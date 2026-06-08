@@ -16,6 +16,7 @@ import { Route as ConfigRouteImport } from './routes/config'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
 import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 
 const ProjetosRoute = ProjetosRouteImport.update({
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FerramentasRoute,
+} as any)
 const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
   id: '/excel',
   path: '/excel',
@@ -68,16 +74,17 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/': typeof FerramentasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
-  '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas': typeof FerramentasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +96,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/': typeof FerramentasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,16 +109,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/ferramentas/excel'
+    | '/ferramentas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/anotacoes'
     | '/arquivos'
     | '/config'
-    | '/ferramentas'
     | '/login'
     | '/projetos'
     | '/ferramentas/excel'
+    | '/ferramentas'
   id:
     | '__root__'
     | '/'
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/ferramentas/excel'
+    | '/ferramentas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ferramentas/': {
+      id: '/ferramentas/'
+      path: '/'
+      fullPath: '/ferramentas/'
+      preLoaderRoute: typeof FerramentasIndexRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
     '/ferramentas/excel': {
       id: '/ferramentas/excel'
       path: '/excel'
@@ -196,10 +213,12 @@ declare module '@tanstack/react-router' {
 
 interface FerramentasRouteChildren {
   FerramentasExcelRoute: typeof FerramentasExcelRoute
+  FerramentasIndexRoute: typeof FerramentasIndexRoute
 }
 
 const FerramentasRouteChildren: FerramentasRouteChildren = {
   FerramentasExcelRoute: FerramentasExcelRoute,
+  FerramentasIndexRoute: FerramentasIndexRoute,
 }
 
 const FerramentasRouteWithChildren = FerramentasRoute._addFileChildren(
