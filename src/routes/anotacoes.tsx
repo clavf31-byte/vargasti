@@ -3,10 +3,10 @@ import { AppShell } from "@/components/AppShell";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, FileText } from "lucide-react";
+import { Plus, Trash2, FileText, Search, Tag, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
-  head: () => ({ meta: [{ title: "Anotações · VargasTI" }] }),
+  head: () => ({ meta: [{ title: "Anotações · VargasTI Lab" }] }),
   component: NotesPage,
 });
 
@@ -14,10 +14,22 @@ type Note = {
   id: string;
   title: string;
   content: string;
+  category?: string;
+  tags?: string;
+  status?: string;
   updated_at: string;
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+const CATEGORIES = ["Geral", "Técnica", "Ideia", "Reunião", "Lembrete"];
+const STATUSES = ["rascunho", "em análise", "aprovado", "arquivado"];
+const STATUS_COLORS: Record<string, string> = {
+  "rascunho": "text-muted-foreground border-muted-foreground/30",
+  "em análise": "text-warning border-warning/30",
+  "aprovado": "text-brand border-brand/30",
+  "arquivado": "text-muted-foreground/50 border-muted-foreground/20",
+};
 
 function NotesPage() {
   const { user } = useAuth();
@@ -25,9 +37,15 @@ function NotesPage() {
   const [selected, setSelected] = useState<Note | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [status, setStatus] = useState<SaveStatus>("idle");
+  const [category, setCategory] = useState("Geral");
+  const [tags, setTags] = useState("");
+  const [noteStatus, setNoteStatus] = useState("rascunho");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("todos");
+  const [filterCategory, setFilterCategory] = useState("todas");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -38,14 +56,14 @@ function NotesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("notes")
-      .select("id, title, content, updated_at")
+      .select("*")
       .eq("user_id", user!.id)
       .order("updated_at", { ascending: false });
 
     if (error) {
       setDbError(true);
     } else {
-      const list = data ?? [];
+      const list = (data ?? []) as Note[];
       setNotes(list);
       if (list.length) selectNote(list[0]);
     }
@@ -57,94 +75,83 @@ function NotesPage() {
     setSelected(note);
     setTitle(note.title);
     setContent(note.content);
-    setStatus("idle");
+    setCategory(note.category || "Geral");
+    setTags(note.tags || "");
+    setNoteStatus(note.status || "rascunho");
+    setSaveStatus("idle");
   }
 
   async function createNote() {
     const { data, error } = await supabase
       .from("notes")
-      .insert({ user_id: user!.id, title: "Nova anotação", content: "" })
+      .insert({ user_id: user!.id, title: "Nova anotação", content: "", category: "Geral", tags: "", status: "rascunho" })
       .select()
       .single();
     if (!error && data) {
-      setNotes((prev) => [data, ...prev]);
-      selectNote(data);
+      setNotes((prev) => [data as Note, ...prev]);
+      selectNote(data as Note);
     }
   }
 
-  function scheduleAutoSave(noteId: string, newTitle: string, newContent: string) {
-    setStatus("saving");
+  function scheduleAutoSave(noteId: string, updates: Partial<Note>) {
+    setSaveStatus("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const { error } = await supabase
         .from("notes")
-        .update({
-          title: newTitle,
-          content: newContent,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", noteId)
         .eq("user_id", user!.id);
 
       if (!error) {
         setNotes((prev) =>
-          prev.map((n) =>
-            n.id === noteId ? { ...n, title: newTitle, content: newContent } : n
-          )
+          prev.map((n) => (n.id === noteId ? { ...n, ...updates } : n))
         );
-        setStatus("saved");
-        setTimeout(() => setStatus("idle"), 2000);
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
-        setStatus("error");
+        setSaveStatus("error");
       }
-    }, 1500);
+    }, 1200);
   }
 
-  function handleTitleChange(val: string) {
-    setTitle(val);
-    if (selected) scheduleAutoSave(selected.id, val, content);
-  }
-
-  function handleContentChange(val: string) {
-    setContent(val);
-    if (selected) scheduleAutoSave(selected.id, title, val);
+  function handleFieldChange(field: string, val: string) {
+    if (!selected) return;
+    const updates: Record<string, string> = {};
+    if (field === "title") { setTitle(val); updates.title = val; updates.content = content; }
+    if (field === "content") { setContent(val); updates.title = title; updates.content = val; }
+    if (field === "category") { setCategory(val); updates.category = val; }
+    if (field === "tags") { setTags(val); updates.tags = val; }
+    if (field === "status") { setNoteStatus(val); updates.status = val; }
+    scheduleAutoSave(selected.id, updates);
   }
 
   async function deleteNote(id: string) {
-    await supabase
-      .from("notes")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user!.id);
+    await supabase.from("notes").delete().eq("id", id).eq("user_id", user!.id);
     const updated = notes.filter((n) => n.id !== id);
     setNotes(updated);
     if (selected?.id === id) {
       if (updated.length) selectNote(updated[0]);
-      else {
-        setSelected(null);
-        setTitle("");
-        setContent("");
-        setStatus("idle");
-      }
+      else { setSelected(null); setTitle(""); setContent(""); setSaveStatus("idle"); }
     }
   }
+
+  const filtered = notes.filter((n) => {
+    const matchSearch = search === "" || n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "todos" || (n.status || "rascunho") === filterStatus;
+    const matchCat = filterCategory === "todas" || (n.category || "Geral") === filterCategory;
+    return matchSearch && matchStatus && matchCat;
+  });
 
   if (dbError) {
     return (
       <AppShell>
-        <div className="p-6 md:p-8">
-          <h1 className="text-2xl font-semibold text-foreground mb-6">Anotações</h1>
-          <div className="bg-surface border border-border rounded-xl p-8 text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Tabela{" "}
-              <code className="font-mono text-brand bg-brand/10 px-1.5 py-0.5 rounded">
-                notes
-              </code>{" "}
-              não encontrada no Supabase.
-            </p>
+        <div className="p-6">
+          <div className="bg-surface border border-border rounded p-6 text-center space-y-2">
             <p className="text-xs text-muted-foreground">
-              Execute o SQL de configuração no dashboard do Supabase para continuar.
+              Tabela <code className="text-brand bg-brand/10 px-1.5 py-0.5 rounded">notes</code> não encontrada.
             </p>
+            <p className="text-[10px] text-muted-foreground">Execute o SQL de setup no dashboard do Supabase.</p>
           </div>
         </div>
       </AppShell>
@@ -153,48 +160,77 @@ function NotesPage() {
 
   return (
     <AppShell>
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex h-[calc(100vh-2.5rem)] overflow-hidden">
         {/* Sidebar */}
-        <div className="w-60 border-r border-border flex flex-col shrink-0 bg-surface">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">Anotações</h2>
-            <button
-              onClick={createNote}
-              className="size-7 rounded-md bg-brand/10 border border-brand/20 grid place-items-center text-brand hover:bg-brand/20 transition-colors"
-              title="Nova anotação"
-            >
-              <Plus className="size-3.5" />
-            </button>
+        <div className="w-56 border-r border-border flex flex-col shrink-0 bg-surface">
+          <div className="px-3 py-2 border-b border-border space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] text-muted-foreground uppercase tracking-widest">&gt;_notes</span>
+              <button
+                onClick={createNote}
+                className="size-5 rounded bg-brand/10 border border-brand/20 grid place-items-center text-brand hover:bg-brand/20 transition-colors"
+              >
+                <Plus className="size-3" />
+              </button>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar..."
+                className="w-full bg-background border border-border rounded px-2 pl-6 py-1 text-[10px] focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="flex gap-1">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none"
+              >
+                <option value="todos">todos</option>
+                {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none"
+              >
+                <option value="todas">todas</option>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
             {loading ? (
-              <p className="text-xs text-muted-foreground px-3 py-6 text-center">
-                Carregando...
-              </p>
-            ) : notes.length === 0 ? (
-              <p className="text-xs text-muted-foreground px-3 py-6 text-center">
-                Nenhuma anotação ainda.
-              </p>
+              <p className="text-[10px] text-muted-foreground text-center py-6">Carregando...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-[10px] text-muted-foreground text-center py-6">Nenhuma nota</p>
             ) : (
-              notes.map((note) => (
+              filtered.map((note) => (
                 <button
                   key={note.id}
                   onClick={() => selectNote(note)}
-                  className={`w-full text-left px-3 py-2.5 rounded-md transition-colors flex items-start gap-2.5 ${
+                  className={`w-full text-left px-2 py-2 rounded text-[10px] transition-colors flex items-start gap-2 ${
                     selected?.id === note.id
-                      ? "bg-brand/10 text-brand"
-                      : "hover:bg-white/5 text-foreground/70"
+                      ? "bg-brand/10 text-brand border border-brand/20"
+                      : "hover:bg-surface-2 text-muted-foreground border border-transparent"
                   }`}
                 >
-                  <FileText className="size-3.5 mt-0.5 shrink-0" />
+                  <FileText className="size-3 mt-0.5 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs font-medium truncate">
-                      {note.title || "Sem título"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-mono">
-                      {new Date(note.updated_at).toLocaleDateString("pt-BR")}
-                    </p>
+                    <p className="truncate text-[11px]">{note.title || "Sem título"}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {note.category && (
+                        <span className="text-[8px] text-muted-foreground/70">{note.category}</span>
+                      )}
+                      {note.status && note.status !== "rascunho" && (
+                        <span className={`text-[8px] border rounded-sm px-1 ${STATUS_COLORS[note.status] || ""}`}>
+                          {note.status}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))
@@ -205,42 +241,60 @@ function NotesPage() {
         {/* Editor */}
         {selected ? (
           <div className="flex-1 flex flex-col min-w-0">
-            <div className="flex items-center gap-3 px-6 py-3 border-b border-border">
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
               <input
                 value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Título da anotação"
-                className="flex-1 bg-transparent text-lg font-semibold text-foreground focus:outline-none placeholder:text-muted-foreground min-w-0"
+                onChange={(e) => handleFieldChange("title", e.target.value)}
+                placeholder="Título"
+                className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground min-w-0"
               />
-              <span className="text-[10px] font-mono text-muted-foreground shrink-0">
-                {status === "saving"
-                  ? "Salvando..."
-                  : status === "saved"
-                  ? "Salvo"
-                  : status === "error"
-                  ? "Erro ao salvar"
-                  : ""}
-              </span>
-              <button
-                onClick={() => deleteNote(selected.id)}
-                className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
-                title="Excluir anotação"
-              >
-                <Trash2 className="size-4" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <select
+                  value={noteStatus}
+                  onChange={(e) => handleFieldChange("status", e.target.value)}
+                  className={`bg-transparent border rounded px-1.5 py-0.5 text-[9px] focus:outline-none appearance-none ${STATUS_COLORS[noteStatus] || ""}`}
+                >
+                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select
+                  value={category}
+                  onChange={(e) => handleFieldChange("category", e.target.value)}
+                  className="bg-transparent border border-border rounded px-1.5 py-0.5 text-[9px] text-muted-foreground focus:outline-none appearance-none"
+                >
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <span className="text-[9px] text-muted-foreground">
+                  {saveStatus === "saving" ? "salvando..." : saveStatus === "saved" ? "salvo" : saveStatus === "error" ? "erro" : ""}
+                </span>
+                <button
+                  onClick={() => deleteNote(selected.id)}
+                  className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              </div>
+            </div>
+            <div className="px-4 py-1.5 border-b border-border flex items-center gap-2">
+              <Tag className="size-3 text-muted-foreground shrink-0" />
+              <input
+                value={tags}
+                onChange={(e) => handleFieldChange("tags", e.target.value)}
+                placeholder="tags separadas por vírgula..."
+                className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/60"
+              />
             </div>
             <textarea
               value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
+              onChange={(e) => handleFieldChange("content", e.target.value)}
               placeholder="Comece a escrever..."
-              className="flex-1 bg-transparent p-6 text-sm text-foreground resize-none focus:outline-none placeholder:text-muted-foreground font-mono leading-relaxed"
+              className="flex-1 bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed"
             />
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-muted-foreground">
-              <FileText className="size-8 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Selecione ou crie uma anotação</p>
+              <FileText className="size-6 mx-auto mb-2 opacity-20" />
+              <p className="text-[10px]">Selecione ou crie uma anotação</p>
             </div>
           </div>
         )}

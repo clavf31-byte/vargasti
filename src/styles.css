@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -37,52 +37,51 @@
   --color-warning: var(--warning);
   --color-info: var(--info);
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Share Tech Mono", "Courier New", monospace;
+  --font-mono: "Share Tech Mono", "Courier New", monospace;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.25rem;
 
-  /* VargasTI — NOC dark theme */
-  --background: oklch(0.145 0.005 285);
-  --foreground: oklch(0.92 0.005 285);
+  /* VargasTI Lab — Matrix dark theme */
+  --background: oklch(0.06 0.004 265);
+  --foreground: oklch(0.90 0.07 145);
 
-  --surface: oklch(0.18 0.006 285);
-  --surface-2: oklch(0.22 0.008 285);
+  --surface: oklch(0.09 0.008 250);
+  --surface-2: oklch(0.12 0.010 248);
 
-  --card: oklch(0.18 0.006 285);
-  --card-foreground: oklch(0.92 0.005 285);
-  --popover: oklch(0.20 0.007 285);
-  --popover-foreground: oklch(0.92 0.005 285);
+  --card: oklch(0.09 0.008 250);
+  --card-foreground: oklch(0.90 0.07 145);
+  --popover: oklch(0.10 0.009 250);
+  --popover-foreground: oklch(0.90 0.07 145);
 
-  --primary: oklch(0.72 0.17 160);
-  --primary-foreground: oklch(0.14 0.005 285);
-  --brand: oklch(0.72 0.17 160);
-  --brand-muted: oklch(0.35 0.08 160);
-  --brand-foreground: oklch(0.14 0.005 285);
+  --primary: oklch(0.88 0.29 142);
+  --primary-foreground: oklch(0.06 0.004 265);
+  --brand: oklch(0.88 0.29 142);
+  --brand-muted: oklch(0.16 0.06 142);
+  --brand-foreground: oklch(0.06 0.004 265);
 
-  --secondary: oklch(0.25 0.008 285);
-  --secondary-foreground: oklch(0.92 0.005 285);
-  --muted: oklch(0.22 0.007 285);
-  --muted-foreground: oklch(0.62 0.01 285);
-  --accent: oklch(0.25 0.008 285);
-  --accent-foreground: oklch(0.92 0.005 285);
+  --secondary: oklch(0.14 0.010 250);
+  --secondary-foreground: oklch(0.90 0.07 145);
+  --muted: oklch(0.12 0.008 250);
+  --muted-foreground: oklch(0.50 0.08 145);
+  --accent: oklch(0.14 0.010 250);
+  --accent-foreground: oklch(0.90 0.07 145);
 
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 285);
   --warning: oklch(0.78 0.16 80);
   --info: oklch(0.68 0.14 230);
 
-  --border: oklch(0.27 0.008 285);
-  --input: oklch(0.27 0.008 285);
-  --ring: oklch(0.72 0.17 160);
+  --border: oklch(0.19 0.05 145);
+  --input: oklch(0.19 0.05 145);
+  --ring: oklch(0.88 0.29 142);
 }
 
 .dark {
-  /* Same as root — app is dark by default */
-  --background: oklch(0.145 0.005 285);
-  --foreground: oklch(0.92 0.005 285);
+  --background: oklch(0.06 0.004 265);
+  --foreground: oklch(0.90 0.07 145);
 }
 
 @layer base {
@@ -93,18 +92,49 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  body {
-    background-image: radial-gradient(circle at 2px 2px, color-mix(in oklab, var(--brand) 8%, transparent) 1px, transparent 0);
-    background-size: 28px 28px;
-    background-attachment: fixed;
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,65,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,65,.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
   }
-  ::selection { background-color: color-mix(in oklab, var(--brand) 35%, transparent); }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 4px
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+  ::selection { background-color: color-mix(in oklab, var(--brand) 30%, transparent); }
 }
 
 @utility status-pulse {
   animation: vargas-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+@utility font-vt323 {
+  font-family: "VT323", monospace;
+  letter-spacing: 0.02em;
+}
+
 @keyframes vargas-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+@utility glow-brand {
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.15), 0 0 24px rgba(0, 255, 65, 0.05);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
 }
