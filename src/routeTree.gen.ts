@@ -9,23 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AnotacoesRouteImport } from './routes/anotacoes'
-import { Route as FerramentasRouteImport } from './routes/ferramentas'
-import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 import { Route as ProjetosRouteImport } from './routes/projetos'
-import { Route as ArquivosRouteImport } from './routes/arquivos'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as FerramentasRouteImport } from './routes/ferramentas'
 import { Route as ConfigRouteImport } from './routes/config'
+import { Route as ArquivosRouteImport } from './routes/arquivos'
+import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnotacoesRoute = AnotacoesRouteImport.update({
-  id: '/anotacoes',
-  path: '/anotacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FerramentasRoute = FerramentasRouteImport.update({
@@ -33,14 +33,9 @@ const FerramentasRoute = FerramentasRouteImport.update({
   path: '/ferramentas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
-  id: '/ferramentas/excel',
-  path: '/ferramentas/excel',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjetosRoute = ProjetosRouteImport.update({
-  id: '/projetos',
-  path: '/projetos',
+const ConfigRoute = ConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArquivosRoute = ArquivosRouteImport.update({
@@ -48,9 +43,9 @@ const ArquivosRoute = ArquivosRouteImport.update({
   path: '/arquivos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfigRoute = ConfigRouteImport.update({
-  id: '/config',
-  path: '/config',
+const AnotacoesRoute = AnotacoesRouteImport.update({
+  id: '/anotacoes',
+  path: '/anotacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -58,89 +53,93 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
+  id: '/excel',
+  path: '/excel',
+  getParentRoute: () => FerramentasRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/anotacoes': typeof AnotacoesRoute
-  '/ferramentas': typeof FerramentasRoute
-  '/ferramentas/excel': typeof FerramentasExcelRoute
-  '/projetos': typeof ProjetosRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
+  '/ferramentas': typeof FerramentasRouteWithChildren
+  '/login': typeof LoginRoute
+  '/projetos': typeof ProjetosRoute
+  '/ferramentas/excel': typeof FerramentasExcelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/anotacoes': typeof AnotacoesRoute
-  '/ferramentas': typeof FerramentasRoute
-  '/ferramentas/excel': typeof FerramentasExcelRoute
-  '/projetos': typeof ProjetosRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
+  '/ferramentas': typeof FerramentasRouteWithChildren
+  '/login': typeof LoginRoute
+  '/projetos': typeof ProjetosRoute
+  '/ferramentas/excel': typeof FerramentasExcelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/anotacoes': typeof AnotacoesRoute
-  '/ferramentas': typeof FerramentasRoute
-  '/ferramentas/excel': typeof FerramentasExcelRoute
-  '/projetos': typeof ProjetosRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
+  '/ferramentas': typeof FerramentasRouteWithChildren
+  '/login': typeof LoginRoute
+  '/projetos': typeof ProjetosRoute
+  '/ferramentas/excel': typeof FerramentasExcelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/login'
     | '/anotacoes'
-    | '/ferramentas'
-    | '/ferramentas/excel'
-    | '/projetos'
     | '/arquivos'
     | '/config'
+    | '/ferramentas'
+    | '/login'
+    | '/projetos'
+    | '/ferramentas/excel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/login'
     | '/anotacoes'
-    | '/ferramentas'
-    | '/ferramentas/excel'
-    | '/projetos'
     | '/arquivos'
     | '/config'
+    | '/ferramentas'
+    | '/login'
+    | '/projetos'
+    | '/ferramentas/excel'
   id:
     | '__root__'
     | '/'
-    | '/login'
     | '/anotacoes'
-    | '/ferramentas'
-    | '/ferramentas/excel'
-    | '/projetos'
     | '/arquivos'
     | '/config'
+    | '/ferramentas'
+    | '/login'
+    | '/projetos'
+    | '/ferramentas/excel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
   AnotacoesRoute: typeof AnotacoesRoute
-  FerramentasRoute: typeof FerramentasRoute
-  FerramentasExcelRoute: typeof FerramentasExcelRoute
-  ProjetosRoute: typeof ProjetosRoute
   ArquivosRoute: typeof ArquivosRoute
   ConfigRoute: typeof ConfigRoute
+  FerramentasRoute: typeof FerramentasRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ProjetosRoute: typeof ProjetosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -150,39 +149,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/anotacoes': {
-      id: '/anotacoes'
-      path: '/anotacoes'
-      fullPath: '/anotacoes'
-      preLoaderRoute: typeof AnotacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/ferramentas': {
       id: '/ferramentas'
       path: '/ferramentas'
       fullPath: '/ferramentas'
       preLoaderRoute: typeof FerramentasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ferramentas/excel': {
-      id: '/ferramentas/excel'
-      path: '/ferramentas/excel'
-      fullPath: '/ferramentas/excel'
-      preLoaderRoute: typeof FerramentasExcelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projetos': {
-      id: '/projetos'
-      path: '/projetos'
-      fullPath: '/projetos'
-      preLoaderRoute: typeof ProjetosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/arquivos': {
-      id: '/arquivos'
-      path: '/arquivos'
-      fullPath: '/arquivos'
-      preLoaderRoute: typeof ArquivosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/config': {
@@ -192,18 +163,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/arquivos': {
+      id: '/arquivos'
+      path: '/arquivos'
+      fullPath: '/arquivos'
+      preLoaderRoute: typeof ArquivosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/anotacoes': {
+      id: '/anotacoes'
+      path: '/anotacoes'
+      fullPath: '/anotacoes'
+      preLoaderRoute: typeof AnotacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ferramentas/excel': {
+      id: '/ferramentas/excel'
+      path: '/excel'
+      fullPath: '/ferramentas/excel'
+      preLoaderRoute: typeof FerramentasExcelRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
   }
 }
 
+interface FerramentasRouteChildren {
+  FerramentasExcelRoute: typeof FerramentasExcelRoute
+}
+
+const FerramentasRouteChildren: FerramentasRouteChildren = {
+  FerramentasExcelRoute: FerramentasExcelRoute,
+}
+
+const FerramentasRouteWithChildren = FerramentasRoute._addFileChildren(
+  FerramentasRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
   AnotacoesRoute: AnotacoesRoute,
-  FerramentasRoute: FerramentasRoute,
-  FerramentasExcelRoute: FerramentasExcelRoute,
-  ProjetosRoute: ProjetosRoute,
   ArquivosRoute: ArquivosRoute,
   ConfigRoute: ConfigRoute,
+  FerramentasRoute: FerramentasRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ProjetosRoute: ProjetosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
