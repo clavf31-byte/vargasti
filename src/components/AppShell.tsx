@@ -4,6 +4,7 @@ import {
   Code2, BookOpen, Wrench, Sparkles, Search, User,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import vargasLogo from "@/assets/vargasti-icon.png";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -24,11 +25,11 @@ export function AppShell({ children }: { children?: ReactNode }) {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-surface flex flex-col shrink-0 sticky top-0 h-screen">
         <Link to="/" className="p-6 flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <div className="size-9 bg-brand rounded-md flex items-center justify-center text-brand-foreground font-bold text-xl tracking-tighter shadow-[0_0_20px_-4px] shadow-brand/50">
-            V
-          </div>
+          <img src={vargasLogo} alt="VargasTI" className="size-10 object-contain drop-shadow-[0_0_12px_rgba(34,197,94,0.25)]" />
           <div>
-            <h1 className="text-base font-semibold text-foreground tracking-tight leading-none">VargasTI</h1>
+            <h1 className="text-base font-semibold text-foreground tracking-tight leading-none">
+              Vargas<span className="text-brand">TI</span>
+            </h1>
             <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mt-1">Knowledge Hub</p>
           </div>
         </Link>
