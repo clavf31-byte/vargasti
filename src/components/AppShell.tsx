@@ -28,7 +28,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           <img src={vargasLogo} alt="VargasTI" className="size-10 object-contain drop-shadow-[0_0_12px_rgba(34,197,94,0.25)]" />
           <div>
             <h1 className="text-base font-semibold text-foreground tracking-tight leading-none">
-              Vargas<span className="text-brand">TI</span>
+              Vargas<span className="text-brand text-cyan-700">TI</span>
             </h1>
             <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mt-1">Knowledge Hub</p>
           </div>
