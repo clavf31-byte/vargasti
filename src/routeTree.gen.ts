@@ -9,21 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as SolucoesRouteImport } from './routes/solucoes'
 import { Route as ScriptsRouteImport } from './routes/scripts'
 import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LaboratorioRouteImport } from './routes/laboratorio'
 import { Route as IdeiasRouteImport } from './routes/ideias'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
 import { Route as DocumentacaoRouteImport } from './routes/documentacao'
 import { Route as IndexRouteImport } from './routes/index'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SolucoesRoute = SolucoesRouteImport.update({
   id: '/solucoes',
   path: '/solucoes',
@@ -37,6 +32,11 @@ const ScriptsRoute = ScriptsRouteImport.update({
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LaboratorioRoute = LaboratorioRouteImport.update({
@@ -67,22 +67,22 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/documentacao': typeof DocumentacaoRoute
   '/ferramentas': typeof FerramentasRoute
   '/ideias': typeof IdeiasRoute
   '/laboratorio': typeof LaboratorioRoute
+  '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/scripts': typeof ScriptsRoute
   '/solucoes': typeof SolucoesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/documentacao': typeof DocumentacaoRoute
   '/ferramentas': typeof FerramentasRoute
   '/ideias': typeof IdeiasRoute
   '/laboratorio': typeof LaboratorioRoute
+  '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/scripts': typeof ScriptsRoute
   '/solucoes': typeof SolucoesRoute
@@ -90,11 +90,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/documentacao': typeof DocumentacaoRoute
   '/ferramentas': typeof FerramentasRoute
   '/ideias': typeof IdeiasRoute
   '/laboratorio': typeof LaboratorioRoute
+  '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/scripts': typeof ScriptsRoute
   '/solucoes': typeof SolucoesRoute
@@ -103,33 +103,33 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/login'
     | '/documentacao'
     | '/ferramentas'
     | '/ideias'
     | '/laboratorio'
+    | '/login'
     | '/projetos'
     | '/scripts'
     | '/solucoes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/login'
     | '/documentacao'
     | '/ferramentas'
     | '/ideias'
     | '/laboratorio'
+    | '/login'
     | '/projetos'
     | '/scripts'
     | '/solucoes'
   id:
     | '__root__'
     | '/'
-    | '/login'
     | '/documentacao'
     | '/ferramentas'
     | '/ideias'
     | '/laboratorio'
+    | '/login'
     | '/projetos'
     | '/scripts'
     | '/solucoes'
@@ -137,11 +137,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
   DocumentacaoRoute: typeof DocumentacaoRoute
   FerramentasRoute: typeof FerramentasRoute
   IdeiasRoute: typeof IdeiasRoute
   LaboratorioRoute: typeof LaboratorioRoute
+  LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
   ScriptsRoute: typeof ScriptsRoute
   SolucoesRoute: typeof SolucoesRoute
@@ -149,13 +149,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/solucoes': {
       id: '/solucoes'
       path: '/solucoes'
@@ -175,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/projetos'
       fullPath: '/projetos'
       preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/laboratorio': {
@@ -217,11 +217,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
   DocumentacaoRoute: DocumentacaoRoute,
   FerramentasRoute: FerramentasRoute,
   IdeiasRoute: IdeiasRoute,
   LaboratorioRoute: LaboratorioRoute,
+  LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
   ScriptsRoute: ScriptsRoute,
   SolucoesRoute: SolucoesRoute,
@@ -229,3 +229,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
