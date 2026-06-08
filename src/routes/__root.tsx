@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet, Link, createRootRouteWithContext, useRouter,
-  HeadContent, Scripts,
+  HeadContent, Scripts, useNavigate, useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -110,11 +111,38 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AuthGuard() {
+  const { session, loading } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session && pathname !== "/login") {
+      navigate({ to: "/login" });
+    } else if (session && pathname === "/login") {
+      navigate({ to: "/" });
+    }
+  }, [session, loading, pathname, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="size-5 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <Outlet />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <AuthProvider>
+        <AuthGuard />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

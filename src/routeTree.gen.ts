@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as SolucoesRouteImport } from './routes/solucoes'
 import { Route as ScriptsRouteImport } from './routes/scripts'
 import { Route as ProjetosRouteImport } from './routes/projetos'
@@ -18,6 +19,11 @@ import { Route as FerramentasRouteImport } from './routes/ferramentas'
 import { Route as DocumentacaoRouteImport } from './routes/documentacao'
 import { Route as IndexRouteImport } from './routes/index'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SolucoesRoute = SolucoesRouteImport.update({
   id: '/solucoes',
   path: '/solucoes',
@@ -61,6 +67,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/documentacao': typeof DocumentacaoRoute
   '/ferramentas': typeof FerramentasRoute
   '/ideias': typeof IdeiasRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/documentacao': typeof DocumentacaoRoute
   '/ferramentas': typeof FerramentasRoute
   '/ideias': typeof IdeiasRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/documentacao': typeof DocumentacaoRoute
   '/ferramentas': typeof FerramentasRoute
   '/ideias': typeof IdeiasRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/documentacao'
     | '/ferramentas'
     | '/ideias'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/documentacao'
     | '/ferramentas'
     | '/ideias'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/login'
     | '/documentacao'
     | '/ferramentas'
     | '/ideias'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
   DocumentacaoRoute: typeof DocumentacaoRoute
   FerramentasRoute: typeof FerramentasRoute
   IdeiasRoute: typeof IdeiasRoute
@@ -136,6 +149,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/solucoes': {
       id: '/solucoes'
       path: '/solucoes'
@@ -197,6 +217,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
   DocumentacaoRoute: DocumentacaoRoute,
   FerramentasRoute: FerramentasRoute,
   IdeiasRoute: IdeiasRoute,

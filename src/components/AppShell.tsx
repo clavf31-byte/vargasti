@@ -1,10 +1,11 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, FolderKanban, Lightbulb, FlaskConical,
-  Code2, BookOpen, Wrench, Sparkles, Search, User,
+  Code2, BookOpen, Wrench, Sparkles, Search, User, LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -19,6 +20,9 @@ const NAV = [
 
 export function AppShell({ children }: { children?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user, signOut } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? "Usuário";
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
 
   return (
     <div className="min-h-screen flex">
@@ -60,13 +64,24 @@ export function AppShell({ children }: { children?: ReactNode }) {
 
         <div className="p-4 border-t border-border">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="size-9 rounded-full bg-secondary outline outline-1 outline-white/10 grid place-items-center">
-              <User className="size-4 text-muted-foreground" />
+            <div className="size-9 rounded-full bg-secondary outline outline-1 outline-white/10 grid place-items-center overflow-hidden shrink-0">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="size-full object-cover" />
+              ) : (
+                <User className="size-4 text-muted-foreground" />
+              )}
             </div>
-            <div className="text-xs">
-              <p className="text-foreground font-medium">Vargas Admin</p>
-              <p className="text-muted-foreground">System Controller</p>
+            <div className="text-xs flex-1 min-w-0">
+              <p className="text-foreground font-medium truncate">{displayName}</p>
+              <p className="text-muted-foreground truncate">{user?.email}</p>
             </div>
+            <button
+              onClick={signOut}
+              title="Sair"
+              className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+            >
+              <LogOut className="size-3.5" />
+            </button>
           </div>
         </div>
       </aside>
