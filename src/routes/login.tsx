@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import vargasLogo from "@/assets/vargasti-icon.png";
+import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -24,10 +25,10 @@ function LoginPage() {
 
   async function handleGoogle() {
     setError("");
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
+    if (result.error) setError(result.error.message ?? "Falha ao entrar com Google");
   }
 
   async function handleEmailLogin(e: React.FormEvent) {
