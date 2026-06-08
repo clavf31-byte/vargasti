@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SolucoesRouteImport } from './routes/solucoes'
+import { Route as ScriptsRouteImport } from './routes/scripts'
+import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as LaboratorioRouteImport } from './routes/laboratorio'
+import { Route as IdeiasRouteImport } from './routes/ideias'
+import { Route as FerramentasRouteImport } from './routes/ferramentas'
+import { Route as DocumentacaoRouteImport } from './routes/documentacao'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SolucoesRoute = SolucoesRouteImport.update({
+  id: '/solucoes',
+  path: '/solucoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScriptsRoute = ScriptsRouteImport.update({
+  id: '/scripts',
+  path: '/scripts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaboratorioRoute = LaboratorioRouteImport.update({
+  id: '/laboratorio',
+  path: '/laboratorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdeiasRoute = IdeiasRouteImport.update({
+  id: '/ideias',
+  path: '/ideias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FerramentasRoute = FerramentasRouteImport.update({
+  id: '/ferramentas',
+  path: '/ferramentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentacaoRoute = DocumentacaoRouteImport.update({
+  id: '/documentacao',
+  path: '/documentacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/documentacao': typeof DocumentacaoRoute
+  '/ferramentas': typeof FerramentasRoute
+  '/ideias': typeof IdeiasRoute
+  '/laboratorio': typeof LaboratorioRoute
+  '/projetos': typeof ProjetosRoute
+  '/scripts': typeof ScriptsRoute
+  '/solucoes': typeof SolucoesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/documentacao': typeof DocumentacaoRoute
+  '/ferramentas': typeof FerramentasRoute
+  '/ideias': typeof IdeiasRoute
+  '/laboratorio': typeof LaboratorioRoute
+  '/projetos': typeof ProjetosRoute
+  '/scripts': typeof ScriptsRoute
+  '/solucoes': typeof SolucoesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/documentacao': typeof DocumentacaoRoute
+  '/ferramentas': typeof FerramentasRoute
+  '/ideias': typeof IdeiasRoute
+  '/laboratorio': typeof LaboratorioRoute
+  '/projetos': typeof ProjetosRoute
+  '/scripts': typeof ScriptsRoute
+  '/solucoes': typeof SolucoesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/documentacao'
+    | '/ferramentas'
+    | '/ideias'
+    | '/laboratorio'
+    | '/projetos'
+    | '/scripts'
+    | '/solucoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/documentacao'
+    | '/ferramentas'
+    | '/ideias'
+    | '/laboratorio'
+    | '/projetos'
+    | '/scripts'
+    | '/solucoes'
+  id:
+    | '__root__'
+    | '/'
+    | '/documentacao'
+    | '/ferramentas'
+    | '/ideias'
+    | '/laboratorio'
+    | '/projetos'
+    | '/scripts'
+    | '/solucoes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DocumentacaoRoute: typeof DocumentacaoRoute
+  FerramentasRoute: typeof FerramentasRoute
+  IdeiasRoute: typeof IdeiasRoute
+  LaboratorioRoute: typeof LaboratorioRoute
+  ProjetosRoute: typeof ProjetosRoute
+  ScriptsRoute: typeof ScriptsRoute
+  SolucoesRoute: typeof SolucoesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/solucoes': {
+      id: '/solucoes'
+      path: '/solucoes'
+      fullPath: '/solucoes'
+      preLoaderRoute: typeof SolucoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scripts': {
+      id: '/scripts'
+      path: '/scripts'
+      fullPath: '/scripts'
+      preLoaderRoute: typeof ScriptsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/laboratorio': {
+      id: '/laboratorio'
+      path: '/laboratorio'
+      fullPath: '/laboratorio'
+      preLoaderRoute: typeof LaboratorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ideias': {
+      id: '/ideias'
+      path: '/ideias'
+      fullPath: '/ideias'
+      preLoaderRoute: typeof IdeiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ferramentas': {
+      id: '/ferramentas'
+      path: '/ferramentas'
+      fullPath: '/ferramentas'
+      preLoaderRoute: typeof FerramentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documentacao': {
+      id: '/documentacao'
+      path: '/documentacao'
+      fullPath: '/documentacao'
+      preLoaderRoute: typeof DocumentacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +197,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DocumentacaoRoute: DocumentacaoRoute,
+  FerramentasRoute: FerramentasRoute,
+  IdeiasRoute: IdeiasRoute,
+  LaboratorioRoute: LaboratorioRoute,
+  ProjetosRoute: ProjetosRoute,
+  ScriptsRoute: ScriptsRoute,
+  SolucoesRoute: SolucoesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
