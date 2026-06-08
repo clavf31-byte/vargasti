@@ -228,7 +228,7 @@ function ExcelTool() {
         {showHistory ? (
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-2xl">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-3">&gt;_import history</div>
+              <div className="text-xs font-medium text-muted-foreground mb-3">Histórico de Importações</div>
               {history.length === 0 ? (
                 <p className="text-[10px] text-muted-foreground">Nenhum histórico ainda.</p>
               ) : (

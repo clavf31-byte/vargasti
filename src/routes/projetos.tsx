@@ -159,7 +159,7 @@ CREATE POLICY "user_own" ON projects USING (auth.uid() = user_id);`}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1">&gt;_projetos</div>
+            <div className="text-xs font-medium text-muted-foreground mb-1">Projetos</div>
             <h1 className="text-sm text-foreground">Gestão de Projetos</h1>
           </div>
           <button

@@ -40,7 +40,7 @@ function ConfigPage() {
     <AppShell>
       <div className="p-4 md:p-5 space-y-4 max-w-xl">
         <div>
-          <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1">&gt;_config</div>
+          <div className="text-xs font-medium text-muted-foreground mb-1">Config</div>
           <h1 className="text-sm text-foreground">Configurações</h1>
         </div>
 

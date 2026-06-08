@@ -93,7 +93,7 @@ function ArquivosPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1">&gt;_arquivos</div>
+            <div className="text-xs font-medium text-muted-foreground mb-1">Arquivos</div>
             <h1 className="text-sm text-foreground">Central de Arquivos</h1>
           </div>
           <div className="text-[9px] text-muted-foreground">{filtered.length} arquivo(s)</div>

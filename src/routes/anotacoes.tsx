@@ -165,7 +165,7 @@ function NotesPage() {
         <div className="w-56 border-r border-border flex flex-col shrink-0 bg-surface">
           <div className="px-3 py-2 border-b border-border space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] text-muted-foreground uppercase tracking-widest">&gt;_notes</span>
+              <span className="text-xs font-medium text-muted-foreground">Anotações</span>
               <button
                 onClick={createNote}
                 className="size-5 rounded bg-brand/10 border border-brand/20 grid place-items-center text-brand hover:bg-brand/20 transition-colors"
