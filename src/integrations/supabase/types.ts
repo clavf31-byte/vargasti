@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      file_records: {
+        Row: {
+          created_at: string | null
+          file_type: string | null
+          id: string
+          name: string
+          origin: string | null
+          size_bytes: number | null
+          storage_path: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_type?: string | null
+          id?: string
+          name?: string
+          origin?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_type?: string | null
+          id?: string
+          name?: string
+          origin?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          category: string | null
+          content: string | null
+          created_at: string | null
+          id: string
+          status: string | null
+          tags: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          tags?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          tags?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          links: string | null
+          name: string
+          observations: string | null
+          status: string | null
+          technologies: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          links?: string | null
+          name?: string
+          observations?: string | null
+          status?: string | null
+          technologies?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          links?: string | null
+          name?: string
+          observations?: string | null
+          status?: string | null
+          technologies?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
