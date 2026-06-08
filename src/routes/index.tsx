@@ -106,7 +106,7 @@ function Dashboard() {
               className="bg-surface border border-border rounded-md p-4 hover:border-brand/40 hover:bg-brand/5 transition-all group"
             >
               <div className="text-xs text-muted-foreground mb-1">{label}</div>
-              <div className="font-vt323 text-4xl text-brand leading-none">{value}</div>
+              <div className="text-3xl font-bold text-brand leading-none">{value}</div>
               <div className="text-xs text-muted-foreground mt-1">{sub}</div>
             </Link>
           ))}
@@ -115,7 +115,7 @@ function Dashboard() {
         {/* Shortcuts + Activity */}
         <div className="grid grid-cols-5 gap-4">
           <div className="col-span-2 bg-surface border border-border rounded-md p-4 space-y-1">
-            <p className="text-xs text-muted-foreground mb-3">&gt;_ Quick Access</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">Acesso Rápido</p>
             {shortcuts.map(({ to, icon: Icon, label }) => (
               <Link
                 key={to}
@@ -130,7 +130,7 @@ function Dashboard() {
           </div>
 
           <div className="col-span-3 bg-surface border border-border rounded-md p-4">
-            <p className="text-xs text-muted-foreground mb-3">&gt;_ Activity Log</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">Atividade Recente</p>
             <div className="space-y-2">
               {activity.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-3 text-center">Nenhuma atividade ainda</p>

@@ -26,9 +26,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <aside className="w-56 border-r border-border bg-surface flex flex-col shrink-0 sticky top-0 h-screen">
-        <Link to="/" className="px-4 py-4 flex items-center gap-2.5 hover:opacity-90 transition-opacity border-b border-border">
-          <img src={vargasLogo} alt="VargasTI" className="size-7 object-contain" />
-          <div>
+        <Link to="/" className="px-4 py-5 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity border-b border-border">
+          <img src={vargasLogo} alt="VargasTI" className="size-12 object-contain" />
+          <div className="text-center">
             <h1 className="text-sm font-semibold text-foreground leading-none">
               Vargas<span className="text-brand">TI</span>
             </h1>
