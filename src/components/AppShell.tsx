@@ -23,22 +23,22 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
 
   return (
-    <div className="min-h-screen flex relative z-10">
+    <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-52 border-r border-border bg-surface flex flex-col shrink-0 sticky top-0 h-screen">
+      <aside className="w-56 border-r border-border bg-surface flex flex-col shrink-0 sticky top-0 h-screen">
         <Link to="/" className="px-4 py-4 flex items-center gap-2.5 hover:opacity-90 transition-opacity border-b border-border">
-          <img src={vargasLogo} alt="VargasTI" className="size-7 object-contain" style={{ filter: "drop-shadow(0 0 6px rgba(0,255,65,0.4))" }} />
+          <img src={vargasLogo} alt="VargasTI" className="size-7 object-contain" />
           <div>
-            <h1 className="text-sm font-normal text-foreground leading-none">
-              Vargas<span className="text-brand text-glow">TI</span>
+            <h1 className="text-sm text-foreground leading-none">
+              Vargas<span className="text-brand">TI</span>
             </h1>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-widest mt-0.5">Lab v2.0</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Lab v2.0</p>
           </div>
         </Link>
 
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          <div className="px-2 pb-1">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">&gt;_modules</span>
+          <div className="px-2 pb-2">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">&gt;_MODULES</span>
           </div>
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
@@ -46,13 +46,13 @@ export function AppShell({ children }: { children?: ReactNode }) {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-2.5 px-2 py-2 rounded text-xs transition-all ${
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
                   active
-                    ? "bg-brand/10 text-brand border border-brand/20 glow-brand"
+                    ? "bg-brand/10 text-brand border border-brand/20"
                     : "text-muted-foreground hover:bg-surface-2 hover:text-foreground border border-transparent"
                 }`}
               >
-                <Icon className="size-3.5 shrink-0" />
+                <Icon className="size-4 shrink-0" />
                 <span>{label}</span>
                 {active && <span className="ml-auto size-1.5 rounded-full bg-brand status-pulse" />}
               </Link>
@@ -62,23 +62,23 @@ export function AppShell({ children }: { children?: ReactNode }) {
 
         <div className="p-3 border-t border-border">
           <div className="flex items-center gap-2 px-1 py-1">
-            <div className="size-7 rounded-full bg-secondary border border-border grid place-items-center overflow-hidden shrink-0">
+            <div className="size-8 rounded-full bg-secondary border border-border grid place-items-center overflow-hidden shrink-0">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} className="size-full object-cover" />
               ) : (
-                <User className="size-3 text-muted-foreground" />
+                <User className="size-3.5 text-muted-foreground" />
               )}
             </div>
-            <div className="text-[10px] flex-1 min-w-0">
+            <div className="text-xs flex-1 min-w-0">
               <p className="text-foreground truncate">{displayName}</p>
-              <p className="text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-muted-foreground truncate text-[10px]">{user?.email}</p>
             </div>
             <button
               onClick={signOut}
               title="Sair"
-              className="shrink-0 p-1 rounded text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
+              className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
             >
-              <LogOut className="size-3" />
+              <LogOut className="size-3.5" />
             </button>
           </div>
         </div>
@@ -86,15 +86,15 @@ export function AppShell({ children }: { children?: ReactNode }) {
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-10 border-b border-border bg-surface/80 backdrop-blur flex items-center justify-between px-4 sticky top-0 z-10">
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <Terminal className="size-3" />
+        <header className="h-11 border-b border-border bg-surface/80 backdrop-blur flex items-center justify-between px-5 sticky top-0 z-10">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Terminal className="size-3.5" />
             <span>vargasti@lab:~$</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-brand/5 border border-brand/15 rounded">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand/5 border border-brand/20 rounded-md">
               <span className="size-1.5 bg-brand rounded-full status-pulse" />
-              <span className="text-[9px] text-brand uppercase tracking-wider">online</span>
+              <span className="text-[10px] text-brand uppercase tracking-wider">online</span>
             </div>
           </div>
         </header>
@@ -109,8 +109,8 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
       <div>
-        <div className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1">&gt;_</div>
-        <h1 className="text-lg text-foreground tracking-tight">{title}</h1>
+        <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">&gt;_</div>
+        <h1 className="text-base text-foreground tracking-tight">{title}</h1>
         {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
       {action}
