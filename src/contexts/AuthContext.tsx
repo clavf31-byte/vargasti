@@ -12,51 +12,21 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function checkAllowedEmail(email: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("allowed_emails")
-    .select("email")
-    .eq("email", email)
-    .maybeSingle();
-  return data !== null;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [accessDenied, setAccessDenied] = useState(false);
-
-  async function handleSession(newSession: Session | null) {
-    if (!newSession) {
-      setSession(null);
-      setAccessDenied(false);
-      setLoading(false);
-      return;
-    }
-
-    const allowed = await checkAllowedEmail(newSession.user.email ?? "");
-    if (!allowed) {
-      await supabase.auth.signOut();
-      setSession(null);
-      setAccessDenied(true);
-      setLoading(false);
-      return;
-    }
-
-    setSession(newSession);
-    setAccessDenied(false);
-    setLoading(false);
-  }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSession(session);
-    });
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_, newSession) => {
-      handleSession(newSession);
+      setSession(newSession);
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -67,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, accessDenied, signOut }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, accessDenied: false, signOut }}>
       {children}
     </AuthContext.Provider>
   );
