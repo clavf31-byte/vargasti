@@ -11,9 +11,9 @@ const TOOLS = [
   {
     to: "/ferramentas/excel" as const,
     icon: FileSpreadsheet,
-    name: "Excel Treatment",
+    name: "Editor Inteligente de Excel",
     category: "dados",
-    description: "Importe, edite, filtre e exporte planilhas .xlsx/.csv com controle de colunas.",
+    description: "Importe, filtre, edite, cruze dados com PROCV e exporte planilhas .xlsx.",
   },
 ];
 
