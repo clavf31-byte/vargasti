@@ -35,24 +35,34 @@ function Dashboard() {
   useEffect(() => {
     if (!user) return;
     async function load() {
-      const [{ count: nc }, { count: pc }, { data: notes }, { data: projects }] = await Promise.all([
-        supabase.from("notes").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
-        supabase.from("projects").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
-        supabase.from("notes").select("id, title, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(3),
-        supabase.from("projects").select("id, name, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(3),
-      ]);
-      setNotesCount(nc ?? 0);
-      setProjectsCount(pc ?? 0);
-
-      const combined: ActivityItem[] = [
-        ...((notes ?? []).map((n: any) => ({ id: n.id, type: "note" as const, label: n.title || "Sem título", time: n.updated_at }))),
-        ...((projects ?? []).map((p: any) => ({ id: p.id, type: "project" as const, label: p.name || "Sem nome", time: p.updated_at }))),
-      ];
-      combined.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-      setActivity(combined.slice(0, 5));
+      try {
+        const results = await Promise.allSettled([
+          supabase.from("notes").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
+          supabase.from("projects").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
+          supabase.from("notes").select("id, title, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(3),
+          supabase.from("projects").select("id, name, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(3),
+        ]);
+        const get = <T,>(i: number): T | undefined =>
+          results[i].status === "fulfilled" ? ((results[i] as PromiseFulfilledResult<any>).value as T) : undefined;
+        const nc = get<{ count: number | null }>(0)?.count ?? 0;
+        const pc = get<{ count: number | null }>(1)?.count ?? 0;
+        const notes = get<{ data: any[] | null }>(2)?.data ?? [];
+        const projects = get<{ data: any[] | null }>(3)?.data ?? [];
+        setNotesCount(nc);
+        setProjectsCount(pc);
+        const combined: ActivityItem[] = [
+          ...notes.filter(Boolean).map((n: any) => ({ id: String(n?.id ?? Math.random()), type: "note" as const, label: n?.title || "Sem título", time: n?.updated_at ?? new Date().toISOString() })),
+          ...projects.filter(Boolean).map((p: any) => ({ id: String(p?.id ?? Math.random()), type: "project" as const, label: p?.name || "Sem nome", time: p?.updated_at ?? new Date().toISOString() })),
+        ];
+        combined.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+        setActivity(combined.slice(0, 5));
+      } catch (e) {
+        console.error("Dashboard load failed", e);
+      }
     }
     load();
   }, [user]);
+
 
   const kpis = [
     { label: "NOTES", value: String(notesCount).padStart(2, "0"), sub: "anotações", to: "/anotacoes" as const },
