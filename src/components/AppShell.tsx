@@ -1,21 +1,13 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
-import {
-  LayoutDashboard, FolderKanban, Lightbulb, FlaskConical,
-  Code2, BookOpen, Wrench, Sparkles, Search, User, LogOut,
-} from "lucide-react";
+import { LayoutDashboard, Wrench, NotebookPen, Search, User, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { useAuth } from "@/contexts/AuthContext";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/projetos", label: "Projetos", icon: FolderKanban },
-  { to: "/solucoes", label: "Soluções", icon: Lightbulb },
-  { to: "/laboratorio", label: "Laboratório", icon: FlaskConical },
-  { to: "/scripts", label: "Scripts", icon: Code2 },
-  { to: "/documentacao", label: "Documentação", icon: BookOpen },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
-  { to: "/ideias", label: "Ideias", icon: Sparkles },
+  { to: "/anotacoes", label: "Anotações", icon: NotebookPen },
 ] as const;
 
 export function AppShell({ children }: { children?: ReactNode }) {

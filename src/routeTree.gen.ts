@@ -9,44 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SolucoesRouteImport } from './routes/solucoes'
-import { Route as ScriptsRouteImport } from './routes/scripts'
-import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LaboratorioRouteImport } from './routes/laboratorio'
-import { Route as IdeiasRouteImport } from './routes/ideias'
+import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
-import { Route as DocumentacaoRouteImport } from './routes/documentacao'
+import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 import { Route as IndexRouteImport } from './routes/index'
 
-const SolucoesRoute = SolucoesRouteImport.update({
-  id: '/solucoes',
-  path: '/solucoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScriptsRoute = ScriptsRouteImport.update({
-  id: '/scripts',
-  path: '/scripts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjetosRoute = ProjetosRouteImport.update({
-  id: '/projetos',
-  path: '/projetos',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LaboratorioRoute = LaboratorioRouteImport.update({
-  id: '/laboratorio',
-  path: '/laboratorio',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IdeiasRoute = IdeiasRouteImport.update({
-  id: '/ideias',
-  path: '/ideias',
+const AnotacoesRoute = AnotacoesRouteImport.update({
+  id: '/anotacoes',
+  path: '/anotacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FerramentasRoute = FerramentasRouteImport.update({
@@ -54,9 +30,9 @@ const FerramentasRoute = FerramentasRouteImport.update({
   path: '/ferramentas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocumentacaoRoute = DocumentacaoRouteImport.update({
-  id: '/documentacao',
-  path: '/documentacao',
+const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
+  id: '/ferramentas/excel',
+  path: '/ferramentas/excel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,107 +43,65 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/documentacao': typeof DocumentacaoRoute
-  '/ferramentas': typeof FerramentasRoute
-  '/ideias': typeof IdeiasRoute
-  '/laboratorio': typeof LaboratorioRoute
   '/login': typeof LoginRoute
-  '/projetos': typeof ProjetosRoute
-  '/scripts': typeof ScriptsRoute
-  '/solucoes': typeof SolucoesRoute
+  '/anotacoes': typeof AnotacoesRoute
+  '/ferramentas': typeof FerramentasRoute
+  '/ferramentas/excel': typeof FerramentasExcelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/documentacao': typeof DocumentacaoRoute
-  '/ferramentas': typeof FerramentasRoute
-  '/ideias': typeof IdeiasRoute
-  '/laboratorio': typeof LaboratorioRoute
   '/login': typeof LoginRoute
-  '/projetos': typeof ProjetosRoute
-  '/scripts': typeof ScriptsRoute
-  '/solucoes': typeof SolucoesRoute
+  '/anotacoes': typeof AnotacoesRoute
+  '/ferramentas': typeof FerramentasRoute
+  '/ferramentas/excel': typeof FerramentasExcelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/documentacao': typeof DocumentacaoRoute
-  '/ferramentas': typeof FerramentasRoute
-  '/ideias': typeof IdeiasRoute
-  '/laboratorio': typeof LaboratorioRoute
   '/login': typeof LoginRoute
-  '/projetos': typeof ProjetosRoute
-  '/scripts': typeof ScriptsRoute
-  '/solucoes': typeof SolucoesRoute
+  '/anotacoes': typeof AnotacoesRoute
+  '/ferramentas': typeof FerramentasRoute
+  '/ferramentas/excel': typeof FerramentasExcelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/documentacao'
-    | '/ferramentas'
-    | '/ideias'
-    | '/laboratorio'
     | '/login'
-    | '/projetos'
-    | '/scripts'
-    | '/solucoes'
+    | '/anotacoes'
+    | '/ferramentas'
+    | '/ferramentas/excel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/documentacao'
-    | '/ferramentas'
-    | '/ideias'
-    | '/laboratorio'
     | '/login'
-    | '/projetos'
-    | '/scripts'
-    | '/solucoes'
+    | '/anotacoes'
+    | '/ferramentas'
+    | '/ferramentas/excel'
   id:
     | '__root__'
     | '/'
-    | '/documentacao'
-    | '/ferramentas'
-    | '/ideias'
-    | '/laboratorio'
     | '/login'
-    | '/projetos'
-    | '/scripts'
-    | '/solucoes'
+    | '/anotacoes'
+    | '/ferramentas'
+    | '/ferramentas/excel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DocumentacaoRoute: typeof DocumentacaoRoute
-  FerramentasRoute: typeof FerramentasRoute
-  IdeiasRoute: typeof IdeiasRoute
-  LaboratorioRoute: typeof LaboratorioRoute
   LoginRoute: typeof LoginRoute
-  ProjetosRoute: typeof ProjetosRoute
-  ScriptsRoute: typeof ScriptsRoute
-  SolucoesRoute: typeof SolucoesRoute
+  AnotacoesRoute: typeof AnotacoesRoute
+  FerramentasRoute: typeof FerramentasRoute
+  FerramentasExcelRoute: typeof FerramentasExcelRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/solucoes': {
-      id: '/solucoes'
-      path: '/solucoes'
-      fullPath: '/solucoes'
-      preLoaderRoute: typeof SolucoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scripts': {
-      id: '/scripts'
-      path: '/scripts'
-      fullPath: '/scripts'
-      preLoaderRoute: typeof ScriptsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projetos': {
-      id: '/projetos'
-      path: '/projetos'
-      fullPath: '/projetos'
-      preLoaderRoute: typeof ProjetosRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -177,18 +111,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/laboratorio': {
-      id: '/laboratorio'
-      path: '/laboratorio'
-      fullPath: '/laboratorio'
-      preLoaderRoute: typeof LaboratorioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ideias': {
-      id: '/ideias'
-      path: '/ideias'
-      fullPath: '/ideias'
-      preLoaderRoute: typeof IdeiasRouteImport
+    '/anotacoes': {
+      id: '/anotacoes'
+      path: '/anotacoes'
+      fullPath: '/anotacoes'
+      preLoaderRoute: typeof AnotacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ferramentas': {
@@ -198,18 +125,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FerramentasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/documentacao': {
-      id: '/documentacao'
-      path: '/documentacao'
-      fullPath: '/documentacao'
-      preLoaderRoute: typeof DocumentacaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/ferramentas/excel': {
+      id: '/ferramentas/excel'
+      path: '/ferramentas/excel'
+      fullPath: '/ferramentas/excel'
+      preLoaderRoute: typeof FerramentasExcelRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -217,14 +137,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DocumentacaoRoute: DocumentacaoRoute,
-  FerramentasRoute: FerramentasRoute,
-  IdeiasRoute: IdeiasRoute,
-  LaboratorioRoute: LaboratorioRoute,
   LoginRoute: LoginRoute,
-  ProjetosRoute: ProjetosRoute,
-  ScriptsRoute: ScriptsRoute,
-  SolucoesRoute: SolucoesRoute,
+  AnotacoesRoute: AnotacoesRoute,
+  FerramentasRoute: FerramentasRoute,
+  FerramentasExcelRoute: FerramentasExcelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
