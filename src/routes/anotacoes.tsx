@@ -3,7 +3,10 @@ import { AppShell } from "@/components/AppShell";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, FileText, Search, Tag, Lock, Eye, EyeOff, ShieldAlert } from "lucide-react";
+import {
+  Plus, Trash2, FileText, Search, Tag,
+  Lock, Eye, EyeOff, ShieldAlert, ShieldCheck,
+} from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
   head: () => ({ meta: [{ title: "Anotações · VargasTI Lab" }] }),
@@ -21,10 +24,9 @@ type Note = {
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
-type Modal =
-  | null
-  | { type: "set-password"; noteId: string }
-  | { type: "unlock"; note: Note };
+type ProtectionMode = "none" | "visible" | "hidden";
+// visible = proteger e manter visível (título aparece, conteúdo pede senha)
+// hidden  = proteger e ocultar (título oculto, exibe só "Anotação protegida")
 
 const CATEGORIES = ["Geral", "Técnica", "Ideia", "Reunião", "Lembrete"];
 const STATUSES = ["rascunho", "em análise", "aprovado", "arquivado"];
@@ -35,8 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
   "arquivado": "text-muted-foreground/50 border-muted-foreground/20",
 };
 
-const PWD_RE = /__pwd:[a-f0-9]+/;
-const CONF_RE = /,?\s*__conf/;
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 async function sha256(text: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -44,98 +45,99 @@ async function sha256(text: string): Promise<string> {
 }
 
 function getPwdHash(tags: string): string | null {
-  const m = tags.match(/__pwd:([a-f0-9]+)/);
+  const m = (tags ?? "").match(/__pwd:([a-f0-9]+)/);
   return m ? m[1] : null;
 }
 
-function addPwdHash(tags: string, hash: string): string {
-  const clean = (tags ?? "").replace(/,?\s*__pwd:[a-f0-9]+/, "").trim();
-  return clean ? `${clean},__pwd:${hash}` : `__pwd:${hash}`;
+function getProtectionMode(tags: string): ProtectionMode {
+  if (!getPwdHash(tags)) return "none";
+  return (tags ?? "").includes("__conf") ? "hidden" : "visible";
 }
 
-function removePwdHash(tags: string): string {
-  return (tags ?? "").replace(/,?\s*__pwd:[a-f0-9]+/, "").trim();
+function setProtectionInTags(tags: string, hash: string, mode: Exclude<ProtectionMode, "none">): string {
+  let t = (tags ?? "")
+    .replace(/,?\s*__pwd:[a-f0-9]+/, "")
+    .replace(/,?\s*__conf/, "")
+    .trim();
+  t = t ? `${t},__pwd:${hash}` : `__pwd:${hash}`;
+  if (mode === "hidden") t += ",__conf";
+  return t;
 }
 
-function isConfidential(tags: string): boolean {
-  return (tags ?? "").includes("__conf");
-}
-
-function addConfMarker(tags: string): string {
-  return tags.includes("__conf") ? tags : (tags ? `${tags},__conf` : "__conf");
-}
-
-function removeConfMarker(tags: string): string {
-  return (tags ?? "").replace(CONF_RE, "").trim();
+function removeProtectionFromTags(tags: string): string {
+  return (tags ?? "")
+    .replace(/,?\s*__pwd:[a-f0-9]+/, "")
+    .replace(/,?\s*__conf/, "")
+    .trim();
 }
 
 function displayTags(tags: string): string {
   return (tags ?? "")
-    .replace(PWD_RE, "")
-    .replace(CONF_RE, "")
+    .replace(/__pwd:[a-f0-9]+/, "")
+    .replace(/__conf/, "")
     .replace(/,\s*,/g, ",")
     .replace(/^,|,$/g, "")
     .trim();
 }
 
-function isLocked(note: Note): boolean {
-  return (note.status === "arquivado" || note.status === "archived") &&
-    !!getPwdHash(note.tags ?? "");
-}
+// ── component ─────────────────────────────────────────────────────────────────
 
 function NotesPage() {
   const { user } = useAuth();
+
+  // lista e seleção
   const [notes, setNotes] = useState<Note[]>([]);
   const [selected, setSelected] = useState<Note | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState(false);
+
+  // editor
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("Geral");
   const [tags, setTags] = useState("");
   const [noteStatus, setNoteStatus] = useState("rascunho");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-  const [loading, setLoading] = useState(true);
-  const [dbError, setDbError] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // filtros
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterCategory, setFilterCategory] = useState("todas");
-  const [modal, setModal] = useState<Modal>(null);
-  const [modalPwd, setModalPwd] = useState("");
-  const [modalPwdShow, setModalPwdShow] = useState(false);
-  const [modalConf, setModalConf] = useState(false);
-  const [modalError, setModalError] = useState("");
+
+  // proteção por nota (apenas frontend — sessão atual)
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (user) loadNotes();
-  }, [user]);
+  // inline unlock (exibido no editor, não modal global)
+  const [unlockPwd, setUnlockPwd] = useState("");
+  const [unlockPwdShow, setUnlockPwdShow] = useState(false);
+  const [unlockError, setUnlockError] = useState("");
+
+  // modal definir proteção (aparece só ao arquivar)
+  const [protModal, setProtModal] = useState<{ noteId: string } | null>(null);
+  const [protChoice, setProtChoice] = useState<ProtectionMode>("none");
+  const [protPwd, setProtPwd] = useState("");
+  const [protPwdShow, setProtPwdShow] = useState(false);
+  const [protError, setProtError] = useState("");
+
+  useEffect(() => { if (user) loadNotes(); }, [user]);
 
   async function loadNotes() {
     setLoading(true);
     const { data, error } = await supabase
-      .from("notes")
-      .select("*")
-      .eq("user_id", user!.id)
+      .from("notes").select("*").eq("user_id", user!.id)
       .order("updated_at", { ascending: false });
-
-    if (error) {
-      setDbError(true);
-    } else {
+    if (error) { setDbError(true); }
+    else {
       const list = (data ?? []) as Note[];
       setNotes(list);
-      if (list.length) selectNote(list[0]);
+      if (list.length) openNote(list[0]);
     }
     setLoading(false);
   }
 
-  function selectNote(note: Note) {
-    if (isLocked(note) && !unlocked.has(note.id)) {
-      setModal({ type: "unlock", note });
-      setModalPwd("");
-      setModalError("");
-      return;
-    }
+  function openNote(note: Note) {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setSelected(note);
     setTitle(note.title);
@@ -144,18 +146,9 @@ function NotesPage() {
     setTags(displayTags(note.tags ?? ""));
     setNoteStatus(note.status || "rascunho");
     setSaveStatus("idle");
-  }
-
-  async function createNote() {
-    const { data, error } = await supabase
-      .from("notes")
-      .insert({ user_id: user!.id, title: "Nova anotação", content: "", category: "Geral", tags: "", status: "rascunho" })
-      .select()
-      .single();
-    if (!error && data) {
-      setNotes((prev) => [data as Note, ...prev]);
-      selectNote(data as Note);
-    }
+    setUnlockPwd("");
+    setUnlockPwdShow(false);
+    setUnlockError("");
   }
 
   function scheduleAutoSave(noteId: string, updates: Partial<Note>) {
@@ -165,11 +158,9 @@ function NotesPage() {
       const { error } = await supabase
         .from("notes")
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", noteId)
-        .eq("user_id", user!.id);
-
+        .eq("id", noteId).eq("user_id", user!.id);
       if (!error) {
-        setNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, ...updates } : n)));
+        setNotes((prev) => prev.map((n) => n.id === noteId ? { ...n, ...updates } : n));
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
@@ -181,83 +172,94 @@ function NotesPage() {
   function handleFieldChange(field: string, val: string) {
     if (!selected) return;
 
+    // ao arquivar → abrir modal de proteção
     if (field === "status" && val === "arquivado") {
       setNoteStatus(val);
       scheduleAutoSave(selected.id, { status: val });
-      setModal({ type: "set-password", noteId: selected.id });
-      setModalPwd("");
-      setModalConf(false);
-      setModalError("");
+      setProtModal({ noteId: selected.id });
+      setProtChoice("none");
+      setProtPwd("");
+      setProtError("");
       return;
     }
 
-    if (field === "status" && selected.status === "arquivado") {
-      let newTags = removePwdHash(notes.find((n) => n.id === selected.id)?.tags ?? "");
-      newTags = removeConfMarker(newTags);
+    // ao desarquivar → remover proteção
+    if (field === "status" && (selected.status === "arquivado")) {
+      const currentNote = notes.find((n) => n.id === selected.id);
+      const cleanTags = removeProtectionFromTags(currentNote?.tags ?? "");
       setNoteStatus(val);
-      scheduleAutoSave(selected.id, { status: val, tags: newTags });
+      scheduleAutoSave(selected.id, { status: val, tags: cleanTags });
       setUnlocked((prev) => { const s = new Set(prev); s.delete(selected.id); return s; });
       setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; });
       return;
     }
 
     const updates: Record<string, string> = {};
-    if (field === "title") { setTitle(val); updates.title = val; updates.content = content; }
-    if (field === "content") { setContent(val); updates.title = title; updates.content = val; }
+    if (field === "title")    { setTitle(val);    updates.title   = val; updates.content = content; }
+    if (field === "content")  { setContent(val);  updates.title   = title; updates.content = val; }
     if (field === "category") { setCategory(val); updates.category = val; }
     if (field === "tags") {
       setTags(val);
-      const existingHash = getPwdHash(notes.find((n) => n.id === selected.id)?.tags ?? "");
-      updates.tags = existingHash ? `${val},__pwd:${existingHash}` : val;
+      const currentNote = notes.find((n) => n.id === selected.id);
+      const pwdHash = getPwdHash(currentNote?.tags ?? "");
+      const confMark = (currentNote?.tags ?? "").includes("__conf") ? ",__conf" : "";
+      updates.tags = pwdHash ? `${val},__pwd:${pwdHash}${confMark}` : val;
     }
     if (field === "status") { setNoteStatus(val); updates.status = val; }
     scheduleAutoSave(selected.id, updates);
   }
 
-  async function handleSetPassword() {
-    if (!modal || modal.type !== "set-password") return;
-    if (!modalPwd.trim()) {
-      setModal(null);
+  // ── confirmar proteção ──────────────────────────────────────────────────────
+  async function handleSetProtection() {
+    if (!protModal) return;
+
+    if (protChoice === "none") {
+      // sem proteção — remover marcadores antigos se houver
+      const note = notes.find((n) => n.id === protModal.noteId);
+      const cleanTags = removeProtectionFromTags(note?.tags ?? "");
+      if (cleanTags !== note?.tags) {
+        await supabase.from("notes")
+          .update({ tags: cleanTags })
+          .eq("id", protModal.noteId).eq("user_id", user!.id);
+        setNotes((prev) => prev.map((n) => n.id === protModal.noteId ? { ...n, tags: cleanTags } : n));
+      }
+      setProtModal(null);
       return;
     }
-    const hash = await sha256(modalPwd.trim());
-    const note = notes.find((n) => n.id === modal.noteId);
-    let newTags = addPwdHash(note?.tags ?? "", hash);
-    if (modalConf) newTags = addConfMarker(newTags);
-    else newTags = removeConfMarker(newTags);
-    await supabase
-      .from("notes")
+
+    if (!protPwd.trim()) { setProtError("Digite uma senha."); return; }
+
+    const hash = await sha256(protPwd.trim());
+    const note = notes.find((n) => n.id === protModal.noteId);
+    const newTags = setProtectionInTags(note?.tags ?? "", hash, protChoice);
+
+    await supabase.from("notes")
       .update({ tags: newTags, updated_at: new Date().toISOString() })
-      .eq("id", modal.noteId)
-      .eq("user_id", user!.id);
-    setNotes((prev) => prev.map((n) => n.id === modal.noteId ? { ...n, tags: newTags } : n));
-    if (selected?.id === modal.noteId) {
-      setUnlocked((prev) => new Set(prev).add(modal.noteId));
-      if (!modalConf) setRevealed((prev) => new Set(prev).add(modal.noteId));
+      .eq("id", protModal.noteId).eq("user_id", user!.id);
+
+    setNotes((prev) => prev.map((n) => n.id === protModal.noteId ? { ...n, tags: newTags } : n));
+
+    // após definir senha → nota fica desbloqueada na sessão atual
+    setUnlocked((prev) => new Set(prev).add(protModal.noteId));
+    // para "visible" já é revelada; para "hidden" precisa de botão explícito
+    if (protChoice === "visible") {
+      setRevealed((prev) => new Set(prev).add(protModal.noteId));
     }
-    setModal(null);
+
+    setProtModal(null);
   }
 
+  // ── desbloquear nota selecionada ───────────────────────────────────────────
   async function handleUnlock() {
-    if (!modal || modal.type !== "unlock") return;
-    const stored = getPwdHash(modal.note.tags ?? "");
-    if (!stored) { setModal(null); selectNote(modal.note); return; }
-    const hash = await sha256(modalPwd.trim());
-    if (hash !== stored) {
-      setModalError("Senha incorreta.");
-      return;
-    }
-    setUnlocked((prev) => new Set(prev).add(modal.note.id));
-    setModal(null);
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    const note = modal.note;
-    setSelected(note);
-    setTitle(note.title);
-    setContent(note.content);
-    setCategory(note.category || "Geral");
-    setTags(displayTags(note.tags ?? ""));
-    setNoteStatus(note.status || "rascunho");
-    setSaveStatus("idle");
+    if (!selected) return;
+    const noteData = notes.find((n) => n.id === selected.id) ?? selected;
+    const stored = getPwdHash(noteData.tags ?? "");
+    if (!stored) { setUnlocked((prev) => new Set(prev).add(selected.id)); return; }
+    const hash = await sha256(unlockPwd.trim());
+    if (hash !== stored) { setUnlockError("Senha incorreta."); return; }
+    setUnlocked((prev) => new Set(prev).add(selected.id));
+    setUnlockPwd("");
+    setUnlockError("");
   }
 
   async function deleteNote(id: string) {
@@ -265,13 +267,14 @@ function NotesPage() {
     const updated = notes.filter((n) => n.id !== id);
     setNotes(updated);
     if (selected?.id === id) {
-      if (updated.length) selectNote(updated[0]);
+      if (updated.length) openNote(updated[0]);
       else { setSelected(null); setTitle(""); setContent(""); setSaveStatus("idle"); }
     }
   }
 
   const filtered = notes.filter((n) => {
-    const matchSearch = search === "" || n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchSearch = !search || n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q);
     const matchStatus = filterStatus === "todos" || (n.status || "rascunho") === filterStatus;
     const matchCat = filterCategory === "todas" || (n.category || "Geral") === filterCategory;
     return matchSearch && matchStatus && matchCat;
@@ -281,7 +284,7 @@ function NotesPage() {
     return (
       <AppShell>
         <div className="p-6">
-          <div className="bg-surface border border-border rounded p-6 text-center space-y-2">
+          <div className="bg-surface border border-border rounded p-6 text-center">
             <p className="text-xs text-muted-foreground">
               Tabela <code className="text-brand bg-brand/10 px-1.5 py-0.5 rounded">notes</code> não encontrada.
             </p>
@@ -294,13 +297,19 @@ function NotesPage() {
   return (
     <AppShell>
       <div className="flex h-[calc(100vh-2.5rem)] overflow-hidden">
-        {/* Sidebar */}
+
+        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <div className="w-56 border-r border-border flex flex-col shrink-0 bg-surface">
           <div className="px-3 py-2 border-b border-border space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Anotações</span>
               <button
-                onClick={createNote}
+                onClick={async () => {
+                  const { data, error } = await supabase.from("notes")
+                    .insert({ user_id: user!.id, title: "Nova anotação", content: "", category: "Geral", tags: "", status: "rascunho" })
+                    .select().single();
+                  if (!error && data) { setNotes((prev) => [data as Note, ...prev]); openNote(data as Note); }
+                }}
                 className="size-5 rounded bg-brand/10 border border-brand/20 grid place-items-center text-brand hover:bg-brand/20 transition-colors"
               >
                 <Plus className="size-3" />
@@ -308,27 +317,17 @@ function NotesPage() {
             </div>
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar..."
-                className="w-full bg-background border border-border rounded px-2 pl-6 py-1 text-[10px] focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground"
-              />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..."
+                className="w-full bg-background border border-border rounded px-2 pl-6 py-1 text-[10px] focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
             </div>
             <div className="flex gap-1">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none"
-              >
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none">
                 <option value="todos">todos</option>
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none"
-              >
+              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
+                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none">
                 <option value="todas">todas</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -340,257 +339,256 @@ function NotesPage() {
               <p className="text-[10px] text-muted-foreground text-center py-6">Carregando...</p>
             ) : filtered.length === 0 ? (
               <p className="text-[10px] text-muted-foreground text-center py-6">Nenhuma nota</p>
-            ) : (
-              filtered.map((note) => {
-                const locked = isLocked(note) && !unlocked.has(note.id);
-                return (
-                  <button
-                    key={note.id}
-                    onClick={() => selectNote(note)}
-                    className={`w-full text-left px-2 py-2 rounded text-[10px] transition-colors flex items-start gap-2 ${
-                      selected?.id === note.id
-                        ? "bg-brand/10 text-brand border border-brand/20"
-                        : "hover:bg-surface-2 text-muted-foreground border border-transparent"
-                    }`}
-                  >
-                    {locked ? (
-                      <Lock className="size-3 mt-0.5 shrink-0 text-muted-foreground/50" />
-                    ) : (
-                      <FileText className="size-3 mt-0.5 shrink-0" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px]">{note.title || "Sem título"}</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        {note.category && (
-                          <span className="text-[8px] text-muted-foreground/70">{note.category}</span>
-                        )}
-                        {note.status && note.status !== "rascunho" && (
-                          <span className={`text-[8px] border rounded-sm px-1 ${STATUS_COLORS[note.status] || ""}`}>
-                            {note.status}
-                          </span>
-                        )}
-                      </div>
+            ) : filtered.map((note) => {
+              const mode = getProtectionMode(note.tags ?? "");
+              const locked = mode !== "none" && !unlocked.has(note.id);
+              return (
+                <button key={note.id} onClick={() => openNote(note)}
+                  className={`w-full text-left px-2 py-2 rounded text-[10px] transition-colors flex items-start gap-2 ${
+                    selected?.id === note.id
+                      ? "bg-brand/10 text-brand border border-brand/20"
+                      : "hover:bg-surface-2 text-muted-foreground border border-transparent"
+                  }`}
+                >
+                  {locked ? <Lock className="size-3 mt-0.5 shrink-0 opacity-60" /> : <FileText className="size-3 mt-0.5 shrink-0" />}
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px]">
+                      {locked && mode === "hidden" ? "Anotação protegida" : (note.title || "Sem título")}
+                    </p>
+                    <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                      {!locked && note.category && (
+                        <span className="text-[8px] text-muted-foreground/70">{note.category}</span>
+                      )}
+                      {!locked && note.status && note.status !== "rascunho" && (
+                        <span className={`text-[8px] border rounded-sm px-1 ${STATUS_COLORS[note.status] || ""}`}>
+                          {note.status}
+                        </span>
+                      )}
+                      {locked && mode === "visible" && (
+                        <span className="text-[8px] border border-warning/30 text-warning rounded-sm px-1">Protegida</span>
+                      )}
+                      {locked && mode === "hidden" && (
+                        <span className="text-[8px] border border-muted-foreground/20 text-muted-foreground/60 rounded-sm px-1">Oculta</span>
+                      )}
                     </div>
-                  </button>
-                );
-              })
-            )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Editor */}
-        {selected ? (
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
-              <input
-                value={title}
-                onChange={(e) => handleFieldChange("title", e.target.value)}
-                placeholder="Título"
-                className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground min-w-0"
-              />
-              <div className="flex items-center gap-2 shrink-0">
-                <select
-                  value={noteStatus}
-                  onChange={(e) => handleFieldChange("status", e.target.value)}
-                  className={`bg-transparent border rounded px-1.5 py-0.5 text-[9px] focus:outline-none appearance-none ${STATUS_COLORS[noteStatus] || ""}`}
-                >
-                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select
-                  value={category}
-                  onChange={(e) => handleFieldChange("category", e.target.value)}
-                  className="bg-transparent border border-border rounded px-1.5 py-0.5 text-[9px] text-muted-foreground focus:outline-none appearance-none"
-                >
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <span className="text-[9px] text-muted-foreground">
-                  {saveStatus === "saving" ? "salvando..." : saveStatus === "saved" ? "salvo" : saveStatus === "error" ? "erro" : ""}
-                </span>
-                <button
-                  onClick={() => deleteNote(selected.id)}
-                  className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                >
-                  <Trash2 className="size-3" />
-                </button>
-              </div>
-            </div>
-            <div className="px-4 py-1.5 border-b border-border flex items-center gap-2">
-              <Tag className="size-3 text-muted-foreground shrink-0" />
-              <input
-                value={tags}
-                onChange={(e) => handleFieldChange("tags", e.target.value)}
-                placeholder="tags separadas por vírgula..."
-                className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/60"
-              />
-              {isLocked(selected) && unlocked.has(selected.id) && (
-                <div className="flex items-center gap-1 text-[9px] text-muted-foreground/60">
-                  <Lock className="size-3" />
-                  <span>protegida</span>
-                </div>
-              )}
-            </div>
-            {isConfidential(notes.find((n) => n.id === selected.id)?.tags ?? "") &&
-             unlocked.has(selected.id) &&
-             !revealed.has(selected.id) ? (
-              <div className="flex-1 relative flex items-center justify-center">
-                <textarea
-                  value={content}
-                  readOnly
-                  className="absolute inset-0 w-full h-full bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none leading-relaxed select-none pointer-events-none blur-sm"
-                />
-                <div className="relative z-10 flex flex-col items-center gap-3">
-                  <div className="size-10 rounded-full bg-surface border border-border grid place-items-center">
-                    <ShieldAlert className="size-5 text-muted-foreground/60" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Conteúdo confidencial</p>
-                  <button
-                    onClick={() => setRevealed((prev) => new Set(prev).add(selected.id))}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand/10 border border-brand/20 text-brand text-xs rounded-lg hover:bg-brand/20 transition-colors"
-                  >
-                    <Eye className="size-3.5" />
-                    Revelar conteúdo
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 relative">
-                <textarea
-                  value={content}
-                  onChange={(e) => handleFieldChange("content", e.target.value)}
-                  placeholder="Comece a escrever..."
-                  className="w-full h-full bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed absolute inset-0"
-                />
-                {isConfidential(notes.find((n) => n.id === selected.id)?.tags ?? "") &&
-                 unlocked.has(selected.id) &&
-                 revealed.has(selected.id) && (
-                  <button
-                    onClick={() => setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; })}
-                    title="Ocultar conteúdo"
-                    className="absolute top-2 right-3 p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-surface-2 transition-colors"
-                  >
-                    <EyeOff className="size-3.5" />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
+        {/* ── Editor ──────────────────────────────────────────────────────── */}
+        {!selected ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <FileText className="size-6 mx-auto mb-2 opacity-20" />
               <p className="text-[10px]">Selecione ou crie uma anotação</p>
             </div>
           </div>
-        )}
+        ) : (() => {
+          const noteData = notes.find((n) => n.id === selected.id) ?? selected;
+          const mode = getProtectionMode(noteData.tags ?? "");
+          const isLocked = mode !== "none" && !unlocked.has(selected.id);
+          const isHiddenRevealed = mode === "hidden" && unlocked.has(selected.id) && !revealed.has(selected.id);
+
+          // ── Nota oculta + BLOQUEADA ────────────────────────────────────
+          if (mode === "hidden" && isLocked) {
+            return (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <div className="w-full max-w-xs space-y-4 text-center">
+                  <div className="size-14 rounded-2xl bg-surface border border-border grid place-items-center mx-auto">
+                    <ShieldAlert className="size-6 text-muted-foreground/50" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Anotação protegida</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Arquivada em {new Date(noteData.updated_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-left">
+                    <div className="relative">
+                      <input
+                        type={unlockPwdShow ? "text" : "password"}
+                        placeholder="Digite a senha"
+                        value={unlockPwd}
+                        onChange={(e) => { setUnlockPwd(e.target.value); setUnlockError(""); }}
+                        onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+                        autoFocus
+                        className={`w-full bg-surface border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${unlockError ? "border-destructive/50" : "border-border focus:border-brand/40"}`}
+                      />
+                      <button type="button" onClick={() => setUnlockPwdShow((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {unlockPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                      </button>
+                    </div>
+                    {unlockError && <p className="text-xs text-destructive">{unlockError}</p>}
+                    <button onClick={handleUnlock} disabled={!unlockPwd.trim()}
+                      className="w-full py-2.5 text-sm bg-brand text-brand-foreground rounded-xl hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      Desbloquear
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // ── Nota oculta + DESBLOQUEADA mas não revelada ───────────────
+          if (isHiddenRevealed) {
+            return (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <div className="w-full max-w-xs space-y-4 text-center">
+                  <div className="size-14 rounded-2xl bg-brand/10 border border-brand/20 grid place-items-center mx-auto">
+                    <ShieldCheck className="size-6 text-brand" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Desbloqueado</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Clique para revelar o conteúdo desta sessão</p>
+                  </div>
+                  <button onClick={() => setRevealed((prev) => new Set(prev).add(selected.id))}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm bg-brand/10 border border-brand/20 text-brand rounded-xl hover:bg-brand/20 transition-colors">
+                    <Eye className="size-4" />
+                    Revelar conteúdo
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // ── Editor normal (desbloqueado ou sem proteção) ───────────────
+          return (
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
+                <input value={title} onChange={(e) => handleFieldChange("title", e.target.value)}
+                  placeholder="Título" readOnly={isLocked}
+                  className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground min-w-0" />
+                <div className="flex items-center gap-2 shrink-0">
+                  {mode === "hidden" && unlocked.has(selected.id) && (
+                    <button onClick={() => setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; })}
+                      title="Ocultar conteúdo novamente"
+                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors">
+                      <EyeOff className="size-3.5" />
+                    </button>
+                  )}
+                  <select value={noteStatus} onChange={(e) => handleFieldChange("status", e.target.value)}
+                    className={`bg-transparent border rounded px-1.5 py-0.5 text-[9px] focus:outline-none appearance-none ${STATUS_COLORS[noteStatus] || ""}`}>
+                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <select value={category} onChange={(e) => handleFieldChange("category", e.target.value)}
+                    className="bg-transparent border border-border rounded px-1.5 py-0.5 text-[9px] text-muted-foreground focus:outline-none appearance-none">
+                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <span className="text-[9px] text-muted-foreground">
+                    {saveStatus === "saving" ? "salvando..." : saveStatus === "saved" ? "salvo" : saveStatus === "error" ? "erro" : ""}
+                  </span>
+                  <button onClick={() => deleteNote(selected.id)}
+                    className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <Trash2 className="size-3" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="px-4 py-1.5 border-b border-border flex items-center gap-2">
+                <Tag className="size-3 text-muted-foreground shrink-0" />
+                <input value={tags} onChange={(e) => handleFieldChange("tags", e.target.value)}
+                  placeholder="tags separadas por vírgula..."
+                  className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/60" />
+              </div>
+
+              {/* conteúdo com lock inline (modo visible) */}
+              {mode === "visible" && isLocked ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
+                  <Lock className="size-5 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground text-center">
+                    Conteúdo protegido. Digite a senha para continuar.
+                  </p>
+                  <div className="w-full max-w-xs space-y-2">
+                    <div className="relative">
+                      <input
+                        type={unlockPwdShow ? "text" : "password"}
+                        placeholder="Senha"
+                        value={unlockPwd}
+                        onChange={(e) => { setUnlockPwd(e.target.value); setUnlockError(""); }}
+                        onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+                        autoFocus
+                        className={`w-full bg-surface border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${unlockError ? "border-destructive/50" : "border-border focus:border-brand/40"}`}
+                      />
+                      <button type="button" onClick={() => setUnlockPwdShow((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {unlockPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                      </button>
+                    </div>
+                    {unlockError && <p className="text-xs text-destructive">{unlockError}</p>}
+                    <button onClick={handleUnlock} disabled={!unlockPwd.trim()}
+                      className="w-full py-2 text-sm bg-brand text-brand-foreground rounded-xl hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      Desbloquear
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <textarea value={content} onChange={(e) => handleFieldChange("content", e.target.value)}
+                  placeholder="Comece a escrever..."
+                  className="flex-1 bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed" />
+              )}
+            </div>
+          );
+        })()}
       </div>
 
-      {/* Modal: definir senha ao arquivar */}
-      {modal?.type === "set-password" && (
+      {/* ── Modal: definir proteção ao arquivar ─────────────────────────────── */}
+      {protModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 animate-fade-in">
             <div className="flex items-center gap-2">
               <Lock className="size-4 text-brand" />
-              <h2 className="text-sm font-semibold text-foreground">Proteger com senha</h2>
+              <h2 className="text-sm font-semibold text-foreground">Proteger esta anotação?</h2>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Defina uma senha para esta anotação arquivada. Deixe em branco para arquivar sem proteção.
-            </p>
-            <div className="relative">
-              <input
-                type={modalPwdShow ? "text" : "password"}
-                placeholder="Senha (opcional)"
-                value={modalPwd}
-                onChange={(e) => setModalPwd(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSetPassword()}
-                autoFocus
-                className="w-full bg-white/5 border border-border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setModalPwdShow((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {modalPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
+
+            <div className="space-y-2">
+              {([
+                { value: "none",    label: "Não proteger",               desc: "Anotação arquivada fica visível normalmente" },
+                { value: "visible", label: "Proteger e manter visível",  desc: "Título aparece, conteúdo exige senha" },
+                { value: "hidden",  label: "Proteger e ocultar conteúdo", desc: "Exibe apenas \"Anotação protegida\", sem título" },
+              ] as { value: ProtectionMode; label: string; desc: string }[]).map((opt) => (
+                <label key={opt.value}
+                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                    protChoice === opt.value ? "border-brand/40 bg-brand/5" : "border-border hover:bg-white/5"
+                  }`}>
+                  <input type="radio" name="prot" value={opt.value}
+                    checked={protChoice === opt.value}
+                    onChange={() => { setProtChoice(opt.value as ProtectionMode); setProtError(""); }}
+                    className="mt-0.5 accent-brand" />
+                  <div>
+                    <p className="text-xs font-medium text-foreground">{opt.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{opt.desc}</p>
+                  </div>
+                </label>
+              ))}
             </div>
-            <label className="flex items-center gap-2.5 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={modalConf}
-                onChange={(e) => setModalConf(e.target.checked)}
-                className="size-3.5 rounded accent-brand"
-              />
-              <div>
-                <p className="text-xs text-foreground">Conteúdo confidencial</p>
-                <p className="text-[10px] text-muted-foreground">Ocultar texto na tela até revelar manualmente</p>
+
+            {protChoice !== "none" && (
+              <div className="relative">
+                <input type={protPwdShow ? "text" : "password"} placeholder="Digite a senha"
+                  value={protPwd} onChange={(e) => { setProtPwd(e.target.value); setProtError(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleSetProtection()}
+                  autoFocus
+                  className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${protError ? "border-destructive/50" : "border-border focus:border-brand/40"}`} />
+                <button type="button" onClick={() => setProtPwdShow((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {protPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                </button>
+                {protError && <p className="text-xs text-destructive mt-1">{protError}</p>}
               </div>
-            </label>
-
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setModal(null)}
-                className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-              >
-                Pular
-              </button>
-              <button
-                onClick={handleSetPassword}
-                disabled={!modalPwd.trim()}
-                className="px-3 py-1.5 text-xs bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Proteger
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: desbloquear nota */}
-      {modal?.type === "unlock" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 animate-fade-in">
-            <div className="flex items-center gap-2">
-              <Lock className="size-4 text-brand" />
-              <h2 className="text-sm font-semibold text-foreground">Nota protegida</h2>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-foreground font-medium">{modal.note.title || "Sem título"}</span>
-              {" "}está protegida. Digite a senha para acessar.
-            </p>
-            <div className="relative">
-              <input
-                type={modalPwdShow ? "text" : "password"}
-                placeholder="Senha"
-                value={modalPwd}
-                onChange={(e) => { setModalPwd(e.target.value); setModalError(""); }}
-                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                autoFocus
-                className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${modalError ? "border-destructive/50 focus:border-destructive/60" : "border-border focus:border-brand/40"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setModalPwdShow((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {modalPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
-            </div>
-            {modalError && (
-              <p className="text-xs text-destructive">{modalError}</p>
             )}
+
             <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setModal(null)}
-                className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-              >
+              <button onClick={() => setProtModal(null)}
+                className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors">
                 Cancelar
               </button>
-              <button
-                onClick={handleUnlock}
-                disabled={!modalPwd.trim()}
-                className="px-3 py-1.5 text-xs bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Desbloquear
+              <button onClick={handleSetProtection}
+                className="px-3 py-1.5 text-xs bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition-colors">
+                Confirmar
               </button>
             </div>
           </div>
