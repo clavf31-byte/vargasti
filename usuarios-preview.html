@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VargasTI - Gestão de Usuários</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: #10b98120;
+            color: #10b981;
+        }
+
+        .status-offline {
+            background: #64748b20;
+            color: #94a3b8;
+        }
+
+        .status-idle {
+            background: #f59e0b20;
+            color: #fbbf24;
+        }
+
+        .user-row {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-row:hover {
+            border-color: #475569;
+            background: #253244;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .user-role {
+            background: #334155;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #cbd5e1;
+        }
+
+        .role-admin {
+            background: #9333ea20;
+            color: #d8b4fe;
+        }
+
+        .role-user {
+            background: #3b82f620;
+            color: #93c5fd;
+        }
+
+        .action-btn {
+            background: #334155;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+        }
+
+        .action-btn:hover {
+            background: #475569;
+            border-color: #64748b;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0d9488, #06b6d4);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .header {
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-bar {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .filter-input {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .filter-input::placeholder {
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div>
+            <h1 style="font-size: 24px; font-weight: 600;">Gestão de Usuários</h1>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Administre os usuários do sistema</p>
+        </div>
+        <button class="btn-primary">+ Novo Usuário</button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div style="padding: 32px; max-width: 1200px; margin: 0 auto;">
+
+        <!-- ESTATÍSTICAS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" style="color: #10b981;">5</div>
+                <div class="stat-label">Total de Usuários</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #3b82f6;">3</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #f59e0b;">1</div>
+                <div class="stat-label">Administradores</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #8b5cf6;">1</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filter-bar">
+            <input type="text" class="filter-input" style="flex: 1;" placeholder="🔍 Buscar por nome ou email...">
+            <select class="filter-input" style="width: 150px;">
+                <option>Todos os papéis</option>
+                <option selected>Administrador</option>
+                <option>Usuário</option>
+            </select>
+            <select class="filter-input" style="width: 150px;">
+                <option selected>Todos os status</option>
+                <option>Online</option>
+                <option>Offline</option>
+                <option>Pendente</option>
+            </select>
+        </div>
+
+        <!-- LISTA DE USUÁRIOS -->
+        <div>
+            <div class="section-title">
+                <span>👥</span> Usuários Ativos
+            </div>
+
+            <!-- USUÁRIO 1 -->
+            <div class="user-row">
+                <div class="user-info">
+                    <div class="user-avatar">CV</div>
+                    <div class="user-details">
+                        <div class="user-name">Claudio Vargas</div>
+                        <div class="user-email">clavf31@gmail.com</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="user-role role-admin">Administrador</span>
+                    <span class="status-badge status-online">Online</span>
+                    <button class="action-btn">Editar</button>
+                    <button class="action-btn">Mais</button>
+                </div>
+            </div>
+
+            <!-- USUÁRIO 2 -->
+            <div class="user-row">
+                <div class="user-info">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">MA</div>
+                    <div class="user-details">
+                        <div class="user-name">Matheus Alves</div>
+                        <div class="user-email">matheus.alves@email.com</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="user-role role-user">Usuário</span>
+                    <span class="status-badge status-online">Online</span>
+                    <button class="action-btn">Editar</button>
+                    <button class="action-btn">Mais</button>
+                </div>
+            </div>
+
+            <!-- USUÁRIO 3 -->
+            <div class="user-row">
+                <div class="user-info">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">JF</div>
+                    <div class="user-details">
+                        <div class="user-name">João Fernando</div>
+                        <div class="user-email">joao.fernando@email.com</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="user-role role-user">Usuário</span>
+                    <span class="status-badge status-online">Online</span>
+                    <button class="action-btn">Editar</button>
+                    <button class="action-btn">Mais</button>
+                </div>
+            </div>
+
+            <!-- USUÁRIO 4 -->
+            <div class="user-row">
+                <div class="user-info">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">SL</div>
+                    <div class="user-details">
+                        <div class="user-name">Sofia Lima</div>
+                        <div class="user-email">sofia.lima@email.com</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="user-role role-user">Usuário</span>
+                    <span class="status-badge status-idle">Ocioso</span>
+                    <button class="action-btn">Editar</button>
+                    <button class="action-btn">Mais</button>
+                </div>
+            </div>
+
+            <!-- USUÁRIO 5 - PENDENTE -->
+            <div class="user-row" style="opacity: 0.7;">
+                <div class="user-info">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #64748b, #475569);">AB</div>
+                    <div class="user-details">
+                        <div class="user-name">Ana Beatriz</div>
+                        <div class="user-email">ana.beatriz@email.com</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="user-role">Pendente</span>
+                    <span class="status-badge status-offline">Offline</span>
+                    <button class="action-btn">Aprovar</button>
+                    <button class="action-btn">Rejeitar</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

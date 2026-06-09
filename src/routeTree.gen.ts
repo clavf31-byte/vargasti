@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 
+const UsuariosRoute = UsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
+  '/usuarios': typeof UsuariosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/': typeof FerramentasIndexRoute
 }
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/config': typeof ConfigRoute
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
+  '/usuarios': typeof UsuariosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas': typeof FerramentasIndexRoute
 }
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
+  '/usuarios': typeof UsuariosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/': typeof FerramentasIndexRoute
 }
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/login'
     | '/projetos'
+    | '/usuarios'
     | '/ferramentas/excel'
     | '/ferramentas/'
   fileRoutesByTo: FileRoutesByTo
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/config'
     | '/login'
     | '/projetos'
+    | '/usuarios'
     | '/ferramentas/excel'
     | '/ferramentas'
   id:
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/login'
     | '/projetos'
+    | '/usuarios'
     | '/ferramentas/excel'
     | '/ferramentas/'
   fileRoutesById: FileRoutesById
@@ -154,10 +166,18 @@ export interface RootRouteChildren {
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
+  UsuariosRoute: typeof UsuariosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/usuarios': {
+      id: '/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof UsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projetos': {
       id: '/projetos'
       path: '/projetos'
@@ -254,6 +274,7 @@ const rootRouteChildren: RootRouteChildren = {
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
+  UsuariosRoute: UsuariosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
