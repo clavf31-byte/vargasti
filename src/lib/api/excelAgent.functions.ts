@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type AnthropicTool = {
   name: string;
@@ -39,6 +40,7 @@ const RequestSchema = z.object({
 });
 
 export const runExcelAgent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(RequestSchema)
   .handler(async ({ data }) => {
     const apiKey = process.env.ANTHROPIC_API_KEY;
