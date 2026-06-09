@@ -2,26 +2,46 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Plus, Search, Filter } from "lucide-react";
+import { Users, Search } from "lucide-react";
 
 export const Route = createFileRoute("/usuarios")({
-  head: () => ({ meta: [{ title: "Gestão de Usuários · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: "Usuários · VargasTI Lab" }] }),
   component: UsuariosPage,
 });
 
-interface User {
+interface UserRow {
   id: string;
   full_name: string;
   email: string;
-  role: string;
+  role: "Administrador" | "Usuário";
   status: "online" | "idle" | "offline";
-  avatar_url?: string;
+}
+
+const STATUS_CLASSES: Record<UserRow["status"], string> = {
+  online: "bg-brand/10 border-brand/20 text-brand",
+  idle: "bg-warning/10 border-warning/20 text-warning",
+  offline: "bg-surface-2 border-border text-muted-foreground",
+};
+
+const STATUS_LABELS: Record<UserRow["status"], string> = {
+  online: "Online",
+  idle: "Ocioso",
+  offline: "Offline",
+};
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 }
 
 function UsuariosPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadUsers();
@@ -34,15 +54,14 @@ function UsuariosPage() {
         .select("id:user_id, full_name, email");
 
       if (!error && data) {
-        const mockUsers: User[] = (data as any[]).map((u: any, idx: number) => ({
+        const rows: UserRow[] = (data as any[]).map((u: any, idx: number) => ({
           id: u.id,
           full_name: u.full_name || "Usuário",
           email: u.email || "sem-email@example.com",
           role: idx === 0 ? "Administrador" : "Usuário",
           status: idx < 2 ? "online" : idx < 3 ? "idle" : "offline",
-          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
         }));
-        setUsers(mockUsers);
+        setUsers(rows);
       }
     } catch (e) {
       console.error("Erro ao carregar usuários:", e);
@@ -53,134 +72,129 @@ function UsuariosPage() {
 
   const filtered = users.filter(
     (u) =>
-      u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      u.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const stats = {
+  const counts = {
     total: users.length,
     online: users.filter((u) => u.status === "online").length,
     admins: users.filter((u) => u.role === "Administrador").length,
     pending: 1,
   };
 
-  const statusConfig = {
-    online: { badge: "bg-green-500/20 text-green-400", dot: "bg-green-400" },
-    idle: { badge: "bg-amber-500/20 text-amber-400", dot: "bg-amber-400" },
-    offline: { badge: "bg-slate-500/20 text-slate-400", dot: "bg-slate-500" },
-  };
-
   return (
     <AppShell>
-      <div className="p-6 space-y-6 bg-slate-900 min-h-screen">
-        {/* HEADER */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-6 h-6 text-cyan-400" />
-              <h1 className="text-2xl font-bold text-slate-100">Gestão de Usuários</h1>
-            </div>
-            <p className="text-sm text-slate-400">Administre os usuários do sistema</p>
-          </div>
-          <button className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/30 transition-all">
-            <Plus className="w-4 h-4 inline mr-2" />
-            Novo Usuário
-          </button>
+      <div className="p-4 md:p-5 space-y-4">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Sistema</p>
+          <h1 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
+            <Users className="size-4 text-brand" />
+            Gestão de Usuários
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Visualize os usuários do sistema</p>
         </div>
 
-        {/* ESTATÍSTICAS */}
-        <div className="grid grid-cols-4 gap-4">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {[
-            { label: "Total de Usuários", value: stats.total, color: "text-cyan-400" },
-            { label: "Online", value: stats.online, color: "text-green-400" },
-            { label: "Administradores", value: stats.admins, color: "text-amber-400" },
-            { label: "Pendentes", value: stats.pending, color: "text-purple-400" },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-              <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">{stat.label}</p>
-              <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+            { label: "Total", value: counts.total, cls: "text-foreground" },
+            { label: "Online", value: counts.online, cls: "text-brand" },
+            { label: "Administradores", value: counts.admins, cls: "text-warning" },
+            { label: "Pendentes", value: counts.pending, cls: "text-info" },
+          ].map(({ label, value, cls }) => (
+            <div key={label} className="bg-surface border border-border rounded-xl px-4 py-3">
+              <div className={`text-2xl font-bold tabular-nums ${cls}`}>
+                {String(value).padStart(2, "0")}
+              </div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-1">
+                {label}
+              </div>
             </div>
           ))}
         </div>
 
-        {/* FILTROS */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 flex gap-3">
-          <div className="flex-1 flex items-center gap-2 bg-slate-700 rounded px-3 py-2">
-            <Search className="w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Buscar por nome ou email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none flex-1"
-            />
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 rounded hover:bg-slate-600 transition-colors">
-            <Filter className="w-4 h-4" />
-            <span className="text-sm">Filtros</span>
-          </button>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou e-mail..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all"
+          />
         </div>
 
-        {/* LISTA DE USUÁRIOS */}
-        <div className="space-y-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 px-2">Usuários Ativos</p>
-
+        {/* List */}
+        <div className="bg-surface border border-border rounded-xl overflow-hidden">
           {loading ? (
-            <div className="text-center py-8 text-slate-400">Carregando...</div>
+            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+              Carregando...
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">Nenhum usuário encontrado</div>
+            <div className="flex flex-col items-center justify-center py-16 gap-2">
+              <div className="size-10 rounded-full bg-surface-2 border border-border grid place-items-center">
+                <Users className="size-4 text-muted-foreground/50" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {search ? "Nenhum usuário encontrado." : "Nenhum usuário cadastrado."}
+              </p>
+            </div>
           ) : (
-            filtered.map((user) => {
-              const statusCfg = statusConfig[user.status];
-              const initials = user.full_name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase();
+            <div className="divide-y divide-border/50">
+              <div className="hidden md:grid grid-cols-[1fr_140px_120px] gap-4 px-4 py-2.5 bg-surface-2/50">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Usuário</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Perfil</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Status</span>
+              </div>
 
-              return (
+              {filtered.map((u) => (
                 <div
-                  key={user.id}
-                  className="bg-slate-800 border border-slate-700 rounded-lg p-4 flex items-center justify-between hover:border-slate-600 transition-all"
+                  key={u.id}
+                  className="grid grid-cols-1 md:grid-cols-[1fr_140px_120px] gap-3 md:gap-4 px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
                 >
-                  <div className="flex items-center gap-3 flex-1">
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-sm font-bold text-white">
-                      {initials}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="size-8 rounded-full bg-secondary border border-border grid place-items-center shrink-0 text-[11px] font-semibold text-muted-foreground">
+                      {initials(u.full_name)}
                     </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-100">{user.full_name}</p>
-                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate leading-tight">
+                        {u.full_name}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
                     </div>
                   </div>
 
-                  {/* Role */}
-                  <div className="px-3 py-1 rounded bg-slate-700 text-xs font-semibold text-slate-300 mr-3">
-                    {user.role}
+                  <div className="flex items-center md:justify-start">
+                    <span
+                      className={`px-2 py-1 rounded-lg border text-[11px] font-medium ${
+                        u.role === "Administrador"
+                          ? "bg-brand/10 border-brand/20 text-brand"
+                          : "bg-surface-2 border-border text-muted-foreground"
+                      }`}
+                    >
+                      {u.role}
+                    </span>
                   </div>
 
-                  {/* Status */}
-                  <div className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1.5 ${statusCfg.badge} mr-3`}>
-                    <span className={`w-2 h-2 rounded-full ${statusCfg.dot}`}></span>
-                    {user.status === "online" ? "Online" : user.status === "idle" ? "Ocioso" : "Offline"}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1 rounded text-xs bg-slate-700 hover:bg-slate-600 transition-colors">
-                      Editar
-                    </button>
-                    <button className="px-3 py-1 rounded text-xs bg-slate-700 hover:bg-slate-600 transition-colors">
-                      Mais
-                    </button>
+                  <div className="flex items-center md:justify-start">
+                    <span className={`px-2 py-1 rounded-lg border text-[11px] font-medium ${STATUS_CLASSES[u.status]}`}>
+                      {STATUS_LABELS[u.status]}
+                    </span>
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
           )}
         </div>
+
+        {!loading && filtered.length > 0 && (
+          <p className="text-[10px] text-muted-foreground text-right">
+            {filtered.length} de {users.length} usuários
+          </p>
+        )}
       </div>
     </AppShell>
   );

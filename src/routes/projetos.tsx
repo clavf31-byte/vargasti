@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Pencil, Trash2, X, Check, FolderKanban, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, FolderKanban, ExternalLink, Search } from "lucide-react";
 
 export const Route = createFileRoute("/projetos")({
   head: () => ({ meta: [{ title: "Projetos · VargasTI Lab" }] }),
@@ -26,13 +26,23 @@ type Project = {
 type ProjectForm = Omit<Project, "id" | "created_at" | "updated_at">;
 
 const STATUSES = ["ideia", "em desenvolvimento", "testando", "finalizado", "arquivado"];
+
 const STATUS_COLORS: Record<string, string> = {
-  "ideia": "text-muted-foreground border-muted-foreground/30",
-  "em desenvolvimento": "text-info border-info/30",
-  "testando": "text-warning border-warning/30",
-  "finalizado": "text-brand border-brand/30",
-  "arquivado": "text-muted-foreground/50 border-muted-foreground/20",
+  "ideia": "text-muted-foreground border-muted-foreground/30 bg-surface-2",
+  "em desenvolvimento": "text-info border-info/30 bg-info/10",
+  "testando": "text-warning border-warning/30 bg-warning/10",
+  "finalizado": "text-brand border-brand/30 bg-brand/10",
+  "arquivado": "text-muted-foreground/50 border-muted-foreground/20 bg-surface-2/50",
 };
+
+const STATUS_DOTS: Record<string, string> = {
+  "ideia": "bg-muted-foreground/40",
+  "em desenvolvimento": "bg-info",
+  "testando": "bg-warning",
+  "finalizado": "bg-brand",
+  "arquivado": "bg-muted-foreground/30",
+};
+
 const CATEGORIES = ["Frontend", "Backend", "DevOps", "Automação", "Infra", "Segurança", "Estudo", "Outros"];
 
 const EMPTY_FORM: ProjectForm = {
@@ -79,7 +89,15 @@ function ProjetosPage() {
   }
 
   function openEdit(p: Project) {
-    setForm({ name: p.name, description: p.description, status: p.status, category: p.category, technologies: p.technologies, links: p.links, observations: p.observations });
+    setForm({
+      name: p.name,
+      description: p.description,
+      status: p.status,
+      category: p.category,
+      technologies: p.technologies,
+      links: p.links,
+      observations: p.observations,
+    });
     setModal({ open: true, editing: p });
   }
 
@@ -93,7 +111,7 @@ function ProjetosPage() {
         .eq("id", modal.editing.id)
         .eq("user_id", user!.id);
       if (!error) {
-        setProjects((prev) => prev.map((p) => p.id === modal.editing!.id ? { ...p, ...form } : p));
+        setProjects((prev) => prev.map((p) => (p.id === modal.editing!.id ? { ...p, ...form } : p)));
         setModal({ open: false, editing: null });
       }
     } else {
@@ -117,15 +135,23 @@ function ProjetosPage() {
 
   const filtered = projects.filter((p) => {
     const matchStatus = filterStatus === "todos" || p.status === filterStatus;
-    const matchSearch = search === "" || p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      search === "" ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
+
+  const countByStatus = STATUSES.reduce<Record<string, number>>((acc, s) => {
+    acc[s] = projects.filter((p) => p.status === s).length;
+    return acc;
+  }, {});
 
   if (dbError) {
     return (
       <AppShell>
         <div className="p-6">
-          <div className="bg-surface border border-border rounded p-6 text-center space-y-2">
+          <div className="bg-surface border border-border rounded-xl p-6 text-center space-y-2">
             <p className="text-xs text-muted-foreground">
               Tabela <code className="text-brand bg-brand/10 px-1.5 py-0.5 rounded">projects</code> não encontrada.
             </p>
@@ -155,41 +181,63 @@ CREATE POLICY "user_own" ON projects USING (auth.uid() = user_id);`}
 
   return (
     <AppShell>
-      <div className="p-4 md:p-5 space-y-3">
+      <div className="p-4 md:p-5 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <div className="text-xs font-medium text-muted-foreground mb-1">Projetos</div>
-            <h1 className="text-sm text-foreground">Gestão de Projetos</h1>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Gestão</p>
+            <h1 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
+              <FolderKanban className="size-4 text-info" />
+              Projetos
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{projects.length} projeto{projects.length !== 1 ? "s" : ""} cadastrado{projects.length !== 1 ? "s" : ""}</p>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] bg-brand text-brand-foreground hover:bg-brand/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-brand text-brand-foreground hover:bg-brand/90 transition-colors"
           >
-            <Plus className="size-3" /> Novo Projeto
+            <Plus className="size-3.5" />
+            Novo Projeto
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 flex-wrap">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar..."
-            className="bg-surface border border-border rounded px-2 py-1 text-[10px] focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground w-40"
-          />
-          <div className="flex gap-1">
-            {["todos", ...STATUSES].map((s) => (
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar projeto..."
+              className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all"
+            />
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              onClick={() => setFilterStatus("todos")}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-colors ${
+                filterStatus === "todos"
+                  ? "border-brand/30 text-brand bg-brand/10"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-white/5"
+              }`}
+            >
+              Todos ({projects.length})
+            </button>
+            {STATUSES.map((s) => (
               <button
                 key={s}
                 onClick={() => setFilterStatus(s)}
-                className={`px-2 py-1 rounded text-[9px] border transition-colors ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-colors ${
                   filterStatus === s
-                    ? "border-brand/30 text-brand bg-brand/5"
-                    : "border-border text-muted-foreground hover:text-foreground"
+                    ? STATUS_COLORS[s]
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-white/5"
                 }`}
               >
+                <span className={`size-1.5 rounded-full ${filterStatus === s ? STATUS_DOTS[s] : "bg-muted-foreground/40"}`} />
                 {s}
+                {countByStatus[s] > 0 && (
+                  <span className="opacity-70">({countByStatus[s]})</span>
+                )}
               </button>
             ))}
           </div>
@@ -197,43 +245,90 @@ CREATE POLICY "user_own" ON projects USING (auth.uid() = user_id);`}
 
         {/* Projects grid */}
         {loading ? (
-          <p className="text-[10px] text-muted-foreground py-6 text-center">Carregando...</p>
+          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+            Carregando...
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <FolderKanban className="size-8 mx-auto mb-2 opacity-20" />
-            <p className="text-[10px]">Nenhum projeto encontrado</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="size-12 rounded-2xl bg-surface border border-border grid place-items-center">
+              <FolderKanban className="size-5 text-muted-foreground/40" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Nenhum projeto encontrado</p>
+              {search === "" && filterStatus === "todos" && (
+                <button onClick={openCreate} className="mt-2 text-[11px] text-brand hover:underline">
+                  Criar primeiro projeto
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((p) => (
-              <div key={p.id} className="bg-surface border border-border rounded p-3 hover:border-brand/20 transition-all group">
-                <div className="flex items-start justify-between mb-2">
+              <div
+                key={p.id}
+                className="bg-surface border border-border rounded-xl p-4 hover:border-border/80 hover:bg-white/[0.02] transition-all group"
+              >
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xs text-foreground truncate">{p.name}</h3>
-                    <span className={`text-[8px] border rounded px-1.5 py-0.5 mt-1 inline-block ${STATUS_COLORS[p.status] || ""}`}>
+                    <h3 className="text-sm font-semibold text-foreground truncate leading-tight">{p.name}</h3>
+                    <span className={`inline-flex items-center gap-1.5 text-[10px] border rounded-lg px-2 py-0.5 mt-1.5 font-medium ${STATUS_COLORS[p.status] || ""}`}>
+                      <span className={`size-1.5 rounded-full ${STATUS_DOTS[p.status] || "bg-muted-foreground/40"}`} />
                       {p.status}
                     </span>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <button onClick={() => openEdit(p)} className="p-1 rounded text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
+                    >
                       <Pencil className="size-3" />
                     </button>
-                    <button onClick={() => deleteProject(p.id)} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <button
+                      onClick={() => deleteProject(p.id)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
                       <Trash2 className="size-3" />
                     </button>
                   </div>
                 </div>
-                {p.description && <p className="text-[10px] text-muted-foreground mb-2 line-clamp-2">{p.description}</p>}
+
+                {p.description && (
+                  <p className="text-[11px] text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+                    {p.description}
+                  </p>
+                )}
+
                 <div className="flex flex-wrap gap-1">
-                  {p.category && <span className="text-[8px] text-muted-foreground bg-surface-2 border border-border rounded px-1.5 py-0.5">{p.category}</span>}
-                  {p.technologies && p.technologies.split(",").slice(0, 3).map((t) => (
-                    <span key={t} className="text-[8px] text-muted-foreground bg-surface-2 border border-border rounded px-1.5 py-0.5">{t.trim()}</span>
-                  ))}
+                  {p.category && (
+                    <span className="text-[9px] text-muted-foreground bg-surface-2 border border-border rounded-lg px-1.5 py-0.5 font-medium">
+                      {p.category}
+                    </span>
+                  )}
+                  {p.technologies &&
+                    p.technologies
+                      .split(",")
+                      .slice(0, 3)
+                      .map((t) => (
+                        <span
+                          key={t}
+                          className="text-[9px] text-muted-foreground bg-surface-2 border border-border rounded-lg px-1.5 py-0.5"
+                        >
+                          {t.trim()}
+                        </span>
+                      ))}
                 </div>
+
                 {p.links && (
-                  <a href={p.links.split(",")[0]?.trim()} target="_blank" rel="noopener noreferrer"
-                    className="mt-2 flex items-center gap-1 text-[9px] text-brand hover:underline" onClick={(e) => e.stopPropagation()}>
-                    <ExternalLink className="size-2.5" /> Link
+                  <a
+                    href={p.links.split(",")[0]?.trim()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 pt-3 border-t border-border/50 flex items-center gap-1 text-[10px] text-brand hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="size-3" />
+                    Ver link
                   </a>
                 )}
               </div>
@@ -244,77 +339,121 @@ CREATE POLICY "user_own" ON projects USING (auth.uid() = user_id);`}
 
       {/* Modal */}
       {modal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setModal({ open: false, editing: null })}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setModal({ open: false, editing: null })}
+        >
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
-          <div className="relative bg-surface border border-border rounded w-full max-w-md p-5 space-y-3 max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative bg-surface border border-border rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[9px] text-muted-foreground uppercase tracking-widest">
-                {modal.editing ? "editar projeto" : "novo projeto"}
-              </span>
-              <button onClick={() => setModal({ open: false, editing: null })} className="text-muted-foreground hover:text-foreground">
+              <div>
+                <span className="text-[9px] text-muted-foreground uppercase tracking-widest">
+                  {modal.editing ? "Editar projeto" : "Novo projeto"}
+                </span>
+              </div>
+              <button
+                onClick={() => setModal({ open: false, editing: null })}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
+              >
                 <X className="size-3.5" />
               </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <div>
-                <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Nome *</label>
-                <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Nome *</label>
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="Nome do projeto"
-                  className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
+                  className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all"
+                />
               </div>
               <div>
-                <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Descrição</label>
-                <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Descrição</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Descrição do projeto"
                   rows={3}
-                  className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground resize-none focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
+                  className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground resize-none focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Status</label>
-                  <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                    className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-[10px] text-foreground focus:outline-none focus:border-brand/50">
-                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Status</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+                    className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40 transition-all"
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Categoria</label>
-                  <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-[10px] text-foreground focus:outline-none focus:border-brand/50">
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Categoria</label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40 transition-all"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
               <div>
-                <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Tecnologias</label>
-                <input value={form.technologies} onChange={(e) => setForm((f) => ({ ...f, technologies: e.target.value }))}
+                <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Tecnologias</label>
+                <input
+                  value={form.technologies}
+                  onChange={(e) => setForm((f) => ({ ...f, technologies: e.target.value }))}
                   placeholder="React, Node.js, Docker..."
-                  className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
+                  className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all"
+                />
               </div>
               <div>
-                <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Links</label>
-                <input value={form.links} onChange={(e) => setForm((f) => ({ ...f, links: e.target.value }))}
+                <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Links</label>
+                <input
+                  value={form.links}
+                  onChange={(e) => setForm((f) => ({ ...f, links: e.target.value }))}
                   placeholder="https://github.com/..."
-                  className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
+                  className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all"
+                />
               </div>
               <div>
-                <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Observações</label>
-                <textarea value={form.observations} onChange={(e) => setForm((f) => ({ ...f, observations: e.target.value }))}
+                <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Observações</label>
+                <textarea
+                  value={form.observations}
+                  onChange={(e) => setForm((f) => ({ ...f, observations: e.target.value }))}
                   placeholder="Notas adicionais..."
                   rows={2}
-                  className="mt-1 w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground resize-none focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
+                  className="mt-1 w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground resize-none focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all"
+                />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-1">
-              <button onClick={() => setModal({ open: false, editing: null })}
-                className="px-3 py-1.5 rounded text-[10px] border border-border text-muted-foreground hover:text-foreground transition-colors">
+            <div className="flex justify-end gap-2 pt-1 border-t border-border/50">
+              <button
+                onClick={() => setModal({ open: false, editing: null })}
+                className="px-3 py-2 rounded-xl text-xs border border-border text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
+              >
                 Cancelar
               </button>
-              <button onClick={save} disabled={saving || !form.name.trim()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] bg-brand text-brand-foreground hover:bg-brand/90 disabled:opacity-50 transition-colors">
+              <button
+                onClick={save}
+                disabled={saving || !form.name.trim()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs bg-brand text-brand-foreground hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 <Check className="size-3" />
                 {saving ? "Salvando..." : modal.editing ? "Salvar" : "Criar"}
               </button>

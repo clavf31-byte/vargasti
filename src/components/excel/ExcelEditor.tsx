@@ -115,20 +115,42 @@ export function ExcelEditor() {
         </div>
       </div>
 
+      {/* Metric cards — visible when file is loaded */}
+      {store.fileName && !showHistory && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 py-3 border-b border-border bg-background/30 shrink-0">
+          {[
+            { label: "Linhas Importadas", value: current?.rows.length ?? 0, cls: "text-brand" },
+            { label: "Colunas Detectadas", value: current?.headers.length ?? 0, cls: "text-info" },
+            { label: "Filtros Ativos", value: store.filters.length, cls: store.filters.length > 0 ? "text-warning" : "text-muted-foreground" },
+            { label: "Registros Filtrados", value: filteredRows.length, cls: "text-foreground" },
+          ].map(({ label, value, cls }) => (
+            <div key={label} className="bg-surface border border-border rounded-xl px-3 py-2.5">
+              <div className={`text-xl font-bold tabular-nums ${cls}`}>{value}</div>
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mt-0.5">{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {showHistory ? (
         <div className="flex-1 overflow-y-auto p-4">
           <div className="max-w-2xl">
-            <div className="text-xs font-medium text-muted-foreground mb-3">Histórico de Importações</div>
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Histórico de Importações</div>
             {store.history.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground">Nenhum histórico ainda.</p>
+              <div className="flex flex-col items-center justify-center py-12 gap-2">
+                <Clock className="size-6 text-muted-foreground/30" />
+                <p className="text-[11px] text-muted-foreground">Nenhum histórico ainda.</p>
+              </div>
             ) : (
               <div className="space-y-1.5">
                 {store.history.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 bg-surface border border-border rounded px-3 py-2 text-[10px]">
-                    <FileSpreadsheet className="size-3 text-brand shrink-0" />
-                    <span className="text-foreground truncate flex-1">{item.fileName}</span>
-                    <span className="text-muted-foreground shrink-0">{item.rows} linhas · {item.cols} cols</span>
-                    <span className="text-muted-foreground shrink-0">
+                  <div key={item.id} className="flex items-center gap-3 bg-surface border border-border rounded-xl px-3 py-2.5 hover:bg-white/[0.02] transition-colors group">
+                    <div className="size-7 rounded-lg bg-warning/10 border border-warning/20 grid place-items-center shrink-0">
+                      <FileSpreadsheet className="size-3.5 text-warning" />
+                    </div>
+                    <span className="text-sm text-foreground truncate flex-1 font-medium">{item.fileName}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{item.rows} linhas · {item.cols} cols</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0 hidden sm:block">
                       {new Date(item.importedAt).toLocaleDateString("pt-BR")}
                     </span>
                     <button
@@ -137,9 +159,9 @@ export function ExcelEditor() {
                         localStorage.setItem("excel-history", JSON.stringify(updated));
                         window.location.reload();
                       }}
-                      className="text-muted-foreground hover:text-red-400 transition-colors"
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
                     >
-                      <Trash2 className="size-3" />
+                      <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 ))}
