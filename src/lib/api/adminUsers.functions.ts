@@ -12,6 +12,7 @@ export type UserRow = {
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed: boolean;
+  provider: string;
 };
 
 async function assertAdmin(userId: string) {
@@ -36,6 +37,7 @@ export const listUsers = createServerFn({ method: "GET" })
       created_at: u.created_at,
       last_sign_in_at: u.last_sign_in_at ?? null,
       email_confirmed: !!u.email_confirmed_at,
+      provider: (u.app_metadata?.provider as string | undefined) ?? "email",
     }));
   });
 
@@ -66,5 +68,32 @@ export const deleteUser = createServerFn({ method: "POST" })
     if (data.id === context.userId) throw new Error("Não é possível deletar a própria conta.");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      userId: z.string(),
+      password: z.string().min(8),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+    if (getUserError || !userData.user) throw new Error("Usuário não encontrado.");
+
+    const provider = (userData.user.app_metadata?.provider as string | undefined) ?? "email";
+    if (provider !== "email") {
+      throw new Error("Não é possível alterar a senha de usuários com login Google.");
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+
     return { ok: true };
   });

@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
-import { listUsers, updateUser, deleteUser } from "@/lib/api/adminUsers.functions";
+import { listUsers, updateUser, deleteUser, updateUserPassword } from "@/lib/api/adminUsers.functions";
 import type { UserRow } from "@/lib/api/adminUsers.functions";
 import {
   Shield, Search, Check, X, Trash2,
-  RefreshCw, User, ChevronDown,
+  RefreshCw, User, ChevronDown, KeyRound, Eye, EyeOff,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -43,6 +43,13 @@ function initials(name: string | null, email: string) {
   return email.slice(0, 2).toUpperCase();
 }
 
+function validatePassword(pwd: string): string | null {
+  if (pwd.length < 8) return "A senha deve ter pelo menos 8 caracteres.";
+  if (!/[a-zA-Z]/.test(pwd)) return "A senha deve conter letras.";
+  if (!/[0-9]/.test(pwd)) return "A senha deve conter números.";
+  return null;
+}
+
 function AdminPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -53,12 +60,20 @@ function AdminPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [openRole, setOpenRole] = useState<string | null>(null);
 
+  // modal alterar senha
+  const [pwdTarget, setPwdTarget] = useState<UserRow | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pwdError, setPwdError] = useState("");
+  const [pwdSuccess, setPwdSuccess] = useState(false);
+  const [pwdBusy, setPwdBusy] = useState(false);
+
   const isAdmin = user?.user_metadata?.role === "admin";
 
   useEffect(() => {
-    if (!isAdmin) {
-      navigate({ to: "/" });
-    }
+    if (!isAdmin) navigate({ to: "/" });
   }, [isAdmin, navigate]);
 
   const load = useCallback(async () => {
@@ -113,6 +128,34 @@ function AdminPage() {
       setError(e instanceof Error ? e.message : "Erro ao remover.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  function openPwdModal(u: UserRow) {
+    setPwdTarget(u);
+    setNewPwd("");
+    setConfirmPwd("");
+    setShowNew(false);
+    setShowConfirm(false);
+    setPwdError("");
+    setPwdSuccess(false);
+  }
+
+  async function handlePwdSubmit() {
+    if (!pwdTarget) return;
+    const validErr = validatePassword(newPwd);
+    if (validErr) { setPwdError(validErr); return; }
+    if (newPwd !== confirmPwd) { setPwdError("As senhas não coincidem."); return; }
+    setPwdBusy(true);
+    setPwdError("");
+    try {
+      await updateUserPassword({ data: { userId: pwdTarget.id, password: newPwd } });
+      setPwdSuccess(true);
+      setTimeout(() => setPwdTarget(null), 1500);
+    } catch (e) {
+      setPwdError(e instanceof Error ? e.message : "Erro ao alterar senha.");
+    } finally {
+      setPwdBusy(false);
     }
   }
 
@@ -202,8 +245,8 @@ function AdminPage() {
             </div>
           ) : (
             <div className="divide-y divide-border/50">
-              {/* Table header (desktop) */}
-              <div className="hidden md:grid grid-cols-[1fr_140px_140px_100px] gap-4 px-4 py-2.5 bg-surface-2/50">
+              {/* Table header */}
+              <div className="hidden md:grid grid-cols-[1fr_140px_140px_120px] gap-4 px-4 py-2.5 bg-surface-2/50">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Usuário</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Função</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Status</span>
@@ -213,11 +256,12 @@ function AdminPage() {
               {filtered.map((u) => {
                 const isBusy = busy?.startsWith(u.id);
                 const isSelf = u.id === user?.id;
+                const isGoogle = u.provider === "google";
 
                 return (
                   <div
                     key={u.id}
-                    className="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_100px] gap-3 md:gap-4 px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
+                    className="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_120px] gap-3 md:gap-4 px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
                   >
                     {/* User info */}
                     <div className="flex items-center gap-3 min-w-0">
@@ -225,13 +269,21 @@ function AdminPage() {
                         {initials(u.full_name, u.email)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate leading-tight flex items-center gap-1.5">
+                        <p className="text-sm font-medium text-foreground truncate leading-tight flex items-center gap-1.5 flex-wrap">
                           {u.full_name ?? u.email.split("@")[0]}
                           {isSelf && (
                             <span className="text-[9px] text-brand bg-brand/10 border border-brand/20 rounded px-1 py-0.5 uppercase tracking-wide">você</span>
                           )}
+                          {isGoogle && (
+                            <span className="text-[9px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded px-1 py-0.5">Login Google</span>
+                          )}
                         </p>
                         <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                        {u.last_sign_in_at && (
+                          <p className="text-[9px] text-muted-foreground/50 mt-0.5">
+                            Último acesso: {new Date(u.last_sign_in_at).toLocaleDateString("pt-BR")}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -318,6 +370,16 @@ function AdminPage() {
                           <Check className="size-3.5" />
                         </button>
                       )}
+                      {!isGoogle && !isSelf && (
+                        <button
+                          onClick={() => openPwdModal(u)}
+                          disabled={isBusy}
+                          title="Alterar senha"
+                          className="p-1.5 rounded-lg text-muted-foreground/50 hover:bg-brand/10 hover:text-brand border border-transparent hover:border-brand/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <KeyRound className="size-3.5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(u.id)}
                         disabled={isBusy || isSelf}
@@ -340,6 +402,97 @@ function AdminPage() {
           </p>
         )}
       </div>
+
+      {/* Modal: alterar senha */}
+      {pwdTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-5">
+            <div className="flex items-center gap-2">
+              <KeyRound className="size-4 text-brand" />
+              <h2 className="text-sm font-semibold text-foreground">Alterar senha</h2>
+            </div>
+
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground">
+                Usuário: <span className="text-foreground font-medium">{pwdTarget.full_name ?? pwdTarget.email}</span>
+              </p>
+              <p className="text-[11px] text-muted-foreground">{pwdTarget.email}</p>
+            </div>
+
+            {pwdSuccess ? (
+              <div className="flex items-center gap-2 py-3 px-4 bg-brand/10 border border-brand/20 rounded-xl">
+                <Check className="size-4 text-brand shrink-0" />
+                <p className="text-sm text-brand">Senha alterada com sucesso.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Nova senha</label>
+                  <div className="relative">
+                    <input
+                      type={showNew ? "text" : "password"}
+                      value={newPwd}
+                      onChange={(e) => { setNewPwd(e.target.value); setPwdError(""); }}
+                      placeholder="Mínimo 8 caracteres"
+                      className="w-full bg-white/5 border border-border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 transition-all"
+                    />
+                    <button type="button" onClick={() => setShowNew((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showNew ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Confirmar senha</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? "text" : "password"}
+                      value={confirmPwd}
+                      onChange={(e) => { setConfirmPwd(e.target.value); setPwdError(""); }}
+                      placeholder="Repita a nova senha"
+                      onKeyDown={(e) => e.key === "Enter" && handlePwdSubmit()}
+                      className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${pwdError ? "border-destructive/50" : "border-border focus:border-brand/40"}`}
+                    />
+                    <button type="button" onClick={() => setShowConfirm((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showConfirm ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {pwdError && (
+                  <p className="text-xs text-destructive">{pwdError}</p>
+                )}
+
+                <div className="text-[10px] text-muted-foreground/60 space-y-0.5 pt-1">
+                  <p>• Mínimo 8 caracteres</p>
+                  <p>• Deve conter letras e números</p>
+                </div>
+              </div>
+            )}
+
+            {!pwdSuccess && (
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setPwdTarget(null)}
+                  disabled={pwdBusy}
+                  className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handlePwdSubmit}
+                  disabled={pwdBusy || !newPwd || !confirmPwd}
+                  className="px-3 py-1.5 text-xs bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  {pwdBusy ? "Salvando..." : "Confirmar"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

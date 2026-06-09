@@ -119,6 +119,16 @@ export function AppShell({ children }: { children?: ReactNode }) {
           })}
         </nav>
 
+        {/* Build info */}
+        <div className="px-4 py-2 border-t border-border/30">
+          <p className="text-[9px] text-muted-foreground/40 font-mono leading-relaxed">
+            v{__APP_VERSION__} · build {__BUILD_NUMBER__}
+          </p>
+          <p className="text-[8px] text-muted-foreground/30 font-mono">
+            {__GIT_HASH__} · {__BUILD_DATE__}
+          </p>
+        </div>
+
         {/* User */}
         <div className="p-3 border-t border-border/50">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group">
