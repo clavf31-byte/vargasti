@@ -21,6 +21,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# One-time scripts
+create-admin.mjs
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

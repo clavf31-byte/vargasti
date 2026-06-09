@@ -1,20 +1,24 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Wrench, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { useAuth } from "@/contexts/AuthContext";
 
-const NAV = [
+const NAV_BASE = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/anotacoes", label: "Anotações", icon: NotebookPen },
   { to: "/ferramentas", label: "Tools", icon: Wrench },
   { to: "/projetos", label: "Projetos", icon: FolderKanban },
   { to: "/arquivos", label: "Arquivos", icon: Files },
   { to: "/config", label: "Config", icon: Settings },
+] as const;
+
+const NAV_ADMIN = [
+  { to: "/admin", label: "Usuários", icon: ShieldCheck },
 ] as const;
 
 export function AppShell({ children }: { children?: ReactNode }) {
@@ -27,8 +31,11 @@ export function AppShell({ children }: { children?: ReactNode }) {
     user?.email?.split("@")[0] ??
     "user";
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const isAdmin = user?.user_metadata?.role === "admin";
 
-  const currentPage = NAV.find(({ to }) =>
+  const ALL_NAV = isAdmin ? [...NAV_BASE, ...NAV_ADMIN] : NAV_BASE;
+
+  const currentPage = ALL_NAV.find(({ to }) =>
     to === "/" ? pathname === "/" : pathname.startsWith(to)
   )?.label ?? "VargasTI Hub";
 
@@ -82,7 +89,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           <p className="px-3 pb-2.5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             Navegação
           </p>
-          {NAV.map(({ to, label, icon: Icon }) => {
+          {ALL_NAV.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
             return (
               <Link
