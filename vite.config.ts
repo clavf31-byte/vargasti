@@ -19,6 +19,11 @@ function getBuildInfo() {
 
 const { hash, count } = getBuildInfo();
 const buildDate = new Date().toISOString().split("T")[0];
+const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "https://mpueyricnfkyobjaviph.supabase.co";
+const supabasePublishableKey =
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.SUPABASE_PUBLISHABLE_KEY ??
+  "sb_publishable_bzztDx20ZpC_5MphnYLhng_aDlYFz_A";
 
 export default defineConfig({
   tanstackStart: {
@@ -32,6 +37,10 @@ export default defineConfig({
       __GIT_HASH__: JSON.stringify(hash),
       __BUILD_DATE__: JSON.stringify(buildDate),
       __BUILD_NUMBER__: JSON.stringify(count),
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabasePublishableKey),
+      "process.env.SUPABASE_URL": JSON.stringify(supabaseUrl),
+      "process.env.SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabasePublishableKey),
     },
   },
 });
