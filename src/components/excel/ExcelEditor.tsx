@@ -11,9 +11,10 @@ import { ExcelColumnEditor } from "./ExcelColumnEditor";
 import { ExcelProcv } from "./ExcelProcv";
 import { ExcelActions } from "./ExcelActions";
 import { ExcelExport } from "./ExcelExport";
+import { ExcelAgent } from "./ExcelAgent";
 import { useState } from "react";
 
-type Tab = "import" | "table" | "filters" | "columns" | "procv" | "actions" | "export";
+type Tab = "import" | "table" | "filters" | "columns" | "procv" | "actions" | "export" | "agent";
 
 export function ExcelEditor() {
   const store = useExcelStore();
@@ -73,6 +74,7 @@ export function ExcelEditor() {
     { id: "procv", label: "PROCV" },
     { id: "actions", label: "Ações" },
     { id: "export", label: "Exportar" },
+    { id: "agent", label: "Agente IA" },
   ];
 
   return (
@@ -349,9 +351,42 @@ export function ExcelEditor() {
               </div>
             )}
 
-            {tab !== "import" && !current && (
+            {tab === "agent" && current && (
+              <ExcelAgent
+                sheetData={current}
+                totalRows={current.rows.length}
+                onSort={(col, dir) => {
+                  store.setSortCol(col);
+                  store.setSortDir(dir);
+                }}
+                onFilter={(filters, logic) => {
+                  store.setFilters(filters);
+                  store.setFilterLogic(logic);
+                }}
+                onClearFilters={() => store.setFilters([])}
+                onAddColumn={(name, values) =>
+                  store.updateSheetData((sheet) => ({
+                    ...sheet,
+                    headers: [...sheet.headers, name],
+                    rows: sheet.rows.map((r, i) => [...r, values[i] ?? ""]),
+                    types: [...sheet.types, detectColType(values)],
+                  }))
+                }
+                onUpdateCells={(changes) =>
+                  changes.forEach((c) => store.updateCell(c.row, c.col, c.value))
+                }
+              />
+            )}
+
+            {tab !== "import" && tab !== "agent" && !current && (
               <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground">
                 Importe um arquivo para continuar.
+              </div>
+            )}
+
+            {tab === "agent" && !current && (
+              <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground">
+                Importe um arquivo para usar o agente.
               </div>
             )}
           </div>
