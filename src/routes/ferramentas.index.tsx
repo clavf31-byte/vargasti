@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { FileSpreadsheet, ChevronRight, Bot, Sparkles } from "lucide-react";
+import { PageHeader } from "@/components/shared";
+import { FileSpreadsheet, ChevronRight, Bot, Sparkles, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/ferramentas/")({
   head: () => ({ meta: [{ title: "Tools · VargasTI Lab" }] }),
@@ -24,14 +25,14 @@ const TOOLS = [
 function ToolsPage() {
   return (
     <AppShell>
-      <div className="p-4 md:p-5">
-        <div className="mb-6">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Ferramentas</p>
-          <h1 className="text-base font-bold text-foreground tracking-tight">Utilitários</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Ferramentas e scripts para produtividade e análise de dados.
-          </p>
-        </div>
+      <div className="p-4 md:p-5 space-y-5">
+        <PageHeader
+          category="Ferramentas"
+          title="Utilitários"
+          icon={Wrench}
+          iconClass="text-warning"
+          subtitle="Ferramentas e scripts para produtividade e análise de dados."
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {TOOLS.map((t) => (
@@ -45,9 +46,7 @@ function ToolsPage() {
                   <t.icon className="size-5" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border uppercase tracking-wide ${t.badgeClass}`}
-                  >
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border uppercase tracking-wide ${t.badgeClass}`}>
                     {t.badge}
                   </span>
                   <ChevronRight className="size-3.5 text-muted-foreground/40 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all" />
@@ -56,11 +55,8 @@ function ToolsPage() {
               <h3 className="text-sm font-semibold text-foreground group-hover:text-brand transition-colors mb-1 leading-snug">
                 {t.name}
               </h3>
-              <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-2.5">
-                {t.category}
-              </p>
+              <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-2.5">{t.category}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">{t.description}</p>
-
               <div className="flex items-center gap-1 mt-4 pt-4 border-t border-border/50">
                 <Sparkles className="size-3 text-brand/50" />
                 <span className="text-[10px] text-muted-foreground">Inclui Agente IA</span>

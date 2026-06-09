@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader, StatCard, EmptyState, DataCard, Toolbar } from "@/components/shared";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Files, Download, Trash2, FileSpreadsheet, FileText, File, ExternalLink, Search,
+  Files, Download, Trash2, FileSpreadsheet, FileText, File, ExternalLink,
 } from "lucide-react";
 
 export const Route = createFileRoute("/arquivos")({
@@ -83,16 +84,10 @@ function ArquivosPage() {
   async function load() {
     setLoading(true);
     const { data, error } = await supabase
-      .from("file_records")
-      .select("*")
-      .eq("user_id", user!.id)
+      .from("file_records").select("*").eq("user_id", user!.id)
       .order("created_at", { ascending: false });
-
-    if (error && error.code !== "42P01") {
-      setDbError(true);
-    } else {
-      setFiles((data ?? []) as FileRecord[]);
-    }
+    if (error && error.code !== "42P01") setDbError(true);
+    else setFiles((data ?? []) as FileRecord[]);
     setLoading(false);
   }
 
@@ -104,25 +99,18 @@ function ArquivosPage() {
         const updated = h.filter((item: Record<string, unknown>) => String(item.id) !== rawId);
         localStorage.setItem("excel-history", JSON.stringify(updated));
         setLocalHistory((prev) => prev.filter((f) => f.id !== id));
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
       return;
     }
     const file = files.find((f) => f.id === id);
-    if (file?.storage_path) {
-      await supabase.storage.from("uploads").remove([file.storage_path]);
-    }
+    if (file?.storage_path) await supabase.storage.from("uploads").remove([file.storage_path]);
     await supabase.from("file_records").delete().eq("id", id).eq("user_id", user!.id);
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }
 
   async function downloadFile(f: FileRecord) {
     if (!f.storage_path) return;
-    if (f.storage_path.startsWith("http")) {
-      window.open(f.storage_path, "_blank");
-      return;
-    }
+    if (f.storage_path.startsWith("http")) { window.open(f.storage_path, "_blank"); return; }
     const { data } = await supabase.storage.from("uploads").createSignedUrl(f.storage_path, 3600);
     if (data?.signedUrl) {
       const a = document.createElement("a");
@@ -142,52 +130,46 @@ function ArquivosPage() {
       f.origin.toLowerCase().includes(search.toLowerCase()),
   );
 
+  const stats = [
+    { label: "Total",    value: allFiles.length,                                colorClass: "text-foreground" },
+    { label: "Excel/CSV",value: allFiles.filter((f) => isExcelFile(f.file_type)).length, colorClass: "text-warning" },
+    { label: "Outros",   value: allFiles.filter((f) => !isExcelFile(f.file_type)).length, colorClass: "text-info" },
+    { label: "Locais",   value: localHistory.length,                            colorClass: "text-muted-foreground" },
+  ];
+
   return (
     <AppShell>
       <div className="p-4 md:p-5 space-y-4">
-        {/* Header */}
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Storage</p>
-            <h1 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
-              <Files className="size-4 text-warning" />
-              Central de Arquivos
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {allFiles.length} arquivo{allFiles.length !== 1 ? "s" : ""} registrado{allFiles.length !== 1 ? "s" : ""}
-            </p>
-          </div>
+        <PageHeader
+          category="Storage"
+          title="Central de Arquivos"
+          icon={Files}
+          iconClass="text-warning"
+          subtitle={`${allFiles.length} arquivo${allFiles.length !== 1 ? "s" : ""} registrado${allFiles.length !== 1 ? "s" : ""}`}
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {stats.map((s) => (
+            <StatCard key={s.label} label={s.label} value={s.value} colorClass={s.colorClass} />
+          ))}
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar arquivos..."
-            className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all"
-          />
-        </div>
+        <Toolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          placeholder="Buscar arquivos..."
+        />
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
-            Carregando...
-          </div>
+          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">Carregando...</div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="size-12 rounded-2xl bg-surface border border-border grid place-items-center">
-              <Files className="size-5 text-muted-foreground/40" />
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Nenhum arquivo encontrado</p>
-              <p className="text-[10px] text-muted-foreground/60 mt-1">
-                Use o Excel Tool para importar planilhas — elas aparecerão aqui
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            icon={Files}
+            title="Nenhum arquivo encontrado"
+            subtitle="Use o Excel Tool para importar planilhas — elas aparecerão aqui"
+          />
         ) : (
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <DataCard>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-surface-2/50 border-b border-border">
@@ -268,7 +250,7 @@ function ArquivosPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </DataCard>
         )}
 
         {!loading && filtered.length > 0 && (

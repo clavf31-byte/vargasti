@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import {
@@ -47,14 +48,12 @@ function ConfigPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-5 space-y-4 max-w-xl">
-        {/* Header */}
-        <div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Sistema</p>
-          <h1 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
-            <Settings className="size-4 text-muted-foreground" />
-            Configurações
-          </h1>
-        </div>
+        <PageHeader
+          category="Sistema"
+          title="Configurações"
+          icon={Settings}
+          iconClass="text-muted-foreground"
+        />
 
         {/* Perfil */}
         <section className="bg-surface border border-border rounded-xl overflow-hidden">
