@@ -1,6 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type Anthropic from "@anthropic-ai/sdk";
+
+type AnthropicTool = {
+  name: string;
+  description: string;
+  input_schema: { type: "object"; properties: Record<string, unknown>; required?: string[] };
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnthropicMessage = any;
+type AnthropicToolResult = { type: "tool_result"; tool_use_id: string; content: string };
 
 const MAX_PREVIEW_ROWS = 200;
 
@@ -68,7 +76,7 @@ ${tablePreview}
 
 Use as ferramentas para executar ações na planilha. Após executar, confirme o que foi feito de forma resumida.`;
 
-    const tools: Anthropic.Tool[] = [
+    const tools: AnthropicTool[] = [
       {
         name: "sort_data",
         description: "Ordenar os dados por uma coluna",
@@ -152,7 +160,7 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
       },
     ];
 
-    const messages: Anthropic.MessageParam[] = [
+    const messages: AnthropicMessage[] = [
       ...history.map((h) => ({ role: h.role as "user" | "assistant", content: h.content })),
       { role: "user", content: message },
     ];
@@ -169,7 +177,7 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
     });
 
     while (resp.stop_reason === "tool_use") {
-      const results: Anthropic.ToolResultBlockParam[] = [];
+      const results: AnthropicToolResult[] = [];
 
       for (const block of resp.content) {
         if (block.type !== "tool_use") continue;
