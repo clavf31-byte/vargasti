@@ -152,11 +152,11 @@ function ConfigPage() {
           <div className="p-4">
             <div className="space-y-2">
               {[
-                ["Versão", "2.0.0"],
-                ["Build", "Matrix Edition"],
-                ["Stack", "React 19 + TanStack Router + Supabase"],
-                ["Auth", "Supabase Auth (Google OAuth + Email)"],
-                ["Storage", "Supabase PostgreSQL"],
+                ["Versão", __APP_VERSION__],
+                ["Build", `#${__BUILD_NUMBER__}`],
+                ["Commit", __GIT_HASH__],
+                ["Data", __BUILD_DATE__],
+                ["Stack", "React 19 · TanStack · Supabase"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between items-center py-1.5 border-b border-border/30 last:border-0">
                   <span className="text-[11px] text-muted-foreground">{k}</span>
