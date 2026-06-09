@@ -38,3 +38,4 @@ create-admin.mjs
 *.njsproj
 *.sln
 *.sw?
+.env
