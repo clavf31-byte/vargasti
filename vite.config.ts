@@ -33,7 +33,7 @@ export default defineConfig({
   },
   vite: {
     define: {
-      __APP_VERSION__: JSON.stringify("2.0.0"),
+      __APP_VERSION__: JSON.stringify("2.0.1"),
       __GIT_HASH__: JSON.stringify(hash),
       __BUILD_DATE__: JSON.stringify(buildDate),
       __BUILD_NUMBER__: JSON.stringify(count),
