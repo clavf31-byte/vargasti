@@ -79,26 +79,29 @@ export function ExcelEditor() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-2.5rem)]">
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-surface shrink-0">
-        <Link to="/ferramentas" className="p-1 rounded text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors">
+      <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-border bg-surface shrink-0">
+        <Link to="/ferramentas" className="p-1.5 rounded-lg text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors">
           <ChevronLeft className="size-3.5" />
         </Link>
-        <div className="text-[9px] text-muted-foreground uppercase tracking-widest">editor de excel</div>
+        <div className="h-4 w-px bg-border/60" />
+        <div className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">Editor de Excel</div>
         {store.fileName && (
-          <div className="flex items-center gap-1 ml-2 px-2 py-0.5 bg-brand/10 border border-brand/20 rounded text-[10px] text-brand">
-            <FileSpreadsheet className="size-3" />
-            <span className="max-w-[160px] truncate">{store.fileName}</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand/10 border border-brand/20 rounded-lg text-[10px] text-brand font-medium">
+            <FileSpreadsheet className="size-3 shrink-0" />
+            <span className="max-w-[180px] truncate">{store.fileName}</span>
           </div>
         )}
         {current && (
-          <span className="text-[9px] text-muted-foreground">
-            {filteredRows.length}/{current.rows.length} linhas · {current.headers.length} cols
+          <span className="text-[10px] text-muted-foreground hidden sm:block">
+            {filteredRows.length.toLocaleString()} / {current.rows.length.toLocaleString()} linhas · {current.headers.length} colunas
           </span>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5">
           <button
             onClick={() => setShowHistory((v) => !v)}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] border transition-colors ${showHistory ? "border-brand/30 text-brand bg-brand/5" : "border-border text-muted-foreground hover:text-foreground"}`}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-colors ${
+              showHistory ? "border-brand/30 text-brand bg-brand/5" : "border-border text-muted-foreground hover:text-foreground hover:bg-white/5"
+            }`}
           >
             <Clock className="size-3" />
             Histórico
@@ -106,10 +109,10 @@ export function ExcelEditor() {
           {store.fileName && (
             <button
               onClick={() => { store.reset(); setTab("import"); }}
-              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] border border-border text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             >
               <Upload className="size-3" />
-              Novo
+              Novo arquivo
             </button>
           )}
         </div>
@@ -171,16 +174,16 @@ export function ExcelEditor() {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-0 px-4 border-b border-border bg-surface shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-0 px-2 border-b border-border bg-surface shrink-0 overflow-x-auto">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 disabled={t.id !== "import" && !store.fileName}
-                className={`px-3 py-2 text-[10px] border-b-2 transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`px-3.5 py-2.5 text-[11px] font-medium border-b-2 transition-colors whitespace-nowrap disabled:opacity-35 disabled:cursor-not-allowed ${
                   tab === t.id
                     ? "border-brand text-brand"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/[0.02]"
                 }`}
               >
                 {t.label}
@@ -190,21 +193,36 @@ export function ExcelEditor() {
 
           <div className="flex-1 overflow-hidden flex flex-col">
             {tab === "import" && (
-              <div className="flex-1 flex items-center justify-center p-6">
+              <div className="flex-1 flex items-center justify-center p-8">
                 <div
                   onDrop={handleDrop}
                   onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                   onDragLeave={() => setDragging(false)}
                   onClick={() => fileRef.current?.click()}
-                  className={`w-full max-w-md border-2 border-dashed rounded p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all ${
-                    dragging ? "border-brand bg-brand/5" : "border-border hover:border-brand/40 hover:bg-surface"
+                  className={`group w-full max-w-lg border-2 border-dashed rounded-2xl p-16 flex flex-col items-center justify-center gap-5 cursor-pointer transition-all duration-300 ${
+                    dragging
+                      ? "border-brand bg-brand/5 shadow-[0_0_60px_oklch(0.73_0.21_145/0.10)] scale-[1.01]"
+                      : "border-border hover:border-brand/30 hover:bg-surface hover:shadow-[0_0_40px_oklch(0.73_0.21_145/0.05)]"
                   }`}
                 >
-                  <FileSpreadsheet className="size-10 text-brand opacity-70" />
-                  <div className="text-center">
-                    <p className="text-xs text-foreground">Arraste ou clique para importar</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">.xlsx · .xls · .csv</p>
+                  <div className={`size-20 rounded-2xl border grid place-items-center transition-all duration-300 ${
+                    dragging ? "bg-brand/10 border-brand/30" : "bg-surface border-border group-hover:bg-brand/5 group-hover:border-brand/20"
+                  }`}>
+                    <FileSpreadsheet className={`size-10 transition-colors duration-300 ${dragging ? "text-brand" : "text-muted-foreground/40 group-hover:text-brand/60"}`} />
                   </div>
+
+                  <div className="text-center space-y-1.5">
+                    <p className="text-sm font-semibold text-foreground">Arraste ou clique para importar</p>
+                    <p className="text-xs text-muted-foreground">Suporta <span className="text-warning font-medium">.xlsx</span> · <span className="text-brand font-medium">.xls</span> · <span className="text-info font-medium">.csv</span></p>
+                    <p className="text-[10px] text-muted-foreground/50">Tamanho máximo recomendado: 10 MB</p>
+                  </div>
+
+                  <span className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-300 pointer-events-none ${
+                    dragging ? "border-brand/40 bg-brand/10 text-brand" : "border-border text-muted-foreground group-hover:border-brand/30 group-hover:text-brand"
+                  }`}>
+                    Escolher arquivo
+                  </span>
+
                   <input
                     ref={fileRef}
                     type="file"
