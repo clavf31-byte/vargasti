@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, FileText, Search, Tag, Lock, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, FileText, Search, Tag, Lock, Eye, EyeOff, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
   head: () => ({ meta: [{ title: "Anotações · VargasTI Lab" }] }),
@@ -36,6 +36,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PWD_RE = /__pwd:[a-f0-9]+/;
+const CONF_RE = /,?\s*__conf/;
 
 async function sha256(text: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -56,8 +57,25 @@ function removePwdHash(tags: string): string {
   return (tags ?? "").replace(/,?\s*__pwd:[a-f0-9]+/, "").trim();
 }
 
+function isConfidential(tags: string): boolean {
+  return (tags ?? "").includes("__conf");
+}
+
+function addConfMarker(tags: string): string {
+  return tags.includes("__conf") ? tags : (tags ? `${tags},__conf` : "__conf");
+}
+
+function removeConfMarker(tags: string): string {
+  return (tags ?? "").replace(CONF_RE, "").trim();
+}
+
 function displayTags(tags: string): string {
-  return (tags ?? "").replace(PWD_RE, "").replace(/,\s*,/g, ",").replace(/^,|,$/g, "").trim();
+  return (tags ?? "")
+    .replace(PWD_RE, "")
+    .replace(CONF_RE, "")
+    .replace(/,\s*,/g, ",")
+    .replace(/^,|,$/g, "")
+    .trim();
 }
 
 function isLocked(note: Note): boolean {
@@ -83,8 +101,10 @@ function NotesPage() {
   const [modal, setModal] = useState<Modal>(null);
   const [modalPwd, setModalPwd] = useState("");
   const [modalPwdShow, setModalPwdShow] = useState(false);
+  const [modalConf, setModalConf] = useState(false);
   const [modalError, setModalError] = useState("");
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -166,15 +186,18 @@ function NotesPage() {
       scheduleAutoSave(selected.id, { status: val });
       setModal({ type: "set-password", noteId: selected.id });
       setModalPwd("");
+      setModalConf(false);
       setModalError("");
       return;
     }
 
     if (field === "status" && selected.status === "arquivado") {
-      const newTags = removePwdHash(notes.find((n) => n.id === selected.id)?.tags ?? "");
+      let newTags = removePwdHash(notes.find((n) => n.id === selected.id)?.tags ?? "");
+      newTags = removeConfMarker(newTags);
       setNoteStatus(val);
       scheduleAutoSave(selected.id, { status: val, tags: newTags });
       setUnlocked((prev) => { const s = new Set(prev); s.delete(selected.id); return s; });
+      setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; });
       return;
     }
 
@@ -199,15 +222,19 @@ function NotesPage() {
     }
     const hash = await sha256(modalPwd.trim());
     const note = notes.find((n) => n.id === modal.noteId);
-    const currentTags = note?.tags ?? "";
-    const newTags = addPwdHash(currentTags, hash);
+    let newTags = addPwdHash(note?.tags ?? "", hash);
+    if (modalConf) newTags = addConfMarker(newTags);
+    else newTags = removeConfMarker(newTags);
     await supabase
       .from("notes")
       .update({ tags: newTags, updated_at: new Date().toISOString() })
       .eq("id", modal.noteId)
       .eq("user_id", user!.id);
     setNotes((prev) => prev.map((n) => n.id === modal.noteId ? { ...n, tags: newTags } : n));
-    if (selected?.id === modal.noteId) setUnlocked((prev) => new Set(prev).add(modal.noteId));
+    if (selected?.id === modal.noteId) {
+      setUnlocked((prev) => new Set(prev).add(modal.noteId));
+      if (!modalConf) setRevealed((prev) => new Set(prev).add(modal.noteId));
+    }
     setModal(null);
   }
 
@@ -402,12 +429,50 @@ function NotesPage() {
                 </div>
               )}
             </div>
-            <textarea
-              value={content}
-              onChange={(e) => handleFieldChange("content", e.target.value)}
-              placeholder="Comece a escrever..."
-              className="flex-1 bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed"
-            />
+            {isConfidential(notes.find((n) => n.id === selected.id)?.tags ?? "") &&
+             unlocked.has(selected.id) &&
+             !revealed.has(selected.id) ? (
+              <div className="flex-1 relative flex items-center justify-center">
+                <textarea
+                  value={content}
+                  readOnly
+                  className="absolute inset-0 w-full h-full bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none leading-relaxed select-none pointer-events-none blur-sm"
+                />
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                  <div className="size-10 rounded-full bg-surface border border-border grid place-items-center">
+                    <ShieldAlert className="size-5 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Conteúdo confidencial</p>
+                  <button
+                    onClick={() => setRevealed((prev) => new Set(prev).add(selected.id))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand/10 border border-brand/20 text-brand text-xs rounded-lg hover:bg-brand/20 transition-colors"
+                  >
+                    <Eye className="size-3.5" />
+                    Revelar conteúdo
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 relative">
+                <textarea
+                  value={content}
+                  onChange={(e) => handleFieldChange("content", e.target.value)}
+                  placeholder="Comece a escrever..."
+                  className="w-full h-full bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed absolute inset-0"
+                />
+                {isConfidential(notes.find((n) => n.id === selected.id)?.tags ?? "") &&
+                 unlocked.has(selected.id) &&
+                 revealed.has(selected.id) && (
+                  <button
+                    onClick={() => setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; })}
+                    title="Ocultar conteúdo"
+                    className="absolute top-2 right-3 p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-surface-2 transition-colors"
+                  >
+                    <EyeOff className="size-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
@@ -448,6 +513,19 @@ function NotesPage() {
                 {modalPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={modalConf}
+                onChange={(e) => setModalConf(e.target.checked)}
+                className="size-3.5 rounded accent-brand"
+              />
+              <div>
+                <p className="text-xs text-foreground">Conteúdo confidencial</p>
+                <p className="text-[10px] text-muted-foreground">Ocultar texto na tela até revelar manualmente</p>
+              </div>
+            </label>
+
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setModal(null)}
