@@ -39,11 +39,10 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, colorClass = "text-foreground" }: StatCardProps) {
-  const v = typeof value === "number" ? String(value).padStart(2, "0") : value;
   return (
-    <div className="bg-surface border border-border rounded-xl px-4 py-3">
-      <div className={`text-2xl font-bold tabular-nums ${colorClass}`}>{v}</div>
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-1">{label}</div>
+    <div className="bg-surface border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className={`text-xl font-bold tabular-nums leading-none ${colorClass}`}>{value}</div>
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wide leading-tight">{label}</div>
     </div>
   );
 }

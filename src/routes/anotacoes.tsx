@@ -299,10 +299,11 @@ function NotesPage() {
       <div className="flex h-[calc(100vh-2.5rem)] overflow-hidden">
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-        <div className="w-56 border-r border-border flex flex-col shrink-0 bg-surface">
-          <div className="px-3 py-2 border-b border-border space-y-1.5">
+        <div className="w-64 border-r border-border flex flex-col shrink-0 bg-surface">
+          {/* Header da sidebar */}
+          <div className="px-3 pt-3 pb-2 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Anotações</span>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Anotações</p>
               <button
                 onClick={async () => {
                   const { data, error } = await supabase.from("notes")
@@ -310,65 +311,69 @@ function NotesPage() {
                     .select().single();
                   if (!error && data) { setNotes((prev) => [data as Note, ...prev]); openNote(data as Note); }
                 }}
-                className="size-5 rounded bg-brand/10 border border-brand/20 grid place-items-center text-brand hover:bg-brand/20 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand/10 border border-brand/20 text-brand text-[10px] font-medium hover:bg-brand/20 transition-colors"
               >
                 <Plus className="size-3" />
+                Nova
               </button>
             </div>
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..."
-                className="w-full bg-background border border-border rounded px-2 pl-6 py-1 text-[10px] focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar anotação..."
+                className="w-full bg-background border border-border rounded-xl px-2.5 pl-7 py-1.5 text-xs focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all" />
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none">
-                <option value="todos">todos</option>
+                className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                <option value="todos">Todos status</option>
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                className="flex-1 bg-background border border-border rounded px-1 py-0.5 text-[9px] text-muted-foreground focus:outline-none focus:border-brand/50 appearance-none">
-                <option value="todas">todas</option>
+                className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                <option value="todas">Todas cat.</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {loading ? (
-              <p className="text-[10px] text-muted-foreground text-center py-6">Carregando...</p>
+              <p className="text-[10px] text-muted-foreground text-center py-8">Carregando...</p>
             ) : filtered.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground text-center py-6">Nenhuma nota</p>
+              <p className="text-[10px] text-muted-foreground text-center py-8">Nenhuma nota</p>
             ) : filtered.map((note) => {
               const mode = getProtectionMode(note.tags ?? "");
               const locked = mode !== "none" && !unlocked.has(note.id);
+              const isActive = selected?.id === note.id;
               return (
                 <button key={note.id} onClick={() => openNote(note)}
-                  className={`w-full text-left px-2 py-2 rounded text-[10px] transition-colors flex items-start gap-2 ${
-                    selected?.id === note.id
-                      ? "bg-brand/10 text-brand border border-brand/20"
-                      : "hover:bg-surface-2 text-muted-foreground border border-transparent"
+                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-start gap-2.5 group ${
+                    isActive
+                      ? "bg-brand/10 border border-brand/25 shadow-[inset_0_0_0_1px_rgba(var(--brand)/0.1)]"
+                      : "hover:bg-surface-2 border border-transparent"
                   }`}
                 >
-                  {locked ? <Lock className="size-3 mt-0.5 shrink-0 opacity-60" /> : <FileText className="size-3 mt-0.5 shrink-0" />}
-                  <div className="min-w-0">
-                    <p className="truncate text-[11px]">
+                  <div className={`mt-0.5 shrink-0 ${isActive ? "text-brand" : "text-muted-foreground/50"}`}>
+                    {locked ? <Lock className="size-3.5" /> : <FileText className="size-3.5" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate text-xs font-medium leading-snug ${isActive ? "text-brand" : "text-foreground"}`}>
                       {locked && mode === "hidden" ? "Anotação protegida" : (note.title || "Sem título")}
                     </p>
-                    <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                      {!locked && note.category && (
-                        <span className="text-[8px] text-muted-foreground/70">{note.category}</span>
+                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                      {!locked && note.category && note.category !== "Geral" && (
+                        <span className="text-[9px] text-muted-foreground/60 bg-surface-2 rounded-md px-1.5 py-0.5">{note.category}</span>
                       )}
                       {!locked && note.status && note.status !== "rascunho" && (
-                        <span className={`text-[8px] border rounded-sm px-1 ${STATUS_COLORS[note.status] || ""}`}>
+                        <span className={`text-[9px] border rounded-md px-1.5 py-0.5 ${STATUS_COLORS[note.status] || ""}`}>
                           {note.status}
                         </span>
                       )}
                       {locked && mode === "visible" && (
-                        <span className="text-[8px] border border-warning/30 text-warning rounded-sm px-1">Protegida</span>
+                        <span className="text-[9px] border border-warning/30 text-warning rounded-md px-1.5 py-0.5">Protegida</span>
                       )}
                       {locked && mode === "hidden" && (
-                        <span className="text-[8px] border border-muted-foreground/20 text-muted-foreground/60 rounded-sm px-1">Oculta</span>
+                        <span className="text-[9px] border border-muted-foreground/20 text-muted-foreground/50 rounded-md px-1.5 py-0.5">Oculta</span>
                       )}
                     </div>
                   </div>
@@ -458,41 +463,45 @@ function NotesPage() {
           // ── Editor normal (desbloqueado ou sem proteção) ───────────────
           return (
             <div className="flex-1 flex flex-col min-w-0">
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
+              {/* Barra de título */}
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-border">
                 <input value={title} onChange={(e) => handleFieldChange("title", e.target.value)}
-                  placeholder="Título" readOnly={isLocked}
-                  className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground min-w-0" />
-                <div className="flex items-center gap-2 shrink-0">
+                  placeholder="Título da anotação" readOnly={isLocked}
+                  className="flex-1 bg-transparent text-sm font-semibold text-foreground focus:outline-none placeholder:text-muted-foreground/50 min-w-0" />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {saveStatus === "saving" && <span className="text-[9px] text-muted-foreground/60">salvando...</span>}
+                  {saveStatus === "saved" && <span className="text-[9px] text-brand/80">salvo</span>}
+                  {saveStatus === "error" && <span className="text-[9px] text-destructive">erro</span>}
                   {mode === "hidden" && unlocked.has(selected.id) && (
                     <button onClick={() => setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; })}
-                      title="Ocultar conteúdo novamente"
-                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors">
+                      title="Ocultar conteúdo"
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors">
                       <EyeOff className="size-3.5" />
                     </button>
                   )}
-                  <select value={noteStatus} onChange={(e) => handleFieldChange("status", e.target.value)}
-                    className={`bg-transparent border rounded px-1.5 py-0.5 text-[9px] focus:outline-none appearance-none ${STATUS_COLORS[noteStatus] || ""}`}>
-                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <select value={category} onChange={(e) => handleFieldChange("category", e.target.value)}
-                    className="bg-transparent border border-border rounded px-1.5 py-0.5 text-[9px] text-muted-foreground focus:outline-none appearance-none">
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <span className="text-[9px] text-muted-foreground">
-                    {saveStatus === "saving" ? "salvando..." : saveStatus === "saved" ? "salvo" : saveStatus === "error" ? "erro" : ""}
-                  </span>
                   <button onClick={() => deleteNote(selected.id)}
-                    className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                    <Trash2 className="size-3" />
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                    <Trash2 className="size-3.5" />
                   </button>
                 </div>
               </div>
 
-              <div className="px-4 py-1.5 border-b border-border flex items-center gap-2">
-                <Tag className="size-3 text-muted-foreground shrink-0" />
-                <input value={tags} onChange={(e) => handleFieldChange("tags", e.target.value)}
-                  placeholder="tags separadas por vírgula..."
-                  className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/60" />
+              {/* Metadados */}
+              <div className="flex items-center gap-2 px-5 py-2 border-b border-border/60 flex-wrap">
+                <select value={noteStatus} onChange={(e) => handleFieldChange("status", e.target.value)}
+                  className={`bg-transparent border rounded-lg px-2 py-1 text-[10px] font-medium focus:outline-none appearance-none cursor-pointer transition-colors ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
+                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select value={category} onChange={(e) => handleFieldChange("category", e.target.value)}
+                  className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer transition-colors">
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <Tag className="size-3 text-muted-foreground/40 shrink-0" />
+                  <input value={tags} onChange={(e) => handleFieldChange("tags", e.target.value)}
+                    placeholder="tags separadas por vírgula..."
+                    className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/40 min-w-0" />
+                </div>
               </div>
 
               {/* conteúdo com lock inline (modo visible) */}
