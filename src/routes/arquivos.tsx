@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Files, Download, Trash2, FileSpreadsheet, FileText, File } from "lucide-react";
+import { Files, Download, Trash2, FileSpreadsheet, FileText, File, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/arquivos")({
   head: () => ({ meta: [{ title: "Arquivos · VargasTI Lab" }] }),
@@ -21,7 +21,7 @@ type FileRecord = {
 };
 
 function getFileIcon(type: string) {
-  if (type.includes("sheet") || type.includes("excel") || type === "csv") return FileSpreadsheet;
+  if (type.includes("sheet") || type.includes("excel") || type === "csv" || type === "xlsx") return FileSpreadsheet;
   if (type.includes("text") || type.includes("pdf") || type.includes("doc")) return FileText;
   return File;
 }
@@ -33,32 +33,42 @@ function formatBytes(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function isExcelFile(type: string) {
+  return type === "xlsx" || type === "csv" || type.includes("sheet") || type.includes("excel");
+}
+
 function ArquivosPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState(false);
   const [search, setSearch] = useState("");
-
-  // Also load Excel import history from localStorage as supplemental data
-  const [excelHistory] = useState<FileRecord[]>(() => {
-    try {
-      const h = JSON.parse(localStorage.getItem("excel-history") || "[]");
-      return h.map((item: any) => ({
-        id: `local-${item.id}`,
-        name: item.fileName,
-        file_type: item.fileName.endsWith(".csv") ? "csv" : "xlsx",
-        origin: "Excel Tool",
-        size_bytes: undefined,
-        storage_path: undefined,
-        created_at: item.importedAt,
-      }));
-    } catch { return []; }
-  });
+  const [localHistory, setLocalHistory] = useState<FileRecord[]>([]);
 
   useEffect(() => {
+    loadLocal();
     if (user) load();
   }, [user]);
+
+  function loadLocal() {
+    try {
+      const h = JSON.parse(localStorage.getItem("excel-history") || "[]");
+      setLocalHistory(
+        h.map((item: Record<string, unknown>) => ({
+          id: `local-${item.id}`,
+          name: item.fileName,
+          file_type: String(item.fileName).endsWith(".csv") ? "csv" : "xlsx",
+          origin: "Excel Tool",
+          size_bytes: undefined,
+          storage_path: undefined,
+          created_at: item.importedAt,
+        }))
+      );
+    } catch {
+      setLocalHistory([]);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -77,20 +87,52 @@ function ArquivosPage() {
   }
 
   async function deleteFile(id: string) {
-    if (id.startsWith("local-")) return;
+    if (id.startsWith("local-")) {
+      const rawId = id.replace("local-", "");
+      try {
+        const h = JSON.parse(localStorage.getItem("excel-history") || "[]");
+        const updated = h.filter((item: Record<string, unknown>) => String(item.id) !== rawId);
+        localStorage.setItem("excel-history", JSON.stringify(updated));
+        setLocalHistory((prev) => prev.filter((f) => f.id !== id));
+      } catch { /* ignore */ }
+      return;
+    }
+    const file = files.find((f) => f.id === id);
+    if (file?.storage_path) {
+      await supabase.storage.from("uploads").remove([file.storage_path]);
+    }
     await supabase.from("file_records").delete().eq("id", id).eq("user_id", user!.id);
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }
 
-  const allFiles = [...files, ...excelHistory].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const filtered = allFiles.filter((f) =>
-    search === "" || f.name.toLowerCase().includes(search.toLowerCase()) || f.origin.toLowerCase().includes(search.toLowerCase())
+  async function downloadFile(f: FileRecord) {
+    if (!f.storage_path) return;
+    if (f.storage_path.startsWith("http")) {
+      window.open(f.storage_path, "_blank");
+      return;
+    }
+    const { data } = await supabase.storage.from("uploads").createSignedUrl(f.storage_path, 3600);
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.download = f.name;
+      a.click();
+    }
+  }
+
+  const allFiles = [...files, ...localHistory].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  const filtered = allFiles.filter(
+    (f) =>
+      search === "" ||
+      f.name.toLowerCase().includes(search.toLowerCase()) ||
+      f.origin.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <AppShell>
       <div className="p-4 md:p-5 space-y-3">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs font-medium text-muted-foreground mb-1">Arquivos</div>
@@ -99,7 +141,6 @@ function ArquivosPage() {
           <div className="text-[9px] text-muted-foreground">{filtered.length} arquivo(s)</div>
         </div>
 
-        {/* Search */}
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -125,12 +166,15 @@ function ArquivosPage() {
                   <th className="px-3 py-2 text-[9px] text-muted-foreground uppercase tracking-wider">Origem</th>
                   <th className="px-3 py-2 text-[9px] text-muted-foreground uppercase tracking-wider">Tamanho</th>
                   <th className="px-3 py-2 text-[9px] text-muted-foreground uppercase tracking-wider">Data</th>
-                  <th className="px-3 py-2 text-[9px] text-muted-foreground uppercase tracking-wider w-16"></th>
+                  <th className="px-3 py-2 text-[9px] text-muted-foreground uppercase tracking-wider w-24"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((f) => {
                   const Icon = getFileIcon(f.file_type);
+                  const canDownload = !!f.storage_path;
+                  const canOpen = isExcelFile(f.file_type);
+                  const isLocal = f.id.startsWith("local-");
                   return (
                     <tr key={f.id} className="hover:bg-surface-2 transition-colors group">
                       <td className="px-3 py-2">
@@ -155,16 +199,31 @@ function ArquivosPage() {
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {f.storage_path && (
-                            <button className="p-1 rounded text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors">
+                          {canOpen && (
+                            <button
+                              onClick={() => navigate({ to: "/ferramentas/excel" })}
+                              title="Abrir no Editor Excel"
+                              className="p-1 rounded text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
+                            >
+                              <ExternalLink className="size-3" />
+                            </button>
+                          )}
+                          {canDownload && (
+                            <button
+                              onClick={() => downloadFile(f)}
+                              title="Baixar arquivo"
+                              className="p-1 rounded text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
+                            >
                               <Download className="size-3" />
                             </button>
                           )}
-                          {!f.id.startsWith("local-") && (
-                            <button onClick={() => deleteFile(f.id)} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                              <Trash2 className="size-3" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => deleteFile(f.id)}
+                            title={isLocal ? "Remover do histórico" : "Excluir arquivo"}
+                            className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 className="size-3" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -177,7 +236,7 @@ function ArquivosPage() {
 
         {dbError && (
           <p className="text-[9px] text-muted-foreground text-center">
-            Tabela <code className="text-brand">file_records</code> não configurada — exibindo apenas histórico local do Excel Tool.
+            Tabela <code className="text-brand">file_records</code> não configurada — exibindo apenas histórico local.
           </p>
         )}
       </div>

@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, FileText, Search, Tag, ChevronDown } from "lucide-react";
+import { Plus, Trash2, FileText, Search, Tag, Lock, Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
   head: () => ({ meta: [{ title: "Anotações · VargasTI Lab" }] }),
@@ -21,6 +21,10 @@ type Note = {
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+type Modal =
+  | null
+  | { type: "set-password"; noteId: string }
+  | { type: "unlock"; note: Note };
 
 const CATEGORIES = ["Geral", "Técnica", "Ideia", "Reunião", "Lembrete"];
 const STATUSES = ["rascunho", "em análise", "aprovado", "arquivado"];
@@ -30,6 +34,36 @@ const STATUS_COLORS: Record<string, string> = {
   "aprovado": "text-brand border-brand/30",
   "arquivado": "text-muted-foreground/50 border-muted-foreground/20",
 };
+
+const PWD_RE = /__pwd:[a-f0-9]+/;
+
+async function sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function getPwdHash(tags: string): string | null {
+  const m = tags.match(/__pwd:([a-f0-9]+)/);
+  return m ? m[1] : null;
+}
+
+function addPwdHash(tags: string, hash: string): string {
+  const clean = (tags ?? "").replace(/,?\s*__pwd:[a-f0-9]+/, "").trim();
+  return clean ? `${clean},__pwd:${hash}` : `__pwd:${hash}`;
+}
+
+function removePwdHash(tags: string): string {
+  return (tags ?? "").replace(/,?\s*__pwd:[a-f0-9]+/, "").trim();
+}
+
+function displayTags(tags: string): string {
+  return (tags ?? "").replace(PWD_RE, "").replace(/,\s*,/g, ",").replace(/^,|,$/g, "").trim();
+}
+
+function isLocked(note: Note): boolean {
+  return (note.status === "arquivado" || note.status === "archived") &&
+    !!getPwdHash(note.tags ?? "");
+}
 
 function NotesPage() {
   const { user } = useAuth();
@@ -46,6 +80,11 @@ function NotesPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterCategory, setFilterCategory] = useState("todas");
+  const [modal, setModal] = useState<Modal>(null);
+  const [modalPwd, setModalPwd] = useState("");
+  const [modalPwdShow, setModalPwdShow] = useState(false);
+  const [modalError, setModalError] = useState("");
+  const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -71,12 +110,18 @@ function NotesPage() {
   }
 
   function selectNote(note: Note) {
+    if (isLocked(note) && !unlocked.has(note.id)) {
+      setModal({ type: "unlock", note });
+      setModalPwd("");
+      setModalError("");
+      return;
+    }
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setSelected(note);
     setTitle(note.title);
     setContent(note.content);
     setCategory(note.category || "Geral");
-    setTags(note.tags || "");
+    setTags(displayTags(note.tags ?? ""));
     setNoteStatus(note.status || "rascunho");
     setSaveStatus("idle");
   }
@@ -104,9 +149,7 @@ function NotesPage() {
         .eq("user_id", user!.id);
 
       if (!error) {
-        setNotes((prev) =>
-          prev.map((n) => (n.id === noteId ? { ...n, ...updates } : n))
-        );
+        setNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, ...updates } : n)));
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
@@ -117,13 +160,77 @@ function NotesPage() {
 
   function handleFieldChange(field: string, val: string) {
     if (!selected) return;
+
+    if (field === "status" && val === "arquivado") {
+      setNoteStatus(val);
+      scheduleAutoSave(selected.id, { status: val });
+      setModal({ type: "set-password", noteId: selected.id });
+      setModalPwd("");
+      setModalError("");
+      return;
+    }
+
+    if (field === "status" && selected.status === "arquivado") {
+      const newTags = removePwdHash(notes.find((n) => n.id === selected.id)?.tags ?? "");
+      setNoteStatus(val);
+      scheduleAutoSave(selected.id, { status: val, tags: newTags });
+      setUnlocked((prev) => { const s = new Set(prev); s.delete(selected.id); return s; });
+      return;
+    }
+
     const updates: Record<string, string> = {};
     if (field === "title") { setTitle(val); updates.title = val; updates.content = content; }
     if (field === "content") { setContent(val); updates.title = title; updates.content = val; }
     if (field === "category") { setCategory(val); updates.category = val; }
-    if (field === "tags") { setTags(val); updates.tags = val; }
+    if (field === "tags") {
+      setTags(val);
+      const existingHash = getPwdHash(notes.find((n) => n.id === selected.id)?.tags ?? "");
+      updates.tags = existingHash ? `${val},__pwd:${existingHash}` : val;
+    }
     if (field === "status") { setNoteStatus(val); updates.status = val; }
     scheduleAutoSave(selected.id, updates);
+  }
+
+  async function handleSetPassword() {
+    if (!modal || modal.type !== "set-password") return;
+    if (!modalPwd.trim()) {
+      setModal(null);
+      return;
+    }
+    const hash = await sha256(modalPwd.trim());
+    const note = notes.find((n) => n.id === modal.noteId);
+    const currentTags = note?.tags ?? "";
+    const newTags = addPwdHash(currentTags, hash);
+    await supabase
+      .from("notes")
+      .update({ tags: newTags, updated_at: new Date().toISOString() })
+      .eq("id", modal.noteId)
+      .eq("user_id", user!.id);
+    setNotes((prev) => prev.map((n) => n.id === modal.noteId ? { ...n, tags: newTags } : n));
+    if (selected?.id === modal.noteId) setUnlocked((prev) => new Set(prev).add(modal.noteId));
+    setModal(null);
+  }
+
+  async function handleUnlock() {
+    if (!modal || modal.type !== "unlock") return;
+    const stored = getPwdHash(modal.note.tags ?? "");
+    if (!stored) { setModal(null); selectNote(modal.note); return; }
+    const hash = await sha256(modalPwd.trim());
+    if (hash !== stored) {
+      setModalError("Senha incorreta.");
+      return;
+    }
+    setUnlocked((prev) => new Set(prev).add(modal.note.id));
+    setModal(null);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    const note = modal.note;
+    setSelected(note);
+    setTitle(note.title);
+    setContent(note.content);
+    setCategory(note.category || "Geral");
+    setTags(displayTags(note.tags ?? ""));
+    setNoteStatus(note.status || "rascunho");
+    setSaveStatus("idle");
   }
 
   async function deleteNote(id: string) {
@@ -151,7 +258,6 @@ function NotesPage() {
             <p className="text-xs text-muted-foreground">
               Tabela <code className="text-brand bg-brand/10 px-1.5 py-0.5 rounded">notes</code> não encontrada.
             </p>
-            <p className="text-[10px] text-muted-foreground">Execute o SQL de setup no dashboard do Supabase.</p>
           </div>
         </div>
       </AppShell>
@@ -208,32 +314,39 @@ function NotesPage() {
             ) : filtered.length === 0 ? (
               <p className="text-[10px] text-muted-foreground text-center py-6">Nenhuma nota</p>
             ) : (
-              filtered.map((note) => (
-                <button
-                  key={note.id}
-                  onClick={() => selectNote(note)}
-                  className={`w-full text-left px-2 py-2 rounded text-[10px] transition-colors flex items-start gap-2 ${
-                    selected?.id === note.id
-                      ? "bg-brand/10 text-brand border border-brand/20"
-                      : "hover:bg-surface-2 text-muted-foreground border border-transparent"
-                  }`}
-                >
-                  <FileText className="size-3 mt-0.5 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="truncate text-[11px]">{note.title || "Sem título"}</p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {note.category && (
-                        <span className="text-[8px] text-muted-foreground/70">{note.category}</span>
-                      )}
-                      {note.status && note.status !== "rascunho" && (
-                        <span className={`text-[8px] border rounded-sm px-1 ${STATUS_COLORS[note.status] || ""}`}>
-                          {note.status}
-                        </span>
-                      )}
+              filtered.map((note) => {
+                const locked = isLocked(note) && !unlocked.has(note.id);
+                return (
+                  <button
+                    key={note.id}
+                    onClick={() => selectNote(note)}
+                    className={`w-full text-left px-2 py-2 rounded text-[10px] transition-colors flex items-start gap-2 ${
+                      selected?.id === note.id
+                        ? "bg-brand/10 text-brand border border-brand/20"
+                        : "hover:bg-surface-2 text-muted-foreground border border-transparent"
+                    }`}
+                  >
+                    {locked ? (
+                      <Lock className="size-3 mt-0.5 shrink-0 text-muted-foreground/50" />
+                    ) : (
+                      <FileText className="size-3 mt-0.5 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px]">{note.title || "Sem título"}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {note.category && (
+                          <span className="text-[8px] text-muted-foreground/70">{note.category}</span>
+                        )}
+                        {note.status && note.status !== "rascunho" && (
+                          <span className={`text-[8px] border rounded-sm px-1 ${STATUS_COLORS[note.status] || ""}`}>
+                            {note.status}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
@@ -282,6 +395,12 @@ function NotesPage() {
                 placeholder="tags separadas por vírgula..."
                 className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/60"
               />
+              {isLocked(selected) && unlocked.has(selected.id) && (
+                <div className="flex items-center gap-1 text-[9px] text-muted-foreground/60">
+                  <Lock className="size-3" />
+                  <span>protegida</span>
+                </div>
+              )}
             </div>
             <textarea
               value={content}
@@ -299,6 +418,106 @@ function NotesPage() {
           </div>
         )}
       </div>
+
+      {/* Modal: definir senha ao arquivar */}
+      {modal?.type === "set-password" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 animate-fade-in">
+            <div className="flex items-center gap-2">
+              <Lock className="size-4 text-brand" />
+              <h2 className="text-sm font-semibold text-foreground">Proteger com senha</h2>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Defina uma senha para esta anotação arquivada. Deixe em branco para arquivar sem proteção.
+            </p>
+            <div className="relative">
+              <input
+                type={modalPwdShow ? "text" : "password"}
+                placeholder="Senha (opcional)"
+                value={modalPwd}
+                onChange={(e) => setModalPwd(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSetPassword()}
+                autoFocus
+                className="w-full bg-white/5 border border-border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setModalPwdShow((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {modalPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </button>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setModal(null)}
+                className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+              >
+                Pular
+              </button>
+              <button
+                onClick={handleSetPassword}
+                disabled={!modalPwd.trim()}
+                className="px-3 py-1.5 text-xs bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Proteger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: desbloquear nota */}
+      {modal?.type === "unlock" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 animate-fade-in">
+            <div className="flex items-center gap-2">
+              <Lock className="size-4 text-brand" />
+              <h2 className="text-sm font-semibold text-foreground">Nota protegida</h2>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <span className="text-foreground font-medium">{modal.note.title || "Sem título"}</span>
+              {" "}está protegida. Digite a senha para acessar.
+            </p>
+            <div className="relative">
+              <input
+                type={modalPwdShow ? "text" : "password"}
+                placeholder="Senha"
+                value={modalPwd}
+                onChange={(e) => { setModalPwd(e.target.value); setModalError(""); }}
+                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+                autoFocus
+                className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${modalError ? "border-destructive/50 focus:border-destructive/60" : "border-border focus:border-brand/40"}`}
+              />
+              <button
+                type="button"
+                onClick={() => setModalPwdShow((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {modalPwdShow ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </button>
+            </div>
+            {modalError && (
+              <p className="text-xs text-destructive">{modalError}</p>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setModal(null)}
+                className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUnlock}
+                disabled={!modalPwd.trim()}
+                className="px-3 py-1.5 text-xs bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Desbloquear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
