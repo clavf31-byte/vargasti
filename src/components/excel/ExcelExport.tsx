@@ -63,10 +63,11 @@ export function ExcelExport({
       const blob = new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
+      const exportName = (fileName || "exportado").replace(/\.[^.]+$/, "") + ".xlsx";
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = fileName || "exportado.xlsx";
+      a.download = exportName;
       a.click();
       URL.revokeObjectURL(url);
     } else {
