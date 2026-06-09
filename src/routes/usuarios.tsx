@@ -29,7 +29,7 @@ function UsuariosPage() {
 
   async function loadUsers() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("profiles")
         .select("id:user_id, full_name, email");
 
