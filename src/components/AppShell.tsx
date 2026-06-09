@@ -60,20 +60,20 @@ export function AppShell({ children }: { children?: ReactNode }) {
         `}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border/50">
+        <div className="flex items-center justify-between px-4 py-5 border-b border-border/50">
           <Link
             to="/"
             onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+            className="flex items-center gap-3.5 hover:opacity-90 transition-opacity"
           >
-            <div className="size-9 rounded-xl bg-brand/10 border border-brand/20 grid place-items-center shrink-0">
-              <img src={vargasLogo} alt="VargasTI" className="size-5 object-contain" />
+            <div className="size-[4.5rem] rounded-[18px] bg-brand/10 border border-brand/20 grid place-items-center shrink-0 shadow-[0_0_32px_rgba(59,220,138,.10)]">
+              <img src={vargasLogo} alt="VargasTI" className="size-[42px] object-contain" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-foreground leading-none tracking-tight">
+              <h1 className="text-lg font-extrabold text-foreground leading-none tracking-tight">
                 Vargas<span className="text-brand">TI</span>
               </h1>
-              <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">Lab v2.0</p>
+              <p className="text-[10px] text-muted-foreground mt-1 tracking-wide">Lab v2.0</p>
             </div>
           </Link>
           <button

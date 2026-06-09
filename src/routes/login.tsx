@@ -72,11 +72,11 @@ function LoginPage() {
       <div className="relative w-full max-w-sm animate-fade-in">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="size-16 rounded-2xl bg-brand/10 border border-brand/20 grid place-items-center mb-4 glow-sm">
+          <div className="size-28 rounded-[28px] bg-brand/10 border border-brand/20 grid place-items-center mb-5 shadow-[0_0_60px_rgba(59,220,138,.15)]">
             <img
               src={vargasLogo}
               alt="VargasTI"
-              className="size-9 object-contain"
+              className="size-[4.5rem] object-contain"
             />
           </div>
           <h1 className="text-xl font-bold text-foreground tracking-tight">
