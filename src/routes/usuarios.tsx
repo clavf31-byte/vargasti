@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Users, Plus, Search, Filter } from "lucide-react";
 
 export const Route = createFileRoute("/usuarios")({
@@ -29,7 +29,7 @@ function UsuariosPage() {
 
   async function loadUsers() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("profiles")
         .select("id:user_id, full_name, email");
 
