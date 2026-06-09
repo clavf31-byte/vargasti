@@ -5,7 +5,7 @@ import { ActivityCard } from "@/components/ActivityCard";
 import { VisionOfToday } from "@/components/VisionOfToday";
 import { SystemInfo } from "@/components/SystemInfo";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import {
   NotebookPen, Wrench, FolderKanban, Files,
