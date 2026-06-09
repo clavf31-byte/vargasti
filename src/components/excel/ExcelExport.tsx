@@ -59,7 +59,16 @@ export function ExcelExport({
       const ws = XLSX.utils.aoa_to_sheet([hdrs, ...data]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, activeSheet || "Sheet1");
-      XLSX.writeFile(wb, fileName || "exportado.xlsx");
+      const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName || "exportado.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
     } else {
       const csv = [hdrs, ...data]
         .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
