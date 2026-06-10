@@ -638,13 +638,18 @@ function CreateAgentDialog({ onClose, onCreated }: { onClose: () => void; onCrea
   const [saving, setSaving] = useState(false);
 
   async function handleCreate() {
-    if (!config.label) return;
+    if (!config.label || !config.instance_name) {
+      alert("Preencha nome e instância");
+      return;
+    }
     setSaving(true);
     try {
-      await saveWhatsappConfig({ data: { ...config, id: undefined } as any });
+      const { id, ...rest } = config;
+      await saveWhatsappConfig({ data: rest as any });
       onCreated();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.error("Erro ao criar agente:", err);
+      alert("Erro ao criar agente");
     }
     setSaving(false);
   }
