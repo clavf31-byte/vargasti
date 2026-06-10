@@ -15,6 +15,7 @@ function getAdminClient() {
 export type WhatsappConfig = {
   id?: string;
   user_id?: string;
+  label: string;
   evolution_url: string;
   evolution_key: string;
   instance_name: string;
