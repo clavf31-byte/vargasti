@@ -88,7 +88,7 @@ function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-surface border border-border/60 rounded-2xl p-6 space-y-4">
+        <div className="card-graphite p-6 space-y-4">
           {accessDenied && (
             <div className="px-3 py-2.5 bg-destructive/10 border border-destructive/20 rounded-lg">
               <p className="text-xs text-destructive text-center">
@@ -119,7 +119,7 @@ function LoginPage() {
                   <span className="w-full border-t border-border/50" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-surface px-3 text-[10px] text-muted-foreground uppercase tracking-widest">
+                  <span className="bg-card px-3 text-[10px] text-muted-foreground uppercase tracking-widest">
                     ou
                   </span>
                 </div>
