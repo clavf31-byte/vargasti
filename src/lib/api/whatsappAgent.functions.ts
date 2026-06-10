@@ -71,7 +71,7 @@ export const getWhatsappConfig = createServerFn({ method: "GET" })
 const SaveConfigSchema = z.object({
   id: z.string().uuid().optional(),
   label: z.string().min(1),
-  evolution_url: z.string().url(),
+  evolution_url: z.string().refine((v) => v === "" || /^https?:\/\/.+/i.test(v), { message: "URL inválida" }),
   evolution_key: z.string(),
   instance_name: z.string().min(1),
   claude_system_prompt: z.string(),
