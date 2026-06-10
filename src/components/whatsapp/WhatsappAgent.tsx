@@ -231,6 +231,7 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveOk, setSaveOk] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -307,13 +308,31 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
 
   async function handleSave() {
     setSaving(true);
+    setSaveError(null);
     try {
-      await saveWhatsappConfig({ data: { ...config, id: config.id } as any });
+      await saveWhatsappConfig({
+        data: {
+          id: config.id,
+          label: config.label,
+          evolution_url: config.evolution_url,
+          evolution_key: config.evolution_key,
+          instance_name: config.instance_name,
+          claude_system_prompt: config.claude_system_prompt,
+          group_system_prompt: config.group_system_prompt || "",
+          auto_reply: config.auto_reply,
+          save_as_notes: config.save_as_notes,
+          webhook_token: config.webhook_token,
+          reply_to_groups: config.reply_to_groups ?? false,
+        }
+      });
       setSaveOk(true);
       onUpdate(config);
       setTimeout(() => setSaveOk(false), 2500);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao salvar";
+      setSaveError(msg);
+      console.error("Save error:", err);
+      setTimeout(() => setSaveError(null), 4000);
     }
     setSaving(false);
   }
@@ -636,12 +655,20 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
               </div>
             </DataCard>
 
-            <div className="flex items-center gap-2">
-              <Btn onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-                {saving ? "Salvando..." : "Salvar"}
-              </Btn>
-              {saveOk && <span className="text-[10px] text-brand flex items-center gap-1"><Check className="size-3" /> Salvo</span>}
+            <div className="space-y-3">
+              {saveError && (
+                <div className="flex items-start gap-3 px-4 py-3 bg-destructive/10 border border-destructive/20 rounded-xl">
+                  <AlertCircle className="size-4 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-xs text-destructive">{saveError}</p>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Btn onClick={handleSave} disabled={saving}>
+                  {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                  {saving ? "Salvando..." : "Salvar"}
+                </Btn>
+                {saveOk && <span className="text-[10px] text-brand flex items-center gap-1"><Check className="size-3" /> Salvo</span>}
+              </div>
             </div>
           </div>
         )}
