@@ -1,0 +1,1 @@
+ALTER TABLE public.whatsapp_config ADD COLUMN IF NOT EXISTS group_system_prompt TEXT DEFAULT ''; ALTER TABLE public.whatsapp_config ADD COLUMN IF NOT EXISTS reply_to_groups BOOLEAN DEFAULT false;

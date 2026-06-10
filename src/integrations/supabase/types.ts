@@ -132,9 +132,11 @@ export type Database = {
           created_at: string | null
           evolution_key: string
           evolution_url: string
+          group_system_prompt: string | null
           id: string
           instance_name: string
           label: string
+          reply_to_groups: boolean | null
           save_as_notes: boolean | null
           updated_at: string | null
           user_id: string
@@ -146,9 +148,11 @@ export type Database = {
           created_at?: string | null
           evolution_key?: string
           evolution_url?: string
+          group_system_prompt?: string | null
           id?: string
           instance_name?: string
           label?: string
+          reply_to_groups?: boolean | null
           save_as_notes?: boolean | null
           updated_at?: string | null
           user_id: string
@@ -160,9 +164,11 @@ export type Database = {
           created_at?: string | null
           evolution_key?: string
           evolution_url?: string
+          group_system_prompt?: string | null
           id?: string
           instance_name?: string
           label?: string
+          reply_to_groups?: boolean | null
           save_as_notes?: boolean | null
           updated_at?: string | null
           user_id?: string
