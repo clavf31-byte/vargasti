@@ -382,7 +382,7 @@ function AdminPage() {
       {/* Modal: alterar senha */}
       {pwdTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-5">
+          <div className="card-graphite p-6 w-full max-w-sm space-y-5">
             <div className="flex items-center gap-2">
               <KeyRound className="size-4 text-brand" />
               <h2 className="text-sm font-semibold text-foreground">Alterar senha</h2>
