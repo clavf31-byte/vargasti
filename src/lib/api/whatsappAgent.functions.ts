@@ -177,15 +177,18 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     if (cfg.save_as_notes) {
       const noteTitle = `WA: ${data.fromName} — ${new Date().toLocaleDateString("pt-BR")}`;
       const noteContent = `**De:** ${data.fromName} (${data.fromNumber})\n**Mensagem:** ${data.message}\n**Resposta:** ${reply}`;
-      await admin.from("notes").insert({
-        user_id: cfg.user_id,
-        title: noteTitle,
-        content: noteContent,
-        category: "Geral",
-        tags: "whatsapp,agente",
-        status: "rascunho",
-        updated_at: new Date().toISOString(),
-      }).catch(() => null);
+      await admin
+        .from("notes")
+        .insert({
+          user_id: cfg.user_id,
+          title: noteTitle,
+          content: noteContent,
+          category: "Geral",
+          tags: "whatsapp,agente",
+          status: "rascunho",
+          updated_at: new Date().toISOString(),
+        })
+        .then(undefined, () => null);
     }
 
     return { ok: true, reply };
