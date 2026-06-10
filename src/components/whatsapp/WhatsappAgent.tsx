@@ -94,21 +94,28 @@ export function WhatsappAgent() {
   async function handleCreateInstance() {
     if (!config.evolution_url || !config.evolution_key) return;
     setCheckingConn(true);
+    setQrBase64(null);
     try {
-      // Try to create — may already exist, that's fine
-      await evolutionAction({ data: { ...evoCfg(), action: "create_instance" } }).catch(() => null);
-      // Set webhook regardless
+      const createResult = await evolutionAction({ data: { ...evoCfg(), action: "create_instance" } }).catch(() => null);
+      // Evolution API v2 returns QR directly in the create response
+      const qrFromCreate = (createResult as { qr?: string | null } | null)?.qr ?? null;
+      if (qrFromCreate) {
+        setConnState("disconnected");
+        setQrBase64(qrFromCreate);
+        setCheckingConn(false);
+        // Set webhook in background — skip SSRF check issue for local URLs
+        evolutionAction({
+          data: { ...evoCfg(), action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
+        }).catch(() => null);
+        return;
+      }
+      // Instance already existed — just fetch QR
       await evolutionAction({
-        data: {
-          ...evoCfg(),
-          action: "set_webhook",
-          webhook_url: getWebhookUrl(config.webhook_token),
-        },
+        data: { ...evoCfg(), action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
       }).catch(() => null);
     } catch { /* ignore */ }
-    // Always try to get QR after creating/reconnecting
     setCheckingConn(false);
-    setTimeout(() => checkConnection(), 1500);
+    setTimeout(() => checkConnection(), 1000);
   }
 
   async function handleSave() {

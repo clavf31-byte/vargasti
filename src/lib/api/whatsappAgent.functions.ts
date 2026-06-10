@@ -169,8 +169,11 @@ export const evolutionAction = createServerFn({ method: "POST" })
           integration: "WHATSAPP-BAILEYS",
         }),
       });
-      const json = await res.json() as any;
-      return { ok: res.ok, data: json };
+      const json = await res.json() as Record<string, unknown>;
+      // Evolution API v2 returns QR inside the create response when qrcode: true
+      const qrcodeField = json?.qrcode as Record<string, unknown> | undefined;
+      const qr = (qrcodeField?.base64 as string) ?? null;
+      return { ok: res.ok, data: json, qr };
     }
 
     if (data.action === "get_qr") {
