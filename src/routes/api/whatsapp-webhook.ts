@@ -34,6 +34,7 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
           }
 
           const remoteJid = (key?.remoteJid as string) ?? "";
+          const isGroup = remoteJid.includes("@g.us");
           const fromNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@g.us", "");
           const fromName = (data?.pushName as string) ?? fromNumber;
 
@@ -78,7 +79,7 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
           }
 
           const result = await processWebhookMessage({
-            data: { token, fromNumber, fromName, message: finalMessage, instanceName, imageUrl },
+            data: { token, fromNumber, fromName, message: finalMessage, instanceName, imageUrl, isGroup },
           });
 
           return new Response(JSON.stringify(result), {

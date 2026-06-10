@@ -584,6 +584,12 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
                   onChange={(v) => setConfig({ ...config, auto_reply: v })}
                 />
                 <Toggle
+                  label="Responder em grupos"
+                  description="Responder mensagens de grupos do WhatsApp"
+                  value={config.reply_to_groups ?? false}
+                  onChange={(v) => setConfig({ ...config, reply_to_groups: v })}
+                />
+                <Toggle
                   label="Salvar como anotações"
                   description="Conversas viram anotações"
                   value={config.save_as_notes}

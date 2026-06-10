@@ -23,6 +23,7 @@ export type WhatsappConfig = {
   auto_reply: boolean;
   save_as_notes: boolean;
   webhook_token: string;
+  reply_to_groups: boolean;
 };
 
 export type WhatsappMessage = {
@@ -78,6 +79,7 @@ const SaveConfigSchema = z.object({
   auto_reply: z.boolean(),
   save_as_notes: z.boolean(),
   webhook_token: z.string(),
+  reply_to_groups: z.boolean().optional().default(false),
 });
 
 export const saveWhatsappConfig = createServerFn({ method: "POST" })
@@ -99,6 +101,7 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
         auto_reply: data.auto_reply,
         save_as_notes: data.save_as_notes,
         webhook_token: data.webhook_token,
+        reply_to_groups: data.reply_to_groups ?? false,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
@@ -290,6 +293,7 @@ const WebhookSchema = z.object({
   instanceName: z.string(),
   imageUrl: z.string().nullable().optional(),
   configId: z.string().optional(),
+  isGroup: z.boolean().optional(),
 });
 
 const DEFAULT_SYSTEM_PROMPT = `Você é o assistente virtual da VargasTI, empresa de suporte em TI e segurança eletrônica.
@@ -371,6 +375,11 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     }
 
     if (!cfg) return { ok: false, reason: "config not found" };
+
+    // Skip groups if reply_to_groups is false
+    if (data.isGroup && !cfg.reply_to_groups) {
+      return { ok: true, skipped: true, reason: "group_ignored" };
+    }
 
     // Save incoming message
     await admin.from("whatsapp_messages").insert({
