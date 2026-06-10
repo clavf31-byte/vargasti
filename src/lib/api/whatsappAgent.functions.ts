@@ -34,8 +34,8 @@ export type WhatsappMessage = {
   created_at: string;
 };
 
-// ── getWhatsappConfig ─────────────────────────────────────────────────────────
-export const getWhatsappConfig = createServerFn({ method: "GET" })
+// ── getWhatsappConfigs ────────────────────────────────────────────────────────
+export const getWhatsappConfigs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
@@ -43,12 +43,33 @@ export const getWhatsappConfig = createServerFn({ method: "GET" })
       .from("whatsapp_config")
       .select("*")
       .eq("user_id", userId)
+      .order("label");
+    return (data ?? []) as (WhatsappConfig & { id: string })[];
+  });
+
+// ── getWhatsappConfig (single by ID) ───────────────────────────────────────────
+const GetConfigSchema = z.object({
+  configId: z.string(),
+});
+
+export const getWhatsappConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(GetConfigSchema)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
+    const { data: cfg } = await supabase
+      .from("whatsapp_config")
+      .select("*")
+      .eq("id", data.configId)
+      .eq("user_id", userId)
       .maybeSingle();
-    return data as WhatsappConfig | null;
+    return cfg as (WhatsappConfig & { id: string }) | null;
   });
 
 // ── saveWhatsappConfig ────────────────────────────────────────────────────────
 const SaveConfigSchema = z.object({
+  id: z.string().uuid().optional(),
+  label: z.string().min(1),
   evolution_url: z.string(),
   evolution_key: z.string(),
   instance_name: z.string().min(1),
@@ -63,10 +84,43 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
   .inputValidator(SaveConfigSchema)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
+    const configId = data.id ?? (await import("crypto")).randomUUID?.() ?? crypto.randomUUID();
+
     const { error } = await supabase.from("whatsapp_config").upsert(
-      { ...data, user_id: userId, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" }
+      {
+        id: configId,
+        user_id: userId,
+        label: data.label,
+        evolution_url: data.evolution_url,
+        evolution_key: data.evolution_key,
+        instance_name: data.instance_name,
+        claude_system_prompt: data.claude_system_prompt,
+        auto_reply: data.auto_reply,
+        save_as_notes: data.save_as_notes,
+        webhook_token: data.webhook_token,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
     );
+    if (error) throw new Error(error.message);
+    return { ok: true, id: configId };
+  });
+
+// ── deleteWhatsappConfig ───────────────────────────────────────────────────────
+const DeleteConfigSchema = z.object({
+  configId: z.string(),
+});
+
+export const deleteWhatsappConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(DeleteConfigSchema)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
+    const { error } = await supabase
+      .from("whatsapp_config")
+      .delete()
+      .eq("id", data.configId)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -234,6 +288,7 @@ const WebhookSchema = z.object({
   message: z.string(),
   instanceName: z.string(),
   imageUrl: z.string().nullable().optional(),
+  configId: z.string().optional(),
 });
 
 const DEFAULT_SYSTEM_PROMPT = `Você é o assistente virtual da VargasTI, empresa de suporte em TI e segurança eletrônica.
@@ -298,12 +353,21 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const admin = getAdminClient();
 
-    const { data: cfg } = await admin
-      .from("whatsapp_config")
-      .select("*")
-      .eq("webhook_token", data.token)
-      .eq("instance_name", data.instanceName)
-      .maybeSingle();
+    let cfg: any;
+    if (data.configId) {
+      const { data: c } = await admin
+        .from("whatsapp_config")
+        .select("*")
+        .eq("id", data.configId)
+        .maybeSingle();
+      cfg = c;
+    } else {
+      const { data: cfgs } = await admin
+        .from("whatsapp_config")
+        .select("*")
+        .eq("webhook_token", data.token);
+      cfg = cfgs?.find((c: any) => c.instance_name === data.instanceName) ?? cfgs?.[0];
+    }
 
     if (!cfg) return { ok: false, reason: "config not found" };
 
