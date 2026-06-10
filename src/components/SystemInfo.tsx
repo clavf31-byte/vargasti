@@ -22,10 +22,6 @@ export function SystemInfo() {
               <span className="text-[10px] font-mono text-foreground">#{__BUILD_NUMBER__}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">Commit</span>
-              <span className="text-[10px] font-mono text-brand">{__GIT_HASH__}</span>
-            </div>
-            <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">Data</span>
               <span className="text-[10px] font-mono text-foreground">{__BUILD_DATE__}</span>
             </div>
