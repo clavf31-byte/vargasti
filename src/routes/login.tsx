@@ -88,7 +88,7 @@ function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-surface border border-border/60 rounded-2xl p-6 space-y-4">
+        <div className="card-graphite p-6 space-y-4">
           {accessDenied && (
             <div className="px-3 py-2.5 bg-destructive/10 border border-destructive/20 rounded-lg">
               <p className="text-xs text-destructive text-center">
