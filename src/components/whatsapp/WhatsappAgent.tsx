@@ -152,39 +152,41 @@ function AgentCard({ agent, onSelect, onRefresh }: { agent: Agent; onSelect: () 
     onRefresh();
   }
 
-  const bgColor = connState === "connected" ? "bg-brand/10 border-brand/20" : "bg-surface/50 border-border/50";
   const initials = agent.label?.substring(0, 1).toUpperCase() || "A";
+  const isBorder = connState === "connected" ? "border-2 border-brand" : "border-0.5 border-border";
 
   return (
-    <div className={`bg-surface border rounded-lg p-5 space-y-4 ${bgColor}`}>
+    <div className={`bg-background border rounded-xl p-5 space-y-4 ${isBorder}`}>
       <div className="flex items-center gap-3">
-        <div className="size-11 rounded-lg bg-surface-2 border border-border grid place-items-center font-semibold text-sm">
+        <div className="size-11 rounded-lg bg-background-info grid place-items-center font-semibold text-sm text-text-info">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-foreground truncate">{agent.label}</p>
-          <p className="text-[10px] text-muted-foreground/60 truncate">{agent.instance_name}</p>
+          <p className="text-sm font-semibold text-foreground">{agent.label}</p>
+          <p className="text-[10px] text-muted-foreground/60">{agent.instance_name}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className={`size-1.5 rounded-full ${connState === "connected" ? "bg-brand" : "bg-muted-foreground/40"}`} />
+        <div className={`size-2 rounded-full ${connState === "connected" ? "bg-brand" : "bg-muted-foreground/40"}`} />
         <p className="text-[10px] text-muted-foreground">{connState === "connected" ? "Conectado" : "Desconectado"}</p>
       </div>
 
       <p className="text-[10px] text-muted-foreground">{msgCount} mensagens</p>
 
-      <div className="flex gap-2 pt-3 border-t border-border/50">
-        <Btn variant="secondary" size="sm" onClick={onSelect} className="flex-1">
-          <MessageCircle className="size-3" />
+      <div className="flex gap-2 pt-4 border-t border-border/50">
+        <button
+          onClick={onSelect}
+          className="flex-1 px-3 py-2 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-2 transition-colors"
+        >
           Abrir
-        </Btn>
+        </button>
         <button
           onClick={handleDelete}
-          className="p-2 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="Deletar agente"
         >
-          <Trash2 className="size-3.5" />
+          <Trash2 className="size-4" />
         </button>
       </div>
     </div>
