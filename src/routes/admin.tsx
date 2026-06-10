@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { listUsers, updateUser, deleteUser, updateUserPassword } from "@/lib/api/adminUsers.functions";
 import type { UserRow } from "@/lib/api/adminUsers.functions";
+import { PageHeader, StatCard, Toolbar, Btn, EmptyState, LoadingState } from "@/components/shared";
 import {
   Shield, Search, Check, X, Trash2,
   RefreshCw, User, ChevronDown, KeyRound, Eye, EyeOff,
