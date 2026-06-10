@@ -20,6 +20,7 @@ export type WhatsappConfig = {
   evolution_key: string;
   instance_name: string;
   claude_system_prompt: string;
+  group_system_prompt: string;
   auto_reply: boolean;
   save_as_notes: boolean;
   webhook_token: string;
@@ -76,6 +77,7 @@ const SaveConfigSchema = z.object({
   evolution_key: z.string(),
   instance_name: z.string().min(1),
   claude_system_prompt: z.string(),
+  group_system_prompt: z.string(),
   auto_reply: z.boolean(),
   save_as_notes: z.boolean(),
   webhook_token: z.string(),
@@ -98,6 +100,7 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
         evolution_key: data.evolution_key,
         instance_name: data.instance_name,
         claude_system_prompt: data.claude_system_prompt,
+        group_system_prompt: data.group_system_prompt,
         auto_reply: data.auto_reply,
         save_as_notes: data.save_as_notes,
         webhook_token: data.webhook_token,
@@ -432,7 +435,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       { role: "user", content: currentUserContent },
     ];
 
-    const systemPrompt = cfg.claude_system_prompt || DEFAULT_SYSTEM_PROMPT;
+    const systemPrompt = (data.isGroup ? cfg.group_system_prompt : cfg.claude_system_prompt) || DEFAULT_SYSTEM_PROMPT;
     const useVision = !!data.imageUrl;
     const model = useVision ? "claude-opus-4-8" : "claude-haiku-4-5-20251001";
 

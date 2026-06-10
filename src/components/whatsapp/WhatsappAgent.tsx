@@ -567,12 +567,23 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
             <DataCard title="Comportamento do agente">
               <div className="p-4 space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Prompt do sistema (Claude)</label>
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Prompt do sistema (mensagens diretas)</label>
                   <textarea
                     value={config.claude_system_prompt}
                     onChange={(e) => setConfig({ ...config, claude_system_prompt: e.target.value })}
                     placeholder="Deixe vazio para usar o prompt padrão"
-                    rows={5}
+                    rows={4}
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground resize-none focus:outline-none focus:border-brand/40"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Prompt do sistema (mensagens de grupos)</label>
+                  <textarea
+                    value={config.group_system_prompt || ""}
+                    onChange={(e) => setConfig({ ...config, group_system_prompt: e.target.value })}
+                    placeholder="Deixe vazio para usar o mesmo prompt das mensagens diretas"
+                    rows={4}
                     className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground resize-none focus:outline-none focus:border-brand/40"
                   />
                 </div>
