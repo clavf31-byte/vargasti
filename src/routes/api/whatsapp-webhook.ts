@@ -26,23 +26,26 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             });
           }
 
-          // Skip archived chats — user archived the conversation in WhatsApp
-          // Check multiple possible locations for archived flag
+          // Debug: log full payload structure for archived detection
+          const payloadStr = JSON.stringify({ data, key }).toLowerCase();
+          const hasArchiveKeyword = payloadStr.includes("archive");
+          if (hasArchiveKeyword) {
+            console.log("[whatsapp-webhook] Archive keyword detected. Full payload:", JSON.stringify({ data, key }, null, 2));
+          }
+
+          // Skip archived chats — check multiple possible locations for archived flag
           const isArchived =
             (data?.chat as Record<string, unknown> | undefined)?.archived === true ||
             (data?.isArchived === true) ||
-            (key?.archived === true);
+            (key?.archived === true) ||
+            (data?.isArchived === "true") ||
+            (JSON.stringify(data).includes('"archived":true'));
 
           if (isArchived) {
-            console.log("[whatsapp-webhook] Skipped archived chat:", { fromNumber, archived: true });
+            console.log("[whatsapp-webhook] Skipped archived chat:", { fromNumber, fromName });
             return new Response(JSON.stringify({ ok: true, skipped: true, reason: "archived" }), {
               headers: { "Content-Type": "application/json" },
             });
-          }
-
-          // Debug: log the full structure if archived field not found (remove after testing)
-          if (JSON.stringify(data).toLowerCase().includes("archive")) {
-            console.log("[whatsapp-webhook] Payload structure:", JSON.stringify(data, null, 2));
           }
 
           const remoteJid = (key?.remoteJid as string) ?? "";
