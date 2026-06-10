@@ -8,12 +8,14 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { execSync } from "child_process";
 
 function getBuildInfo() {
+  const envHash = process.env.VITE_GIT_HASH ?? process.env.GIT_HASH ?? process.env.CF_PAGES_COMMIT_SHA;
+  const envCount = process.env.VITE_BUILD_NUMBER ?? process.env.BUILD_NUMBER;
   try {
-    const hash = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
-    const count = execSync("git rev-list --count HEAD", { encoding: "utf-8" }).trim();
-    return { hash, count: String(parseInt(count, 10)).padStart(3, "0") };
+    const hash = (envHash ?? execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim()).slice(0, 7);
+    const count = envCount ?? execSync("git rev-list --count HEAD", { encoding: "utf-8" }).trim();
+    return { hash, count: String(parseInt(count, 10) || 1).padStart(3, "0") };
   } catch {
-    return { hash: "dev", count: "001" };
+    return { hash: envHash?.slice(0, 7) ?? "dev", count: (envCount ?? "001").padStart(3, "0") };
   }
 }
 
