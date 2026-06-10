@@ -232,6 +232,7 @@ const WebhookSchema = z.object({
   fromName: z.string(),
   message: z.string(),
   instanceName: z.string(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 const DEFAULT_SYSTEM_PROMPT = `Você é o assistente virtual da VargasTI, empresa de suporte em TI e segurança eletrônica.
@@ -334,7 +335,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(10);
 
-    type MsgParam = { role: "user" | "assistant"; content: string };
+    type MsgParam = { role: "user" | "assistant"; content: string | Anthropic.ContentBlockParam[] };
     const historyMessages: MsgParam[] = (history ?? [])
       .reverse()
       .map((m: { direction: string; message: string }) => ({
@@ -342,13 +343,23 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
         content: m.message,
       }));
 
-    // Add current message (already saved above, so it may appear — deduplicate)
+    // Build current message — if image present, include it
+    let currentUserContent: string | Anthropic.ContentBlockParam[] = `${data.fromName}: ${data.message}`;
+    if (data.imageUrl) {
+      currentUserContent = [
+        { type: "text", text: `${data.fromName}: ${data.message}` },
+        { type: "image", source: { type: "url", url: data.imageUrl } },
+      ];
+    }
+
     const messages: MsgParam[] = [
-      ...historyMessages.filter((_, i, arr) => !(i === arr.length - 1 && arr[arr.length - 1].role === "user" && arr[arr.length - 1].content === data.message)),
-      { role: "user", content: `${data.fromName}: ${data.message}` },
+      ...historyMessages.filter((_, i, arr) => !(i === arr.length - 1 && arr[arr.length - 1].role === "user" && typeof arr[arr.length - 1].content === "string" && arr[arr.length - 1].content === data.message)),
+      { role: "user", content: currentUserContent },
     ];
 
     const systemPrompt = cfg.claude_system_prompt || DEFAULT_SYSTEM_PROMPT;
+    const useVision = !!data.imageUrl;
+    const model = useVision ? "claude-opus-4-8" : "claude-haiku-4-5-20251001";
 
     // Tool-use loop (max 3 iterations)
     let currentMessages = messages as Anthropic.MessageParam[];
@@ -357,8 +368,8 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
 
     for (let i = 0; i < 3; i++) {
       const resp = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
+        model,
+        max_tokens: useVision ? 2048 : 1024,
         system: systemPrompt,
         tools: AGENT_TOOLS as unknown as Anthropic.Tool[],
         messages: currentMessages,

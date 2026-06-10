@@ -49,19 +49,33 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
           const fromNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@g.us", "");
           const fromName = (data?.pushName as string) ?? fromNumber;
           const msgObj = data?.message as Record<string, unknown>;
+
           const message =
             (msgObj?.conversation as string) ??
             ((msgObj?.extendedTextMessage as Record<string, unknown>)?.text as string) ??
             "";
 
-          if (!message || !fromNumber) {
+          // Extract image URL if present
+          const imageMessage = msgObj?.imageMessage as Record<string, unknown> | undefined;
+          const imageUrl = (imageMessage?.url as string) ?? null;
+          const imageCaption = (imageMessage?.caption as string) ?? null;
+
+          if (!fromNumber) {
+            return new Response(JSON.stringify({ ok: true, skipped: true }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          // If image present, use image caption or a placeholder; if text present, use text; if neither, skip
+          const finalMessage = message || imageCaption || (imageUrl ? "[Imagem enviada]" : "");
+          if (!finalMessage) {
             return new Response(JSON.stringify({ ok: true, skipped: true }), {
               headers: { "Content-Type": "application/json" },
             });
           }
 
           const result = await processWebhookMessage({
-            data: { token, fromNumber, fromName, message, instanceName },
+            data: { token, fromNumber, fromName, message: finalMessage, instanceName, imageUrl },
           });
 
           return new Response(JSON.stringify(result), {
