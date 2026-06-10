@@ -158,8 +158,79 @@
 @utility glass {
   background-color: color-mix(in oklch, var(--surface) 80%, transparent);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
+
+/* ─── Modern Card System (referência: tela "Seus agentes") ─── */
+@utility card-graphite {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow-card);
+}
+
+@utility card-selectable {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease, background-color 200ms ease;
+}
+@utility card-selectable-hover {
+  border-color: color-mix(in oklch, var(--select) 35%, var(--border));
+  box-shadow: var(--shadow-card-hover);
+}
+
+@utility card-selected {
+  border-color: var(--select);
+  box-shadow: var(--shadow-select), var(--shadow-card);
+}
+
+@utility icon-box {
+  display: grid;
+  place-items: center;
+  background-color: color-mix(in oklch, var(--select) 18%, var(--surface));
+  border: 1px solid color-mix(in oklch, var(--select) 30%, var(--border));
+  border-radius: calc(var(--radius));
+  color: var(--select-foreground);
+}
+
+@utility icon-box-brand {
+  display: grid;
+  place-items: center;
+  background-color: color-mix(in oklch, var(--brand) 14%, var(--surface));
+  border: 1px solid color-mix(in oklch, var(--brand) 28%, var(--border));
+  border-radius: calc(var(--radius));
+  color: var(--brand);
+}
+
+@utility divider-soft {
+  height: 1px;
+  width: 100%;
+  background-color: color-mix(in oklch, var(--border) 70%, transparent);
+}
+
+@utility btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border);
+  background-color: color-mix(in oklch, var(--surface) 80%, transparent);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+@utility btn-modern-hover {
+  background-color: var(--surface-2);
+  border-color: color-mix(in oklch, var(--select) 30%, var(--border));
+}
+
+
 
 @utility card-interactive {
   transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
