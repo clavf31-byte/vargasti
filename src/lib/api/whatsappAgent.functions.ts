@@ -333,6 +333,36 @@ Seu nome é **Vargas**. Você atende pelo WhatsApp corporativo e representa a em
 
 Ao criar a anotação, informe o cliente que o chamado foi registrado e que a equipe entrará em contato.`;
 
+// ── Helper: Search KB articles by keywords ───────────────────────────────────
+async function searchKnowledgeBase(admin: ReturnType<typeof getAdminClient>, keywords: string[], limit = 3): Promise<Array<{ title: string; content: string }>> {
+  if (!keywords.length) return [];
+
+  try {
+    const { data: articles } = await admin
+      .from("kb_articles")
+      .select("title, content")
+      .eq("status", "published")
+      .limit(limit * 2);
+
+    if (!articles?.length) return [];
+
+    // Simple keyword matching — sort by relevance
+    const scored = articles
+      .map((article: any) => {
+        const text = `${article.title} ${article.content}`.toLowerCase();
+        const score = keywords.filter(kw => text.includes(kw.toLowerCase())).length;
+        return { ...article, score };
+      })
+      .filter((a: any) => a.score > 0)
+      .sort((a: any, b: any) => b.score - a.score)
+      .slice(0, limit);
+
+    return scored;
+  } catch {
+    return [];
+  }
+}
+
 const AGENT_TOOLS = [
   {
     name: "create_ticket_note",
@@ -438,7 +468,24 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       { role: "user", content: currentUserContent },
     ];
 
-    const systemPrompt = (data.isGroup ? cfg.group_system_prompt : cfg.claude_system_prompt) || DEFAULT_SYSTEM_PROMPT;
+    // Search KB for relevant articles based on message keywords
+    const keywords = data.message
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3)
+      .slice(0, 5);
+    const kbArticles = await searchKnowledgeBase(admin, keywords, 3);
+
+    let systemPrompt = (data.isGroup ? cfg.group_system_prompt : cfg.claude_system_prompt) || DEFAULT_SYSTEM_PROMPT;
+
+    // Append KB context if articles found
+    if (kbArticles.length > 0) {
+      const kbContext = kbArticles
+        .map((article) => `**${article.title}**\n${article.content}`)
+        .join("\n\n---\n\n");
+      systemPrompt += `\n\n## Base de Conhecimento Relevante\nConsulte as informações abaixo para contextualizar suas respostas:\n\n${kbContext}`;
+    }
+
     const useVision = !!data.imageUrl;
     const model = useVision ? "claude-opus-4-8" : "claude-haiku-4-5-20251001";
 
