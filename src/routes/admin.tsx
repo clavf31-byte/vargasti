@@ -177,50 +177,30 @@ function AdminPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-5 space-y-4">
-        {/* Header */}
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Administração</p>
-            <h1 className="text-base font-bold text-foreground tracking-tight">Gestão de Usuários</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Aprove contas, gerencie funções e acessos.</p>
-          </div>
-          <button
-            onClick={load}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-2 border border-border rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-            Atualizar
-          </button>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+        <PageHeader
+          category="Administração"
+          title="Gestão de Usuários"
+          icon={Shield}
+          subtitle="Aprove contas, gerencie funções e acessos."
+          actions={
+            <Btn variant="secondary" size="sm" onClick={load} disabled={loading}>
+              <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Btn>
+          }
+        />
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {[
-            { label: "Total", value: counts.total, cls: "text-foreground" },
-            { label: "Ativos", value: counts.active, cls: "text-brand" },
-            { label: "Pendentes", value: counts.pending, cls: "text-warning" },
-            { label: "Rejeitados", value: counts.rejected, cls: "text-destructive" },
-          ].map(({ label, value, cls }) => (
-            <div key={label} className="bg-surface border border-border rounded-xl px-4 py-3">
-              <div className={`text-2xl font-bold tabular-nums ${cls}`}>{String(value).padStart(2, "0")}</div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-1">{label}</div>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard label="Total" value={String(counts.total).padStart(2, "0")} />
+          <StatCard label="Ativos" value={String(counts.active).padStart(2, "0")} colorClass="text-brand" />
+          <StatCard label="Pendentes" value={String(counts.pending).padStart(2, "0")} colorClass="text-warning" />
+          <StatCard label="Rejeitados" value={String(counts.rejected).padStart(2, "0")} colorClass="text-destructive" />
         </div>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou e-mail..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all"
-          />
-        </div>
+        <Toolbar searchValue={search} onSearchChange={setSearch} placeholder="Buscar por nome ou e-mail..." />
 
         {error && (
           <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
@@ -229,25 +209,19 @@ function AdminPage() {
         )}
 
         {/* List */}
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+        <div className="card-graphite overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
-              <RefreshCw className="size-4 animate-spin" />
-              <span className="text-sm">Carregando usuários...</span>
-            </div>
+            <LoadingState label="Carregando usuários..." />
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-2">
-              <div className="size-10 rounded-full bg-surface-2 border border-border grid place-items-center">
-                <User className="size-4 text-muted-foreground/50" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {search ? "Nenhum usuário encontrado." : "Nenhum usuário cadastrado."}
-              </p>
-            </div>
+            <EmptyState
+              icon={User}
+              title={search ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
+              subtitle={search ? "Ajuste sua busca e tente novamente." : "Convide pessoas para começar."}
+            />
           ) : (
             <div className="divide-y divide-border/50">
               {/* Table header */}
-              <div className="hidden md:grid grid-cols-[1fr_140px_140px_120px] gap-4 px-4 py-2.5 bg-surface-2/50">
+              <div className="hidden md:grid grid-cols-[1fr_140px_140px_120px] gap-4 px-5 py-3 bg-surface-2/40">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Usuário</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Função</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Status</span>
@@ -258,6 +232,7 @@ function AdminPage() {
                 const isBusy = busy?.startsWith(u.id);
                 const isSelf = u.id === user?.id;
                 const isGoogle = u.provider === "google";
+
 
                 return (
                   <div
