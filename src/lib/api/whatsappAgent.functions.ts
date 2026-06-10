@@ -103,15 +103,57 @@ const EvolutionActionSchema = z.object({
   webhook_url: z.string().optional(),
 });
 
+// Validate URL is https public hostname (no private/loopback/link-local IPs)
+function assertSafeExternalUrl(raw: string): URL {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    throw new Error("URL inválida");
+  }
+  if (u.protocol !== "https:") {
+    throw new Error("Apenas URLs https:// são permitidas");
+  }
+  const host = u.hostname.toLowerCase();
+  // Block literal IPs in private/loopback/link-local ranges and any non-public host
+  const blockedHostnames = ["localhost", "metadata.google.internal", "metadata.goog"];
+  if (blockedHostnames.includes(host)) throw new Error("Host não permitido");
+  // IPv6 loopback / link-local
+  if (host === "[::1]" || host.startsWith("[fc") || host.startsWith("[fd") || host.startsWith("[fe80")) {
+    throw new Error("Host não permitido");
+  }
+  // IPv4 literal
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    if (
+      a === 10 ||
+      a === 127 ||
+      a === 0 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a >= 224
+    ) {
+      throw new Error("Host não permitido");
+    }
+  }
+  return u;
+}
+
 export const evolutionAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(EvolutionActionSchema)
-  .handler(async ({ data }) => {
-    const base = data.evolution_url.replace(/\/$/, "");
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string | null };
+    if (!userId) throw new Error("Não autenticado");
+
+    const safeUrl = assertSafeExternalUrl(data.evolution_url);
+    const base = safeUrl.toString().replace(/\/$/, "");
     const headers = { "Content-Type": "application/json", apikey: data.evolution_key };
 
     if (data.action === "check_status") {
-      const res = await fetch(`${base}/instance/connectionState/${data.instance_name}`, { headers });
+      const res = await fetch(`${base}/instance/connectionState/${encodeURIComponent(data.instance_name)}`, { headers });
       if (!res.ok) return { state: "disconnected" };
       const json = await res.json() as { instance?: { state?: string } };
       return { state: json?.instance?.state ?? "disconnected" };
@@ -127,19 +169,20 @@ export const evolutionAction = createServerFn({ method: "POST" })
           integration: "WHATSAPP-BAILEYS",
         }),
       });
-      const json = await res.json() as Record<string, unknown>;
+      const json = await res.json() as any;
       return { ok: res.ok, data: json };
     }
 
     if (data.action === "get_qr") {
-      const res = await fetch(`${base}/instance/connect/${data.instance_name}`, { headers });
+      const res = await fetch(`${base}/instance/connect/${encodeURIComponent(data.instance_name)}`, { headers });
       if (!res.ok) return { qr: null };
       const json = await res.json() as { base64?: string; qrcode?: { base64?: string } };
       return { qr: json?.base64 ?? json?.qrcode?.base64 ?? null };
     }
 
     if (data.action === "set_webhook" && data.webhook_url) {
-      const res = await fetch(`${base}/webhook/set/${data.instance_name}`, {
+      assertSafeExternalUrl(data.webhook_url);
+      const res = await fetch(`${base}/webhook/set/${encodeURIComponent(data.instance_name)}`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -152,7 +195,7 @@ export const evolutionAction = createServerFn({ method: "POST" })
           },
         }),
       });
-      const json = await res.json() as Record<string, unknown>;
+      const json = await res.json() as any;
       return { ok: res.ok, data: json };
     }
 

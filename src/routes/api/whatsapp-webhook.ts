@@ -49,8 +49,9 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             headers: { "Content-Type": "application/json" },
           });
         } catch (err) {
+          console.error("[whatsapp-webhook] processing error:", err);
           return new Response(
-            JSON.stringify({ ok: false, error: err instanceof Error ? err.message : "unknown" }),
+            JSON.stringify({ ok: false, error: "Webhook processing failed" }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
