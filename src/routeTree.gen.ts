@@ -19,6 +19,7 @@ import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
+import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 
 const UsuariosRoute = UsuariosRouteImport.update({
@@ -71,6 +72,11 @@ const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FerramentasRoute,
 } as any)
+const FerramentasWhatsappRoute = FerramentasWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => FerramentasRoute,
+} as any)
 const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
   id: '/excel',
   path: '/excel',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
 }
 export interface FileRoutesByTo {
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas': typeof FerramentasIndexRoute
 }
 export interface FileRoutesById {
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
 }
 export interface FileRouteTypes {
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/usuarios'
     | '/ferramentas/excel'
+    | '/ferramentas/whatsapp'
     | '/ferramentas/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/usuarios'
     | '/ferramentas/excel'
+    | '/ferramentas/whatsapp'
     | '/ferramentas'
   id:
     | '__root__'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/usuarios'
     | '/ferramentas/excel'
+    | '/ferramentas/whatsapp'
     | '/ferramentas/'
   fileRoutesById: FileRoutesById
 }
@@ -241,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FerramentasIndexRouteImport
       parentRoute: typeof FerramentasRoute
     }
+    '/ferramentas/whatsapp': {
+      id: '/ferramentas/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/ferramentas/whatsapp'
+      preLoaderRoute: typeof FerramentasWhatsappRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
     '/ferramentas/excel': {
       id: '/ferramentas/excel'
       path: '/excel'
@@ -253,11 +272,13 @@ declare module '@tanstack/react-router' {
 
 interface FerramentasRouteChildren {
   FerramentasExcelRoute: typeof FerramentasExcelRoute
+  FerramentasWhatsappRoute: typeof FerramentasWhatsappRoute
   FerramentasIndexRoute: typeof FerramentasIndexRoute
 }
 
 const FerramentasRouteChildren: FerramentasRouteChildren = {
   FerramentasExcelRoute: FerramentasExcelRoute,
+  FerramentasWhatsappRoute: FerramentasWhatsappRoute,
   FerramentasIndexRoute: FerramentasIndexRoute,
 }
 
@@ -279,3 +300,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
