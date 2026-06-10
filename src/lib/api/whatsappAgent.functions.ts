@@ -220,12 +220,68 @@ const WebhookSchema = z.object({
   instanceName: z.string(),
 });
 
+const DEFAULT_SYSTEM_PROMPT = `Você é o assistente virtual da VargasTI, empresa de suporte em TI e segurança eletrônica.
+
+Seu nome é **Vargas**. Você atende pelo WhatsApp corporativo e representa a empresa com profissionalismo e simpatia.
+
+## Como você se comporta
+- Fale em português brasileiro, de forma natural e acessível — sem ser robótico
+- Seja direto, mas humano. Evite respostas longas demais para WhatsApp
+- Use emojis com moderação quando ajudar a deixar a mensagem mais clara
+- Quando não souber algo, seja honesto e oriente o caminho certo
+- Lembre do contexto da conversa — o histórico está disponível para você
+
+## O que você faz
+1. **Lê e interpreta** a solicitação do cliente
+2. **Orienta** como resolver na hora, se possível (reiniciar equipamento, verificar cabo, etc.)
+3. **Avalia** se o problema precisa de atendimento técnico presencial ou abertura de chamado
+4. **Cria uma anotação** automaticamente quando identificar que será necessário acompanhamento (use a tool create_ticket_note)
+
+## Quando criar uma anotação (chamado)
+- Problema que não pode ser resolvido remotamente
+- Equipamento com defeito confirmado
+- Instalação, manutenção preventiva ou corretiva necessária
+- Cliente relata recorrência do mesmo problema
+- Solicitação que exige visita técnica
+
+## Prioridades
+- **alta**: sistema de segurança inoperante, câmeras offline, alarme disparando sem motivo, acesso bloqueado
+- **media**: lentidão, equipamento com falha intermitente, dúvidas de configuração
+- **baixa**: solicitações de informação, dúvidas gerais, manutenções agendadas
+
+Ao criar a anotação, informe o cliente que o chamado foi registrado e que a equipe entrará em contato.`;
+
+const AGENT_TOOLS = [
+  {
+    name: "create_ticket_note",
+    description: "Cria uma anotação no sistema para abertura de chamado técnico. Use quando o problema não pode ser resolvido via WhatsApp e precisa de acompanhamento.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        title: { type: "string", description: "Título curto do chamado (ex: 'Câmera offline - Cliente João')" },
+        description: { type: "string", description: "Descrição completa do problema relatado, contexto e orientações já fornecidas" },
+        priority: { type: "string", enum: ["alta", "media", "baixa"], description: "Prioridade do chamado" },
+        contact: { type: "string", description: "Nome e número do contato" },
+      },
+      required: ["title", "description", "priority", "contact"],
+    },
+  },
+  {
+    name: "get_datetime",
+    description: "Retorna a data e hora atual no Brasil (America/Sao_Paulo). Use quando precisar saber o horário atual para contexto da resposta.",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
+] as const;
+
 export const processWebhookMessage = createServerFn({ method: "POST" })
   .inputValidator(WebhookSchema)
   .handler(async ({ data }) => {
     const admin = getAdminClient();
 
-    // Find config by webhook_token
     const { data: cfg } = await admin
       .from("whatsapp_config")
       .select("*")
@@ -249,35 +305,111 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
 
     if (!cfg.auto_reply) return { ok: true, reply: null };
 
-    // Build Claude response
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return { ok: false, reason: "no API key" };
 
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
     const client = new Anthropic({ apiKey });
 
-    const systemPrompt = cfg.claude_system_prompt ||
-      `Você é um assistente pessoal do VargasTI Lab. Responda de forma clara e direta em português brasileiro. Seja conciso — estamos no WhatsApp.`;
+    // Load conversation history for this contact (last 10 messages)
+    const { data: history } = await admin
+      .from("whatsapp_messages")
+      .select("direction, message")
+      .eq("user_id", cfg.user_id)
+      .eq("from_number", data.fromNumber)
+      .order("created_at", { ascending: false })
+      .limit(10);
 
-    const resp = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: `${data.fromName}: ${data.message}` }],
-    });
+    type MsgParam = { role: "user" | "assistant"; content: string };
+    const historyMessages: MsgParam[] = (history ?? [])
+      .reverse()
+      .map((m: { direction: string; message: string }) => ({
+        role: m.direction === "outgoing" ? "assistant" : "user",
+        content: m.message,
+      }));
 
-    const reply = resp.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as { type: "text"; text: string }).text)
-      .join("");
+    // Add current message (already saved above, so it may appear — deduplicate)
+    const messages: MsgParam[] = [
+      ...historyMessages.filter((_, i, arr) => !(i === arr.length - 1 && arr[arr.length - 1].role === "user" && arr[arr.length - 1].content === data.message)),
+      { role: "user", content: `${data.fromName}: ${data.message}` },
+    ];
 
-    // Save response
+    const systemPrompt = cfg.claude_system_prompt || DEFAULT_SYSTEM_PROMPT;
+
+    // Tool-use loop (max 3 iterations)
+    let currentMessages = messages as Anthropic.MessageParam[];
+    let finalReply = "";
+    let noteCreated = false;
+
+    for (let i = 0; i < 3; i++) {
+      const resp = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system: systemPrompt,
+        tools: AGENT_TOOLS as unknown as Anthropic.Tool[],
+        messages: currentMessages,
+      });
+
+      if (resp.stop_reason === "end_turn") {
+        finalReply = resp.content
+          .filter((b) => b.type === "text")
+          .map((b) => (b as Anthropic.TextBlock).text)
+          .join("");
+        break;
+      }
+
+      if (resp.stop_reason === "tool_use") {
+        const toolUseBlocks = resp.content.filter((b) => b.type === "tool_use") as Anthropic.ToolUseBlock[];
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+
+        for (const tool of toolUseBlocks) {
+          if (tool.name === "get_datetime") {
+            const now = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+            toolResults.push({ type: "tool_result", tool_use_id: tool.id, content: now });
+          }
+
+          if (tool.name === "create_ticket_note") {
+            const input = tool.input as { title: string; description: string; priority: string; contact: string };
+            const noteContent = `**Contato:** ${input.contact}\n**Prioridade:** ${input.priority.toUpperCase()}\n\n**Descrição:**\n${input.description}\n\n---\n*Registrado via WhatsApp Agente em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}*`;
+            await admin.from("notes").insert({
+              user_id: cfg.user_id,
+              title: `[WA] ${input.title}`,
+              content: noteContent,
+              category: "Suporte",
+              tags: `whatsapp,chamado,${input.priority}`,
+              status: "rascunho",
+              updated_at: new Date().toISOString(),
+            }).then(undefined, () => null);
+            noteCreated = true;
+            toolResults.push({ type: "tool_result", tool_use_id: tool.id, content: "Anotação criada com sucesso." });
+          }
+        }
+
+        currentMessages = [
+          ...currentMessages,
+          { role: "assistant", content: resp.content },
+          { role: "user", content: toolResults },
+        ];
+        continue;
+      }
+
+      // Fallback: extract any text from last response
+      finalReply = resp.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b as Anthropic.TextBlock).text)
+        .join("");
+      break;
+    }
+
+    if (!finalReply) finalReply = "Entendido! Já registrei e nossa equipe entrará em contato em breve.";
+
+    // Save outgoing message
     await admin.from("whatsapp_messages").insert({
       user_id: cfg.user_id,
       instance_name: data.instanceName,
       from_number: data.fromNumber,
       from_name: data.fromName,
-      message: reply,
+      message: finalReply,
       response: null,
       direction: "outgoing",
       created_at: new Date().toISOString(),
@@ -288,26 +420,8 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     await fetch(sendUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: cfg.evolution_key },
-      body: JSON.stringify({ number: data.fromNumber, text: reply }),
+      body: JSON.stringify({ number: data.fromNumber, text: finalReply }),
     }).catch(() => null);
 
-    // Optionally save as note
-    if (cfg.save_as_notes) {
-      const noteTitle = `WA: ${data.fromName} — ${new Date().toLocaleDateString("pt-BR")}`;
-      const noteContent = `**De:** ${data.fromName} (${data.fromNumber})\n**Mensagem:** ${data.message}\n**Resposta:** ${reply}`;
-      await admin
-        .from("notes")
-        .insert({
-          user_id: cfg.user_id,
-          title: noteTitle,
-          content: noteContent,
-          category: "Geral",
-          tags: "whatsapp,agente",
-          status: "rascunho",
-          updated_at: new Date().toISOString(),
-        })
-        .then(undefined, () => null);
-    }
-
-    return { ok: true, reply };
+    return { ok: true, reply: finalReply, noteCreated };
   });
