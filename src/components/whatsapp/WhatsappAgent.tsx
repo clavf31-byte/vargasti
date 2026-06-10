@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import {
   getWhatsappConfig, saveWhatsappConfig, getWhatsappMessages,
-  clearWhatsappMessages, WhatsappConfig, WhatsappMessage,
+  clearWhatsappMessages, evolutionAction, WhatsappConfig, WhatsappMessage,
 } from "@/lib/api/whatsappAgent.functions";
 import { DataCard, SectionTitle, Btn } from "@/components/shared";
 
@@ -65,60 +65,46 @@ export function WhatsappAgent() {
     setLoadingMsgs(false);
   }
 
+  const evoCfg = useCallback(() => ({
+    evolution_url: config.evolution_url,
+    evolution_key: config.evolution_key,
+    instance_name: config.instance_name,
+  }), [config.evolution_url, config.evolution_key, config.instance_name]);
+
   const checkConnection = useCallback(async () => {
     if (!config.evolution_url || !config.evolution_key || !config.instance_name) return;
     setCheckingConn(true);
     setQrBase64(null);
-
     try {
-      const base = config.evolution_url.replace(/\/$/, "");
-      const res = await fetch(
-        `${base}/instance/connectionState/${config.instance_name}`,
-        { headers: { apikey: config.evolution_key } }
-      );
-      if (!res.ok) { setConnState("disconnected"); setCheckingConn(false); return; }
-      const json = await res.json() as { instance?: { state?: string } };
-      const state = json?.instance?.state ?? "";
+      const result = await evolutionAction({ data: { ...evoCfg(), action: "check_status" } });
+      const state = (result as { state?: string })?.state ?? "disconnected";
       if (state === "open") {
         setConnState("connected");
       } else {
         setConnState("disconnected");
-        fetchQr(base);
+        const qrResult = await evolutionAction({ data: { ...evoCfg(), action: "get_qr" } });
+        setQrBase64((qrResult as { qr?: string | null })?.qr ?? null);
       }
     } catch {
       setConnState("disconnected");
     }
     setCheckingConn(false);
-  }, [config.evolution_url, config.evolution_key, config.instance_name]);
-
-  async function fetchQr(base: string) {
-    try {
-      const res = await fetch(
-        `${base}/instance/connect/${config.instance_name}`,
-        { headers: { apikey: config.evolution_key } }
-      );
-      if (!res.ok) return;
-      const json = await res.json() as { base64?: string; qrcode?: { base64?: string } };
-      const b64 = json?.base64 ?? json?.qrcode?.base64 ?? null;
-      setQrBase64(b64);
-    } catch { /* ignore */ }
-  }
+  }, [config.evolution_url, config.evolution_key, config.instance_name, evoCfg]);
 
   async function handleCreateInstance() {
     if (!config.evolution_url || !config.evolution_key) return;
     setCheckingConn(true);
     try {
-      const base = config.evolution_url.replace(/\/$/, "");
-      await fetch(`${base}/instance/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: config.evolution_key },
-        body: JSON.stringify({
-          instanceName: config.instance_name,
-          qrcode: true,
-          integration: "WHATSAPP-BAILEYS",
-        }),
+      await evolutionAction({ data: { ...evoCfg(), action: "create_instance" } });
+      // Configure webhook automatically after creating instance
+      await evolutionAction({
+        data: {
+          ...evoCfg(),
+          action: "set_webhook",
+          webhook_url: getWebhookUrl(config.webhook_token),
+        },
       });
-      setTimeout(() => checkConnection(), 1500);
+      setTimeout(() => checkConnection(), 2000);
     } catch { /* ignore */ }
     setCheckingConn(false);
   }

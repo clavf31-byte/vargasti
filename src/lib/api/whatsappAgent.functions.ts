@@ -93,6 +93,72 @@ export const clearWhatsappMessages = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ── Evolution API proxy (server-side to avoid CORS) ──────────────────────────
+
+const EvolutionActionSchema = z.object({
+  evolution_url: z.string(),
+  evolution_key: z.string(),
+  instance_name: z.string(),
+  action: z.enum(["check_status", "create_instance", "get_qr", "set_webhook"]),
+  webhook_url: z.string().optional(),
+});
+
+export const evolutionAction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(EvolutionActionSchema)
+  .handler(async ({ data }) => {
+    const base = data.evolution_url.replace(/\/$/, "");
+    const headers = { "Content-Type": "application/json", apikey: data.evolution_key };
+
+    if (data.action === "check_status") {
+      const res = await fetch(`${base}/instance/connectionState/${data.instance_name}`, { headers });
+      if (!res.ok) return { state: "disconnected" };
+      const json = await res.json() as { instance?: { state?: string } };
+      return { state: json?.instance?.state ?? "disconnected" };
+    }
+
+    if (data.action === "create_instance") {
+      const res = await fetch(`${base}/instance/create`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          instanceName: data.instance_name,
+          qrcode: true,
+          integration: "WHATSAPP-BAILEYS",
+        }),
+      });
+      const json = await res.json() as Record<string, unknown>;
+      return { ok: res.ok, data: json };
+    }
+
+    if (data.action === "get_qr") {
+      const res = await fetch(`${base}/instance/connect/${data.instance_name}`, { headers });
+      if (!res.ok) return { qr: null };
+      const json = await res.json() as { base64?: string; qrcode?: { base64?: string } };
+      return { qr: json?.base64 ?? json?.qrcode?.base64 ?? null };
+    }
+
+    if (data.action === "set_webhook" && data.webhook_url) {
+      const res = await fetch(`${base}/webhook/set/${data.instance_name}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          webhook: {
+            enabled: true,
+            url: data.webhook_url,
+            webhookByEvents: false,
+            webhookBase64: false,
+            events: ["MESSAGES_UPSERT"],
+          },
+        }),
+      });
+      const json = await res.json() as Record<string, unknown>;
+      return { ok: res.ok, data: json };
+    }
+
+    return { ok: false };
+  });
+
 // ── processWebhookMessage (called from API route, no user auth) ───────────────
 const WebhookSchema = z.object({
   token: z.string(),
