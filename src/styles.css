@@ -36,25 +36,27 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-select: var(--select);
+  --color-select-foreground: var(--select-foreground);
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.875rem;
 
-  /* VargasTI Lab — Dark Premium (Slate + Green) */
-  --background: oklch(0.13 0.025 265);
-  --foreground: oklch(0.98 0.003 240);
+  /* VargasTI Lab — Dark Premium (Graphite + Green + Cyan accent) */
+  --background: oklch(0.135 0.018 260);
+  --foreground: oklch(0.985 0.003 240);
 
-  --surface: oklch(0.16 0.025 265);
-  --surface-2: oklch(0.20 0.020 265);
+  --surface: oklch(0.175 0.018 260);
+  --surface-2: oklch(0.215 0.018 260);
 
-  --card: oklch(0.16 0.025 265);
-  --card-foreground: oklch(0.98 0.003 240);
-  --popover: oklch(0.18 0.020 265);
-  --popover-foreground: oklch(0.98 0.003 240);
+  --card: oklch(0.185 0.018 260);
+  --card-foreground: oklch(0.985 0.003 240);
+  --popover: oklch(0.195 0.018 260);
+  --popover-foreground: oklch(0.985 0.003 240);
 
   --primary: oklch(0.73 0.21 145);
   --primary-foreground: oklch(0.09 0.02 145);
@@ -62,21 +64,29 @@
   --brand-muted: oklch(0.22 0.08 145);
   --brand-foreground: oklch(0.09 0.02 145);
 
-  --secondary: oklch(0.20 0.020 265);
-  --secondary-foreground: oklch(0.98 0.003 240);
-  --muted: oklch(0.18 0.020 265);
-  --muted-foreground: oklch(0.66 0.030 240);
-  --accent: oklch(0.20 0.020 265);
-  --accent-foreground: oklch(0.98 0.003 240);
+  /* Cyan/blue selection accent — borda azul forte do card selecionado */
+  --select: oklch(0.72 0.17 235);
+  --select-foreground: oklch(0.98 0.005 240);
+
+  --secondary: oklch(0.215 0.018 260);
+  --secondary-foreground: oklch(0.985 0.003 240);
+  --muted: oklch(0.195 0.018 260);
+  --muted-foreground: oklch(0.68 0.025 240);
+  --accent: oklch(0.215 0.018 260);
+  --accent-foreground: oklch(0.985 0.003 240);
 
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 285);
   --warning: oklch(0.78 0.16 80);
   --info: oklch(0.60 0.19 254);
 
-  --border: oklch(0.24 0.016 265);
-  --input: oklch(0.24 0.016 265);
-  --ring: oklch(0.73 0.21 145);
+  --border: oklch(0.265 0.014 260);
+  --input: oklch(0.265 0.014 260);
+  --ring: oklch(0.72 0.17 235);
+
+  --shadow-card: 0 1px 0 oklch(1 0 0 / 0.02) inset, 0 8px 24px -12px oklch(0 0 0 / 0.5);
+  --shadow-card-hover: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 14px 40px -16px oklch(0 0 0 / 0.65);
+  --shadow-select: 0 0 0 1px var(--select), 0 0 0 4px oklch(0.72 0.17 235 / 0.18);
 }
 
 .dark {
@@ -148,8 +158,79 @@
 @utility glass {
   background-color: color-mix(in oklch, var(--surface) 80%, transparent);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
+
+/* ─── Modern Card System (referência: tela "Seus agentes") ─── */
+@utility card-graphite {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow-card);
+}
+
+@utility card-selectable {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease, background-color 200ms ease;
+}
+@utility card-selectable-hover {
+  border-color: color-mix(in oklch, var(--select) 35%, var(--border));
+  box-shadow: var(--shadow-card-hover);
+}
+
+@utility card-selected {
+  border-color: var(--select);
+  box-shadow: var(--shadow-select), var(--shadow-card);
+}
+
+@utility icon-box {
+  display: grid;
+  place-items: center;
+  background-color: color-mix(in oklch, var(--select) 18%, var(--surface));
+  border: 1px solid color-mix(in oklch, var(--select) 30%, var(--border));
+  border-radius: calc(var(--radius));
+  color: var(--select-foreground);
+}
+
+@utility icon-box-brand {
+  display: grid;
+  place-items: center;
+  background-color: color-mix(in oklch, var(--brand) 14%, var(--surface));
+  border: 1px solid color-mix(in oklch, var(--brand) 28%, var(--border));
+  border-radius: calc(var(--radius));
+  color: var(--brand);
+}
+
+@utility divider-soft {
+  height: 1px;
+  width: 100%;
+  background-color: color-mix(in oklch, var(--border) 70%, transparent);
+}
+
+@utility btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border);
+  background-color: color-mix(in oklch, var(--surface) 80%, transparent);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+@utility btn-modern-hover {
+  background-color: var(--surface-2);
+  border-color: color-mix(in oklch, var(--select) 30%, var(--border));
+}
+
+
 
 @utility card-interactive {
   transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;

@@ -86,28 +86,38 @@ export function WhatsappAgent() {
 
 function AgentsList({ agents, onSelectAgent, onRefresh }: { agents: Agent[]; onSelectAgent: (id: string) => void; onRefresh: () => void }) {
   const [creatingNew, setCreatingNew] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(agents[0]?.id ?? null);
 
   return (
-    <div className="p-4 md:p-5 space-y-5">
+    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
       <div>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Agente WhatsApp</p>
-        <h2 className="text-xl font-semibold text-foreground">Seus agentes</h2>
+        <p className="text-[11px] text-muted-foreground uppercase tracking-[0.18em] mb-2">Agente WhatsApp</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Seus agentes</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {agents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} onSelect={() => onSelectAgent(agent.id)} onRefresh={onRefresh} />
+          <AgentCard
+            key={agent.id}
+            agent={agent}
+            selected={activeId === agent.id}
+            onActivate={() => setActiveId(agent.id)}
+            onOpen={() => onSelectAgent(agent.id)}
+            onRefresh={onRefresh}
+          />
         ))}
 
         <button
           onClick={() => setCreatingNew(true)}
-          className="bg-surface/50 border border-dashed border-border/50 rounded-lg p-5 flex flex-col items-center justify-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer"
+          className="group min-h-[280px] rounded-[1.125rem] border border-dashed border-border hover:border-select/60 bg-card/40 hover:bg-card/70 p-6 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer"
         >
-          <div className="size-10 rounded-lg bg-surface-2 border border-border grid place-items-center">
-            <Plus className="size-5 text-muted-foreground/40" />
+          <div className="size-14 rounded-xl bg-surface-2 border border-border grid place-items-center group-hover:border-select/40 transition-colors">
+            <Plus className="size-6 text-muted-foreground group-hover:text-select transition-colors" />
           </div>
-          <p className="text-xs font-medium text-foreground text-center">Criar novo agente</p>
-          <p className="text-[10px] text-muted-foreground/60 text-center">VargasTI, Interative, ou customize</p>
+          <div className="text-center">
+            <p className="text-base font-semibold text-foreground">Criar novo agente</p>
+            <p className="text-xs text-muted-foreground mt-1">VargasTI, Interative, ou customize</p>
+          </div>
         </button>
       </div>
 
@@ -118,7 +128,7 @@ function AgentsList({ agents, onSelectAgent, onRefresh }: { agents: Agent[]; onS
   );
 }
 
-function AgentCard({ agent, onSelect, onRefresh }: { agent: Agent; onSelect: () => void; onRefresh: () => void }) {
+function AgentCard({ agent, selected, onActivate, onOpen, onRefresh }: { agent: Agent; selected: boolean; onActivate: () => void; onOpen: () => void; onRefresh: () => void }) {
   const [connState, setConnState] = useState<ConnState>("unknown");
   const [msgCount, setMsgCount] = useState(0);
 
@@ -146,46 +156,61 @@ function AgentCard({ agent, onSelect, onRefresh }: { agent: Agent; onSelect: () 
     }
   }
 
-  async function handleDelete() {
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
     if (!window.confirm(`Deletar agente "${agent.label}"?`)) return;
     await deleteWhatsappConfig({ data: { configId: agent.id } });
     onRefresh();
   }
 
   const initials = agent.label?.substring(0, 1).toUpperCase() || "A";
-  const isBorder = connState === "connected" ? "border-2 border-brand" : "border-0.5 border-border";
+  const isConnected = connState === "connected";
+  const statusLabel = isConnected ? "Conectado" : connState === "disconnected" ? "Desconectado" : "Aguardando conexão";
+  const statusDot = isConnected ? "bg-brand" : connState === "disconnected" ? "bg-muted-foreground/40" : "bg-warning";
+  const statusText = isConnected ? "text-brand" : connState === "disconnected" ? "text-muted-foreground" : "text-warning";
 
   return (
-    <div className={`bg-background border rounded-xl p-5 space-y-3 ${isBorder}`}>
-      <div className="flex items-center gap-3">
-        <div className="size-11 rounded-lg bg-background-info grid place-items-center font-semibold text-sm text-text-info">
+    <div
+      onClick={onActivate}
+      className={`card-selectable hover:card-selectable-hover p-6 flex flex-col gap-5 min-h-[280px] ${selected ? "card-selected" : ""}`}
+    >
+      <div className="flex items-center gap-4">
+        <div className="icon-box size-14 text-lg font-bold">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">{agent.label}</p>
-          <p className="text-[10px] text-muted-foreground/60">Instância: {agent.instance_name}</p>
+          <p className="text-lg font-semibold text-foreground truncate">{agent.label || "Sem nome"}</p>
+          <p className="text-xs text-muted-foreground truncate">{agent.claude_system_prompt ? "Customizado" : "Corporativo"}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className={`size-2 rounded-full ${connState === "connected" ? "bg-brand" : "bg-muted-foreground/40"}`} />
-        <p className="text-[10px] font-medium ${connState === "connected" ? "text-brand" : "text-muted-foreground"}">
-          {connState === "connected" ? "Conectado" : connState === "disconnected" ? "Desconectado" : "Aguardando conexão"}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className={`size-2 rounded-full ${statusDot}`} />
+          <p className={`text-sm font-medium ${statusText}`}>{statusLabel}</p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Instância: <code className="text-foreground bg-surface-2 px-1.5 py-0.5 rounded text-[11px] font-mono">{agent.instance_name}</code>
         </p>
+        <p className="text-xs text-muted-foreground">{msgCount} mensagens</p>
       </div>
 
-      <p className="text-[10px] text-muted-foreground">{msgCount} mensagens</p>
-
-      <div className="flex gap-2 pt-2 border-t border-border/50">
+      <div className="mt-auto pt-4 border-t border-border/60 flex gap-2">
         <button
-          onClick={onSelect}
-          className="flex-1 px-3 py-2 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-2 transition-colors"
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}
+          className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-surface/60 text-foreground text-sm font-medium hover:bg-surface-2 hover:border-select/40 transition-colors"
+        >
+          Editar
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}
+          className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-surface/60 text-foreground text-sm font-medium hover:bg-surface-2 hover:border-select/40 transition-colors"
         >
           Abrir
         </button>
         <button
           onClick={handleDelete}
-          className="px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="px-3 py-2.5 rounded-lg border border-border bg-surface/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/5 transition-colors"
           title="Deletar agente"
         >
           <Trash2 className="size-4" />
