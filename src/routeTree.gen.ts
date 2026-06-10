@@ -19,7 +19,9 @@ import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
+import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
+import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
 
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
@@ -71,10 +73,20 @@ const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FerramentasRoute,
 } as any)
+const FerramentasWhatsappRoute = FerramentasWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => FerramentasRoute,
+} as any)
 const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
   id: '/excel',
   path: '/excel',
   getParentRoute: () => FerramentasRoute,
+} as any)
+const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
+  id: '/api/whatsapp-webhook',
+  path: '/api/whatsapp-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -87,7 +99,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
 }
 export interface FileRoutesByTo {
@@ -99,7 +113,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas': typeof FerramentasIndexRoute
 }
 export interface FileRoutesById {
@@ -113,7 +129,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
+  '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
 }
 export interface FileRouteTypes {
@@ -128,7 +146,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/whatsapp-webhook'
     | '/ferramentas/excel'
+    | '/ferramentas/whatsapp'
     | '/ferramentas/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -140,7 +160,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/whatsapp-webhook'
     | '/ferramentas/excel'
+    | '/ferramentas/whatsapp'
     | '/ferramentas'
   id:
     | '__root__'
@@ -153,7 +175,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/whatsapp-webhook'
     | '/ferramentas/excel'
+    | '/ferramentas/whatsapp'
     | '/ferramentas/'
   fileRoutesById: FileRoutesById
 }
@@ -167,6 +191,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
   UsuariosRoute: typeof UsuariosRoute
+  ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -241,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FerramentasIndexRouteImport
       parentRoute: typeof FerramentasRoute
     }
+    '/ferramentas/whatsapp': {
+      id: '/ferramentas/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/ferramentas/whatsapp'
+      preLoaderRoute: typeof FerramentasWhatsappRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
     '/ferramentas/excel': {
       id: '/ferramentas/excel'
       path: '/excel'
@@ -248,16 +280,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FerramentasExcelRouteImport
       parentRoute: typeof FerramentasRoute
     }
+    '/api/whatsapp-webhook': {
+      id: '/api/whatsapp-webhook'
+      path: '/api/whatsapp-webhook'
+      fullPath: '/api/whatsapp-webhook'
+      preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface FerramentasRouteChildren {
   FerramentasExcelRoute: typeof FerramentasExcelRoute
+  FerramentasWhatsappRoute: typeof FerramentasWhatsappRoute
   FerramentasIndexRoute: typeof FerramentasIndexRoute
 }
 
 const FerramentasRouteChildren: FerramentasRouteChildren = {
   FerramentasExcelRoute: FerramentasExcelRoute,
+  FerramentasWhatsappRoute: FerramentasWhatsappRoute,
   FerramentasIndexRoute: FerramentasIndexRoute,
 }
 
@@ -275,6 +316,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
   UsuariosRoute: UsuariosRoute,
+  ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
