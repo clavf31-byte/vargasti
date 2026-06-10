@@ -156,25 +156,27 @@ function AgentCard({ agent, onSelect, onRefresh }: { agent: Agent; onSelect: () 
   const isBorder = connState === "connected" ? "border-2 border-brand" : "border-0.5 border-border";
 
   return (
-    <div className={`bg-background border rounded-xl p-5 space-y-4 ${isBorder}`}>
+    <div className={`bg-background border rounded-xl p-5 space-y-3 ${isBorder}`}>
       <div className="flex items-center gap-3">
         <div className="size-11 rounded-lg bg-background-info grid place-items-center font-semibold text-sm text-text-info">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">{agent.label}</p>
-          <p className="text-[10px] text-muted-foreground/60">{agent.instance_name}</p>
+          <p className="text-[10px] text-muted-foreground/60">Instância: {agent.instance_name}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <div className={`size-2 rounded-full ${connState === "connected" ? "bg-brand" : "bg-muted-foreground/40"}`} />
-        <p className="text-[10px] text-muted-foreground">{connState === "connected" ? "Conectado" : "Desconectado"}</p>
+        <p className="text-[10px] font-medium ${connState === "connected" ? "text-brand" : "text-muted-foreground"}">
+          {connState === "connected" ? "Conectado" : connState === "disconnected" ? "Desconectado" : "Aguardando conexão"}
+        </p>
       </div>
 
       <p className="text-[10px] text-muted-foreground">{msgCount} mensagens</p>
 
-      <div className="flex gap-2 pt-4 border-t border-border/50">
+      <div className="flex gap-2 pt-2 border-t border-border/50">
         <button
           onClick={onSelect}
           className="flex-1 px-3 py-2 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-2 transition-colors"
