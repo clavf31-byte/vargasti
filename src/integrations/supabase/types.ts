@@ -134,6 +134,7 @@ export type Database = {
           evolution_url: string
           id: string
           instance_name: string
+          label: string
           save_as_notes: boolean | null
           updated_at: string | null
           user_id: string
@@ -147,6 +148,7 @@ export type Database = {
           evolution_url?: string
           id?: string
           instance_name?: string
+          label?: string
           save_as_notes?: boolean | null
           updated_at?: string | null
           user_id: string
@@ -160,6 +162,7 @@ export type Database = {
           evolution_url?: string
           id?: string
           instance_name?: string
+          label?: string
           save_as_notes?: boolean | null
           updated_at?: string | null
           user_id?: string
