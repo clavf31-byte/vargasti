@@ -138,31 +138,31 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <div className="p-6 space-y-6 bg-background min-h-screen">
+      <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
 
         {/* HEADER COM RELÓGIO GRANDE */}
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-[0.18em]">
               {now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
             </p>
-            <h1 className="text-2xl font-bold text-foreground mt-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mt-3 tracking-tight">
               {greeting}, <span className="text-brand">{firstName}</span>
             </h1>
           </div>
-          <div className="text-right">
-            <div className="text-6xl font-light text-brand font-mono tabular-nums">
+          <div className="text-right shrink-0">
+            <div className="text-5xl md:text-6xl font-light text-brand font-mono tabular-nums leading-none">
               {now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </div>
-            <div className="flex items-center justify-end gap-1.5 mt-2">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-xs text-green-400 font-medium">Online</span>
+            <div className="flex items-center justify-end gap-1.5 mt-3">
+              <span className="size-1.5 bg-brand rounded-full status-pulse" />
+              <span className="text-xs text-brand font-medium">Online</span>
             </div>
           </div>
         </div>
 
-        {/* VISÃO DE HOJE + VERSÃO */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* VISÃO DE HOJE + SYSTEM INFO */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2">
             <VisionOfToday
               notesCount={notesCount}
@@ -175,12 +175,12 @@ function Dashboard() {
         </div>
 
         {/* KPI CARDS */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Métricas Principais</p>
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="size-4 text-select" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Métricas Principais</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {kpis.map(({ label, value, icon, to, gradient, progress }) => (
               <KpiCard
                 key={label}
@@ -193,40 +193,45 @@ function Dashboard() {
               />
             ))}
           </div>
-        </div>
+        </section>
 
         {/* ATALHOS RÁPIDOS + ATIVIDADE RECENTE */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* ATALHOS */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-4 h-4 text-muted-foreground" />
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Atalhos Rápidos</p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Plus className="size-4 text-select" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atalhos Rápidos</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {actions.map(({ to, icon: Icon, label }) => (
+              {actions.map(({ to, icon: Icon, label, desc, iconClass }) => (
                 <Link
                   key={to}
                   to={to}
-                  className="bg-surface border border-border rounded-lg p-3 text-center transition-all hover:border-border/80 hover:bg-surface-2"
+                  className="card-selectable hover:card-selectable-hover p-4 flex flex-col items-start gap-3"
                 >
-                  <Icon className="w-5 h-5 text-brand mx-auto mb-2" />
-                  <p className="text-xs font-medium text-foreground">{label}</p>
+                  <div className={`size-10 rounded-lg border ${iconClass} grid place-items-center`}>
+                    <Icon className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
 
           {/* ATIVIDADE RECENTE */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Atividade Recente</p>
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center gap-2">
+              <Clock className="size-4 text-select" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atividade Recente</p>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {activity.length === 0 ? (
-                <div className="bg-surface border border-border rounded-lg p-6 text-center">
-                  <p className="text-xs text-muted-foreground">Nenhuma atividade ainda</p>
+                <div className="card-graphite border-dashed p-8 text-center">
+                  <p className="text-sm text-muted-foreground">Nenhuma atividade ainda</p>
                 </div>
               ) : (
                 activity.map((item) => (
