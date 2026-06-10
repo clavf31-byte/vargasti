@@ -119,7 +119,7 @@ function LoginPage() {
                   <span className="w-full border-t border-border/50" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-surface px-3 text-[10px] text-muted-foreground uppercase tracking-widest">
+                  <span className="bg-card px-3 text-[10px] text-muted-foreground uppercase tracking-widest">
                     ou
                   </span>
                 </div>
