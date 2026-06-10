@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/shared";
-import { FileSpreadsheet, ChevronRight, Bot, Sparkles, Wrench } from "lucide-react";
+import { FileSpreadsheet, ChevronRight, Bot, Sparkles, Wrench, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/ferramentas/")({
   head: () => ({ meta: [{ title: "Tools · VargasTI Lab" }] }),
@@ -19,6 +19,19 @@ const TOOLS = [
       "Importe, filtre, edite, cruze dados com PROCV e exporte planilhas .xlsx. Inclui agente IA para análise em linguagem natural.",
     badge: "Disponível",
     badgeClass: "bg-brand/10 border-brand/20 text-brand",
+    footer: "Inclui Agente IA",
+  },
+  {
+    to: "/ferramentas/whatsapp" as const,
+    icon: MessageCircle,
+    iconClass: "bg-brand/10 border-brand/20 text-brand",
+    name: "Agente WhatsApp",
+    category: "comunicação",
+    description:
+      "Conecte seu WhatsApp via Evolution API. O agente Claude responde mensagens automaticamente e salva conversas como anotações.",
+    badge: "Disponível",
+    badgeClass: "bg-brand/10 border-brand/20 text-brand",
+    footer: "Claude + Evolution API",
   },
 ];
 
@@ -59,7 +72,7 @@ function ToolsPage() {
               <p className="text-xs text-muted-foreground leading-relaxed">{t.description}</p>
               <div className="flex items-center gap-1 mt-4 pt-4 border-t border-border/50">
                 <Sparkles className="size-3 text-brand/50" />
-                <span className="text-[10px] text-muted-foreground">Inclui Agente IA</span>
+                <span className="text-[10px] text-muted-foreground">{t.footer}</span>
               </div>
             </Link>
           ))}
