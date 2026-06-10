@@ -181,11 +181,14 @@ const EvolutionActionSchema = z.object({
 
 // Validate URL is https public hostname (no private/loopback/link-local IPs)
 function assertSafeExternalUrl(raw: string): URL {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed) throw new Error("URL da Evolution API não configurada");
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   let u: URL;
   try {
-    u = new URL(raw);
+    u = new URL(withScheme);
   } catch {
-    throw new Error("URL inválida");
+    throw new Error(`URL inválida: "${raw}"`);
   }
   if (u.protocol !== "https:") {
     throw new Error("Apenas URLs https:// são permitidas");
