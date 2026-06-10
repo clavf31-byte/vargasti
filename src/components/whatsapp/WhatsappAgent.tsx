@@ -2,18 +2,23 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Wifi, WifiOff, QrCode, RefreshCw, Trash2, Copy, Check,
   MessageCircle, Settings, Bot, Send, Loader2, Info,
-  ToggleLeft, ToggleRight, AlertCircle,
+  ToggleLeft, ToggleRight, AlertCircle, Plus, ArrowLeft,
 } from "lucide-react";
 import {
-  getWhatsappConfig, saveWhatsappConfig, getWhatsappMessages,
-  clearWhatsappMessages, deleteContactMessages, evolutionAction, WhatsappConfig, WhatsappMessage,
+  getWhatsappConfigs, getWhatsappConfig, saveWhatsappConfig, getWhatsappMessages,
+  clearWhatsappMessages, deleteContactMessages, deleteWhatsappConfig, evolutionAction, WhatsappConfig, WhatsappMessage,
 } from "@/lib/api/whatsappAgent.functions";
 import { DataCard, SectionTitle, Btn } from "@/components/shared";
 
 type Tab = "status" | "messages" | "config";
 type ConnState = "connected" | "disconnected" | "connecting" | "unknown";
 
-const DEFAULT_CONFIG: WhatsappConfig = {
+interface Agent extends WhatsappConfig {
+  id: string;
+}
+
+const DEFAULT_AGENT: Partial<Agent> = {
+  label: "",
   evolution_url: "",
   evolution_key: "",
   instance_name: "vargasti",
@@ -29,30 +34,176 @@ function getWebhookUrl(token: string) {
 }
 
 export function WhatsappAgent() {
-  const [tab, setTab] = useState<Tab>("status");
-  const [config, setConfig] = useState<WhatsappConfig>(DEFAULT_CONFIG);
-  const [saving, setSaving] = useState(false);
-  const [saveOk, setSaveOk] = useState(false);
-  const [configLoaded, setConfigLoaded] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    loadAgents();
+  }, []);
+
+  async function loadAgents() {
+    setLoading(true);
+    try {
+      const data = await getWhatsappConfigs();
+      setAgents(data);
+    } catch {
+      console.error("Failed to load agents");
+    }
+    setLoading(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="size-5 text-brand animate-spin" />
+      </div>
+    );
+  }
+
+  if (!selectedAgentId) {
+    return <AgentsList agents={agents} onSelectAgent={setSelectedAgentId} onRefresh={loadAgents} />;
+  }
+
+  const agent = agents.find((a) => a.id === selectedAgentId);
+  if (!agent) return null;
+
+  return (
+    <AgentDetail
+      agent={agent}
+      onBack={() => setSelectedAgentId(null)}
+      onUpdate={(updated) => {
+        setAgents((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+      }}
+      onDelete={() => {
+        setAgents((prev) => prev.filter((a) => a.id !== agent.id));
+        setSelectedAgentId(null);
+      }}
+      onRefresh={loadAgents}
+    />
+  );
+}
+
+function AgentsList({ agents, onSelectAgent, onRefresh }: { agents: Agent[]; onSelectAgent: (id: string) => void; onRefresh: () => void }) {
+  const [creatingNew, setCreatingNew] = useState(false);
+
+  return (
+    <div className="p-4 md:p-5 space-y-5">
+      <div>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Agente WhatsApp</p>
+        <h2 className="text-xl font-semibold text-foreground">Seus agentes</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {agents.map((agent) => (
+          <AgentCard key={agent.id} agent={agent} onSelect={() => onSelectAgent(agent.id)} onRefresh={onRefresh} />
+        ))}
+
+        <button
+          onClick={() => setCreatingNew(true)}
+          className="bg-surface/50 border border-dashed border-border/50 rounded-lg p-5 flex flex-col items-center justify-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer"
+        >
+          <div className="size-10 rounded-lg bg-surface-2 border border-border grid place-items-center">
+            <Plus className="size-5 text-muted-foreground/40" />
+          </div>
+          <p className="text-xs font-medium text-foreground text-center">Criar novo agente</p>
+          <p className="text-[10px] text-muted-foreground/60 text-center">VargasTI, Interative, ou customize</p>
+        </button>
+      </div>
+
+      {creatingNew && (
+        <CreateAgentDialog onClose={() => setCreatingNew(false)} onCreated={() => { setCreatingNew(false); onRefresh(); }} />
+      )}
+    </div>
+  );
+}
+
+function AgentCard({ agent, onSelect, onRefresh }: { agent: Agent; onSelect: () => void; onRefresh: () => void }) {
+  const [connState, setConnState] = useState<ConnState>("unknown");
+  const [msgCount, setMsgCount] = useState(0);
+
+  useEffect(() => {
+    checkConnection();
+    loadMessageCount();
+  }, [agent.id]);
+
+  async function checkConnection() {
+    try {
+      const result = await evolutionAction({ data: { evolution_url: agent.evolution_url, evolution_key: agent.evolution_key, instance_name: agent.instance_name, action: "check_status" } });
+      const state = (result as { state?: string })?.state ?? "disconnected";
+      setConnState(state === "open" ? "connected" : "disconnected");
+    } catch {
+      setConnState("disconnected");
+    }
+  }
+
+  async function loadMessageCount() {
+    try {
+      const msgs = await getWhatsappMessages();
+      setMsgCount(msgs.length);
+    } catch {
+      setMsgCount(0);
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Deletar agente "${agent.label}"?`)) return;
+    await deleteWhatsappConfig({ data: { configId: agent.id } });
+    onRefresh();
+  }
+
+  const bgColor = connState === "connected" ? "bg-brand/10 border-brand/20" : "bg-surface/50 border-border/50";
+  const initials = agent.label?.substring(0, 1).toUpperCase() || "A";
+
+  return (
+    <div className={`bg-surface border rounded-lg p-5 space-y-4 ${bgColor}`}>
+      <div className="flex items-center gap-3">
+        <div className="size-11 rounded-lg bg-surface-2 border border-border grid place-items-center font-semibold text-sm">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-foreground truncate">{agent.label}</p>
+          <p className="text-[10px] text-muted-foreground/60 truncate">{agent.instance_name}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className={`size-1.5 rounded-full ${connState === "connected" ? "bg-brand" : "bg-muted-foreground/40"}`} />
+        <p className="text-[10px] text-muted-foreground">{connState === "connected" ? "Conectado" : "Desconectado"}</p>
+      </div>
+
+      <p className="text-[10px] text-muted-foreground">{msgCount} mensagens</p>
+
+      <div className="flex gap-2 pt-3 border-t border-border/50">
+        <Btn variant="secondary" size="sm" onClick={onSelect} className="flex-1">
+          <MessageCircle className="size-3" />
+          Abrir
+        </Btn>
+        <button
+          onClick={handleDelete}
+          className="p-2 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          title="Deletar agente"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: Agent; onBack: () => void; onUpdate: (a: Agent) => void; onDelete: () => void; onRefresh: () => void }) {
+  const [tab, setTab] = useState<Tab>("status");
+  const [config, setConfig] = useState(agent);
   const [connState, setConnState] = useState<ConnState>("unknown");
   const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [checkingConn, setCheckingConn] = useState(false);
-
   const [messages, setMessages] = useState<WhatsappMessage[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveOk, setSaveOk] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  // Load config
-  useEffect(() => {
-    getWhatsappConfig().then((cfg) => {
-      if (cfg) setConfig(cfg);
-      setConfigLoaded(true);
-    }).catch(() => setConfigLoaded(true));
-  }, []);
-
-  // Load messages when tab changes
   useEffect(() => {
     if (tab === "messages") loadMessages();
   }, [tab]);
@@ -62,81 +213,79 @@ export function WhatsappAgent() {
     try {
       const msgs = await getWhatsappMessages();
       setMessages(msgs);
-    } catch { /* ignore */ }
+    } catch {
+      setMessages([]);
+    }
     setLoadingMsgs(false);
   }
 
-  const evoCfg = useCallback(() => ({
-    evolution_url: config.evolution_url,
-    evolution_key: config.evolution_key,
-    instance_name: config.instance_name,
-  }), [config.evolution_url, config.evolution_key, config.instance_name]);
-
-  async function handleUpdateWebhook() {
-    if (!config.evolution_url || !config.evolution_key) return;
-    setCheckingConn(true);
-    try {
-      await evolutionAction({
-        data: { ...evoCfg(), action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
-      });
-    } catch { /* ignore */ }
-    setCheckingConn(false);
-  }
-
   const checkConnection = useCallback(async () => {
-    if (!config.evolution_url || !config.evolution_key || !config.instance_name) return;
+    if (!config.evolution_url || !config.evolution_key) return;
     setCheckingConn(true);
     setQrBase64(null);
     try {
-      const result = await evolutionAction({ data: { ...evoCfg(), action: "check_status" } });
+      const result = await evolutionAction({ data: { evolution_url: config.evolution_url, evolution_key: config.evolution_key, instance_name: config.instance_name, action: "check_status" } });
       const state = (result as { state?: string })?.state ?? "disconnected";
-      if (state === "open") {
-        setConnState("connected");
-      } else {
-        setConnState("disconnected");
-        const qrResult = await evolutionAction({ data: { ...evoCfg(), action: "get_qr" } });
+      setConnState(state === "open" ? "connected" : "disconnected");
+      if (state !== "open") {
+        const qrResult = await evolutionAction({ data: { evolution_url: config.evolution_url, evolution_key: config.evolution_key, instance_name: config.instance_name, action: "get_qr" } });
         setQrBase64((qrResult as { qr?: string | null })?.qr ?? null);
       }
     } catch {
       setConnState("disconnected");
     }
     setCheckingConn(false);
-  }, [config.evolution_url, config.evolution_key, config.instance_name, evoCfg]);
+  }, [config.evolution_url, config.evolution_key, config.instance_name]);
 
   async function handleCreateInstance() {
     if (!config.evolution_url || !config.evolution_key) return;
     setCheckingConn(true);
     setQrBase64(null);
     try {
-      const createResult = await evolutionAction({ data: { ...evoCfg(), action: "create_instance" } }).catch(() => null);
-      // Evolution API v2 returns QR directly in the create response
+      const createResult = await evolutionAction({ data: { evolution_url: config.evolution_url, evolution_key: config.evolution_key, instance_name: config.instance_name, action: "create_instance" } });
       const qrFromCreate = (createResult as { qr?: string | null } | null)?.qr ?? null;
       if (qrFromCreate) {
         setConnState("disconnected");
         setQrBase64(qrFromCreate);
         setCheckingConn(false);
-        // Set webhook in background — skip SSRF check issue for local URLs
         evolutionAction({
-          data: { ...evoCfg(), action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
+          data: { evolution_url: config.evolution_url, evolution_key: config.evolution_key, instance_name: config.instance_name, action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
         }).catch(() => null);
         return;
       }
-      // Instance already existed — just fetch QR
       await evolutionAction({
-        data: { ...evoCfg(), action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
+        data: { evolution_url: config.evolution_url, evolution_key: config.evolution_key, instance_name: config.instance_name, action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
       }).catch(() => null);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setCheckingConn(false);
     setTimeout(() => checkConnection(), 1000);
+  }
+
+  async function handleUpdateWebhook() {
+    if (!config.evolution_url || !config.evolution_key) return;
+    setCheckingConn(true);
+    try {
+      await evolutionAction({
+        data: { evolution_url: config.evolution_url, evolution_key: config.evolution_key, instance_name: config.instance_name, action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
+      });
+    } catch {
+      /* ignore */
+    }
+    setCheckingConn(false);
   }
 
   async function handleSave() {
     setSaving(true);
     try {
-      await saveWhatsappConfig({ data: config });
+      await saveWhatsappConfig({ data: { ...config, id: config.id } as any });
       setSaveOk(true);
+      onUpdate(config);
       setTimeout(() => setSaveOk(false), 2500);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setSaving(false);
   }
 
@@ -145,10 +294,10 @@ export function WhatsappAgent() {
     setMessages([]);
   }
 
-  async function handleDeleteContact(contact: string) {
-    if (!window.confirm(`Deletar todas as mensagens com ${contact}?`)) return;
-    await deleteContactMessages({ data: { fromNumber: contact } });
-    setMessages((prev) => prev.filter((m) => m.from_number !== contact));
+  async function handleDeleteContact(number: string) {
+    if (!window.confirm(`Deletar conversa?`)) return;
+    await deleteContactMessages({ data: { fromNumber: number } });
+    setMessages((prev) => prev.filter((m) => m.from_number !== number));
     setSelectedContact(null);
   }
 
@@ -161,32 +310,17 @@ export function WhatsappAgent() {
   const webhookUrl = getWebhookUrl(config.webhook_token);
   const isConfigured = !!config.evolution_url && !!config.evolution_key;
 
-  const tabs: { id: Tab; label: string; icon: typeof Wifi }[] = [
-    { id: "status", label: "Status", icon: Wifi },
-    { id: "messages", label: `Conversas${messages.length ? ` (${messages.length})` : ""}`, icon: MessageCircle },
-    { id: "config", label: "Configurações", icon: Settings },
-  ];
-
   return (
     <div className="flex flex-col h-[calc(100vh-2.5rem)]">
-      {/* Tab bar */}
-      <div className="flex items-center gap-0 px-2 border-b border-border bg-surface shrink-0">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-              tab === t.id
-                ? "border-brand text-brand"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/[0.02]"
-            }`}
-          >
-            <t.icon className="size-3.5" />
-            {t.label}
-          </button>
-        ))}
-
-        <div className="ml-auto pr-2 flex items-center gap-2">
+      <div className="flex items-center gap-3 p-4 border-b border-border bg-surface shrink-0">
+        <button onClick={onBack} className="p-1.5 hover:bg-surface-2 rounded-lg transition-colors">
+          <ArrowLeft className="size-4" />
+        </button>
+        <div>
+          <p className="text-xs font-semibold text-foreground">{config.label}</p>
+          <p className="text-[10px] text-muted-foreground">{config.instance_name}</p>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
           {connState === "connected" && (
             <span className="flex items-center gap-1.5 text-[10px] text-brand">
               <span className="size-1.5 rounded-full bg-brand status-pulse" />
@@ -202,8 +336,24 @@ export function WhatsappAgent() {
         </div>
       </div>
 
+      <div className="flex items-center gap-0 px-2 border-b border-border bg-surface shrink-0">
+        {(["status", "messages", "config"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-medium border-b-2 transition-colors whitespace-nowrap ${
+              tab === t ? "border-brand text-brand" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "status" && <Wifi className="size-3.5" />}
+            {t === "messages" && <MessageCircle className="size-3.5" />}
+            {t === "config" && <Settings className="size-3.5" />}
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+
       <div className="flex-1 overflow-y-auto">
-        {/* ── STATUS ─────────────────────────────────────────────────────────── */}
         {tab === "status" && (
           <div className="p-4 md:p-5 space-y-4 max-w-2xl">
             {!isConfigured && (
@@ -223,25 +373,12 @@ export function WhatsappAgent() {
                     <p className="text-[10px] text-muted-foreground">{config.evolution_url || "URL não configurada"}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Btn
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleUpdateWebhook}
-                      disabled={!isConfigured || checkingConn}
-                      title="Atualiza o webhook no Evolution API para a URL atual"
-                    >
+                    <Btn variant="secondary" size="sm" onClick={handleUpdateWebhook} disabled={!isConfigured || checkingConn} title="Atualiza o webhook">
                       <RefreshCw className="size-3" />
                       Webhook
                     </Btn>
-                    <Btn
-                      variant="secondary"
-                      size="sm"
-                      onClick={checkConnection}
-                      disabled={!isConfigured || checkingConn}
-                    >
-                      {checkingConn
-                        ? <Loader2 className="size-3 animate-spin" />
-                        : <RefreshCw className="size-3" />}
+                    <Btn variant="secondary" size="sm" onClick={checkConnection} disabled={!isConfigured || checkingConn}>
+                      {checkingConn ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
                       Verificar
                     </Btn>
                     {connState === "disconnected" && (
@@ -253,13 +390,8 @@ export function WhatsappAgent() {
                   </div>
                 </div>
 
-                {/* Connection indicator */}
                 <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
-                  connState === "connected"
-                    ? "bg-brand/5 border-brand/20"
-                    : connState === "disconnected"
-                    ? "bg-destructive/5 border-destructive/20"
-                    : "bg-surface-2 border-border"
+                  connState === "connected" ? "bg-brand/5 border-brand/20" : connState === "disconnected" ? "bg-destructive/5 border-destructive/20" : "bg-surface-2 border-border"
                 }`}>
                   {connState === "connected" && <Wifi className="size-4 text-brand" />}
                   {connState === "disconnected" && <WifiOff className="size-4 text-destructive" />}
@@ -268,7 +400,6 @@ export function WhatsappAgent() {
                     <p className="text-xs font-medium text-foreground">
                       {connState === "connected" && "WhatsApp conectado"}
                       {connState === "disconnected" && "WhatsApp desconectado"}
-                      {connState === "connecting" && "Conectando..."}
                       {connState === "unknown" && "Estado desconhecido"}
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -277,12 +408,11 @@ export function WhatsappAgent() {
                   </div>
                 </div>
 
-                {/* QR Code */}
                 {qrBase64 && (
                   <div className="flex flex-col items-center gap-3 py-4">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Escaneie com o WhatsApp</p>
                     <div className="p-3 bg-white rounded-2xl shadow-lg">
-                      <img src={qrBase64} alt="QR Code WhatsApp" className="size-52" />
+                      <img src={qrBase64} alt="QR Code" className="size-52" />
                     </div>
                     <p className="text-[10px] text-muted-foreground">Abra WhatsApp → Aparelhos conectados → Conectar</p>
                   </div>
@@ -290,12 +420,9 @@ export function WhatsappAgent() {
               </div>
             </DataCard>
 
-            {/* Webhook URL */}
             <DataCard title="URL do Webhook">
               <div className="p-4 space-y-2">
-                <p className="text-[10px] text-muted-foreground">
-                  Configure este endereço no Evolution API para receber mensagens:
-                </p>
+                <p className="text-[10px] text-muted-foreground">Configure este endereço no Evolution API:</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-[10px] text-brand font-mono truncate">
                     {webhookUrl}
@@ -308,30 +435,17 @@ export function WhatsappAgent() {
                     {copied ? "Copiado!" : "Copiar"}
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground/60">
-                  Evento: <code className="text-muted-foreground">messages.upsert</code>
-                </p>
-              </div>
-            </DataCard>
-
-            {/* SQL para criar tabelas */}
-            <DataCard title="SQL — criar tabelas (Supabase)">
-              <div className="p-4 space-y-2">
-                <p className="text-[10px] text-muted-foreground">Execute no SQL Editor do Supabase:</p>
-                <pre className="bg-background border border-border rounded-xl p-3 text-[9px] text-muted-foreground font-mono overflow-x-auto leading-relaxed whitespace-pre">{SQL_SETUP}</pre>
               </div>
             </DataCard>
           </div>
         )}
 
-        {/* ── MESSAGES ───────────────────────────────────────────────────────── */}
         {tab === "messages" && (
-          <div className="flex h-[calc(100vh-11rem)] gap-0">
-            {/* Contacts list */}
+          <div className="flex h-full gap-0">
             <div className="w-56 border-r border-border flex flex-col shrink-0">
               <div className="p-3 border-b border-border space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Contatos</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase">Contatos</p>
                   <Btn variant="ghost" size="sm" onClick={loadMessages} disabled={loadingMsgs}>
                     <RefreshCw className={`size-3 ${loadingMsgs ? "animate-spin" : ""}`} />
                   </Btn>
@@ -345,7 +459,7 @@ export function WhatsappAgent() {
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2 px-3">
                   <MessageCircle className="size-4 text-muted-foreground/40" />
-                  <p className="text-[9px] text-muted-foreground text-center">Nenhuma conversa</p>
+                  <p className="text-[9px] text-muted-foreground">Sem conversas</p>
                 </div>
               ) : (
                 <div className="flex-1 overflow-y-auto">
@@ -370,12 +484,7 @@ export function WhatsappAgent() {
                         <p className="text-[10px] font-medium text-foreground truncate">{contact.name}</p>
                         <p className="text-[9px] text-muted-foreground/60 truncate">{number}</p>
                         <p className="text-[8px] text-muted-foreground/40 mt-0.5">
-                          {new Date(contact.lastMsg).toLocaleString("pt-BR", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {new Date(contact.lastMsg).toLocaleString("pt-BR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </p>
                         <button
                           onClick={(e) => {
@@ -383,7 +492,6 @@ export function WhatsappAgent() {
                             handleDeleteContact(number);
                           }}
                           className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-destructive/20"
-                          title="Deletar conversa"
                         >
                           <Trash2 className="size-3 text-destructive" />
                         </button>
@@ -393,7 +501,6 @@ export function WhatsappAgent() {
               )}
             </div>
 
-            {/* Chat view */}
             <div className="flex-1 flex flex-col">
               {selectedContact ? (
                 <>
@@ -405,7 +512,7 @@ export function WhatsappAgent() {
                       <p className="text-[10px] text-muted-foreground">{selectedContact}</p>
                     </div>
                     {selectedContact && (
-                      <Btn variant="danger" size="sm" onClick={() => handleDeleteContact(selectedContact)} title="Deletar conversa com este contato">
+                      <Btn variant="danger" size="sm" onClick={() => handleDeleteContact(selectedContact)}>
                         <Trash2 className="size-3" />
                       </Btn>
                     )}
@@ -414,25 +521,15 @@ export function WhatsappAgent() {
                     {messages
                       .filter((m) => m.from_number === selectedContact)
                       .map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`flex ${msg.direction === "outgoing" ? "justify-end" : "justify-start"}`}
-                        >
+                        <div key={msg.id} className={`flex ${msg.direction === "outgoing" ? "justify-end" : "justify-start"}`}>
                           <div
                             className={`max-w-[70%] rounded-2xl px-3 py-2 space-y-1 ${
-                              msg.direction === "outgoing"
-                                ? "bg-brand/10 border border-brand/20"
-                                : "bg-surface border border-border"
+                              msg.direction === "outgoing" ? "bg-brand/10 border border-brand/20" : "bg-surface border border-border"
                             }`}
                           >
-                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-                              {msg.message}
-                            </p>
+                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">{msg.message}</p>
                             <p className="text-[8px] text-muted-foreground/50 text-right">
-                              {new Date(msg.created_at).toLocaleTimeString("pt-BR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {new Date(msg.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                             </p>
                           </div>
                         </div>
@@ -441,103 +538,64 @@ export function WhatsappAgent() {
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full gap-3">
-                  <div className="size-12 rounded-2xl bg-surface border border-border grid place-items-center">
-                    <MessageCircle className="size-5 text-muted-foreground/40" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Selecione um contato para ver a conversa</p>
+                  <MessageCircle className="size-5 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground">Selecione um contato</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* ── CONFIG ─────────────────────────────────────────────────────────── */}
-        {tab === "config" && configLoaded && (
+        {tab === "config" && (
           <div className="p-4 md:p-5 space-y-4 max-w-xl">
-            <DataCard title="Evolution API">
+            <DataCard title="Informações do agente">
               <div className="p-4 space-y-3">
-                <Field
-                  label="URL da API"
-                  placeholder="https://sua-evolution-api.com"
-                  value={config.evolution_url}
-                  onChange={(v) => setConfig((c) => ({ ...c, evolution_url: v }))}
-                />
-                <Field
-                  label="API Key"
-                  placeholder="sua-chave-secreta"
-                  type="password"
-                  value={config.evolution_key}
-                  onChange={(v) => setConfig((c) => ({ ...c, evolution_key: v }))}
-                />
-                <Field
-                  label="Nome da instância"
-                  placeholder="vargasti"
-                  value={config.instance_name}
-                  onChange={(v) => setConfig((c) => ({ ...c, instance_name: v }))}
-                />
+                <Field label="Nome do agente" placeholder="ex: VargasTI" value={config.label} onChange={(v) => setConfig({ ...config, label: v })} />
               </div>
             </DataCard>
 
-            <DataCard title="Comportamento do Agente">
+            <DataCard title="Evolution API">
+              <div className="p-4 space-y-3">
+                <Field label="URL da API" placeholder="https://sua-evolution-api.com" value={config.evolution_url} onChange={(v) => setConfig({ ...config, evolution_url: v })} />
+                <Field label="API Key" placeholder="sua-chave-secreta" type="password" value={config.evolution_key} onChange={(v) => setConfig({ ...config, evolution_key: v })} />
+                <Field label="Nome da instância" placeholder="vargasti" value={config.instance_name} onChange={(v) => setConfig({ ...config, instance_name: v })} />
+              </div>
+            </DataCard>
+
+            <DataCard title="Comportamento do agente">
               <div className="p-4 space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                    Prompt do sistema (Claude)
-                  </label>
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-widest">Prompt do sistema (Claude)</label>
                   <textarea
                     value={config.claude_system_prompt}
-                    onChange={(e) => setConfig((c) => ({ ...c, claude_system_prompt: e.target.value }))}
-                    placeholder={`Você é um assistente pessoal do VargasTI Lab. Responda de forma clara e direta em português brasileiro. Seja conciso — estamos no WhatsApp.`}
+                    onChange={(e) => setConfig({ ...config, claude_system_prompt: e.target.value })}
+                    placeholder="Deixe vazio para usar o prompt padrão"
                     rows={5}
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground resize-none focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground/50 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground resize-none focus:outline-none focus:border-brand/40"
                   />
-                  <p className="text-[9px] text-muted-foreground/60">Deixe vazio para usar o prompt padrão.</p>
                 </div>
 
                 <Toggle
-                  label="Responder automaticamente com IA"
-                  description="Claude responde cada mensagem recebida"
+                  label="Responder automaticamente"
+                  description="Claude responde cada mensagem"
                   value={config.auto_reply}
-                  onChange={(v) => setConfig((c) => ({ ...c, auto_reply: v }))}
+                  onChange={(v) => setConfig({ ...config, auto_reply: v })}
                 />
                 <Toggle
                   label="Salvar como anotações"
-                  description="Cada conversa vira uma anotação no VargasTI Hub"
+                  description="Conversas viram anotações"
                   value={config.save_as_notes}
-                  onChange={(v) => setConfig((c) => ({ ...c, save_as_notes: v }))}
+                  onChange={(v) => setConfig({ ...config, save_as_notes: v })}
                 />
               </div>
             </DataCard>
 
-            <DataCard title="Segurança">
-              <div className="p-4 space-y-2">
-                <p className="text-[10px] text-muted-foreground">Token do webhook (gerado automaticamente):</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-[10px] text-brand font-mono truncate">
-                    {config.webhook_token}
-                  </code>
-                  <button
-                    onClick={() => setConfig((c) => ({ ...c, webhook_token: crypto.randomUUID() }))}
-                    title="Gerar novo token"
-                    className="p-2 rounded-xl border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <RefreshCw className="size-3.5" />
-                  </button>
-                </div>
-                <p className="text-[9px] text-muted-foreground/60">Regenerar o token invalida o webhook atual.</p>
-              </div>
-            </DataCard>
-
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2">
               <Btn onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-                {saving ? "Salvando..." : "Salvar configurações"}
+                {saving ? "Salvando..." : "Salvar"}
               </Btn>
-              {saveOk && (
-                <span className="flex items-center gap-1 text-[10px] text-brand">
-                  <Check className="size-3" /> Salvo
-                </span>
-              )}
+              {saveOk && <span className="text-[10px] text-brand flex items-center gap-1"><Check className="size-3" /> Salvo</span>}
             </div>
           </div>
         )}
@@ -546,14 +604,7 @@ export function WhatsappAgent() {
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
-
-function Field({
-  label, placeholder, value, onChange, type = "text",
-}: {
-  label: string; placeholder: string; value: string;
-  onChange: (v: string) => void; type?: string;
-}) {
+function Field({ label, placeholder, value, onChange, type = "text" }: { label: string; placeholder: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div className="space-y-1">
       <label className="text-[10px] text-muted-foreground uppercase tracking-widest">{label}</label>
@@ -562,17 +613,13 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all"
+        className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/40"
       />
     </div>
   );
 }
 
-function Toggle({
-  label, description, value, onChange,
-}: {
-  label: string; description: string; value: boolean; onChange: (v: boolean) => void;
-}) {
+function Toggle({ label, description, value, onChange }: { label: string; description: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
@@ -580,47 +627,46 @@ function Toggle({
         <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
       </div>
       <button onClick={() => onChange(!value)} className="shrink-0">
-        {value
-          ? <ToggleRight className="size-7 text-brand" />
-          : <ToggleLeft className="size-7 text-muted-foreground/40" />
-        }
+        {value ? <ToggleRight className="size-7 text-brand" /> : <ToggleLeft className="size-7 text-muted-foreground/40" />}
       </button>
     </div>
   );
 }
 
-// ── SQL setup ──────────────────────────────────────────────────────────────────
-const SQL_SETUP = `CREATE TABLE IF NOT EXISTS whatsapp_config (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  evolution_url TEXT NOT NULL DEFAULT '',
-  evolution_key TEXT NOT NULL DEFAULT '',
-  instance_name TEXT NOT NULL DEFAULT 'vargasti',
-  claude_system_prompt TEXT DEFAULT '',
-  auto_reply BOOLEAN DEFAULT true,
-  save_as_notes BOOLEAN DEFAULT false,
-  webhook_token TEXT DEFAULT gen_random_uuid()::text,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id)
-);
-ALTER TABLE whatsapp_config ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "user_own_config" ON whatsapp_config
-  USING (auth.uid() = user_id);
-CREATE POLICY "webhook_read_config" ON whatsapp_config
-  FOR SELECT USING (true);
+function CreateAgentDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [config, setConfig] = useState<Partial<Agent>>(DEFAULT_AGENT);
+  const [saving, setSaving] = useState(false);
 
-CREATE TABLE IF NOT EXISTS whatsapp_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  instance_name TEXT,
-  from_number TEXT,
-  from_name TEXT,
-  message TEXT,
-  response TEXT,
-  direction TEXT DEFAULT 'incoming',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "user_own_messages" ON whatsapp_messages
-  USING (auth.uid() = user_id);`;
+  async function handleCreate() {
+    if (!config.label) return;
+    setSaving(true);
+    try {
+      await saveWhatsappConfig({ data: { ...config, id: undefined } as any });
+      onCreated();
+    } catch {
+      /* ignore */
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-surface border border-border rounded-xl p-6 space-y-4 max-w-sm w-full mx-4">
+        <h3 className="text-base font-semibold">Criar novo agente</h3>
+
+        <Field label="Nome" placeholder="ex: VargasTI" value={config.label || ""} onChange={(v) => setConfig({ ...config, label: v })} />
+        <Field label="Instância" placeholder="ex: vargasti" value={config.instance_name || ""} onChange={(v) => setConfig({ ...config, instance_name: v })} />
+
+        <div className="flex gap-2 pt-4">
+          <button onClick={onClose} className="flex-1 px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-surface-2">
+            Cancelar
+          </button>
+          <Btn onClick={handleCreate} disabled={saving || !config.label} className="flex-1">
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+            Criar
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
