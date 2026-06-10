@@ -144,7 +144,7 @@ function assertSafeExternalUrl(raw: string): URL {
 export const evolutionAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(EvolutionActionSchema)
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<Record<string, unknown>> => {
     const { userId } = context as { userId: string | null };
     if (!userId) throw new Error("Não autenticado");
 
