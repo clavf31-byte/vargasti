@@ -169,7 +169,7 @@ export const evolutionAction = createServerFn({ method: "POST" })
           integration: "WHATSAPP-BAILEYS",
         }),
       });
-      const json = await res.json() as unknown;
+      const json = await res.json() as any;
       return { ok: res.ok, data: json };
     }
 
@@ -195,7 +195,7 @@ export const evolutionAction = createServerFn({ method: "POST" })
           },
         }),
       });
-      const json = await res.json() as unknown;
+      const json = await res.json() as any;
       return { ok: res.ok, data: json };
     }
 
