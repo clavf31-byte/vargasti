@@ -125,6 +125,84 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_config: {
+        Row: {
+          auto_reply: boolean | null
+          claude_system_prompt: string | null
+          created_at: string | null
+          evolution_key: string
+          evolution_url: string
+          id: string
+          instance_name: string
+          save_as_notes: boolean | null
+          updated_at: string | null
+          user_id: string
+          webhook_token: string | null
+        }
+        Insert: {
+          auto_reply?: boolean | null
+          claude_system_prompt?: string | null
+          created_at?: string | null
+          evolution_key?: string
+          evolution_url?: string
+          id?: string
+          instance_name?: string
+          save_as_notes?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          webhook_token?: string | null
+        }
+        Update: {
+          auto_reply?: boolean | null
+          claude_system_prompt?: string | null
+          created_at?: string | null
+          evolution_key?: string
+          evolution_url?: string
+          id?: string
+          instance_name?: string
+          save_as_notes?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          webhook_token?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string | null
+          direction: string | null
+          from_name: string | null
+          from_number: string | null
+          id: string
+          instance_name: string | null
+          message: string | null
+          response: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          direction?: string | null
+          from_name?: string | null
+          from_number?: string | null
+          id?: string
+          instance_name?: string | null
+          message?: string | null
+          response?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string | null
+          from_name?: string | null
+          from_number?: string | null
+          id?: string
+          instance_name?: string | null
+          message?: string | null
+          response?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
