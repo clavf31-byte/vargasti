@@ -39,7 +39,15 @@ async function fetchVersion(baseUrl: string): Promise<VersionPayload> {
     headers: { "cache-control": "no-cache" },
   });
   expect(res.status, `${baseUrl}/api/version status`).toBe(200);
-  return (await res.json()) as VersionPayload;
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as VersionPayload;
+  } catch {
+    throw new Error(
+      `${baseUrl}/api/version did not return JSON (build likely missing the route). ` +
+        `First 120 chars: ${text.slice(0, 120)}`,
+    );
+  }
 }
 
 function buildId(p: VersionPayload): string {
