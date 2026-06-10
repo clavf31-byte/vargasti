@@ -156,7 +156,7 @@ export const evolutionAction = createServerFn({ method: "POST" })
       ok?: boolean;
       state?: string;
       qr?: string | null;
-      data?: Record<string, unknown> | null;
+      data?: any;
     };
 
     if (data.action === "check_status") {
