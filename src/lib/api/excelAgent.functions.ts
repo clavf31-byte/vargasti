@@ -26,7 +26,9 @@ export type AgentAction =
   | { type: "filter"; filters: FilterSpec[]; logic: "AND" | "OR" }
   | { type: "clear_filters" }
   | { type: "add_column"; name: string; values: string[] }
-  | { type: "update_cells"; changes: { row: number; col: number; value: string }[] };
+  | { type: "update_cells"; changes: { row: number; col: number; value: string }[] }
+  | { type: "switch_sheet"; sheetName: string }
+  | { type: "summarize" };
 
 const RequestSchema = z.object({
   headers: z.array(z.string()),
@@ -37,6 +39,10 @@ const RequestSchema = z.object({
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() }))
     .max(20),
+  activeSheet: z.string().optional(),
+  allSheets: z
+    .array(z.object({ name: z.string(), rows: z.number(), cols: z.number() }))
+    .optional(),
 });
 
 export const runExcelAgent = createServerFn({ method: "POST" })
@@ -49,7 +55,7 @@ export const runExcelAgent = createServerFn({ method: "POST" })
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
     const client = new Anthropic({ apiKey });
 
-    const { headers, types, rows, totalRows, message, history } = data;
+    const { headers, types, rows, totalRows, message, history, activeSheet, allSheets } = data;
     const previewRows = rows.slice(0, MAX_PREVIEW_ROWS);
 
     const colMeta = headers
@@ -67,16 +73,24 @@ export const runExcelAgent = createServerFn({ method: "POST" })
         ? `\nATENÇÃO: A planilha tem ${totalRows} linhas; apenas as primeiras ${MAX_PREVIEW_ROWS} estão disponíveis. Para add_column, forneça exatamente ${previewRows.length} valores.`
         : "";
 
-    const system = `Você é um assistente de análise e manipulação de planilhas. Responda sempre em português brasileiro.
+    const sheetsMeta = allSheets && allSheets.length > 1
+      ? `\nAbas disponíveis no arquivo:\n${allSheets.map((s) => `  - "${s.name}": ${s.rows} linhas × ${s.cols} colunas`).join("\n")}\nAba ativa: "${activeSheet ?? "desconhecida"}"`
+      : "";
 
-Colunas disponíveis:
+    const system = `Você é um assistente de análise e manipulação de planilhas. Responda sempre em português brasileiro.
+${sheetsMeta}
+
+Colunas da aba ativa:
 ${colMeta}
 ${truncNote}
 
-Dados (${previewRows.length} linhas):
+Dados da aba ativa (${previewRows.length} linhas):
 ${tablePreview}
 
-Use as ferramentas para executar ações na planilha. Após executar, confirme o que foi feito de forma resumida.`;
+Use as ferramentas para executar ações na planilha. Após executar, confirme o que foi feito de forma resumida.
+- Para trocar de aba, use switch_sheet.
+- Para listar abas, use list_sheets.
+- Para resumo estatístico, use summarize_data.`;
 
     const tools: AnthropicTool[] = [
       {
@@ -160,6 +174,27 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
           required: ["changes"],
         },
       },
+      {
+        name: "switch_sheet",
+        description: "Trocar a aba ativa da planilha. Use quando o usuário pedir para abrir, ver ou trabalhar em outra aba.",
+        input_schema: {
+          type: "object" as const,
+          properties: {
+            sheet_name: { type: "string", description: "Nome exato da aba (case-sensitive)" },
+          },
+          required: ["sheet_name"],
+        },
+      },
+      {
+        name: "list_sheets",
+        description: "Listar todas as abas do arquivo com nome, número de linhas e colunas. Use quando o usuário perguntar quais abas existem.",
+        input_schema: { type: "object" as const, properties: {} },
+      },
+      {
+        name: "summarize_data",
+        description: "Gerar resumo estatístico da aba ativa: total de linhas, colunas, contagem de valores únicos, mínimo/máximo/média para colunas numéricas.",
+        input_schema: { type: "object" as const, properties: {} },
+      },
     ];
 
     const messages: AnthropicMessage[] = [
@@ -186,7 +221,33 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
         const input = block.input as Record<string, unknown>;
         const action = buildAction(block.name, input, headers, types, previewRows.length);
         if (action) actions.push(action);
-        results.push({ type: "tool_result", tool_use_id: block.id, content: "OK" });
+
+        let toolResultContent = "OK";
+        if (block.name === "list_sheets" && allSheets) {
+          toolResultContent = allSheets
+            .map((s) => `- "${s.name}": ${s.rows} linhas × ${s.cols} colunas`)
+            .join("\n");
+        } else if (block.name === "summarize_data") {
+          const numCols = headers.filter((_, i) => types[i] === "number");
+          const stats = headers
+            .map((h, i) => {
+              if (types[i] !== "number") {
+                const unique = new Set(previewRows.map((r) => r[i] ?? "").filter(Boolean)).size;
+                return `${h}: ${unique} valores únicos`;
+              }
+              const nums = previewRows
+                .map((r) => parseFloat((r[i] ?? "").replace(",", ".")))
+                .filter((n) => !isNaN(n));
+              if (nums.length === 0) return `${h}: sem dados`;
+              const sum = nums.reduce((a, b) => a + b, 0);
+              return `${h}: min=${Math.min(...nums)}, max=${Math.max(...nums)}, média=${(sum / nums.length).toFixed(2)}`;
+            })
+            .join("\n");
+          toolResultContent = `Total: ${previewRows.length} linhas, ${headers.length} colunas\n${stats}`;
+          void numCols;
+        }
+
+        results.push({ type: "tool_result", tool_use_id: block.id, content: toolResultContent });
       }
 
       messages.push({ role: "assistant", content: resp.content });
@@ -264,6 +325,18 @@ function buildAction(
       if (mapped.length === 0) return null;
       return { type: "update_cells", changes: mapped };
     }
+
+    case "switch_sheet": {
+      const sheetName = (input.sheet_name as string) ?? "";
+      if (!sheetName) return null;
+      return { type: "switch_sheet", sheetName };
+    }
+
+    case "list_sheets":
+      return null;
+
+    case "summarize_data":
+      return null;
 
     default:
       return null;

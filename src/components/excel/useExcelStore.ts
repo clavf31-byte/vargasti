@@ -37,6 +37,29 @@ export type ProcvResults = {
   notFoundRows: number[];
 };
 
+export type CompareConfig = {
+  mode: "same_file" | "second_file";
+  sheet1: string;
+  key1: number;
+  sheet2: string;
+  key2: number;
+  returnCols: number[];
+};
+
+export type CompareResult = {
+  sheet1Name: string;
+  sheet2Name: string;
+  mergedHeaders: string[];
+  total1: number;
+  total2: number;
+  found: number;
+  notFound: number;
+  percent: number;
+  foundRows: string[][];
+  notFoundRows: string[][];
+  mergedRows: string[][];
+};
+
 export function detectColType(values: string[]): ColType {
   const nonEmpty = values.filter((v) => v.trim() !== "").slice(0, 50);
   if (nonEmpty.length === 0) return "text";
@@ -141,6 +164,13 @@ export function useExcelStore() {
   const [procvConfig, setProcvConfig] = useState<ProcvConfig | null>(null);
   const [procvResults, setProcvResults] = useState<ProcvResults>({ found: 0, notFound: 0, notFoundRows: [] });
 
+  // Second file
+  const [fileName2, setFileName2] = useState("");
+  const [sheetNames2, setSheetNames2] = useState<string[]>([]);
+  const [activeSheet2, setActiveSheet2] = useState("");
+  const [sheetData2, setSheetData2] = useState<Record<string, SheetData>>({});
+  const [compareResult, setCompareResult] = useState<CompareResult | null>(null);
+
   function saveHistory(item: HistoryItem) {
     const updated = [item, ...history].slice(0, 20);
     setHistory(updated);
@@ -162,6 +192,66 @@ export function useExcelStore() {
     setProcvResults({ found: 0, notFound: 0, notFoundRows: [] });
   }
 
+  function loadSheetData2(data: Record<string, SheetData>, names: string[], name: string) {
+    setSheetData2(data);
+    setSheetNames2(names);
+    setActiveSheet2(name);
+    setCompareResult(null);
+  }
+
+  function resetFile2() {
+    setFileName2("");
+    setSheetData2({});
+    setSheetNames2([]);
+    setActiveSheet2("");
+    setCompareResult(null);
+  }
+
+  function runCompare(cfg: CompareConfig) {
+    const s1 = sheetData[cfg.sheet1];
+    const s2 = cfg.mode === "same_file" ? sheetData[cfg.sheet2] : sheetData2[cfg.sheet2];
+    if (!s1 || !s2) return;
+
+    const normalize = (v: string) =>
+      v.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ");
+
+    const lookupMap = new Map<string, string[]>();
+    s2.rows.forEach((r) => {
+      const key = normalize(r[cfg.key2] ?? "");
+      if (key) lookupMap.set(key, r);
+    });
+
+    const returnHeaders = cfg.returnCols.map((c) => s2.headers[c] ?? `Col ${c + 1}`);
+    const mergedHeaders = [...s1.headers, ...returnHeaders];
+    const foundRows: string[][] = [];
+    const notFoundRows: string[][] = [];
+    const mergedRows: string[][] = [];
+
+    s1.rows.forEach((row) => {
+      const key = normalize(row[cfg.key1] ?? "");
+      const match = lookupMap.get(key);
+      const extra = cfg.returnCols.map((c) => match?.[c] ?? "");
+      const merged = [...row, ...extra];
+      mergedRows.push(merged);
+      if (match) foundRows.push(merged);
+      else notFoundRows.push(merged);
+    });
+
+    setCompareResult({
+      sheet1Name: cfg.sheet1,
+      sheet2Name: cfg.sheet2,
+      mergedHeaders,
+      total1: s1.rows.length,
+      total2: s2.rows.length,
+      found: foundRows.length,
+      notFound: notFoundRows.length,
+      percent: s1.rows.length > 0 ? Math.round((foundRows.length / s1.rows.length) * 100) : 0,
+      foundRows,
+      notFoundRows,
+      mergedRows,
+    });
+  }
+
   function reset() {
     setFileName("");
     setSheetData({});
@@ -176,6 +266,11 @@ export function useExcelStore() {
     setProcvSheet(null);
     setProcvConfig(null);
     setProcvResults({ found: 0, notFound: 0, notFoundRows: [] });
+    setFileName2("");
+    setSheetData2({});
+    setSheetNames2([]);
+    setActiveSheet2("");
+    setCompareResult(null);
   }
 
   function isColVisible(idx: number) {
@@ -320,5 +415,16 @@ export function useExcelStore() {
     getFilteredRows,
     updateCell,
     updateSheetData,
+    // second file
+    fileName2, setFileName2,
+    sheetNames2,
+    activeSheet2, setActiveSheet2,
+    sheetData2,
+    loadSheetData2,
+    resetFile2,
+    // compare
+    compareResult,
+    setCompareResult,
+    runCompare,
   };
 }

@@ -12,9 +12,10 @@ import { ExcelProcv } from "./ExcelProcv";
 import { ExcelActions } from "./ExcelActions";
 import { ExcelExport } from "./ExcelExport";
 import { ExcelAgent } from "./ExcelAgent";
+import { ExcelCompare } from "./ExcelCompare";
 import { useState } from "react";
 
-type Tab = "import" | "table" | "filters" | "columns" | "procv" | "actions" | "export" | "agent";
+type Tab = "import" | "table" | "filters" | "columns" | "procv" | "actions" | "export" | "agent" | "compare";
 
 export function ExcelEditor() {
   const store = useExcelStore();
@@ -74,6 +75,7 @@ export function ExcelEditor() {
     { id: "procv", label: "PROCV" },
     { id: "actions", label: "Ações" },
     { id: "export", label: "Exportar" },
+    { id: "compare", label: "Comparar" },
     { id: "agent", label: "Agente IA" },
   ];
 
@@ -236,16 +238,32 @@ export function ExcelEditor() {
 
             {tab === "table" && current && (
               <div className="flex flex-col flex-1 overflow-hidden">
+                {/* Sheet tabs */}
+                {store.sheetNames.length > 1 && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-background/40 overflow-x-auto shrink-0">
+                    {store.sheetNames.map((n) => {
+                      const s = store.sheetData[n];
+                      const active = n === store.activeSheet;
+                      return (
+                        <button
+                          key={n}
+                          onClick={() => store.setActiveSheet(n)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-medium whitespace-nowrap transition-colors ${
+                            active
+                              ? "border-brand/30 bg-brand/10 text-brand"
+                              : "border-border text-muted-foreground hover:text-foreground hover:bg-surface-2"
+                          }`}
+                        >
+                          {n}
+                          <span className={`text-[9px] ${active ? "text-brand/70" : "text-muted-foreground/50"}`}>
+                            {s?.rows.length ?? 0}L
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-surface/50 shrink-0 flex-wrap">
-                  {store.sheetNames.length > 1 && (
-                    <select
-                      value={store.activeSheet}
-                      onChange={(e) => store.setActiveSheet(e.target.value)}
-                      className="bg-background border border-border rounded px-2 py-1 text-[10px] focus:outline-none focus:border-brand/50"
-                    >
-                      {store.sheetNames.map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                  )}
                   <div className="relative">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
                     <input
@@ -391,9 +409,31 @@ export function ExcelEditor() {
               </div>
             )}
 
+            {tab === "compare" && (
+              <ExcelCompare
+                fileName1={store.fileName}
+                sheetNames1={store.sheetNames}
+                sheetData1={store.sheetData}
+                fileName2={store.fileName2}
+                sheetNames2={store.sheetNames2}
+                sheetData2={store.sheetData2}
+                compareResult={store.compareResult}
+                onLoadFile2={(data, names, first, name) => {
+                  store.loadSheetData2(data, names, first);
+                  store.setFileName2(name);
+                }}
+                onResetFile2={store.resetFile2}
+                onCompare={store.runCompare}
+                onClearResult={() => store.setCompareResult(null)}
+              />
+            )}
+
             {tab === "agent" && current && (
               <ExcelAgent
                 sheetData={current}
+                allSheetData={store.sheetData}
+                sheetNames={store.sheetNames}
+                activeSheet={store.activeSheet}
                 totalRows={current.rows.length}
                 onSort={(col, dir) => {
                   store.setSortCol(col);
@@ -415,18 +455,19 @@ export function ExcelEditor() {
                 onUpdateCells={(changes) =>
                   changes.forEach((c) => store.updateCell(c.row, c.col, c.value))
                 }
+                onSwitchSheet={store.setActiveSheet}
               />
             )}
 
-            {tab !== "import" && tab !== "agent" && !current && (
+            {tab !== "import" && tab !== "agent" && tab !== "compare" && !current && (
               <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground">
                 Importe um arquivo para continuar.
               </div>
             )}
 
-            {tab === "agent" && !current && (
+            {(tab === "agent" || tab === "compare") && !store.fileName && (
               <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground">
-                Importe um arquivo para usar o agente.
+                Importe um arquivo para continuar.
               </div>
             )}
           </div>

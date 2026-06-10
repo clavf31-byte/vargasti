@@ -16,26 +16,36 @@ const ACTION_LABELS: Record<string, string> = {
   clear_filters: "Filtros removidos",
   add_column: "Coluna adicionada",
   update_cells: "Células atualizadas",
+  switch_sheet: "Aba alterada",
+  summarize: "Resumo gerado",
 };
 
 interface Props {
   sheetData: SheetData;
+  allSheetData: Record<string, SheetData>;
+  sheetNames: string[];
+  activeSheet: string;
   totalRows: number;
   onSort: (colIndex: number, direction: "asc" | "desc") => void;
   onFilter: (filters: FilterRule[], logic: "AND" | "OR") => void;
   onClearFilters: () => void;
   onAddColumn: (name: string, values: string[]) => void;
   onUpdateCells: (changes: { row: number; col: number; value: string }[]) => void;
+  onSwitchSheet: (name: string) => void;
 }
 
 export function ExcelAgent({
   sheetData,
+  allSheetData,
+  sheetNames,
+  activeSheet,
   totalRows,
   onSort,
   onFilter,
   onClearFilters,
   onAddColumn,
   onUpdateCells,
+  onSwitchSheet,
 }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -60,6 +70,12 @@ export function ExcelAgent({
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }));
 
+      const allSheetsMeta = sheetNames.map((n) => ({
+        name: n,
+        rows: allSheetData[n]?.rows.length ?? 0,
+        cols: allSheetData[n]?.headers.length ?? 0,
+      }));
+
       const result = await runExcelAgent({
         data: {
           headers: sheetData.headers,
@@ -68,11 +84,13 @@ export function ExcelAgent({
           totalRows,
           message: userMsg.content,
           history,
+          activeSheet,
+          allSheets: allSheetsMeta,
         },
       });
 
       for (const action of result.actions ?? []) {
-        applyAction(action, { onSort, onFilter, onClearFilters, onAddColumn, onUpdateCells });
+        applyAction(action, { onSort, onFilter, onClearFilters, onAddColumn, onUpdateCells, onSwitchSheet });
       }
 
       setMessages((prev) => [
@@ -228,6 +246,7 @@ type Callbacks = {
   onClearFilters: () => void;
   onAddColumn: (name: string, values: string[]) => void;
   onUpdateCells: (changes: { row: number; col: number; value: string }[]) => void;
+  onSwitchSheet: (name: string) => void;
 };
 
 function applyAction(action: AgentAction, cb: Callbacks) {
@@ -255,6 +274,9 @@ function applyAction(action: AgentAction, cb: Callbacks) {
       break;
     case "update_cells":
       cb.onUpdateCells(action.changes);
+      break;
+    case "switch_sheet":
+      cb.onSwitchSheet(action.sheetName);
       break;
   }
 }
