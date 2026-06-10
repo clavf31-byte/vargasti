@@ -31,7 +31,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     user?.email?.split("@")[0] ??
     "user";
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-  const isAdmin = user?.user_metadata?.role === "admin";
+  const isAdmin = (user?.app_metadata as { role?: string } | undefined)?.role === "admin";
 
   const ALL_NAV = isAdmin ? [...NAV_BASE, ...NAV_ADMIN] : NAV_BASE;
 
