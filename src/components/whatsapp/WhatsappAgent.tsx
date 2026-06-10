@@ -42,6 +42,7 @@ export function WhatsappAgent() {
   const [messages, setMessages] = useState<WhatsappMessage[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<string | null>(null);
 
   // Load config
   useEffect(() => {
@@ -318,67 +319,118 @@ export function WhatsappAgent() {
 
         {/* ── MESSAGES ───────────────────────────────────────────────────────── */}
         {tab === "messages" && (
-          <div className="p-4 md:p-5 space-y-4 max-w-3xl">
-            <div className="flex items-center justify-between">
-              <SectionTitle icon={MessageCircle}>Conversas recentes</SectionTitle>
-              <div className="flex gap-2">
-                <Btn variant="ghost" size="sm" onClick={loadMessages} disabled={loadingMsgs}>
-                  <RefreshCw className={`size-3 ${loadingMsgs ? "animate-spin" : ""}`} />
-                  Atualizar
-                </Btn>
-                {messages.length > 0 && (
-                  <Btn variant="danger" size="sm" onClick={handleClear}>
-                    <Trash2 className="size-3" />
-                    Limpar
+          <div className="flex h-[calc(100vh-11rem)] gap-0">
+            {/* Contacts list */}
+            <div className="w-56 border-r border-border flex flex-col shrink-0">
+              <div className="p-3 border-b border-border space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Contatos</p>
+                  <Btn variant="ghost" size="sm" onClick={loadMessages} disabled={loadingMsgs}>
+                    <RefreshCw className={`size-3 ${loadingMsgs ? "animate-spin" : ""}`} />
                   </Btn>
-                )}
+                </div>
               </div>
+
+              {loadingMsgs ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="size-4 text-brand animate-spin" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2 px-3">
+                  <MessageCircle className="size-4 text-muted-foreground/40" />
+                  <p className="text-[9px] text-muted-foreground text-center">Nenhuma conversa</p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto">
+                  {Array.from(
+                    messages.reduce((acc, msg) => {
+                      const key = msg.from_number;
+                      if (!acc.has(key)) {
+                        acc.set(key, { name: msg.from_name, number: msg.from_number, lastMsg: msg.created_at });
+                      }
+                      return acc;
+                    }, new Map<string, { name: string; number: string; lastMsg: string }>())
+                  )
+                    .sort((a, b) => new Date(b[1].lastMsg).getTime() - new Date(a[1].lastMsg).getTime())
+                    .map(([number, contact]) => (
+                      <button
+                        key={number}
+                        onClick={() => setSelectedContact(number)}
+                        className={`w-full px-3 py-2 text-left border-b border-border/50 hover:bg-white/[0.02] transition-colors ${
+                          selectedContact === number ? "bg-brand/10 border-l-2 border-l-brand" : ""
+                        }`}
+                      >
+                        <p className="text-[10px] font-medium text-foreground truncate">{contact.name}</p>
+                        <p className="text-[9px] text-muted-foreground/60 truncate">{number}</p>
+                        <p className="text-[8px] text-muted-foreground/40 mt-0.5">
+                          {new Date(contact.lastMsg).toLocaleString("pt-BR", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
 
-            {loadingMsgs ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="size-5 text-brand animate-spin" />
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <div className="size-12 rounded-2xl bg-surface border border-border grid place-items-center">
-                  <MessageCircle className="size-5 text-muted-foreground/40" />
-                </div>
-                <p className="text-xs text-muted-foreground">Nenhuma conversa ainda</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.direction === "outgoing" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 space-y-1 ${
-                      msg.direction === "outgoing"
-                        ? "bg-brand/10 border border-brand/20"
-                        : "bg-surface border border-border"
-                    }`}>
-                      <div className="flex items-center gap-2">
-                        {msg.direction === "incoming"
-                          ? <MessageCircle className="size-3 text-muted-foreground" />
-                          : <Bot className="size-3 text-brand" />
-                        }
-                        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">
-                          {msg.direction === "incoming" ? msg.from_name : "Agente IA"}
-                        </span>
-                        {msg.direction === "incoming" && (
-                          <span className="text-[9px] text-muted-foreground/50">{msg.from_number}</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">{msg.message}</p>
-                      <p className="text-[9px] text-muted-foreground/50 text-right">
-                        {new Date(msg.created_at).toLocaleString("pt-BR")}
+            {/* Chat view */}
+            <div className="flex-1 flex flex-col">
+              {selectedContact ? (
+                <>
+                  <div className="p-3 border-b border-border flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">
+                        {messages.find((m) => m.from_number === selectedContact)?.from_name}
                       </p>
+                      <p className="text-[10px] text-muted-foreground">{selectedContact}</p>
                     </div>
+                    {messages.length > 0 && (
+                      <Btn variant="danger" size="sm" onClick={handleClear} title="Limpar todas as mensagens">
+                        <Trash2 className="size-3" />
+                      </Btn>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {messages
+                      .filter((m) => m.from_number === selectedContact)
+                      .map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex ${msg.direction === "outgoing" ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[70%] rounded-2xl px-3 py-2 space-y-1 ${
+                              msg.direction === "outgoing"
+                                ? "bg-brand/10 border border-brand/20"
+                                : "bg-surface border border-border"
+                            }`}
+                          >
+                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                              {msg.message}
+                            </p>
+                            <p className="text-[8px] text-muted-foreground/50 text-right">
+                              {new Date(msg.created_at).toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-3">
+                  <div className="size-12 rounded-2xl bg-surface border border-border grid place-items-center">
+                    <MessageCircle className="size-5 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Selecione um contato para ver a conversa</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
