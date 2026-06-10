@@ -152,11 +152,18 @@ export const evolutionAction = createServerFn({ method: "POST" })
     const base = safeUrl.toString().replace(/\/$/, "");
     const headers = { "Content-Type": "application/json", apikey: data.evolution_key };
 
+    type Result = {
+      ok?: boolean;
+      state?: string;
+      qr?: string | null;
+      data?: any;
+    };
+
     if (data.action === "check_status") {
       const res = await fetch(`${base}/instance/connectionState/${encodeURIComponent(data.instance_name)}`, { headers });
-      if (!res.ok) return { state: "disconnected" };
+      if (!res.ok) return { state: "disconnected" } as Result;
       const json = await res.json() as { instance?: { state?: string } };
-      return { state: json?.instance?.state ?? "disconnected" };
+      return { state: json?.instance?.state ?? "disconnected" } as Result;
     }
 
     if (data.action === "create_instance") {
@@ -170,17 +177,16 @@ export const evolutionAction = createServerFn({ method: "POST" })
         }),
       });
       const json = await res.json() as Record<string, unknown>;
-      // Evolution API v2 returns QR inside the create response when qrcode: true
       const qrcodeField = json?.qrcode as Record<string, unknown> | undefined;
       const qr = (qrcodeField?.base64 as string) ?? null;
-      return { ok: res.ok, data: json, qr };
+      return { ok: res.ok, data: json, qr } as Result;
     }
 
     if (data.action === "get_qr") {
       const res = await fetch(`${base}/instance/connect/${encodeURIComponent(data.instance_name)}`, { headers });
-      if (!res.ok) return { qr: null };
+      if (!res.ok) return { qr: null } as Result;
       const json = await res.json() as { base64?: string; qrcode?: { base64?: string } };
-      return { qr: json?.base64 ?? json?.qrcode?.base64 ?? null };
+      return { qr: json?.base64 ?? json?.qrcode?.base64 ?? null } as Result;
     }
 
     if (data.action === "set_webhook" && data.webhook_url) {
@@ -198,11 +204,11 @@ export const evolutionAction = createServerFn({ method: "POST" })
           },
         }),
       });
-      const json = await res.json() as any;
-      return { ok: res.ok, data: json };
+      const json = await res.json() as Record<string, unknown>;
+      return { ok: res.ok, data: json } as Result;
     }
 
-    return { ok: false };
+    return { ok: false } as Result;
   });
 
 // ── processWebhookMessage (called from API route, no user auth) ───────────────
