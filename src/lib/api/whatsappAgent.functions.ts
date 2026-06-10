@@ -61,9 +61,9 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(SaveConfigSchema)
   .handler(async ({ data, context }) => {
-    const { supabase, user } = context as { supabase: ReturnType<typeof getAdminClient>; user: { id: string } };
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
     const { error } = await supabase.from("whatsapp_config").upsert(
-      { ...data, user_id: user.id, updated_at: new Date().toISOString() },
+      { ...data, user_id: userId, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
     if (error) throw new Error(error.message);
@@ -74,11 +74,11 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
 export const getWhatsappMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, user } = context as { supabase: ReturnType<typeof getAdminClient>; user: { id: string } };
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
     const { data } = await supabase
       .from("whatsapp_messages")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
     return (data ?? []) as WhatsappMessage[];
@@ -88,8 +88,8 @@ export const getWhatsappMessages = createServerFn({ method: "GET" })
 export const clearWhatsappMessages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, user } = context as { supabase: ReturnType<typeof getAdminClient>; user: { id: string } };
-    await supabase.from("whatsapp_messages").delete().eq("user_id", user.id);
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
+    await supabase.from("whatsapp_messages").delete().eq("user_id", userId);
     return { ok: true };
   });
 
