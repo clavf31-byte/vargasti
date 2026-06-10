@@ -37,11 +37,11 @@ export type WhatsappMessage = {
 export const getWhatsappConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, user } = context as { supabase: ReturnType<typeof getAdminClient>; user: { id: string } };
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
     const { data } = await supabase
       .from("whatsapp_config")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
     return data as WhatsappConfig | null;
   });
