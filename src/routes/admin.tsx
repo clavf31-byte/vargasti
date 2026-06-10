@@ -70,7 +70,7 @@ function AdminPage() {
   const [pwdSuccess, setPwdSuccess] = useState(false);
   const [pwdBusy, setPwdBusy] = useState(false);
 
-  const isAdmin = user?.user_metadata?.role === "admin";
+  const isAdmin = (user?.app_metadata as { role?: string } | undefined)?.role === "admin";
 
   useEffect(() => {
     if (!isAdmin) navigate({ to: "/" });

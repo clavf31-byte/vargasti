@@ -15,6 +15,7 @@ function getAdminClient() {
 export type WhatsappConfig = {
   id?: string;
   user_id?: string;
+  label: string;
   evolution_url: string;
   evolution_key: string;
   instance_name: string;
@@ -70,7 +71,7 @@ export const getWhatsappConfig = createServerFn({ method: "GET" })
 const SaveConfigSchema = z.object({
   id: z.string().uuid().optional(),
   label: z.string().min(1),
-  evolution_url: z.string(),
+  evolution_url: z.string().url(),
   evolution_key: z.string(),
   instance_name: z.string().min(1),
   claude_system_prompt: z.string(),
@@ -505,13 +506,18 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       created_at: new Date().toISOString(),
     });
 
-    // Send via Evolution API
-    const sendUrl = `${cfg.evolution_url.replace(/\/$/, "")}/message/sendText/${data.instanceName}`;
-    await fetch(sendUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: cfg.evolution_key },
-      body: JSON.stringify({ number: data.fromNumber, text: finalReply }),
-    }).catch(() => null);
+    // Send via Evolution API — validate URL to prevent SSRF
+    try {
+      const safeBase = assertSafeExternalUrl(cfg.evolution_url);
+      const sendUrl = `${safeBase.toString().replace(/\/$/, "")}/message/sendText/${data.instanceName}`;
+      await fetch(sendUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: cfg.evolution_key },
+        body: JSON.stringify({ number: data.fromNumber, text: finalReply }),
+      }).catch(() => null);
+    } catch (err) {
+      console.warn("[whatsapp-webhook] Blocked unsafe evolution_url:", (err as Error).message);
+    }
 
     return { ok: true, reply: finalReply, noteCreated };
   });
