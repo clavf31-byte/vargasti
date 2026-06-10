@@ -27,11 +27,22 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
           }
 
           // Skip archived chats — user archived the conversation in WhatsApp
-          const chatData = data?.chat as Record<string, unknown> | undefined;
-          if (chatData?.archived === true) {
+          // Check multiple possible locations for archived flag
+          const isArchived =
+            (data?.chat as Record<string, unknown> | undefined)?.archived === true ||
+            (data?.isArchived === true) ||
+            (key?.archived === true);
+
+          if (isArchived) {
+            console.log("[whatsapp-webhook] Skipped archived chat:", { fromNumber, archived: true });
             return new Response(JSON.stringify({ ok: true, skipped: true, reason: "archived" }), {
               headers: { "Content-Type": "application/json" },
             });
+          }
+
+          // Debug: log the full structure if archived field not found (remove after testing)
+          if (JSON.stringify(data).toLowerCase().includes("archive")) {
+            console.log("[whatsapp-webhook] Payload structure:", JSON.stringify(data, null, 2));
           }
 
           const remoteJid = (key?.remoteJid as string) ?? "";
