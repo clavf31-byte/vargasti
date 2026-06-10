@@ -95,18 +95,20 @@ export function WhatsappAgent() {
     if (!config.evolution_url || !config.evolution_key) return;
     setCheckingConn(true);
     try {
-      await evolutionAction({ data: { ...evoCfg(), action: "create_instance" } });
-      // Configure webhook automatically after creating instance
+      // Try to create — may already exist, that's fine
+      await evolutionAction({ data: { ...evoCfg(), action: "create_instance" } }).catch(() => null);
+      // Set webhook regardless
       await evolutionAction({
         data: {
           ...evoCfg(),
           action: "set_webhook",
           webhook_url: getWebhookUrl(config.webhook_token),
         },
-      });
-      setTimeout(() => checkConnection(), 2000);
+      }).catch(() => null);
     } catch { /* ignore */ }
+    // Always try to get QR after creating/reconnecting
     setCheckingConn(false);
+    setTimeout(() => checkConnection(), 1500);
   }
 
   async function handleSave() {
