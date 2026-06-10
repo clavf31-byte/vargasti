@@ -93,6 +93,20 @@ export const clearWhatsappMessages = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ── deleteContactMessages ──────────────────────────────────────────────────────
+const DeleteContactSchema = z.object({
+  fromNumber: z.string(),
+});
+
+export const deleteContactMessages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(DeleteContactSchema)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as { supabase: ReturnType<typeof getAdminClient>; userId: string };
+    await supabase.from("whatsapp_messages").delete().eq("user_id", userId).eq("from_number", data.fromNumber);
+    return { ok: true };
+  });
+
 // ── Evolution API proxy (server-side to avoid CORS) ──────────────────────────
 
 const EvolutionActionSchema = z.object({

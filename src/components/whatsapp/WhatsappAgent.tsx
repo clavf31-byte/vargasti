@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import {
   getWhatsappConfig, saveWhatsappConfig, getWhatsappMessages,
-  clearWhatsappMessages, evolutionAction, WhatsappConfig, WhatsappMessage,
+  clearWhatsappMessages, deleteContactMessages, evolutionAction, WhatsappConfig, WhatsappMessage,
 } from "@/lib/api/whatsappAgent.functions";
 import { DataCard, SectionTitle, Btn } from "@/components/shared";
 
@@ -143,6 +143,13 @@ export function WhatsappAgent() {
   async function handleClear() {
     await clearWhatsappMessages();
     setMessages([]);
+  }
+
+  async function handleDeleteContact(contact: string) {
+    if (!window.confirm(`Deletar todas as mensagens com ${contact}?`)) return;
+    await deleteContactMessages({ data: { fromNumber: contact } });
+    setMessages((prev) => prev.filter((m) => m.from_number !== contact));
+    setSelectedContact(null);
   }
 
   function copyWebhook() {
@@ -353,12 +360,12 @@ export function WhatsappAgent() {
                   )
                     .sort((a, b) => new Date(b[1].lastMsg).getTime() - new Date(a[1].lastMsg).getTime())
                     .map(([number, contact]) => (
-                      <button
+                      <div
                         key={number}
-                        onClick={() => setSelectedContact(number)}
-                        className={`w-full px-3 py-2 text-left border-b border-border/50 hover:bg-white/[0.02] transition-colors ${
+                        className={`relative group px-3 py-2 border-b border-border/50 hover:bg-white/[0.02] transition-colors cursor-pointer ${
                           selectedContact === number ? "bg-brand/10 border-l-2 border-l-brand" : ""
                         }`}
+                        onClick={() => setSelectedContact(number)}
                       >
                         <p className="text-[10px] font-medium text-foreground truncate">{contact.name}</p>
                         <p className="text-[9px] text-muted-foreground/60 truncate">{number}</p>
@@ -370,7 +377,17 @@ export function WhatsappAgent() {
                             minute: "2-digit",
                           })}
                         </p>
-                      </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteContact(number);
+                          }}
+                          className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-destructive/20"
+                          title="Deletar conversa"
+                        >
+                          <Trash2 className="size-3 text-destructive" />
+                        </button>
+                      </div>
                     ))}
                 </div>
               )}
@@ -387,8 +404,8 @@ export function WhatsappAgent() {
                       </p>
                       <p className="text-[10px] text-muted-foreground">{selectedContact}</p>
                     </div>
-                    {messages.length > 0 && (
-                      <Btn variant="danger" size="sm" onClick={handleClear} title="Limpar todas as mensagens">
+                    {selectedContact && (
+                      <Btn variant="danger" size="sm" onClick={() => handleDeleteContact(selectedContact)} title="Deletar conversa com este contato">
                         <Trash2 className="size-3" />
                       </Btn>
                     )}
