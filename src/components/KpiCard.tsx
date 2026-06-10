@@ -11,32 +11,36 @@ interface KpiCardProps {
   progress?: number;
 }
 
-const gradientClasses = {
-  teal: "from-teal-500 to-cyan-500",
-  blue: "from-blue-500 to-blue-600",
-  purple: "from-purple-500 to-purple-600",
-  amber: "from-amber-500 to-orange-600",
+const iconTokens = {
+  teal:   { bg: "bg-brand/12",   border: "border-brand/30",   text: "text-brand",   bar: "bg-brand" },
+  blue:   { bg: "bg-select/15",  border: "border-select/30",  text: "text-select",  bar: "bg-select" },
+  purple: { bg: "bg-info/12",    border: "border-info/30",    text: "text-info",    bar: "bg-info" },
+  amber:  { bg: "bg-warning/12", border: "border-warning/30", text: "text-warning", bar: "bg-warning" },
 };
 
 export function KpiCard({ label, value, icon: Icon, to, gradient, trend, progress = 60 }: KpiCardProps) {
+  const t = iconTokens[gradient];
   return (
     <Link
       to={to}
-      className="group bg-surface border border-border rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:border-border/80 hover:shadow-lg hover:shadow-black/30"
+      className="card-selectable hover:card-selectable-hover group p-6 flex flex-col gap-4"
     >
-      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${gradientClasses[gradient]} flex items-center justify-center mb-4 shadow-lg`}>
-        <Icon className="w-6 h-6 text-white" />
+      <div className="flex items-start justify-between">
+        <div className={`size-12 rounded-xl ${t.bg} border ${t.border} ${t.text} grid place-items-center transition-transform group-hover:scale-105`}>
+          <Icon className="size-5" />
+        </div>
+        {trend && <div className="text-xs text-brand font-medium">↑ {trend}</div>}
       </div>
 
-      <div className="text-4xl font-bold text-foreground mb-1">{value}</div>
-      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</div>
+      <div>
+        <div className="text-3xl font-bold text-foreground tabular-nums leading-none">{value}</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-2">{label}</div>
+      </div>
 
-      {trend && <div className="text-xs text-brand font-medium mb-3">↑ {trend}</div>}
-
-      {progress && (
+      {progress !== undefined && (
         <div className="w-full h-1 bg-surface-2 rounded-full overflow-hidden">
           <div
-            className={`h-full bg-gradient-to-r ${gradientClasses[gradient]} transition-all duration-500`}
+            className={`h-full ${t.bar} transition-all duration-500`}
             style={{ width: `${progress}%` }}
           />
         </div>
