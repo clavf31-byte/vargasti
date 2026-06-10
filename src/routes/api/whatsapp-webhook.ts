@@ -26,6 +26,14 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             });
           }
 
+          // Skip archived chats — user archived the conversation in WhatsApp
+          const chatData = data?.chat as Record<string, unknown> | undefined;
+          if (chatData?.archived === true) {
+            return new Response(JSON.stringify({ ok: true, skipped: true, reason: "archived" }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           const remoteJid = (key?.remoteJid as string) ?? "";
           const fromNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@g.us", "");
           const fromName = (data?.pushName as string) ?? fromNumber;
