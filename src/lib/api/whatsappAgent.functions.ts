@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
+import type Anthropic from "@anthropic-ai/sdk";
 
 // ── Supabase admin client (uses service role for webhook access) ──────────────
 function getAdminClient() {

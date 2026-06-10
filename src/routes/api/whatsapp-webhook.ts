@@ -33,6 +33,10 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             console.log("[whatsapp-webhook] Archive keyword detected. Full payload:", JSON.stringify({ data, key }, null, 2));
           }
 
+          const remoteJid = (key?.remoteJid as string) ?? "";
+          const fromNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@g.us", "");
+          const fromName = (data?.pushName as string) ?? fromNumber;
+
           // Skip archived chats — check multiple possible locations for archived flag
           const isArchived =
             (data?.chat as Record<string, unknown> | undefined)?.archived === true ||
@@ -47,10 +51,6 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
               headers: { "Content-Type": "application/json" },
             });
           }
-
-          const remoteJid = (key?.remoteJid as string) ?? "";
-          const fromNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@g.us", "");
-          const fromName = (data?.pushName as string) ?? fromNumber;
           const msgObj = data?.message as Record<string, unknown>;
 
           const message =
