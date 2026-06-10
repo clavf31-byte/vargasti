@@ -71,6 +71,17 @@ export function WhatsappAgent() {
     instance_name: config.instance_name,
   }), [config.evolution_url, config.evolution_key, config.instance_name]);
 
+  async function handleUpdateWebhook() {
+    if (!config.evolution_url || !config.evolution_key) return;
+    setCheckingConn(true);
+    try {
+      await evolutionAction({
+        data: { ...evoCfg(), action: "set_webhook", webhook_url: getWebhookUrl(config.webhook_token) },
+      });
+    } catch { /* ignore */ }
+    setCheckingConn(false);
+  }
+
   const checkConnection = useCallback(async () => {
     if (!config.evolution_url || !config.evolution_key || !config.instance_name) return;
     setCheckingConn(true);
@@ -204,6 +215,16 @@ export function WhatsappAgent() {
                     <p className="text-[10px] text-muted-foreground">{config.evolution_url || "URL não configurada"}</p>
                   </div>
                   <div className="flex gap-2">
+                    <Btn
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleUpdateWebhook}
+                      disabled={!isConfigured || checkingConn}
+                      title="Atualiza o webhook no Evolution API para a URL atual"
+                    >
+                      <RefreshCw className="size-3" />
+                      Webhook
+                    </Btn>
                     <Btn
                       variant="secondary"
                       size="sm"
