@@ -279,7 +279,7 @@ function AdminPage() {
                         {openRole === u.id && (
                           <>
                             <div className="fixed inset-0 z-10" onClick={() => setOpenRole(null)} />
-                            <div className="absolute left-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-xl overflow-hidden min-w-[130px]">
+                            <div className="absolute left-0 top-full mt-1 z-20 card-graphite shadow-xl overflow-hidden min-w-[130px]">
                               {(["admin", "operator", "viewer"] as UserRow["role"][]).map((r) => (
                                 <button
                                   key={r}
