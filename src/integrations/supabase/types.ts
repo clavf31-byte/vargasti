@@ -47,6 +47,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_processing_log: {
+        Row: {
+          created_at: string
+          email_id: string
+          error: string | null
+          id: string
+          status: string
+          ticket_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          error?: string | null
+          id?: string
+          status: string
+          ticket_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          error?: string | null
+          id?: string
+          status?: string
+          ticket_id?: string | null
+        }
+        Relationships: []
+      }
       file_records: {
         Row: {
           created_at: string | null
@@ -77,6 +104,36 @@ export type Database = {
           size_bytes?: number | null
           storage_path?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      gmail_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
