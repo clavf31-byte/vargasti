@@ -364,6 +364,140 @@ async function searchKnowledgeBase(admin: ReturnType<typeof getAdminClient>, key
   }
 }
 
+// ── Conversation Pause Logic (Claudio managing support) ───────────────────
+const PauseConversationSchema = z.object({
+  userId: z.string(),
+  fromNumber: z.string(),
+  instanceName: z.string(),
+  isGroup: z.boolean(),
+});
+
+export const pauseConversation = createServerFn({ method: "POST" })
+  .inputValidator(PauseConversationSchema)
+  .handler(async ({ data }) => {
+    const admin = getAdminClient();
+
+    await admin
+      .from("conversation_pauses")
+      .delete()
+      .lte("resume_at", new Date().toISOString());
+
+    const { error } = await admin.from("conversation_pauses").insert({
+      user_id: data.userId,
+      from_number: data.fromNumber,
+      instance_name: data.instanceName,
+      is_group: data.isGroup,
+      paused_at: new Date().toISOString(),
+      resume_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    });
+
+    if (error) throw new Error(error.message);
+    return { ok: true, paused: true };
+  });
+
+export const isConversationPaused = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({
+      userId: z.string(),
+      fromNumber: z.string(),
+      instanceName: z.string(),
+    })
+  )
+  .handler(async ({ data }) => {
+    const admin = getAdminClient();
+
+    const { data: pause } = await admin
+      .from("conversation_pauses")
+      .select("id, resume_at")
+      .eq("user_id", data.userId)
+      .eq("from_number", data.fromNumber)
+      .eq("instance_name", data.instanceName)
+      .maybeSingle();
+
+    if (!pause) return { isPaused: false };
+
+    const now = new Date();
+    const resumeAt = new Date(pause.resume_at);
+    const isPaused = now < resumeAt;
+
+    return { isPaused, resumeAt: pause.resume_at };
+  });
+
+export const resumeConversation = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      userId: z.string(),
+      fromNumber: z.string(),
+      instanceName: z.string(),
+    })
+  )
+  .handler(async ({ data }) => {
+    const admin = getAdminClient();
+
+    const { error } = await admin
+      .from("conversation_pauses")
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("from_number", data.fromNumber)
+      .eq("instance_name", data.instanceName);
+
+    if (error) throw new Error(error.message);
+    return { ok: true, resumed: true };
+  });
+
+// ── Keyword Helpers ──────────────────────────────────────────────────────────
+export function isTakingOver(message: string): boolean {
+  const keywords = [
+    "deixa comigo",
+    "deixa que eu",
+    "vou cuidar",
+    "vou verificar",
+    "vou conferir",
+    "vou resolver",
+    "eu cuido",
+    "eu trato",
+    "eu vejo",
+  ];
+
+  const msg = message.toLowerCase().trim();
+  return keywords.some((kw) => msg.includes(kw));
+}
+
+export function isResolved(message: string): boolean {
+  const keywords = [
+    "resolvido",
+    "ok",
+    "pronto",
+    "beleza",
+    "feito",
+    "consegui",
+    "resolveu",
+    "funcionou",
+    "✓",
+    "✔️",
+  ];
+
+  const msg = message.toLowerCase().trim();
+  return keywords.some((kw) => msg.includes(kw));
+}
+
+export function isCallingAI(message: string): boolean {
+  const keywords = [
+    "vargas",
+    "claudio",
+    "assistente",
+    "@assistente",
+    "bot",
+    "ia",
+    "dúvida",
+    "ajuda",
+    "?",
+  ];
+
+  const msg = message.toLowerCase().trim();
+  return keywords.some((kw) => msg.includes(kw));
+}
+
 const AGENT_TOOLS = [
   {
     name: "create_ticket_note",
