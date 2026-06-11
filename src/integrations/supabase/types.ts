@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_pauses: {
+        Row: {
+          created_at: string
+          from_number: string
+          id: string
+          instance_name: string
+          is_group: boolean
+          paused_at: string
+          resume_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_number: string
+          id?: string
+          instance_name: string
+          is_group: boolean
+          paused_at?: string
+          resume_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_number?: string
+          id?: string
+          instance_name?: string
+          is_group?: boolean
+          paused_at?: string
+          resume_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       file_records: {
         Row: {
           created_at: string | null
