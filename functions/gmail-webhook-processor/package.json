@@ -1,0 +1,14 @@
+{
+  "name": "gmail-webhook-processor",
+  "version": "1.0.0",
+  "description": "Google Cloud Function to process Gmail webhooks and create tickets",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.5.0",
+    "googleapis": "^130.0.0",
+    "@anthropic-ai/sdk": "^0.21.0"
+  },
+  "engines": {
+    "node": "18"
+  }
+}
