@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { processWebhookMessage } from "@/lib/api/whatsappAgent.functions";
 
+// Store last message date per contact to detect first message of day
+const lastMessageDateMap = new Map<string, string>();
+
 export const Route = createFileRoute("/api/whatsapp-webhook")({
   server: {
     handlers: {
@@ -78,8 +81,17 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             });
           }
 
+          // Detect if this is the first message of the day from this contact
+          const today = new Date().toDateString();
+          const contactKey = `${fromNumber}-${instanceName}`;
+          const lastDate = lastMessageDateMap.get(contactKey);
+          const isFirstMessageOfDay = lastDate !== today;
+
+          // Update last message date for this contact
+          lastMessageDateMap.set(contactKey, today);
+
           const result = await processWebhookMessage({
-            data: { token, fromNumber, fromName, message: finalMessage, instanceName, imageUrl, isGroup },
+            data: { token, fromNumber, fromName, message: finalMessage, instanceName, imageUrl, isGroup, isFirstMessageOfDay },
           });
 
           return new Response(JSON.stringify(result), {

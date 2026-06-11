@@ -300,6 +300,7 @@ const WebhookSchema = z.object({
   imageUrl: z.string().nullable().optional(),
   configId: z.string().optional(),
   isGroup: z.boolean().optional(),
+  isFirstMessageOfDay: z.boolean().optional(),
 });
 
 const DEFAULT_SYSTEM_PROMPT = `Você é o assistente virtual da VargasTI, empresa de suporte em TI e segurança eletrônica.
@@ -477,6 +478,15 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     const kbArticles = await searchKnowledgeBase(admin, keywords, 3);
 
     let systemPrompt = (data.isGroup ? cfg.group_system_prompt : cfg.claude_system_prompt) || DEFAULT_SYSTEM_PROMPT;
+
+    // Add instruction for first message of day greeting (only if applicable)
+    if (data.isFirstMessageOfDay && data.isGroup) {
+      systemPrompt += `\n\n## Primeira mensagem do dia\nEsta é a primeira mensagem do grupo hoje. Você pode incluir uma breve saudação calorosa (ex: "Bom dia, equipe! 👋 Pronto para ajudar.") se achar apropriado. Depois, responda ao contexto da mensagem normalmente.`;
+    } else if (data.isFirstMessageOfDay && !data.isGroup) {
+      systemPrompt += `\n\n## Primeira mensagem do dia\nEsta é a primeira mensagem deste contato hoje. Você pode incluir uma breve saudação calorosa se achar apropriado. Depois, responda ao contexto da mensagem normalmente.`;
+    } else {
+      systemPrompt += `\n\n## Conversas contextuais\nEsta é uma mensagem em andamento. Não repita saudações ou boas-vindas. Responda diretamente ao contexto da conversa.`;
+    }
 
     // Append KB context if articles found
     if (kbArticles.length > 0) {
