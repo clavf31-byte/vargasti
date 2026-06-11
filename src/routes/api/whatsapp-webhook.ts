@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { processWebhookMessage } from "@/lib/api/whatsappAgent.functions";
+import {
+  processWebhookMessage,
+  isTakingOver,
+  isResolved,
+  isConversationPaused,
+  resumeConversation,
+  pauseConversation,
+  isCallingAI,
+} from "@/lib/api/whatsappAgent.functions";
 
 // Store last message date per contact to detect first message of day
 const lastMessageDateMap = new Map<string, string>();
@@ -31,8 +39,7 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
 
           // Debug: log full payload structure for archived detection
           const payloadStr = JSON.stringify({ data, key }).toLowerCase();
-          const hasArchiveKeyword = payloadStr.includes("archive");
-          if (hasArchiveKeyword) {
+          if (payloadStr.includes("archive")) {
             console.log("[whatsapp-webhook] Archive keyword detected. Full payload:", JSON.stringify({ data, key }, null, 2));
           }
 
@@ -41,7 +48,7 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
           const fromNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@g.us", "");
           const fromName = (data?.pushName as string) ?? fromNumber;
 
-          // Skip archived chats — check multiple possible locations for archived flag
+          // Skip archived chats
           const isArchived =
             (data?.chat as Record<string, unknown> | undefined)?.archived === true ||
             (data?.isArchived === true) ||
@@ -55,6 +62,7 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
               headers: { "Content-Type": "application/json" },
             });
           }
+
           const msgObj = data?.message as Record<string, unknown>;
 
           const message =
@@ -62,7 +70,6 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             ((msgObj?.extendedTextMessage as Record<string, unknown>)?.text as string) ??
             "";
 
-          // Extract image URL if present
           const imageMessage = msgObj?.imageMessage as Record<string, unknown> | undefined;
           const imageUrl = (imageMessage?.url as string) ?? null;
           const imageCaption = (imageMessage?.caption as string) ?? null;
@@ -73,7 +80,6 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             });
           }
 
-          // If image present, use image caption or a placeholder; if text present, use text; if neither, skip
           const finalMessage = message || imageCaption || (imageUrl ? "[Imagem enviada]" : "");
           if (!finalMessage) {
             return new Response(JSON.stringify({ ok: true, skipped: true }), {
@@ -81,13 +87,51 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
             });
           }
 
-          // Detect if this is the first message of the day from this contact
+          // Use webhook token as the partition key for pause records (self-consistent).
+          const pauseKey = { userId: token, fromNumber, instanceName };
+
+          // CONVERSATION PAUSE LOGIC ----------------------------------------------
+
+          // "Deixa comigo" → pause IA
+          if (isTakingOver(finalMessage)) {
+            await pauseConversation({
+              data: { ...pauseKey, isGroup },
+            }).catch(() => null);
+
+            console.log("[webhook] Claudio assumiu conversa:", { fromNumber, instanceName });
+            return new Response(JSON.stringify({ ok: true, skipped: true, reason: "claudio_taking_over" }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          // "Resolvido" → resume IA
+          if (isResolved(finalMessage)) {
+            await resumeConversation({ data: pauseKey }).catch(() => null);
+            console.log("[webhook] Resolvido — retomando IA:", { fromNumber, instanceName });
+          }
+
+          // Conversation paused?
+          const { isPaused } = await isConversationPaused({ data: pauseKey });
+
+          if (isPaused) {
+            if (isCallingAI(finalMessage)) {
+              await resumeConversation({ data: pauseKey }).catch(() => null);
+              console.log("[webhook] IA chamada durante pausa — retomando:", { fromNumber, instanceName });
+            } else {
+              console.log("[webhook] Conversa pausada — Claudio cuidando:", { fromNumber, instanceName });
+              return new Response(JSON.stringify({ ok: true, skipped: true, reason: "paused" }), {
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+          }
+
+          // -----------------------------------------------------------------------
+
+          // First message of day?
           const today = new Date().toDateString();
           const contactKey = `${fromNumber}-${instanceName}`;
           const lastDate = lastMessageDateMap.get(contactKey);
           const isFirstMessageOfDay = lastDate !== today;
-
-          // Update last message date for this contact
           lastMessageDateMap.set(contactKey, today);
 
           const result = await processWebhookMessage({
