@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createAnthropicMessage, type AnthropicMessage } from "./anthropicRest";
+import { createAnthropicMessage, type AnthropicMessage, type AnthropicToolUseBlock } from "./anthropicRest";
 
 type AnthropicTool = {
   name: string;
@@ -212,8 +212,9 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
     while (resp.stop_reason === "tool_use") {
       const results: AnthropicToolResult[] = [];
 
-      for (const block of resp.content) {
-        if (block.type !== "tool_use") continue;
+      for (const contentBlock of resp.content) {
+        if (contentBlock.type !== "tool_use") continue;
+        const block = contentBlock as AnthropicToolUseBlock;
         const input = block.input as Record<string, unknown>;
         const action = buildAction(block.name, input, headers, types, previewRows.length);
         if (action) actions.push(action);
