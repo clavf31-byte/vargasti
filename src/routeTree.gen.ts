@@ -27,6 +27,7 @@ import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
 import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callback'
 import { Route as ApiGmailAuthRouteImport } from './routes/api/gmail-auth'
+import { Route as ApiDeleteGmailTokenRouteImport } from './routes/api/delete-gmail-token'
 
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
@@ -118,6 +119,11 @@ const ApiGmailAuthRoute = ApiGmailAuthRouteImport.update({
   path: '/api/gmail-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDeleteGmailTokenRoute = ApiDeleteGmailTokenRouteImport.update({
+  id: '/api/delete-gmail-token',
+  path: '/api/delete-gmail-token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/delete-gmail-token': typeof ApiDeleteGmailTokenRoute
   '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/delete-gmail-token': typeof ApiDeleteGmailTokenRoute
   '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/delete-gmail-token': typeof ApiDeleteGmailTokenRoute
   '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/delete-gmail-token'
     | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/delete-gmail-token'
     | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/delete-gmail-token'
     | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
@@ -251,6 +263,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
   UsuariosRoute: typeof UsuariosRoute
+  ApiDeleteGmailTokenRoute: typeof ApiDeleteGmailTokenRoute
   ApiGmailAuthRoute: typeof ApiGmailAuthRoute
   ApiGmailCallbackRoute: typeof ApiGmailCallbackRoute
   ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
@@ -386,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGmailAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/delete-gmail-token': {
+      id: '/api/delete-gmail-token'
+      path: '/api/delete-gmail-token'
+      fullPath: '/api/delete-gmail-token'
+      preLoaderRoute: typeof ApiDeleteGmailTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -417,6 +437,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
   UsuariosRoute: UsuariosRoute,
+  ApiDeleteGmailTokenRoute: ApiDeleteGmailTokenRoute,
   ApiGmailAuthRoute: ApiGmailAuthRoute,
   ApiGmailCallbackRoute: ApiGmailCallbackRoute,
   ApiGmailWebhookRoute: ApiGmailWebhookRoute,
