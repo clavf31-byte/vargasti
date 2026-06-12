@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   fetchNewEmails,
   markEmailAsRead,
-  createTicketFromEmail,
+  sendToHelpdeskApi,
   interpretEmailWithClaude,
 } from "@/lib/api/emailAgent.functions";
 
