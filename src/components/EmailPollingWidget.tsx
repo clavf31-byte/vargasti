@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { startEmailPolling, stopEmailPolling, triggerEmailPolling, isEmailPollingActive } from "@/lib/api/emailPolling";
-import { deleteGmailToken } from "@/lib/api/gmailToken.server";
 
 export function EmailPollingWidget() {
   const [loading, setLoading] = useState(false);
@@ -67,7 +66,17 @@ export function EmailPollingWidget() {
     setError(null);
 
     try {
-      await deleteGmailToken();
+      const response = await fetch("/api/delete-gmail-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = (await response.json()) as { ok: boolean; error?: string };
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error ?? "Erro ao deletar token");
+      }
+
       setLastResult(null);
       alert("✅ Token deletado! Você pode autorizar uma nova conta.");
     } catch (err) {
