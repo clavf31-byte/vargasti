@@ -40,6 +40,14 @@ export type GmailEmail = {
   labels: string[];
 };
 
+type FetchEmailsResult =
+  | { emails: GmailEmail[]; authorized: true; message?: string }
+  | { emails: []; authorized: false; message: string };
+
+function isGmailAuthorizationError(err: unknown) {
+  return err instanceof Error && err.message === "Gmail not authorized";
+}
+
 // ── Get Gmail OAuth URL ───────────────────────────────────────────────────────
 export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
   const auth = await getGoogleAuthClient();
@@ -107,20 +115,31 @@ async function getGmailClient() {
   return google.gmail({ version: "v1", auth });
 }
 
-// ── Fetch New Emails ──────────────────────────────────────────────────────────
-export const fetchNewEmails = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ maxResults: z.number().default(10) }))
-  .handler(async ({ data }) => {
-    const gmail = await getGmailClient();
+async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult> {
+    let gmail: Awaited<ReturnType<typeof getGmailClient>>;
+
+    try {
+      gmail = await getGmailClient();
+    } catch (err) {
+      if (isGmailAuthorizationError(err)) {
+        return {
+          emails: [],
+          authorized: false,
+          message: "Gmail precisa ser autorizado antes de processar e-mails.",
+        };
+      }
+
+      throw err;
+    }
 
     const listRes = await gmail.users.messages.list({
       userId: "me",
       q: "is:unread",
-      maxResults: data.maxResults,
+      maxResults,
     });
 
     if (!listRes.data.messages?.length) {
-      return { emails: [] };
+      return { emails: [], authorized: true };
     }
 
     const emails: GmailEmail[] = [];
@@ -159,29 +178,36 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
       });
     }
 
-    return { emails };
-  });
+    return { emails, authorized: true };
+}
+
+// ── Fetch New Emails ──────────────────────────────────────────────────────────
+export const fetchNewEmails = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ maxResults: z.number().default(10) }))
+  .handler(async ({ data }) => fetchUnreadEmails(data.maxResults));
 
 // ── Mark Email as Read ────────────────────────────────────────────────────────
 const MarkAsReadSchema = z.object({
   messageId: z.string(),
 });
 
+async function markEmailAsReadInternal(messageId: string) {
+  const gmail = await getGmailClient();
+
+  await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: {
+      removeLabelIds: ["UNREAD"],
+    },
+  });
+
+  return { ok: true };
+}
+
 export const markEmailAsRead = createServerFn({ method: "POST" })
   .inputValidator(MarkAsReadSchema)
-  .handler(async ({ data }) => {
-    const gmail = await getGmailClient();
-
-    await gmail.users.messages.modify({
-      userId: "me",
-      id: data.messageId,
-      requestBody: {
-        removeLabelIds: ["UNREAD"],
-      },
-    });
-
-    return { ok: true };
-  });
+  .handler(async ({ data }) => markEmailAsReadInternal(data.messageId));
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
 export async function interpretEmailWithClaude(email: GmailEmail) {
@@ -234,39 +260,43 @@ const SendToHelpdeskSchema = z.object({
   summary: z.string(),
 });
 
+type HelpdeskPayload = z.infer<typeof SendToHelpdeskSchema>;
+
+async function sendToHelpdeskInternal(data: HelpdeskPayload) {
+  const helpdeskUrl = process.env.HELPDESK_EMAIL_INTAKE_URL;
+  const helpdeskApiKey = process.env.HELPDESK_EMAIL_INTAKE_API_KEY;
+
+  if (!helpdeskUrl || !helpdeskApiKey) {
+    throw new Error("Helpdesk configuration missing");
+  }
+
+  const response = await fetch(helpdeskUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${helpdeskApiKey}`,
+    },
+    body: JSON.stringify({
+      subject: data.subject,
+      from: data.from,
+      body: data.body,
+      category: data.category,
+      priority: data.priority,
+      summary: data.summary,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Helpdesk API error: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json() as { ok: boolean; ticketId?: string };
+  return { ok: true, ticketId: result.ticketId };
+}
+
 export const sendToHelpdeskApi = createServerFn({ method: "POST" })
   .inputValidator(SendToHelpdeskSchema)
-  .handler(async ({ data }) => {
-    const helpdeskUrl = process.env.HELPDESK_EMAIL_INTAKE_URL;
-    const helpdeskApiKey = process.env.HELPDESK_EMAIL_INTAKE_API_KEY;
-
-    if (!helpdeskUrl || !helpdeskApiKey) {
-      throw new Error("Helpdesk configuration missing");
-    }
-
-    const response = await fetch(helpdeskUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${helpdeskApiKey}`,
-      },
-      body: JSON.stringify({
-        subject: data.subject,
-        from: data.from,
-        body: data.body,
-        category: data.category,
-        priority: data.priority,
-        summary: data.summary,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Helpdesk API error: ${response.status} ${response.statusText}`);
-    }
-
-    const result = await response.json() as { ok: boolean; ticketId?: string };
-    return { ok: true, ticketId: result.ticketId };
-  });
+  .handler(async ({ data }) => sendToHelpdeskInternal(data));
 
 // ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
 export const processEmailPipeline = createServerFn({ method: "POST" })
@@ -276,11 +306,22 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
       console.log("[email-pipeline] Starting email processing");
 
       // Fetch unread emails
-      const emailsResult = await fetchNewEmails({ data: { maxResults: data.maxEmails } });
+      const emailsResult = await fetchUnreadEmails(data.maxEmails);
+
+      if (emailsResult.authorized === false) {
+        console.log("[email-pipeline] Gmail not authorized");
+        return {
+          ok: false,
+          authorized: false,
+          processed: 0,
+          total: 0,
+          message: emailsResult.message,
+        };
+      }
 
       if (!emailsResult.emails.length) {
         console.log("[email-pipeline] No unread emails");
-        return { ok: true, processed: 0, message: "No unread emails" };
+        return { ok: true, authorized: true, processed: 0, total: 0, message: "No unread emails" };
       }
 
       let processedCount = 0;
@@ -296,16 +337,14 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           // If it's a request, send to Helpdesk
           if (analysis.isRequest) {
             try {
-              await sendToHelpdeskApi({
-                data: {
-                  emailId: email.id,
-                  from: email.from,
-                  subject: email.subject,
-                  body: email.body,
-                  category: analysis.category || "suporte",
-                  priority: analysis.priority || "media",
-                  summary: analysis.summary || email.subject,
-                },
+              await sendToHelpdeskInternal({
+                emailId: email.id,
+                from: email.from,
+                subject: email.subject,
+                body: email.body,
+                category: analysis.category || "suporte",
+                priority: analysis.priority || "media",
+                summary: analysis.summary || email.subject,
               });
 
               console.log("[email-pipeline] Sent to Helpdesk:", email.subject);
@@ -318,7 +357,7 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           }
 
           // Mark as read
-          await markEmailAsRead({ data: { messageId: email.id } });
+          await markEmailAsReadInternal(email.id);
           console.log("[email-pipeline] Marked as read:", email.id);
         } catch (err) {
           console.error("[email-pipeline] Error processing email:", err);
@@ -327,11 +366,22 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
 
       return {
         ok: true,
+        authorized: true,
         processed: processedCount,
         total: emailsResult.emails.length,
         message: `Processed ${processedCount}/${emailsResult.emails.length} emails`,
       };
     } catch (err) {
+      if (isGmailAuthorizationError(err)) {
+        return {
+          ok: false,
+          authorized: false,
+          processed: 0,
+          total: 0,
+          message: "Gmail precisa ser autorizado antes de processar e-mails.",
+        };
+      }
+
       console.error("[email-pipeline] Fatal error:", err);
       throw err;
     }

@@ -7,6 +7,7 @@ export function EmailPollingWidget() {
     processed: number;
     total: number;
     message: string;
+    authorized?: boolean;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -44,6 +45,7 @@ export function EmailPollingWidget() {
         processed: result.processed ?? 0,
         total: result.total ?? 0,
         message: result.message ?? "",
+        authorized: result.authorized,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao verificar e-mails");
@@ -54,15 +56,15 @@ export function EmailPollingWidget() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 bg-white border border-gray-200 rounded-lg shadow">
+    <div className="w-full max-w-md mx-auto p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">E-mails</h3>
         <div className="flex items-center gap-2">
           {isRunning && (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-xs text-green-600 font-medium">Automático</span>
+              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+              <span className="text-xs text-brand font-medium">Automático</span>
             </div>
           )}
         </div>
@@ -70,17 +72,31 @@ export function EmailPollingWidget() {
 
       {/* Status */}
       {lastResult && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-          <p className="text-sm text-blue-800">
-            <strong>{lastResult.processed}</strong> de <strong>{lastResult.total}</strong> e-mail(ns) processado(s)
+        <div className="mb-4 p-3 bg-surface-2 border border-border rounded-lg">
+          <p className="text-sm text-foreground">
+            {lastResult.authorized === false ? (
+              lastResult.message
+            ) : (
+              <>
+                <strong>{lastResult.processed}</strong> de <strong>{lastResult.total}</strong> e-mail(ns) processado(s)
+              </>
+            )}
           </p>
+          {lastResult.authorized === false && (
+            <a
+              href="/api/gmail-auth"
+              className="mt-3 inline-flex h-9 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
+            >
+              Autorizar Gmail
+            </a>
+          )}
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
@@ -88,10 +104,10 @@ export function EmailPollingWidget() {
       <button
         onClick={handleManualCheck}
         disabled={loading}
-        className={`w-full py-2 px-4 rounded font-medium text-white transition ${
+        className={`w-full py-2 px-4 rounded-lg font-medium transition ${
           loading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
+            : "bg-brand text-brand-foreground hover:bg-brand/90 active:bg-brand/80"
         }`}
       >
         {loading ? "Verificando..." : "Verificar Agora"}
