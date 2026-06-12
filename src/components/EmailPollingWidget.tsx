@@ -37,10 +37,13 @@ export function EmailPollingWidget() {
 
     try {
       const result = await triggerEmailPolling(5);
+      if (!result) {
+        throw new Error("Sem resposta do servidor");
+      }
       setLastResult({
-        processed: result.processed,
-        total: result.total,
-        message: result.message,
+        processed: result.processed ?? 0,
+        total: result.total ?? 0,
+        message: result.message ?? "",
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao verificar e-mails");
