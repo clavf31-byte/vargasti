@@ -37,6 +37,7 @@ function Dashboard() {
 
   const [notesCount, setNotesCount] = useState<number>(0);
   const [projectsCount, setProjectsCount] = useState<number>(0);
+  const [filesCount, setFilesCount] = useState<number>(0);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
@@ -46,6 +47,7 @@ function Dashboard() {
         const results = await Promise.allSettled([
           supabase.from("notes").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
           supabase.from("projects").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
+          supabase.from("arquivos").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
           supabase.from("notes").select("id, title, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(4),
           supabase.from("projects").select("id, name, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(4),
         ]);
@@ -53,10 +55,12 @@ function Dashboard() {
           results[i].status === "fulfilled" ? ((results[i] as PromiseFulfilledResult<any>).value as T) : undefined;
         const nc = get<{ count: number | null }>(0)?.count ?? 0;
         const pc = get<{ count: number | null }>(1)?.count ?? 0;
-        const notes = get<{ data: any[] | null }>(2)?.data ?? [];
-        const projects = get<{ data: any[] | null }>(3)?.data ?? [];
+        const fc = get<{ count: number | null }>(2)?.count ?? 0;
+        const notes = get<{ data: any[] | null }>(3)?.data ?? [];
+        const projects = get<{ data: any[] | null }>(4)?.data ?? [];
         setNotesCount(nc);
         setProjectsCount(pc);
+        setFilesCount(fc);
         const combined: ActivityItem[] = [
           ...notes.map((n: any) => ({ id: String(n.id), type: "note" as const, label: n.title || "Sem título", time: n.updated_at })),
           ...projects.map((p: any) => ({ id: String(p.id), type: "project" as const, label: p.name || "Sem nome", time: p.updated_at })),
@@ -167,7 +171,7 @@ function Dashboard() {
             <VisionOfToday
               notesCount={notesCount}
               projectsCount={projectsCount}
-              filesCount={0}
+              filesCount={filesCount}
               toolsCount={1}
             />
           </div>

@@ -10,8 +10,8 @@ interface VisionOfTodayProps {
 const items = (n: number, p: number, f: number, t: number) => [
   { label: "Anotações", value: n, color: "border-brand/30 bg-brand/10 text-brand" },
   { label: "Projetos",  value: p, color: "border-info/30 bg-info/10 text-info" },
-  { label: "Arquivos",  value: f, color: "border-warning/30 bg-warning/10 text-warning" },
   { label: "Tools",     value: t, color: "border-purple-400/30 bg-purple-400/10 text-purple-400" },
+  { label: "Arquivos",  value: f, color: "border-warning/30 bg-warning/10 text-warning" },
 ];
 
 export function VisionOfToday({ notesCount, projectsCount, filesCount, toolsCount }: VisionOfTodayProps) {
