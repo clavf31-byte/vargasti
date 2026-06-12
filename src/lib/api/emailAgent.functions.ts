@@ -83,7 +83,6 @@ async function getGmailClient() {
   const auth = getGoogleAuthClient();
   const admin = getAdminClient();
 
-  // Fetch stored token
   const { data: tokenData } = await admin
     .from("gmail_tokens")
     .select("access_token, refresh_token, expires_at")
@@ -108,7 +107,6 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const gmail = await getGmailClient();
 
-    // Fetch unread messages
     const listRes = await gmail.users.messages.list({
       userId: "me",
       q: "is:unread",
@@ -219,8 +217,8 @@ Conteúdo: ${email.body}`,
   }
 }
 
-// ── Create Ticket from Email ──────────────────────────────────────────────────
-const CreateTicketSchema = z.object({
+// ── Send to Helpdesk Edge Function ────────────────────────────────────────────
+const SendToHelpdeskSchema = z.object({
   emailId: z.string(),
   from: z.string(),
   subject: z.string(),
@@ -230,48 +228,105 @@ const CreateTicketSchema = z.object({
   summary: z.string(),
 });
 
-export const createTicketFromEmail = createServerFn({ method: "POST" })
-  .inputValidator(CreateTicketSchema)
+export const sendToHelpdeskApi = createServerFn({ method: "POST" })
+  .inputValidator(SendToHelpdeskSchema)
   .handler(async ({ data }) => {
-    const admin = getAdminClient();
+    const helpdeskUrl = process.env.HELPDESK_EMAIL_INTAKE_URL;
+    const helpdeskApiKey = process.env.HELPDESK_EMAIL_INTAKE_API_KEY;
 
-    // Map priority
-    const priorityMap: Record<string, "alta" | "media" | "baixa"> = {
-      high: "alta",
-      media: "media",
-      low: "baixa",
-      urgente: "alta",
-      normal: "media",
-      baixa: "baixa",
-    };
+    if (!helpdeskUrl || !helpdeskApiKey) {
+      throw new Error("Helpdesk configuration missing");
+    }
 
-    const priority = priorityMap[data.priority.toLowerCase()] ?? "media";
-
-    // Create ticket
-    const { data: ticket, error } = await admin
-      .from("tickets")
-      .insert({
-        title: data.subject,
-        description: `**Via E-mail:** ${data.from}\n\n${data.body}`,
-        status: "aberto",
-        priority,
+    const response = await fetch(helpdeskUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${helpdeskApiKey}`,
+      },
+      body: JSON.stringify({
+        subject: data.subject,
+        from: data.from,
+        body: data.body,
         category: data.category,
-        source: "email",
-        email_source: data.from,
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .maybeSingle();
-
-    if (error) throw new Error(error.message);
-
-    // Save email processing record
-    await admin.from("email_processing_log").insert({
-      email_id: data.emailId,
-      ticket_id: ticket?.id,
-      status: "processado",
-      created_at: new Date().toISOString(),
+        priority: data.priority,
+        summary: data.summary,
+      }),
     });
 
-    return { ok: true, ticketId: ticket?.id };
+    if (!response.ok) {
+      throw new Error(`Helpdesk API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json() as { ok: boolean; ticketId?: string };
+    return { ok: true, ticketId: result.ticketId };
+  });
+
+// ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
+export const processEmailPipeline = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ maxEmails: z.number().default(1) }))
+  .handler(async ({ data }) => {
+    try {
+      console.log("[email-pipeline] Starting email processing");
+
+      // Fetch unread emails
+      const emailsResult = await fetchNewEmails({ data: { maxResults: data.maxEmails } });
+
+      if (!emailsResult.emails.length) {
+        console.log("[email-pipeline] No unread emails");
+        return { ok: true, processed: 0, message: "No unread emails" };
+      }
+
+      let processedCount = 0;
+
+      for (const email of emailsResult.emails) {
+        try {
+          console.log("[email-pipeline] Processing:", { from: email.from, subject: email.subject });
+
+          // Interpret with Claude
+          const analysis = await interpretEmailWithClaude(email);
+          console.log("[email-pipeline] Analysis:", analysis);
+
+          // If it's a request, send to Helpdesk
+          if (analysis.isRequest) {
+            try {
+              await sendToHelpdeskApi({
+                data: {
+                  emailId: email.id,
+                  from: email.from,
+                  subject: email.subject,
+                  body: email.body,
+                  category: analysis.category || "suporte",
+                  priority: analysis.priority || "media",
+                  summary: analysis.summary || email.subject,
+                },
+              });
+
+              console.log("[email-pipeline] Sent to Helpdesk:", email.subject);
+              processedCount++;
+            } catch (err) {
+              console.error("[email-pipeline] Error sending to Helpdesk:", err);
+            }
+          } else {
+            console.log("[email-pipeline] Email is not a request, skipping");
+          }
+
+          // Mark as read
+          await markEmailAsRead({ data: { messageId: email.id } });
+          console.log("[email-pipeline] Marked as read:", email.id);
+        } catch (err) {
+          console.error("[email-pipeline] Error processing email:", err);
+        }
+      }
+
+      return {
+        ok: true,
+        processed: processedCount,
+        total: emailsResult.emails.length,
+        message: `Processed ${processedCount}/${emailsResult.emails.length} emails`,
+      };
+    } catch (err) {
+      console.error("[email-pipeline] Fatal error:", err);
+      throw err;
+    }
   });
