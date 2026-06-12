@@ -64,6 +64,22 @@ type FetchEmailsResult =
   | { emails: GmailEmail[]; authorized: true; message?: string }
   | { emails: []; authorized: false; message: string };
 
+type GmailListResponse = {
+  messages?: Array<{ id?: string; threadId?: string }>;
+};
+
+type GmailMessageResponse = {
+  id?: string;
+  threadId?: string;
+  internalDate?: string;
+  labelIds?: string[];
+  payload?: {
+    headers?: Array<{ name?: string | null; value?: string | null }>;
+    body?: { data?: string | null };
+    parts?: Array<{ mimeType?: string | null; body?: { data?: string | null } }>;
+  };
+};
+
 function isGmailAuthorizationError(err: unknown) {
   return err instanceof Error && err.message === "Gmail not authorized";
 }
@@ -193,10 +209,8 @@ async function gmailRequest<T>(path: string, init: RequestInit = {}): Promise<T>
 }
 
 async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult> {
-    let gmail: Awaited<ReturnType<typeof getGmailClient>>;
-
     try {
-      gmail = await getGmailClient();
+      await getGmailAccessToken();
     } catch (err) {
       if (isGmailAuthorizationError(err)) {
         return {
@@ -209,49 +223,45 @@ async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult>
       throw err;
     }
 
-    const listRes = await gmail.users.messages.list({
-      userId: "me",
+    const searchParams = new URLSearchParams({
       q: "is:unread",
-      maxResults,
+      maxResults: String(maxResults),
     });
+    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`);
 
-    if (!listRes.data.messages?.length) {
+    if (!listRes.messages?.length) {
       return { emails: [], authorized: true };
     }
 
     const emails: GmailEmail[] = [];
 
-    for (const msg of listRes.data.messages) {
+    for (const msg of listRes.messages) {
       if (!msg.id) continue;
 
-      const emailRes = await gmail.users.messages.get({
-        userId: "me",
-        id: msg.id,
-        format: "full",
-      });
+      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`);
 
-      const headers = emailRes.data.payload?.headers ?? [];
+      const headers = emailRes.payload?.headers ?? [];
       const getHeader = (name: string) => headers.find((h: { name?: string | null; value?: string | null }) => h.name === name)?.value ?? "";
 
       let body = "";
-      if (emailRes.data.payload?.parts) {
-        const part = emailRes.data.payload.parts.find((p: { mimeType?: string | null }) => p.mimeType === "text/plain");
+      if (emailRes.payload?.parts) {
+        const part = emailRes.payload.parts.find((p: { mimeType?: string | null }) => p.mimeType === "text/plain");
         if (part?.body?.data) {
-          body = Buffer.from(part.body.data, "base64").toString("utf-8");
+          body = Buffer.from(part.body.data, "base64url").toString("utf-8");
         }
-      } else if (emailRes.data.payload?.body?.data) {
-        body = Buffer.from(emailRes.data.payload.body.data, "base64").toString("utf-8");
+      } else if (emailRes.payload?.body?.data) {
+        body = Buffer.from(emailRes.payload.body.data, "base64url").toString("utf-8");
       }
 
       emails.push({
         id: msg.id,
-        threadId: msg.threadId ?? "",
+        threadId: emailRes.threadId ?? msg.threadId ?? "",
         from: getHeader("From"),
         to: getHeader("To"),
         subject: getHeader("Subject"),
         body,
-        timestamp: parseInt(emailRes.data.internalDate ?? "0"),
-        labels: emailRes.data.labelIds ?? [],
+        timestamp: parseInt(emailRes.internalDate ?? "0"),
+        labels: emailRes.labelIds ?? [],
       });
     }
 
@@ -269,14 +279,11 @@ const MarkAsReadSchema = z.object({
 });
 
 async function markEmailAsReadInternal(messageId: string) {
-  const gmail = await getGmailClient();
-
-  await gmail.users.messages.modify({
-    userId: "me",
-    id: messageId,
-    requestBody: {
+  await gmailRequest(`/users/me/messages/${messageId}/modify`, {
+    method: "POST",
+    body: JSON.stringify({
       removeLabelIds: ["UNREAD"],
-    },
+    }),
   });
 
   return { ok: true };
