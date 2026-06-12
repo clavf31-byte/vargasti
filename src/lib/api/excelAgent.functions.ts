@@ -1,14 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createAnthropicMessage, type AnthropicMessage, type AnthropicToolUseBlock } from "./anthropicRest";
 
 type AnthropicTool = {
   name: string;
   description: string;
   input_schema: { type: "object"; properties: Record<string, unknown>; required?: string[] };
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnthropicMessage = any;
 type AnthropicToolResult = { type: "tool_result"; tool_use_id: string; content: string };
 
 const MAX_PREVIEW_ROWS = 200;
@@ -51,9 +50,6 @@ export const runExcelAgent = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada no servidor.");
-
-    const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const client = new Anthropic({ apiKey });
 
     const { headers, types, rows, totalRows, message, history, activeSheet, allSheets } = data;
     const previewRows = rows.slice(0, MAX_PREVIEW_ROWS);
@@ -205,7 +201,7 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
     const actions: AgentAction[] = [];
     let finalText = "";
 
-    let resp = await client.messages.create({
+    let resp = await createAnthropicMessage(apiKey, {
       model: "claude-opus-4-8",
       max_tokens: 4096,
       system,
@@ -216,8 +212,9 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
     while (resp.stop_reason === "tool_use") {
       const results: AnthropicToolResult[] = [];
 
-      for (const block of resp.content) {
-        if (block.type !== "tool_use") continue;
+      for (const contentBlock of resp.content) {
+        if (contentBlock.type !== "tool_use") continue;
+        const block = contentBlock as AnthropicToolUseBlock;
         const input = block.input as Record<string, unknown>;
         const action = buildAction(block.name, input, headers, types, previewRows.length);
         if (action) actions.push(action);
@@ -253,7 +250,7 @@ Use as ferramentas para executar ações na planilha. Após executar, confirme o
       messages.push({ role: "assistant", content: resp.content });
       messages.push({ role: "user", content: results });
 
-      resp = await client.messages.create({
+      resp = await createAnthropicMessage(apiKey, {
         model: "claude-opus-4-8",
         max_tokens: 4096,
         system,

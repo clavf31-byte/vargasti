@@ -1,4 +1,4 @@
-import { processEmailPipeline } from "./emailAgent.server";
+import { processEmailPipeline } from "./emailAgent.functions";
 
 /**
  * Email Polling Service
@@ -10,7 +10,7 @@ import { processEmailPipeline } from "./emailAgent.server";
  * - Marks as read
  */
 
-let pollingInterval: NodeJS.Timeout | null = null;
+let pollingInterval: ReturnType<typeof setInterval> | null = null;
 let isPolling = false;
 
 interface PollingConfig {
