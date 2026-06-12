@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
-import type Anthropic from "@anthropic-ai/sdk";
+import { createAnthropicMessage, type AnthropicContentBlock, type AnthropicMessage, type AnthropicToolUseBlock } from "./anthropicRest";
 
 // ── Supabase admin client (uses service role for webhook access) ──────────────
 function getAdminClient() {
@@ -437,9 +437,6 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return { ok: false, reason: "no API key" };
 
-    const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const client = new Anthropic({ apiKey });
-
     // Load conversation history for this contact (last 10 messages)
     const { data: history } = await admin
       .from("whatsapp_messages")
@@ -449,8 +446,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(10);
 
-    type MsgParam = { role: "user" | "assistant"; content: string | Anthropic.ContentBlockParam[] };
-    const historyMessages: MsgParam[] = (history ?? [])
+    const historyMessages: AnthropicMessage[] = (history ?? [])
       .reverse()
       .map((m: { direction: string; message: string }) => ({
         role: m.direction === "outgoing" ? "assistant" : "user",
@@ -458,7 +454,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       }));
 
     // Build current message — if image present, include it
-    let currentUserContent: string | Anthropic.ContentBlockParam[] = `${data.fromName}: ${data.message}`;
+    let currentUserContent: string | AnthropicContentBlock[] = `${data.fromName}: ${data.message}`;
     if (data.imageUrl) {
       currentUserContent = [
         { type: "text", text: `${data.fromName}: ${data.message}` },
@@ -466,7 +462,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       ];
     }
 
-    const messages: MsgParam[] = [
+    const messages: AnthropicMessage[] = [
       ...historyMessages.filter((_, i, arr) => !(i === arr.length - 1 && arr[arr.length - 1].role === "user" && typeof arr[arr.length - 1].content === "string" && arr[arr.length - 1].content === data.message)),
       { role: "user", content: currentUserContent },
     ];
@@ -502,30 +498,30 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     const model = useVision ? "claude-opus-4-8" : "claude-haiku-4-5-20251001";
 
     // Tool-use loop (max 3 iterations)
-    let currentMessages = messages as Anthropic.MessageParam[];
+    let currentMessages = messages;
     let finalReply = "";
     let noteCreated = false;
 
     for (let i = 0; i < 3; i++) {
-      const resp = await client.messages.create({
+      const resp = await createAnthropicMessage(apiKey, {
         model,
         max_tokens: useVision ? 2048 : 1024,
         system: systemPrompt,
-        tools: AGENT_TOOLS as unknown as Anthropic.Tool[],
+        tools: AGENT_TOOLS,
         messages: currentMessages,
       });
 
       if (resp.stop_reason === "end_turn") {
         finalReply = resp.content
           .filter((b) => b.type === "text")
-          .map((b) => (b as Anthropic.TextBlock).text)
+          .map((b) => (b as { type: "text"; text: string }).text)
           .join("");
         break;
       }
 
       if (resp.stop_reason === "tool_use") {
-        const toolUseBlocks = resp.content.filter((b) => b.type === "tool_use") as Anthropic.ToolUseBlock[];
-        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+        const toolUseBlocks = resp.content.filter((b) => b.type === "tool_use") as AnthropicToolUseBlock[];
+        const toolResults: AnthropicContentBlock[] = [];
 
         for (const tool of toolUseBlocks) {
           if (tool.name === "get_datetime") {
@@ -561,7 +557,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       // Fallback: extract any text from last response
       finalReply = resp.content
         .filter((b) => b.type === "text")
-        .map((b) => (b as Anthropic.TextBlock).text)
+        .map((b) => (b as { type: "text"; text: string }).text)
         .join("");
       break;
     }

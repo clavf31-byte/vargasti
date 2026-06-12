@@ -7,7 +7,7 @@ import {
 import {
   getWhatsappConfigs, getWhatsappConfig, saveWhatsappConfig, getWhatsappMessages,
   clearWhatsappMessages, deleteContactMessages, deleteWhatsappConfig, evolutionAction, WhatsappConfig, WhatsappMessage,
-} from "@/lib/api/whatsappAgent.server";
+} from "@/lib/api/whatsappAgent.functions";
 import { DataCard, SectionTitle, Btn } from "@/components/shared";
 
 type Tab = "status" | "messages" | "config";
