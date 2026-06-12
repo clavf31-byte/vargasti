@@ -337,20 +337,67 @@ export const markEmailAsRead = createServerFn({ method: "POST" })
   .handler(async ({ data }) => markEmailAsReadInternal(data.messageId));
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
+async function getEmailConfig() {
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured");
+    }
+
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/email_settings?id=eq.00000000-0000-0000-0000-000000000000&select=*`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.warn("[getEmailConfig] Failed to fetch config from Supabase");
+      return null;
+    }
+
+    const data = (await response.json()) as Array<{
+      categories?: Array<{ name: string; keywords: string[] }>;
+      priorities?: Array<{ id: string; keywords: string[]; priority: string }>;
+    }>;
+
+    return data[0] || null;
+  } catch (err) {
+    console.error("[getEmailConfig] Error:", err);
+    return null;
+  }
+}
+
 export async function interpretEmailWithClaude(email: GmailEmail) {
   const text = `${email.subject} ${email.body}`.toLowerCase();
 
-  // Categorização por palavras-chave
-  const categories: Record<string, string[]> = {
-    "Impressora": ["impressora", "printer", "imprimir", "print", "papel"],
-    "Rede": ["internet", "conexão", "wifi", "rede", "conectar", "ping", "latência"],
-    "Email": ["email", "outlook", "gmail", "enviar", "receber", "anexo"],
-    "Software": ["software", "programa", "aplicativo", "erro", "crash", "travado"],
-    "Hardware": ["hardware", "dispositivo", "mouse", "teclado", "monitor", "pc"],
-    "VPN": ["vpn", "remoto", "acesso remoto", "proxy"],
-    "Banco de Dados": ["banco", "banco de dados", "database", "sql", "backup"],
-    "Suporte": ["help", "suporte", "ajuda", "problema", "não funciona", "dúvida"],
-  };
+  // Buscar configurações do Supabase
+  const config = await getEmailConfig();
+
+  // Categorias: usar config do Supabase ou defaults
+  const categories: Record<string, string[]> = {};
+  if (config?.categories && Array.isArray(config.categories)) {
+    for (const cat of config.categories) {
+      if (cat.name && Array.isArray(cat.keywords)) {
+        categories[cat.name] = cat.keywords;
+      }
+    }
+  } else {
+    // Defaults
+    categories["Impressora"] = ["impressora", "printer", "imprimir", "print", "papel"];
+    categories["Rede"] = ["internet", "conexão", "wifi", "rede", "conectar", "ping", "latência"];
+    categories["Email"] = ["email", "outlook", "gmail", "enviar", "receber", "anexo"];
+    categories["Software"] = ["software", "programa", "aplicativo", "erro", "crash", "travado"];
+    categories["Hardware"] = ["hardware", "dispositivo", "mouse", "teclado", "monitor", "pc"];
+    categories["VPN"] = ["vpn", "remoto", "acesso remoto", "proxy"];
+    categories["Banco de Dados"] = ["banco", "banco de dados", "database", "sql", "backup"];
+    categories["Suporte"] = ["help", "suporte", "ajuda", "problema", "não funciona", "dúvida"];
+  }
 
   let category = "Suporte";
   for (const [cat, keywords] of Object.entries(categories)) {
@@ -360,15 +407,27 @@ export async function interpretEmailWithClaude(email: GmailEmail) {
     }
   }
 
-  // Detectar prioridade
-  const urgentKeywords = ["urgente", "urgency", "asap", "crítico", "crítica", "parado", "offline"];
-  const highKeywords = ["problema", "erro", "não funciona", "quebrado", "travado"];
-  const lowKeywords = ["dúvida", "informação", "pergunta", "como"];
-
+  // Prioridades: usar config do Supabase ou defaults
   let priority = "media";
-  if (urgentKeywords.some((kw) => text.includes(kw))) priority = "alta";
-  else if (highKeywords.some((kw) => text.includes(kw))) priority = "alta";
-  else if (lowKeywords.some((kw) => text.includes(kw))) priority = "baixa";
+  if (config?.priorities && Array.isArray(config.priorities)) {
+    for (const rule of config.priorities) {
+      if (rule.keywords && Array.isArray(rule.keywords)) {
+        if (rule.keywords.some((kw) => text.includes(kw))) {
+          priority = rule.priority || "media";
+          break;
+        }
+      }
+    }
+  } else {
+    // Defaults
+    const urgentKeywords = ["urgente", "urgency", "asap", "crítico", "crítica", "parado", "offline"];
+    const highKeywords = ["problema", "erro", "não funciona", "quebrado", "travado"];
+    const lowKeywords = ["dúvida", "informação", "pergunta", "como"];
+
+    if (urgentKeywords.some((kw) => text.includes(kw))) priority = "alta";
+    else if (highKeywords.some((kw) => text.includes(kw))) priority = "alta";
+    else if (lowKeywords.some((kw) => text.includes(kw))) priority = "baixa";
+  }
 
   // Sempre considera como request
   return {

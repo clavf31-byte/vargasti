@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type EmailCategory = {
   name: string;
@@ -28,8 +29,6 @@ const DEFAULT_CATEGORIES: EmailCategory[] = [
   { name: "Suporte", keywords: ["help", "suporte", "ajuda", "problema", "não funciona", "dúvida"] },
 ];
 
-const DEFAULT_WHITELIST: EmailWhitelist[] = [];
-
 const DEFAULT_PRIORITIES: EmailPriority[] = [
   {
     id: "urgent",
@@ -50,37 +49,82 @@ const DEFAULT_PRIORITIES: EmailPriority[] = [
 
 export function useEmailConfig() {
   const [categories, setCategories] = useState<EmailCategory[]>(DEFAULT_CATEGORIES);
-  const [whitelist, setWhitelist] = useState<EmailWhitelist[]>(DEFAULT_WHITELIST);
+  const [whitelist, setWhitelist] = useState<EmailWhitelist[]>([]);
   const [priorities, setPriorities] = useState<EmailPriority[]>(DEFAULT_PRIORITIES);
   const [loaded, setLoaded] = useState(false);
 
-  // Carregar do localStorage
+  // Carregar do Supabase
   useEffect(() => {
-    const savedCategories = localStorage.getItem("email_categories");
-    const savedWhitelist = localStorage.getItem("email_whitelist");
-    const savedPriorities = localStorage.getItem("email_priorities");
+    const loadConfig = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("email_settings")
+          .select("*")
+          .eq("id", "00000000-0000-0000-0000-000000000000")
+          .single();
 
-    if (savedCategories) setCategories(JSON.parse(savedCategories));
-    if (savedWhitelist) setWhitelist(JSON.parse(savedWhitelist));
-    if (savedPriorities) setPriorities(JSON.parse(savedPriorities));
+        if (error) throw error;
 
-    setLoaded(true);
+        if (data) {
+          if (data.categories?.length > 0) setCategories(data.categories);
+          if (data.whitelist?.length > 0) setWhitelist(data.whitelist);
+          if (data.priorities?.length > 0) setPriorities(data.priorities);
+        }
+      } catch (err) {
+        console.error("[useEmailConfig] Error loading from Supabase:", err);
+        // Fallback to localStorage
+        const savedCat = localStorage.getItem("email_categories");
+        const savedWL = localStorage.getItem("email_whitelist");
+        const savedPri = localStorage.getItem("email_priorities");
+        if (savedCat) setCategories(JSON.parse(savedCat));
+        if (savedWL) setWhitelist(JSON.parse(savedWL));
+        if (savedPri) setPriorities(JSON.parse(savedPri));
+      } finally {
+        setLoaded(true);
+      }
+    };
+
+    loadConfig();
   }, []);
 
-  // Salvar no localStorage
-  const saveCategories = (newCategories: EmailCategory[]) => {
+  // Salvar no Supabase
+  const saveCategories = async (newCategories: EmailCategory[]) => {
     setCategories(newCategories);
-    localStorage.setItem("email_categories", JSON.stringify(newCategories));
+    try {
+      await supabase
+        .from("email_settings")
+        .update({ categories: newCategories, updated_at: new Date().toISOString() })
+        .eq("id", "00000000-0000-0000-0000-000000000000");
+    } catch (err) {
+      console.error("[useEmailConfig] Error saving categories:", err);
+      localStorage.setItem("email_categories", JSON.stringify(newCategories));
+    }
   };
 
-  const saveWhitelist = (newWhitelist: EmailWhitelist[]) => {
+  const saveWhitelist = async (newWhitelist: EmailWhitelist[]) => {
     setWhitelist(newWhitelist);
-    localStorage.setItem("email_whitelist", JSON.stringify(newWhitelist));
+    try {
+      await supabase
+        .from("email_settings")
+        .update({ whitelist: newWhitelist, updated_at: new Date().toISOString() })
+        .eq("id", "00000000-0000-0000-0000-000000000000");
+    } catch (err) {
+      console.error("[useEmailConfig] Error saving whitelist:", err);
+      localStorage.setItem("email_whitelist", JSON.stringify(newWhitelist));
+    }
   };
 
-  const savePriorities = (newPriorities: EmailPriority[]) => {
+  const savePriorities = async (newPriorities: EmailPriority[]) => {
     setPriorities(newPriorities);
-    localStorage.setItem("email_priorities", JSON.stringify(newPriorities));
+    try {
+      await supabase
+        .from("email_settings")
+        .update({ priorities: newPriorities, updated_at: new Date().toISOString() })
+        .eq("id", "00000000-0000-0000-0000-000000000000");
+    } catch (err) {
+      console.error("[useEmailConfig] Error saving priorities:", err);
+      localStorage.setItem("email_priorities", JSON.stringify(newPriorities));
+    }
   };
 
   return {
