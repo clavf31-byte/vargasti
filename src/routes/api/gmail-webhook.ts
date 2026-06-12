@@ -4,7 +4,7 @@ import {
   markEmailAsRead,
   sendToHelpdeskApi,
   interpretEmailWithClaude,
-} from "@/lib/api/emailAgent.functions";
+} from "@/lib/api/emailAgent.server";
 
 export const Route = createFileRoute("/api/gmail-webhook")({
   server: {

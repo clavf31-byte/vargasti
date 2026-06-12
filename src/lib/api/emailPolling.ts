@@ -1,4 +1,4 @@
-import { processEmailPipeline } from "./emailAgent.functions";
+import { processEmailPipeline } from "./emailAgent.server";
 
 /**
  * Email Polling Service
