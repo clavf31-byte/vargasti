@@ -52,7 +52,7 @@ export const Route = createFileRoute("/api/gmail-webhook")({
 
           // If it's a request, create a ticket
           if (analysis.isRequest) {
-            await createTicketFromEmail({
+            await sendToHelpdeskApi({
               data: {
                 emailId: email.id,
                 from: email.from,
