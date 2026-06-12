@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { createAnthropicMessage } from "./anthropicRest";
 
 // ── Supabase admin client (server-only) ───────────────────────────────────────
 async function getAdminClient() {
@@ -298,10 +299,7 @@ export async function interpretEmailWithClaude(email: GmailEmail) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
-  const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey });
-
-  const response = await client.messages.create({
+  const response = await createAnthropicMessage(apiKey, {
     model: "claude-haiku-4-5-20251001",
     max_tokens: 500,
     system: `Você é um agente que analisa e-mails de suporte.
@@ -319,7 +317,7 @@ Conteúdo: ${email.body}`,
   });
 
   const content = response.content[0];
-  if (content.type !== "text") throw new Error("Unexpected response type");
+  if (content.type !== "text" || typeof content.text !== "string") throw new Error("Unexpected response type");
 
   try {
     return JSON.parse(content.text);
