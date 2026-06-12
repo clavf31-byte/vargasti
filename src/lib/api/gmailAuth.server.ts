@@ -18,7 +18,7 @@ export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async (
     access_type: "offline",
     scope: "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify",
     prompt: "consent",
-  });
+  }).toString();
 
   return { authUrl: authUrl.toString() };
 });
