@@ -129,11 +129,11 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
       });
 
       const headers = emailRes.data.payload?.headers ?? [];
-      const getHeader = (name: string) => headers.find((h) => h.name === name)?.value ?? "";
+      const getHeader = (name: string) => headers.find((h: { name?: string | null; value?: string | null }) => h.name === name)?.value ?? "";
 
       let body = "";
       if (emailRes.data.payload?.parts) {
-        const part = emailRes.data.payload.parts.find((p) => p.mimeType === "text/plain");
+        const part = emailRes.data.payload.parts.find((p: { mimeType?: string | null }) => p.mimeType === "text/plain");
         if (part?.body?.data) {
           body = Buffer.from(part.body.data, "base64").toString("utf-8");
         }
