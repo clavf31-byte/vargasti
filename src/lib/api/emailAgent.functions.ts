@@ -115,19 +115,36 @@ export const saveGmailToken = createServerFn({ method: "POST" })
       throw new Error("Failed to get access token");
     }
 
-    const admin = await getAdminClient();
-    const { error } = await admin.from("gmail_tokens").upsert(
-      {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured");
+    }
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/gmail_tokens`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         user_id: data.userId,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? null,
-        expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
+        expires_at: tokens.expires_in
+          ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+          : null,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
+      }),
+    });
 
-    if (error) throw new Error(error.message);
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to save Gmail token: ${error}`);
+    }
+
     return { ok: true, authorized: true };
   });
 
