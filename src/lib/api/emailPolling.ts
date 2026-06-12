@@ -11,7 +11,7 @@ import { processEmailPipeline } from "./emailAgent.functions";
  */
 
 let pollingInterval: ReturnType<typeof setInterval> | null = null;
-let isPolling = false;
+let pollingPromise: Promise<void> | null = null;
 
 interface PollingConfig {
   intervalMs?: number; // Default: 5 minutes (300000ms)
@@ -22,10 +22,10 @@ const DEFAULT_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const DEFAULT_MAX_EMAILS = 5;
 
 /**
- * Start polling for emails
+ * Start polling for emails with atomic Promise-based locking
  */
 export async function startEmailPolling(config?: PollingConfig) {
-  if (isPolling) {
+  if (pollingPromise) {
     console.warn("[email-polling] Already polling, skipping start");
     return;
   }
@@ -35,15 +35,21 @@ export async function startEmailPolling(config?: PollingConfig) {
 
   console.log(`[email-polling] Starting with interval: ${interval}ms, max emails: ${maxEmails}`);
 
-  isPolling = true;
+  pollingPromise = (async () => {
+    try {
+      // Run immediately on start
+      await runEmailPollingCycle(maxEmails);
 
-  // Run immediately on start
-  await runEmailPollingCycle(maxEmails);
-
-  // Then run at intervals
-  pollingInterval = setInterval(async () => {
-    await runEmailPollingCycle(maxEmails);
-  }, interval);
+      // Then run at intervals
+      pollingInterval = setInterval(async () => {
+        await runEmailPollingCycle(maxEmails);
+      }, interval);
+    } catch (err) {
+      console.error("[email-polling] Fatal error in polling loop:", err);
+    } finally {
+      pollingPromise = null;
+    }
+  })();
 }
 
 /**
@@ -54,7 +60,7 @@ export function stopEmailPolling() {
     clearInterval(pollingInterval);
     pollingInterval = null;
   }
-  isPolling = false;
+  pollingPromise = null;
   console.log("[email-polling] Stopped");
 }
 
@@ -62,7 +68,7 @@ export function stopEmailPolling() {
  * Check if currently polling
  */
 export function isEmailPollingActive(): boolean {
-  return isPolling;
+  return pollingPromise !== null;
 }
 
 /**

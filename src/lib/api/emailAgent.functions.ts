@@ -56,6 +56,15 @@ export type GmailEmail = {
   labels: string[];
 };
 
+const MAX_BODY_LENGTH = 5000;
+
+function truncateBody(body: string): string {
+  if (body.length > MAX_BODY_LENGTH) {
+    return body.substring(0, MAX_BODY_LENGTH) + "\n\n[...truncado...]";
+  }
+  return body;
+}
+
 type FetchEmailsResult =
   | { emails: GmailEmail[]; authorized: true; message?: string }
   | { emails: []; authorized: false; message: string };
@@ -143,34 +152,52 @@ export const saveGmailToken = createServerFn({ method: "POST" })
     return { ok: true, authorized: true };
   });
 
-// ── Get Gmail Access Token ───────────────────────────────────────────────────
-async function refreshGmailAccessToken(refreshToken: string) {
+// ── Refresh Gmail Access Token with Retry Logic ──────────────────────────────
+async function refreshGmailAccessTokenWithRetry(
+  refreshToken: string,
+  maxRetries = 3
+): Promise<{ access_token?: string; expires_in?: number } | null> {
   const { clientId, clientSecret } = getGmailOAuthConfig();
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
 
-  const tokens = await response.json() as {
-    access_token?: string;
-    expires_in?: number;
-    error_description?: string;
-  };
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      });
 
-  if (!response.ok || !tokens.access_token) {
-    throw new Error(tokens.error_description ?? "Failed to refresh Gmail access token");
+      const tokens = await response.json() as {
+        access_token?: string;
+        expires_in?: number;
+        error_description?: string;
+      };
+
+      if (!response.ok || !tokens.access_token) {
+        throw new Error(tokens.error_description ?? "Failed to refresh Gmail access token");
+      }
+
+      return tokens;
+    } catch (err) {
+      console.warn(`[email-polling] Token refresh attempt ${attempt + 1}/${maxRetries} failed:`, err);
+      if (attempt < maxRetries - 1) {
+        const backoffMs = 1000 * Math.pow(2, attempt);
+        await new Promise(r => setTimeout(r, backoffMs));
+        continue;
+      }
+      console.error("[email-polling] Token refresh failed after retries:", err);
+      return null;
+    }
   }
-
-  return tokens;
+  return null;
 }
 
-async function getGmailAccessToken() {
+async function getGmailAccessToken(userId: string = "system") {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -179,7 +206,7 @@ async function getGmailAccessToken() {
   }
 
   const response = await fetch(
-    `${supabaseUrl}/rest/v1/gmail_tokens?select=access_token,refresh_token,expires_at&user_id=eq.system`,
+    `${supabaseUrl}/rest/v1/gmail_tokens?select=access_token,refresh_token,expires_at&user_id=eq.${userId}`,
     {
       headers: {
         apikey: supabaseKey,
@@ -210,9 +237,13 @@ async function getGmailAccessToken() {
 
   if (!shouldRefresh) return tokenData.access_token;
 
-  const refreshed = await refreshGmailAccessToken(tokenData.refresh_token);
+  const refreshed = await refreshGmailAccessTokenWithRetry(tokenData.refresh_token);
 
-  await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.system`, {
+  if (!refreshed?.access_token) {
+    throw new Error("Failed to refresh Gmail token after multiple retries");
+  }
+
+  await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.${userId}`, {
     method: "PATCH",
     headers: {
       apikey: supabaseKey,
@@ -231,8 +262,8 @@ async function getGmailAccessToken() {
   return refreshed.access_token;
 }
 
-async function gmailRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const accessToken = await getGmailAccessToken();
+async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: string = "system"): Promise<T> {
+  const accessToken = await getGmailAccessToken(userId);
   const response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
     ...init,
     headers: {
@@ -251,9 +282,9 @@ async function gmailRequest<T>(path: string, init: RequestInit = {}): Promise<T>
   return response.json() as Promise<T>;
 }
 
-async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult> {
+async function fetchUnreadEmails(maxResults: number, userId: string = "system"): Promise<FetchEmailsResult> {
     try {
-      await getGmailAccessToken();
+      await getGmailAccessToken(userId);
     } catch (err) {
       if (isGmailAuthorizationError(err)) {
         return {
@@ -270,7 +301,7 @@ async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult>
       q: "is:unread",
       maxResults: String(maxResults),
     });
-    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`);
+    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`, {}, userId);
 
     if (!listRes.messages?.length) {
       return { emails: [], authorized: true };
@@ -281,7 +312,7 @@ async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult>
     for (const msg of listRes.messages) {
       if (!msg.id) continue;
 
-      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`);
+      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`, {}, userId);
 
       const headers = emailRes.payload?.headers ?? [];
       const getHeader = (name: string) => headers.find((h: { name?: string | null; value?: string | null }) => h.name === name)?.value ?? "";
@@ -302,7 +333,7 @@ async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult>
         from: getHeader("From"),
         to: getHeader("To"),
         subject: getHeader("Subject"),
-        body,
+        body: truncateBody(body),
         timestamp: parseInt(emailRes.internalDate ?? "0"),
         labels: emailRes.labelIds ?? [],
       });
@@ -321,13 +352,13 @@ const MarkAsReadSchema = z.object({
   messageId: z.string(),
 });
 
-async function markEmailAsReadInternal(messageId: string) {
+async function markEmailAsReadInternal(messageId: string, userId: string = "system") {
   await gmailRequest(`/users/me/messages/${messageId}/modify`, {
     method: "POST",
     body: JSON.stringify({
       removeLabelIds: ["UNREAD"],
     }),
-  });
+  }, userId);
 
   return { ok: true };
 }
@@ -489,13 +520,14 @@ export const sendToHelpdeskApi = createServerFn({ method: "POST" })
 
 // ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
 export const processEmailPipeline = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ maxEmails: z.number().default(1) }))
+  .inputValidator(z.object({ maxEmails: z.number().default(1), userId: z.string().optional() }))
   .handler(async ({ data }) => {
     try {
-      console.log("[email-pipeline] Starting email processing");
+      const userId = data.userId ?? "system";
+      console.log("[email-pipeline] Starting email processing for user:", userId);
 
       // Fetch unread emails
-      const emailsResult = await fetchUnreadEmails(data.maxEmails);
+      const emailsResult = await fetchUnreadEmails(data.maxEmails, userId);
 
       if (emailsResult.authorized === false) {
         console.log("[email-pipeline] Gmail not authorized");
@@ -519,6 +551,27 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
         try {
           console.log("[email-pipeline] Processing:", { from: email.from, subject: email.subject });
 
+          // Check if ticket already exists for this email (deduplication)
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          if (supabaseUrl && supabaseKey) {
+            const checkResponse = await fetch(
+              `${supabaseUrl}/rest/v1/tickets?select=id&external_ref=eq.gmail-${email.id}`,
+              {
+                headers: {
+                  apikey: supabaseKey,
+                  Authorization: `Bearer ${supabaseKey}`,
+                },
+              }
+            );
+            const existingData = (await checkResponse.json()) as Array<{ id: string }>;
+            if (existingData && existingData.length > 0) {
+              console.log("[email-pipeline] Ticket already exists for", email.id);
+              await markEmailAsReadInternal(email.id, userId);
+              continue;
+            }
+          }
+
           // Interpret with Claude
           const analysis = await interpretEmailWithClaude(email);
           console.log("[email-pipeline] Analysis:", analysis);
@@ -538,16 +591,16 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
 
               console.log("[email-pipeline] Sent to Helpdesk:", email.subject);
               processedCount++;
+
+              // Mark as read only after successful ticket creation
+              await markEmailAsReadInternal(email.id, userId);
+              console.log("[email-pipeline] Marked as read:", email.id);
             } catch (err) {
               console.error("[email-pipeline] Error sending to Helpdesk:", err);
             }
           } else {
             console.log("[email-pipeline] Email is not a request, skipping");
           }
-
-          // Mark as read
-          await markEmailAsReadInternal(email.id);
-          console.log("[email-pipeline] Marked as read:", email.id);
         } catch (err) {
           console.error("[email-pipeline] Error processing email:", err);
         }

@@ -1,10 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import {
   fetchNewEmails,
   markEmailAsRead,
   sendToHelpdeskApi,
   interpretEmailWithClaude,
 } from "@/lib/api/emailAgent.functions";
+
+const GmailWebhookSchema = z.object({
+  message: z.object({
+    data: z.string(),
+    messageId: z.string().optional(),
+    publishTime: z.string().optional(),
+  }).optional(),
+}).optional();
 
 export const Route = createFileRoute("/api/gmail-webhook")({
   server: {
@@ -13,8 +22,17 @@ export const Route = createFileRoute("/api/gmail-webhook")({
         try {
           const body = (await request.json()) as Record<string, unknown>;
 
+          // Validate webhook payload structure
+          const parsed = GmailWebhookSchema.safeParse(body);
+          if (!parsed.success) {
+            return new Response(JSON.stringify({ error: "Invalid payload" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           // Gmail webhook payload
-          const message = body.message as Record<string, unknown>;
+          const message = parsed.data?.message as Record<string, unknown> | undefined;
           if (!message?.data) {
             return new Response(JSON.stringify({ ok: true }), {
               headers: { "Content-Type": "application/json" },

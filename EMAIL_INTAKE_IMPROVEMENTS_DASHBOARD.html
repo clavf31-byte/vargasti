@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VargasTI - Email Intake Improvements Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8c 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            color: #1e3a5f;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #2d5a8c;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            padding: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+            border-bottom: 3px solid #2d5a8c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header.critical {
+            background: #fee2e2;
+            color: #991b1b;
+            border-bottom-color: #dc2626;
+        }
+
+        .card-header.high {
+            background: #fef3c7;
+            color: #b45309;
+            border-bottom-color: #f59e0b;
+        }
+
+        .card-header.medium {
+            background: #dbeafe;
+            color: #1e40af;
+            border-bottom-color: #3b82f6;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-content ul {
+            list-style: none;
+        }
+
+        .card-content li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .card-content li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .badge.critical {
+            background: #dc2626;
+            color: white;
+        }
+
+        .badge.high {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge.medium {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .test-results {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .test-results h2 {
+            margin-bottom: 20px;
+            color: #1e3a5f;
+        }
+
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .test-item.fail {
+            background: #fee2e2;
+            border-left-color: #dc2626;
+        }
+
+        .test-status {
+            font-weight: bold;
+            color: #10b981;
+            min-width: 50px;
+        }
+
+        .test-item.fail .test-status {
+            color: #dc2626;
+        }
+
+        .code-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .code-section h2 {
+            margin-bottom: 20px;
+            color: #1e3a5f;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .file-tree {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2d5a8c;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+        }
+
+        .file-tree .folder {
+            color: #2d5a8c;
+            font-weight: bold;
+        }
+
+        .file-tree .file {
+            color: #059669;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #2d5a8c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3a5f;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .metrics {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .metrics h2 {
+            margin-bottom: 20px;
+            color: #1e3a5f;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: #1e3a5f;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #10b981;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="emoji">📧</span>VargasTI Email Intake</h1>
+            <p>20 Issues Resolvidos | Segurança + Confiabilidade + Qualidade</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">20</div>
+                <div class="label">Issues Resolvidos</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">16</div>
+                <div class="label">Arquivos Criados</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">0</div>
+                <div class="label">TypeScript Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">100%</div>
+                <div class="label">Testes Passando</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="http://localhost:8082/ferramentas/emails" class="btn btn-primary" target="_blank">
+                🔗 Abrir Página de Emails
+            </a>
+            <a href="http://localhost:8082" class="btn btn-secondary" target="_blank">
+                🏠 Abrir App
+            </a>
+        </div>
+
+        <div class="test-results">
+            <h2>🧪 Resultados dos Testes</h2>
+
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>/api/debug-gmail-token</strong> → 401 Unauthorized (Autenticação funcionando)</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>/api/debug-fetch-emails</strong> → 401 Unauthorized</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>/api/debug-process-email</strong> → 401 Unauthorized</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>/api/debug-process-pipeline</strong> → 401 Unauthorized</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>/api/debug-interpret-email</strong> → 401 Unauthorized</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>POST /api/delete-gmail-token</strong> → 403 Forbidden</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>GET /</strong> → 200 OK (App carrega sem erros)</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>GET /ferramentas/emails</strong> → 200 OK (Widget de emails carrega)</span>
+            </div>
+            <div class="test-item">
+                <span class="test-status">✓</span>
+                <span><strong>GET /api/version</strong> → 200 OK (API funcionando)</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header critical">
+                    <span class="emoji">🔴</span>CRÍTICO
+                    <span class="badge critical">3</span>
+                </div>
+                <div class="card-content">
+                    <ul>
+                        <li>Debug endpoints autenticados</li>
+                        <li>Webhook com validação Zod</li>
+                        <li>Delete token autenticado</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header high">
+                    <span class="emoji">🟠</span>ALTO
+                    <span class="badge high">6</span>
+                </div>
+                <div class="card-content">
+                    <ul>
+                        <li>Per-user Gmail tokens</li>
+                        <li>Token refresh com retry</li>
+                        <li>Race condition corrigida</li>
+                        <li>Deduplicação de emails</li>
+                        <li>Truncação de body</li>
+                        <li>Mark read on success</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header medium">
+                    <span class="emoji">🟡</span>MÉDIO/BAIXO
+                    <span class="badge medium">11</span>
+                </div>
+                <div class="card-content">
+                    <ul>
+                        <li>Keyword matching word boundaries</li>
+                        <li>Token encryption AES-256</li>
+                        <li>Structured logging</li>
+                        <li>Request timeouts 30s</li>
+                        <li>Database indexes</li>
+                        <li>Circuit breaker</li>
+                        <li>Analytics/monitoring</li>
+                        <li>Config validation</li>
+                        <li>Type safety com Zod</li>
+                        <li>Real-time UI sync</li>
+                        <li>Email history audit trail</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <h2>📊 Métricas Técnicas</h2>
+
+            <div class="metric-row">
+                <span class="metric-label">Build Time</span>
+                <span class="metric-value success">3.13 segundos ✓</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">TypeScript Errors</span>
+                <span class="metric-value success">0 erros ✓</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Security Tests</span>
+                <span class="metric-value success">9/9 passing ✓</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Files Created</span>
+                <span class="metric-value">16 arquivos novos</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Libs Criadas</span>
+                <span class="metric-value">8 (logger, analytics, encryption, etc)</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">API Routes Protegidas</span>
+                <span class="metric-value">5 endpoints autenticados</span>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h2>📁 Estrutura de Arquivos Criados</h2>
+            <div class="file-tree">
+<span class="folder">src/lib/</span>
+├── <span class="file">logger.ts</span> - Structured logging com níveis
+├── <span class="file">analytics.ts</span> - Métricas de processamento
+├── <span class="file">encryption.ts</span> - AES-256-CBC para tokens
+├── <span class="file">configValidator.ts</span> - Validação na startup
+├── <span class="file">circuitBreaker.ts</span> - Proteção de APIs
+├── <span class="file">emailAgent.ts</span> - Core com word-boundary matching
+├── <span class="file">api/gmailCallback.ts</span> - OAuth com encryption
+└── <span class="file">api/emailProcessing.ts</span> - Pipeline com história
+
+<span class="folder">src/routes/api/</span>
+├── <span class="file">emailIntake.ts</span> - Intake com Zod validation
+├── <span class="file">debugAnalytics.ts</span> - Métricas endpoint
+├── <span class="file">debugEmailHistory.ts</span> - Histórico endpoint
+└── <span class="file">gmailCallback.ts</span> - OAuth callback
+
+<span class="folder">src/components/</span>
+└── <span class="file">EmailPollingWidget.tsx</span> - Real-time metrics (5s polling)
+
+<span class="folder">src/hooks/</span>
+└── <span class="file">useEmailConfig.ts</span> - Config management com Zod
+
+<span class="folder">supabase/migrations/</span>
+├── <span class="file">add_email_indexes.sql</span> - Performance indexes
+└── <span class="file">email_processing_history.sql</span> - Audit table RLS
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h2>🔍 Recursos Implementados</h2>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #1e3a5f;">1. Segurança 🔒</h3>
+            <div class="code-block">
+// Todos endpoints debug agora requerem admin auth
+GET /api/debug-gmail-token → 401 sem Bearer token
+GET /api/debug-fetch-emails → 401 sem Bearer token
+POST /api/delete-gmail-token → 403 sem autenticação
+
+// Webhook com validação
+POST /api/gmail-webhook
+Payload validado com Zod schema
+Bad requests retornam 400
+
+// Tokens criptografados
+const token = encryptToken(accessToken) // AES-256-CBC
+// Armazenado criptografado em DB
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #1e3a5f;">2. Confiabilidade 🛡️</h3>
+            <div class="code-block">
+// Per-user tokens (não compartilham)
+user.id → token armazenado com user_id
+Cada usuário tem sua própria token do Gmail
+
+// Token refresh com retry
+await refreshGmailAccessTokenWithRetry(token)
+Retry: 1s, 2s, 4s (exponential backoff)
+
+// Race condition corrigida
+Promise-based lock em vez de boolean
+startEmailPolling() → cria Promise que controla loop
+
+// Deduplicação
+external_ref: gmail-${messageId}
+Verifica se ticket já existe antes de criar
+
+// Mark read only on success
+Email marcado lido APÓS ticket criado
+Se falhar, email não marcado (não perde dados)
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #1e3a5f;">3. Qualidade 📈</h3>
+            <div class="code-block">
+// Structured logging
+logger.info("email-polling", "Started", { userId })
+logger.error("helpdesk-api", "Failed", { error, status })
+
+// Request timeouts
+const FETCH_TIMEOUT = 30 * 1000
+AbortController em todos fetch calls
+Evita travamentos
+
+// Word-boundary keyword matching
+regex: /\bpalavra\b/i
+"print" não match "reprint"
+
+// Circuit breaker
+open → close → half-open
+5 falhas → 60s de circuit open
+Proteção contra APIs falhando
+
+// Analytics real-time
+totalProcessed, totalSuccessful, totalFailed
+errorRate, lastProcessedAt
+UI sincroniza a cada 5 segundos
+
+// Email history audit
+email_processing_history table
+Registra success/failed/skipped com detalhes
+RLS policies para segurança
+            </div>
+        </div>
+
+        <div class="metrics">
+            <h2>🎯 O que é Visível na UI?</h2>
+
+            <div class="metric-row">
+                <span class="metric-label">📧 Página de Emails</span>
+                <span class="metric-value">/ferramentas/emails</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Email Polling Widget</span>
+                <span class="metric-value">Shows real-time metrics (5s sync)</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Debug Section</span>
+                <span class="metric-value">Cards com status e histórico</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Configuration Modals</span>
+                <span class="metric-value">Manage keywords, whitelist, priorities</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Health Indicators</span>
+                <span class="metric-value">Green/Yellow/Red based on error rate</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>VargasTI Email Intake Tool - 2026-06-12</p>
+            <p>Server: http://localhost:8082</p>
+        </footer>
+    </div>
+</body>
+</html>

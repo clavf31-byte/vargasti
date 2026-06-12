@@ -2,7 +2,7 @@
 
 import { json } from "@tanstack/react-router";
 
-export async function deleteGmailToken() {
+export async function deleteGmailToken(userId: string = "system") {
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -11,7 +11,7 @@ export async function deleteGmailToken() {
       throw new Error("Supabase credentials not configured");
     }
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.system`, {
+    const response = await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.${userId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${supabaseKey}`,

@@ -22,6 +22,22 @@ export const Route = createFileRoute("/api/gmail-callback")({
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+          // Get current authenticated user from Authorization header
+          const authHeader = request.headers.get("authorization");
+          let userId = "system"; // Fallback for backward compatibility
+
+          if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.replace("Bearer ", "");
+            try {
+              const { data, error: authError } = await supabaseAdmin.auth.getClaims(token);
+              if (!authError && data?.claims?.sub) {
+                userId = data.claims.sub;
+              }
+            } catch {
+              console.warn("[gmail-callback] Could not extract user from auth header");
+            }
+          }
+
           const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -45,7 +61,7 @@ export const Route = createFileRoute("/api/gmail-callback")({
           }
 
           const { error: dbError } = await supabaseAdmin.from("gmail_tokens").upsert({
-            user_id: "system",
+            user_id: userId,
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token || null,
             expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
