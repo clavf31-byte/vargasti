@@ -40,6 +40,10 @@ export type GmailEmail = {
   labels: string[];
 };
 
+type FetchEmailsResult =
+  | { emails: GmailEmail[]; authorized: true; message?: string }
+  | { emails: []; authorized: false; message: string };
+
 function isGmailAuthorizationError(err: unknown) {
   return err instanceof Error && err.message === "Gmail not authorized";
 }
@@ -111,10 +115,7 @@ async function getGmailClient() {
   return google.gmail({ version: "v1", auth });
 }
 
-// ── Fetch New Emails ──────────────────────────────────────────────────────────
-export const fetchNewEmails = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ maxResults: z.number().default(10) }))
-  .handler(async ({ data }) => {
+async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult> {
     let gmail: Awaited<ReturnType<typeof getGmailClient>>;
 
     try {
@@ -134,7 +135,7 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
     const listRes = await gmail.users.messages.list({
       userId: "me",
       q: "is:unread",
-      maxResults: data.maxResults,
+      maxResults,
     });
 
     if (!listRes.data.messages?.length) {
@@ -178,28 +179,35 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
     }
 
     return { emails, authorized: true };
-  });
+}
+
+// ── Fetch New Emails ──────────────────────────────────────────────────────────
+export const fetchNewEmails = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ maxResults: z.number().default(10) }))
+  .handler(async ({ data }) => fetchUnreadEmails(data.maxResults));
 
 // ── Mark Email as Read ────────────────────────────────────────────────────────
 const MarkAsReadSchema = z.object({
   messageId: z.string(),
 });
 
+async function markEmailAsReadInternal(messageId: string) {
+  const gmail = await getGmailClient();
+
+  await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: {
+      removeLabelIds: ["UNREAD"],
+    },
+  });
+
+  return { ok: true };
+}
+
 export const markEmailAsRead = createServerFn({ method: "POST" })
   .inputValidator(MarkAsReadSchema)
-  .handler(async ({ data }) => {
-    const gmail = await getGmailClient();
-
-    await gmail.users.messages.modify({
-      userId: "me",
-      id: data.messageId,
-      requestBody: {
-        removeLabelIds: ["UNREAD"],
-      },
-    });
-
-    return { ok: true };
-  });
+  .handler(async ({ data }) => markEmailAsReadInternal(data.messageId));
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
 export async function interpretEmailWithClaude(email: GmailEmail) {
