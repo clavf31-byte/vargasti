@@ -2,11 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createAnthropicMessage } from "./anthropicRest";
 
-// ── Supabase admin client (server-only) ───────────────────────────────────────
-async function getAdminClient() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
 
 // ── Gmail REST helpers (server-only) ──────────────────────────────────────────
 function getGmailOAuthConfig() {
