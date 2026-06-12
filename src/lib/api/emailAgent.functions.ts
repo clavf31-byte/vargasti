@@ -1,17 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
-import { google } from "googleapis";
 
-// ── Supabase admin client ─────────────────────────────────────────────────────
-function getAdminClient() {
+// ── Supabase admin client (server-only) ───────────────────────────────────────
+async function getAdminClient() {
+  const { createClient } = await import("@supabase/supabase-js");
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
   return createClient(url, key);
 }
 
-// ── OAuth2 Client ─────────────────────────────────────────────────────────────
-function getGoogleAuthClient() {
+// ── OAuth2 Client (server-only) ───────────────────────────────────────────────
+async function getGoogleAuthClient() {
   const clientId = process.env.GMAIL_CLIENT_ID;
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
   const redirectUri = process.env.GMAIL_REDIRECT_URI ?? "http://localhost:3000/api/gmail-callback";
@@ -20,7 +19,13 @@ function getGoogleAuthClient() {
     throw new Error("Gmail credentials not configured");
   }
 
+  const { google } = await import("googleapis");
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+}
+
+async function getGoogleApi() {
+  const { google } = await import("googleapis");
+  return google;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
