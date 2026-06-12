@@ -159,32 +159,62 @@ async function refreshGmailAccessToken(refreshToken: string) {
 }
 
 async function getGmailAccessToken() {
-  const admin = await getAdminClient();
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const { data: tokenData } = await admin
-    .from("gmail_tokens")
-    .select("access_token, refresh_token, expires_at")
-    .eq("user_id", "system")
-    .maybeSingle();
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase credentials not configured");
+  }
 
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.system&select=access_token,refresh_token,expires_at`,
+    {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Gmail token: ${response.statusText}`);
+  }
+
+  const data = (await response.json()) as Array<{
+    access_token: string;
+    refresh_token: string;
+    expires_at: string | null;
+  }>;
+
+  const tokenData = data[0];
   if (!tokenData?.access_token) {
     throw new Error("Gmail not authorized");
   }
 
   const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at).getTime() : 0;
-  const shouldRefresh = Boolean(tokenData.refresh_token && expiresAt && expiresAt <= Date.now() + 60_000);
+  const shouldRefresh = Boolean(
+    tokenData.refresh_token && expiresAt && expiresAt <= Date.now() + 60_000
+  );
 
   if (!shouldRefresh) return tokenData.access_token;
 
-  const refreshed = await refreshGmailAccessToken(tokenData.refresh_token as string);
-  await admin
-    .from("gmail_tokens")
-    .update({
+  const refreshed = await refreshGmailAccessToken(tokenData.refresh_token);
+
+  await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.system`, {
+    method: "PATCH",
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       access_token: refreshed.access_token,
-      expires_at: refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString() : null,
+      expires_at: refreshed.expires_in
+        ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
+        : null,
       updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", "system");
+    }),
+  });
 
   return refreshed.access_token;
 }
