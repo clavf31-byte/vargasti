@@ -260,39 +260,43 @@ const SendToHelpdeskSchema = z.object({
   summary: z.string(),
 });
 
+type HelpdeskPayload = z.infer<typeof SendToHelpdeskSchema>;
+
+async function sendToHelpdeskInternal(data: HelpdeskPayload) {
+  const helpdeskUrl = process.env.HELPDESK_EMAIL_INTAKE_URL;
+  const helpdeskApiKey = process.env.HELPDESK_EMAIL_INTAKE_API_KEY;
+
+  if (!helpdeskUrl || !helpdeskApiKey) {
+    throw new Error("Helpdesk configuration missing");
+  }
+
+  const response = await fetch(helpdeskUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${helpdeskApiKey}`,
+    },
+    body: JSON.stringify({
+      subject: data.subject,
+      from: data.from,
+      body: data.body,
+      category: data.category,
+      priority: data.priority,
+      summary: data.summary,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Helpdesk API error: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json() as { ok: boolean; ticketId?: string };
+  return { ok: true, ticketId: result.ticketId };
+}
+
 export const sendToHelpdeskApi = createServerFn({ method: "POST" })
   .inputValidator(SendToHelpdeskSchema)
-  .handler(async ({ data }) => {
-    const helpdeskUrl = process.env.HELPDESK_EMAIL_INTAKE_URL;
-    const helpdeskApiKey = process.env.HELPDESK_EMAIL_INTAKE_API_KEY;
-
-    if (!helpdeskUrl || !helpdeskApiKey) {
-      throw new Error("Helpdesk configuration missing");
-    }
-
-    const response = await fetch(helpdeskUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${helpdeskApiKey}`,
-      },
-      body: JSON.stringify({
-        subject: data.subject,
-        from: data.from,
-        body: data.body,
-        category: data.category,
-        priority: data.priority,
-        summary: data.summary,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Helpdesk API error: ${response.status} ${response.statusText}`);
-    }
-
-    const result = await response.json() as { ok: boolean; ticketId?: string };
-    return { ok: true, ticketId: result.ticketId };
-  });
+  .handler(async ({ data }) => sendToHelpdeskInternal(data));
 
 // ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
 export const processEmailPipeline = createServerFn({ method: "POST" })
@@ -302,7 +306,7 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
       console.log("[email-pipeline] Starting email processing");
 
       // Fetch unread emails
-      const emailsResult = await fetchNewEmails({ data: { maxResults: data.maxEmails } });
+      const emailsResult = await fetchUnreadEmails(data.maxEmails);
 
       if (emailsResult.authorized === false) {
         console.log("[email-pipeline] Gmail not authorized");
@@ -333,16 +337,14 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           // If it's a request, send to Helpdesk
           if (analysis.isRequest) {
             try {
-              await sendToHelpdeskApi({
-                data: {
-                  emailId: email.id,
-                  from: email.from,
-                  subject: email.subject,
-                  body: email.body,
-                  category: analysis.category || "suporte",
-                  priority: analysis.priority || "media",
-                  summary: analysis.summary || email.subject,
-                },
+              await sendToHelpdeskInternal({
+                emailId: email.id,
+                from: email.from,
+                subject: email.subject,
+                body: email.body,
+                category: analysis.category || "suporte",
+                priority: analysis.priority || "media",
+                summary: analysis.summary || email.subject,
               });
 
               console.log("[email-pipeline] Sent to Helpdesk:", email.subject);
@@ -355,7 +357,7 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           }
 
           // Mark as read
-          await markEmailAsRead({ data: { messageId: email.id } });
+          await markEmailAsReadInternal(email.id);
           console.log("[email-pipeline] Marked as read:", email.id);
         } catch (err) {
           console.error("[email-pipeline] Error processing email:", err);
