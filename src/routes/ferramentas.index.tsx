@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/shared";
-import { FileSpreadsheet, ChevronRight, Bot, Sparkles, Wrench, MessageCircle } from "lucide-react";
+import { FileSpreadsheet, ChevronRight, Bot, Sparkles, Wrench, MessageCircle, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/ferramentas/")({
   head: () => ({ meta: [{ title: "Tools · VargasTI Lab" }] }),
@@ -32,6 +32,18 @@ const TOOLS = [
     badge: "Disponível",
     badgeClass: "bg-brand/10 border-brand/20 text-brand",
     footer: "Claude + Evolution API",
+  },
+  {
+    to: "/ferramentas/emails" as const,
+    icon: Mail,
+    iconClass: "bg-brand/10 border-brand/20 text-brand",
+    name: "Gerenciador de E-mails",
+    category: "integrações",
+    description:
+      "Sincronize automaticamente e-mails do Gmail. Claude interpreta e cria tickets no Helpdesk Interative com categorização e priorização.",
+    badge: "Disponível",
+    badgeClass: "bg-brand/10 border-brand/20 text-brand",
+    footer: "Gmail OAuth + Claude + Helpdesk",
   },
 ];
 

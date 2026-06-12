@@ -21,8 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
+import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
+import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
+import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callback'
 
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
@@ -84,6 +87,11 @@ const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
   path: '/excel',
   getParentRoute: () => FerramentasRoute,
 } as any)
+const FerramentasEmailsRoute = FerramentasEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => FerramentasRoute,
+} as any)
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
@@ -92,6 +100,16 @@ const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
 const ApiVersionRoute = ApiVersionRouteImport.update({
   id: '/api/version',
   path: '/api/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGmailWebhookRoute = ApiGmailWebhookRouteImport.update({
+  id: '/api/gmail-webhook',
+  path: '/api/gmail-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGmailCallbackRoute = ApiGmailCallbackRouteImport.update({
+  id: '/api/gmail-callback',
+  path: '/api/gmail-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -105,8 +123,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/gmail-callback': typeof ApiGmailCallbackRoute
+  '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
@@ -120,8 +141,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/gmail-callback': typeof ApiGmailCallbackRoute
+  '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas': typeof FerramentasIndexRoute
@@ -137,8 +161,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/gmail-callback': typeof ApiGmailCallbackRoute
+  '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
@@ -155,8 +182,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/gmail-callback'
+    | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
@@ -170,8 +200,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/gmail-callback'
+    | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas'
@@ -186,8 +219,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/gmail-callback'
+    | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
@@ -203,6 +239,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
   UsuariosRoute: typeof UsuariosRoute
+  ApiGmailCallbackRoute: typeof ApiGmailCallbackRoute
+  ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
   ApiVersionRoute: typeof ApiVersionRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
 }
@@ -293,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FerramentasExcelRouteImport
       parentRoute: typeof FerramentasRoute
     }
+    '/ferramentas/emails': {
+      id: '/ferramentas/emails'
+      path: '/emails'
+      fullPath: '/ferramentas/emails'
+      preLoaderRoute: typeof FerramentasEmailsRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
     '/api/whatsapp-webhook': {
       id: '/api/whatsapp-webhook'
       path: '/api/whatsapp-webhook'
@@ -307,16 +352,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/gmail-webhook': {
+      id: '/api/gmail-webhook'
+      path: '/api/gmail-webhook'
+      fullPath: '/api/gmail-webhook'
+      preLoaderRoute: typeof ApiGmailWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gmail-callback': {
+      id: '/api/gmail-callback'
+      path: '/api/gmail-callback'
+      fullPath: '/api/gmail-callback'
+      preLoaderRoute: typeof ApiGmailCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface FerramentasRouteChildren {
+  FerramentasEmailsRoute: typeof FerramentasEmailsRoute
   FerramentasExcelRoute: typeof FerramentasExcelRoute
   FerramentasWhatsappRoute: typeof FerramentasWhatsappRoute
   FerramentasIndexRoute: typeof FerramentasIndexRoute
 }
 
 const FerramentasRouteChildren: FerramentasRouteChildren = {
+  FerramentasEmailsRoute: FerramentasEmailsRoute,
   FerramentasExcelRoute: FerramentasExcelRoute,
   FerramentasWhatsappRoute: FerramentasWhatsappRoute,
   FerramentasIndexRoute: FerramentasIndexRoute,
@@ -336,9 +397,21 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
   UsuariosRoute: UsuariosRoute,
+  ApiGmailCallbackRoute: ApiGmailCallbackRoute,
+  ApiGmailWebhookRoute: ApiGmailWebhookRoute,
   ApiVersionRoute: ApiVersionRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

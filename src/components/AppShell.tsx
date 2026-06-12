@@ -1,7 +1,7 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Wrench, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, Mail,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
