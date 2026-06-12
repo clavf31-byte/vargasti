@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { startEmailPolling, stopEmailPolling, triggerEmailPolling, isEmailPollingActive } from "@/lib/api/emailPolling";
+import { deleteGmailToken } from "@/lib/api/gmailToken.server";
 
 export function EmailPollingWidget() {
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [lastResult, setLastResult] = useState<{
     processed: number;
     total: number;
@@ -55,6 +57,27 @@ export function EmailPollingWidget() {
     }
   };
 
+  // Deletar token
+  const handleDeleteToken = async () => {
+    if (!confirm("Tem certeza que quer deletar o token? Você precisará autorizar novamente.")) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      await deleteGmailToken();
+      setLastResult(null);
+      alert("✅ Token deletado! Você pode autorizar uma nova conta.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao deletar token");
+      console.error("[EmailPollingWidget] Error deleting token:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto p-4">
       {/* Header */}
@@ -100,18 +123,32 @@ export function EmailPollingWidget() {
         </div>
       )}
 
-      {/* Button */}
-      <button
-        onClick={handleManualCheck}
-        disabled={loading}
-        className={`w-full py-2 px-4 rounded-lg font-medium transition ${
-          loading
-            ? "bg-muted text-muted-foreground cursor-not-allowed"
-            : "bg-brand text-brand-foreground hover:bg-brand/90 active:bg-brand/80"
-        }`}
-      >
-        {loading ? "Verificando..." : "Verificar Agora"}
-      </button>
+      {/* Buttons */}
+      <div className="space-y-2">
+        <button
+          onClick={handleManualCheck}
+          disabled={loading || deleting}
+          className={`w-full py-2 px-4 rounded-lg font-medium transition ${
+            loading || deleting
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-brand text-brand-foreground hover:bg-brand/90 active:bg-brand/80"
+          }`}
+        >
+          {loading ? "Verificando..." : "Verificar Agora"}
+        </button>
+
+        <button
+          onClick={handleDeleteToken}
+          disabled={deleting || loading}
+          className={`w-full py-2 px-4 rounded-lg font-medium transition text-sm ${
+            deleting || loading
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-destructive/10 text-destructive hover:bg-destructive/20 active:bg-destructive/30 border border-destructive/30"
+          }`}
+        >
+          {deleting ? "Deletando..." : "Deletar Token"}
+        </button>
+      </div>
 
       {/* Info */}
       <p className="mt-3 text-xs text-gray-500 text-center">
