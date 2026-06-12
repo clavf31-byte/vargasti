@@ -3,14 +3,12 @@ import { z } from "zod";
 
 // ── Supabase admin client (server-only) ───────────────────────────────────────
 async function getAdminClient() {
-  const { createClient } = await import("@supabase/supabase-js");
-  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
-  return createClient(url, key);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
 }
 
-// ── OAuth2 Client (server-only) ───────────────────────────────────────────────
-async function getGoogleAuthClient() {
+// ── Gmail REST helpers (server-only) ──────────────────────────────────────────
+function getGmailOAuthConfig() {
   const clientId = process.env.GMAIL_CLIENT_ID;
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
   const redirectUri = process.env.GMAIL_REDIRECT_URI ?? "http://localhost:3000/api/gmail-callback";
@@ -19,13 +17,35 @@ async function getGoogleAuthClient() {
     throw new Error("Gmail credentials not configured");
   }
 
-  const { google } = await import("googleapis");
-  return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+  return { clientId, clientSecret, redirectUri };
 }
 
-async function getGoogleApi() {
-  const { google } = await import("googleapis");
-  return google;
+async function exchangeGmailCodeForTokens(code: string) {
+  const { clientId, clientSecret, redirectUri } = getGmailOAuthConfig();
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+
+  const tokens = await response.json() as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    error_description?: string;
+  };
+
+  if (!response.ok || !tokens.access_token) {
+    throw new Error(tokens.error_description ?? "Failed to get Gmail access token");
+  }
+
+  return tokens;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -44,19 +64,39 @@ type FetchEmailsResult =
   | { emails: GmailEmail[]; authorized: true; message?: string }
   | { emails: []; authorized: false; message: string };
 
+type GmailListResponse = {
+  messages?: Array<{ id?: string; threadId?: string }>;
+};
+
+type GmailMessageResponse = {
+  id?: string;
+  threadId?: string;
+  internalDate?: string;
+  labelIds?: string[];
+  payload?: {
+    headers?: Array<{ name?: string | null; value?: string | null }>;
+    body?: { data?: string | null };
+    parts?: Array<{ mimeType?: string | null; body?: { data?: string | null } }>;
+  };
+};
+
 function isGmailAuthorizationError(err: unknown) {
   return err instanceof Error && err.message === "Gmail not authorized";
 }
 
 // ── Get Gmail OAuth URL ───────────────────────────────────────────────────────
 export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
-  const auth = await getGoogleAuthClient();
-  const url = auth.generateAuthUrl({
+  const { clientId, redirectUri } = getGmailOAuthConfig();
+  const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  url.search = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
     access_type: "offline",
-    scope: ["https://www.googleapis.com/auth/gmail.modify"],
+    scope: "https://www.googleapis.com/auth/gmail.modify",
     prompt: "consent",
-  });
-  return { url };
+  }).toString();
+  return { url: url.toString() };
 });
 
 // ── Save Gmail Token ──────────────────────────────────────────────────────────
@@ -68,8 +108,7 @@ const SaveGmailTokenSchema = z.object({
 export const saveGmailToken = createServerFn({ method: "POST" })
   .inputValidator(SaveGmailTokenSchema)
   .handler(async ({ data }) => {
-    const auth = await getGoogleAuthClient();
-    const { tokens } = await auth.getToken(data.code);
+    const tokens = await exchangeGmailCodeForTokens(data.code);
 
     if (!tokens.access_token) {
       throw new Error("Failed to get access token");
@@ -81,7 +120,7 @@ export const saveGmailToken = createServerFn({ method: "POST" })
         user_id: data.userId,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? null,
-        expires_at: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+        expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }
@@ -91,9 +130,34 @@ export const saveGmailToken = createServerFn({ method: "POST" })
     return { ok: true, authorized: true };
   });
 
-// ── Get Gmail Client ──────────────────────────────────────────────────────────
-async function getGmailClient() {
-  const auth = await getGoogleAuthClient();
+// ── Get Gmail Access Token ───────────────────────────────────────────────────
+async function refreshGmailAccessToken(refreshToken: string) {
+  const { clientId, clientSecret } = getGmailOAuthConfig();
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+
+  const tokens = await response.json() as {
+    access_token?: string;
+    expires_in?: number;
+    error_description?: string;
+  };
+
+  if (!response.ok || !tokens.access_token) {
+    throw new Error(tokens.error_description ?? "Failed to refresh Gmail access token");
+  }
+
+  return tokens;
+}
+
+async function getGmailAccessToken() {
   const admin = await getAdminClient();
 
   const { data: tokenData } = await admin
@@ -106,20 +170,47 @@ async function getGmailClient() {
     throw new Error("Gmail not authorized");
   }
 
-  auth.setCredentials({
-    access_token: tokenData.access_token,
-    refresh_token: tokenData.refresh_token,
+  const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at).getTime() : 0;
+  const shouldRefresh = Boolean(tokenData.refresh_token && expiresAt && expiresAt <= Date.now() + 60_000);
+
+  if (!shouldRefresh) return tokenData.access_token;
+
+  const refreshed = await refreshGmailAccessToken(tokenData.refresh_token as string);
+  await admin
+    .from("gmail_tokens")
+    .update({
+      access_token: refreshed.access_token,
+      expires_at: refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", "system");
+
+  return refreshed.access_token;
+}
+
+async function gmailRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const accessToken = await getGmailAccessToken();
+  const response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
+    ...init,
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
   });
 
-  const google = await getGoogleApi();
-  return google.gmail({ version: "v1", auth });
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Gmail API error: ${response.status} ${details}`);
+  }
+
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
 }
 
 async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult> {
-    let gmail: Awaited<ReturnType<typeof getGmailClient>>;
-
     try {
-      gmail = await getGmailClient();
+      await getGmailAccessToken();
     } catch (err) {
       if (isGmailAuthorizationError(err)) {
         return {
@@ -132,49 +223,45 @@ async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult>
       throw err;
     }
 
-    const listRes = await gmail.users.messages.list({
-      userId: "me",
+    const searchParams = new URLSearchParams({
       q: "is:unread",
-      maxResults,
+      maxResults: String(maxResults),
     });
+    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`);
 
-    if (!listRes.data.messages?.length) {
+    if (!listRes.messages?.length) {
       return { emails: [], authorized: true };
     }
 
     const emails: GmailEmail[] = [];
 
-    for (const msg of listRes.data.messages) {
+    for (const msg of listRes.messages) {
       if (!msg.id) continue;
 
-      const emailRes = await gmail.users.messages.get({
-        userId: "me",
-        id: msg.id,
-        format: "full",
-      });
+      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`);
 
-      const headers = emailRes.data.payload?.headers ?? [];
+      const headers = emailRes.payload?.headers ?? [];
       const getHeader = (name: string) => headers.find((h: { name?: string | null; value?: string | null }) => h.name === name)?.value ?? "";
 
       let body = "";
-      if (emailRes.data.payload?.parts) {
-        const part = emailRes.data.payload.parts.find((p: { mimeType?: string | null }) => p.mimeType === "text/plain");
+      if (emailRes.payload?.parts) {
+        const part = emailRes.payload.parts.find((p: { mimeType?: string | null }) => p.mimeType === "text/plain");
         if (part?.body?.data) {
-          body = Buffer.from(part.body.data, "base64").toString("utf-8");
+          body = Buffer.from(part.body.data, "base64url").toString("utf-8");
         }
-      } else if (emailRes.data.payload?.body?.data) {
-        body = Buffer.from(emailRes.data.payload.body.data, "base64").toString("utf-8");
+      } else if (emailRes.payload?.body?.data) {
+        body = Buffer.from(emailRes.payload.body.data, "base64url").toString("utf-8");
       }
 
       emails.push({
         id: msg.id,
-        threadId: msg.threadId ?? "",
+        threadId: emailRes.threadId ?? msg.threadId ?? "",
         from: getHeader("From"),
         to: getHeader("To"),
         subject: getHeader("Subject"),
         body,
-        timestamp: parseInt(emailRes.data.internalDate ?? "0"),
-        labels: emailRes.data.labelIds ?? [],
+        timestamp: parseInt(emailRes.internalDate ?? "0"),
+        labels: emailRes.labelIds ?? [],
       });
     }
 
@@ -192,14 +279,11 @@ const MarkAsReadSchema = z.object({
 });
 
 async function markEmailAsReadInternal(messageId: string) {
-  const gmail = await getGmailClient();
-
-  await gmail.users.messages.modify({
-    userId: "me",
-    id: messageId,
-    requestBody: {
+  await gmailRequest(`/users/me/messages/${messageId}/modify`, {
+    method: "POST",
+    body: JSON.stringify({
       removeLabelIds: ["UNREAD"],
-    },
+    }),
   });
 
   return { ok: true };
