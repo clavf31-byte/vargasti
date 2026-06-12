@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { startEmailPolling, stopEmailPolling, triggerEmailPolling, isEmailPollingActive } from "@/lib/api/emailPolling";
+import { startEmailPolling, stopEmailPolling, triggerEmailPolling } from "@/lib/api/emailPolling";
 
 export function EmailPollingWidget() {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [debugLoading, setDebugLoading] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
   const [debugResult, setDebugResult] = useState<string>("");
+  const [showConfig, setShowConfig] = useState(false);
   const [lastResult, setLastResult] = useState<{
     processed: number;
     total: number;
@@ -16,18 +16,13 @@ export function EmailPollingWidget() {
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  // Inicia polling automático ao montar
   useEffect(() => {
     console.log("[EmailPollingWidget] Starting auto-polling");
-
     startEmailPolling({
-      intervalMs: 5 * 60 * 1000, // 5 minutos
+      intervalMs: 5 * 60 * 1000,
       maxEmailsPerPoll: 5,
     });
-
     setIsRunning(true);
-
-    // Para polling ao desmontar
     return () => {
       console.log("[EmailPollingWidget] Stopping auto-polling");
       stopEmailPolling();
@@ -35,16 +30,12 @@ export function EmailPollingWidget() {
     };
   }, []);
 
-  // Botão manual: força um check agora
   const handleManualCheck = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const result = await triggerEmailPolling(5);
-      if (!result) {
-        throw new Error("Sem resposta do servidor");
-      }
+      if (!result) throw new Error("Sem resposta do servidor");
       setLastResult({
         processed: result.processed ?? 0,
         total: result.total ?? 0,
@@ -59,38 +50,26 @@ export function EmailPollingWidget() {
     }
   };
 
-  // Deletar token
   const handleDeleteToken = async () => {
-    if (!confirm("Tem certeza que quer deletar o token? Você precisará autorizar novamente.")) {
-      return;
-    }
-
+    if (!confirm("Tem certeza que quer deletar o token? Você precisará autorizar novamente.")) return;
     setDeleting(true);
     setError(null);
-
     try {
       const response = await fetch("/api/delete-gmail-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-
       const data = (await response.json()) as { ok: boolean; error?: string };
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error ?? "Erro ao deletar token");
-      }
-
+      if (!response.ok || !data.ok) throw new Error(data.error ?? "Erro ao deletar token");
       setLastResult(null);
       alert("✅ Token deletado! Você pode autorizar uma nova conta.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao deletar token");
-      console.error("[EmailPollingWidget] Error deleting token:", err);
     } finally {
       setDeleting(false);
     }
   };
 
-  // Debug endpoints
   const handleDebug = async (endpoint: string) => {
     setDebugLoading(true);
     try {
@@ -105,24 +84,22 @@ export function EmailPollingWidget() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4">
-      {/* Header */}
+    <div className="w-full space-y-4">
+      {/* Header com Status */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">E-mails</h3>
-        <div className="flex items-center gap-2">
-          {isRunning && (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-              <span className="text-xs text-brand font-medium">Automático</span>
-            </div>
-          )}
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900">Gerenciador de E-mails</h3>
+        {isRunning && (
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+            <span className="text-xs text-brand font-medium">Automático</span>
+          </div>
+        )}
       </div>
 
-      {/* Status */}
+      {/* Status Card */}
       {lastResult && (
-        <div className="mb-4 p-3 bg-surface-2 border border-border rounded-lg">
-          <p className="text-sm text-foreground">
+        <div className="p-4 bg-surface-2 border border-border rounded-lg">
+          <p className="text-sm text-foreground font-semibold mb-3">
             {lastResult.authorized === false ? (
               lastResult.message
             ) : (
@@ -134,7 +111,7 @@ export function EmailPollingWidget() {
           {lastResult.authorized === false && (
             <a
               href="/api/gmail-auth"
-              className="mt-3 inline-flex h-9 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
             >
               Autorizar Gmail
             </a>
@@ -144,17 +121,17 @@ export function EmailPollingWidget() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+        <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
           <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
       {/* Buttons */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={handleManualCheck}
           disabled={loading || deleting}
-          className={`w-full py-2 px-4 rounded-lg font-medium transition ${
+          className={`py-2 px-4 rounded-lg font-medium transition ${
             loading || deleting
               ? "bg-muted text-muted-foreground cursor-not-allowed"
               : "bg-brand text-brand-foreground hover:bg-brand/90 active:bg-brand/80"
@@ -166,70 +143,124 @@ export function EmailPollingWidget() {
         <button
           onClick={handleDeleteToken}
           disabled={deleting || loading}
-          className={`w-full py-2 px-4 rounded-lg font-medium transition text-sm ${
+          className={`py-2 px-4 rounded-lg font-medium transition text-sm ${
             deleting || loading
               ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : "bg-destructive/10 text-destructive hover:bg-destructive/20 active:bg-destructive/30 border border-destructive/30"
+              : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30"
           }`}
         >
           {deleting ? "Deletando..." : "Deletar Token"}
         </button>
       </div>
 
-      {/* Info */}
-      <p className="mt-3 text-xs text-gray-500 text-center">
-        Verifica automaticamente a cada 5 minutos
-      </p>
+      {/* Info Cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3 bg-surface-2 border border-border rounded-lg">
+          <h4 className="font-semibold text-sm mb-1">Automático</h4>
+          <p className="text-xs text-gray-600">Verifica Gmail a cada 5 minutos e cria tickets automaticamente no Helpdesk.</p>
+        </div>
+        <div className="p-3 bg-surface-2 border border-border rounded-lg">
+          <h4 className="font-semibold text-sm mb-1">Manual</h4>
+          <p className="text-xs text-gray-600">Clique "Verificar Agora" para forçar uma sincronização imediata.</p>
+        </div>
+        <div className="p-3 bg-surface-2 border border-border rounded-lg">
+          <h4 className="font-semibold text-sm mb-1">IA Inteligente</h4>
+          <p className="text-xs text-gray-600">Claude analisa cada e-mail para categorizar e priorizar automaticamente.</p>
+        </div>
+        <div className="p-3 bg-surface-2 border border-border rounded-lg">
+          <h4 className="font-semibold text-sm mb-1">Zero Config</h4>
+          <p className="text-xs text-gray-600">Após inicial setup do Gmail OAuth, tudo funciona sem intervenção.</p>
+        </div>
+      </div>
+
+      {/* Config Card */}
+      <details className="p-4 bg-surface-2 border border-border rounded-lg">
+        <summary className="cursor-pointer font-semibold text-sm hover:text-brand">
+          ⚙️ Configurações
+        </summary>
+        <div className="mt-4 space-y-4">
+          {/* Gerenciar Palavras-chave */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">📝 Gerenciar Palavras-chave</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              Categorias atuais: Impressora, Rede, Email, Software, Hardware, VPN, Banco de Dados, Suporte
+            </p>
+            <button className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90">
+              Editar Palavras-chave
+            </button>
+          </div>
+
+          {/* Clientes Permitidos */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">👥 Clientes Permitidos</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              Defina quais domínios/emails podem enviar e criar atendimento
+            </p>
+            <button className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90">
+              Gerenciar Clientes
+            </button>
+          </div>
+
+          {/* Prioridades */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">🎯 Regras de Prioridade</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              Configure palavras-chave e prioridades customizadas
+            </p>
+            <button className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90">
+              Editar Prioridades
+            </button>
+          </div>
+        </div>
+      </details>
 
       {/* Debug Section */}
-      <details className="mt-4 pt-4 border-t border-border">
-        <summary className="cursor-pointer text-xs text-gray-500 font-medium hover:text-gray-700">
+      <details className="p-4 bg-surface-2 border border-border rounded-lg">
+        <summary className="cursor-pointer font-semibold text-sm hover:text-brand">
           🔧 Debug
         </summary>
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={() => handleDebug("debug-gmail-token")}
             disabled={debugLoading}
-            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
           >
-            {debugLoading ? "..." : "Token"}
+            Token
           </button>
           <button
             onClick={() => handleDebug("debug-fetch-emails")}
             disabled={debugLoading}
-            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
           >
-            {debugLoading ? "..." : "Buscar Emails"}
+            Buscar
           </button>
           <button
             onClick={() => handleDebug("debug-process-email")}
             disabled={debugLoading}
-            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
           >
-            {debugLoading ? "..." : "Processar Email"}
+            Processar
           </button>
           <button
             onClick={() => handleDebug("debug-process-pipeline")}
             disabled={debugLoading}
-            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
           >
-            {debugLoading ? "..." : "Pipeline"}
-          </button>
-          <button
-            onClick={() => handleDebug("debug-interpret-email")}
-            disabled={debugLoading}
-            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-          >
-            {debugLoading ? "..." : "Interpretar"}
+            Pipeline
           </button>
 
           {debugResult && (
-            <div className="mt-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs max-h-64 overflow-auto font-mono whitespace-pre-wrap break-words text-gray-700">
+            <div className="col-span-2 mt-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs max-h-48 overflow-auto font-mono whitespace-pre-wrap break-words text-gray-700">
               {debugResult}
             </div>
           )}
         </div>
       </details>
+
+      {/* Info */}
+      <p className="text-xs text-gray-500 text-center">
+        Verifica automaticamente a cada 5 minutos
+      </p>
     </div>
   );
 }
