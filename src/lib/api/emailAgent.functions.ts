@@ -42,7 +42,7 @@ export type GmailEmail = {
 
 // ── Get Gmail OAuth URL ───────────────────────────────────────────────────────
 export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
-  const auth = getGoogleAuthClient();
+  const auth = await getGoogleAuthClient();
   const url = auth.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/gmail.modify"],
@@ -60,14 +60,14 @@ const SaveGmailTokenSchema = z.object({
 export const saveGmailToken = createServerFn({ method: "POST" })
   .inputValidator(SaveGmailTokenSchema)
   .handler(async ({ data }) => {
-    const auth = getGoogleAuthClient();
+    const auth = await getGoogleAuthClient();
     const { tokens } = await auth.getToken(data.code);
 
     if (!tokens.access_token) {
       throw new Error("Failed to get access token");
     }
 
-    const admin = getAdminClient();
+    const admin = await getAdminClient();
     const { error } = await admin.from("gmail_tokens").upsert(
       {
         user_id: data.userId,
@@ -85,8 +85,8 @@ export const saveGmailToken = createServerFn({ method: "POST" })
 
 // ── Get Gmail Client ──────────────────────────────────────────────────────────
 async function getGmailClient() {
-  const auth = getGoogleAuthClient();
-  const admin = getAdminClient();
+  const auth = await getGoogleAuthClient();
+  const admin = await getAdminClient();
 
   const { data: tokenData } = await admin
     .from("gmail_tokens")
@@ -103,6 +103,7 @@ async function getGmailClient() {
     refresh_token: tokenData.refresh_token,
   });
 
+  const google = await getGoogleApi();
   return google.gmail({ version: "v1", auth });
 }
 
