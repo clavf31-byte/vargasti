@@ -4,25 +4,26 @@ export const Route = createFileRoute("/api/gmail-auth")({
   server: {
     handlers: {
       GET: async () => {
-        const { google } = await import("googleapis");
         const clientId = process.env.GMAIL_CLIENT_ID;
-        const clientSecret = process.env.GMAIL_CLIENT_SECRET;
         const redirectUri = process.env.GMAIL_REDIRECT_URI;
 
-        if (!clientId || !clientSecret || !redirectUri) {
+        if (!clientId || !redirectUri) {
           return new Response("Gmail OAuth credentials not configured", { status: 500 });
         }
 
-        const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
-        const authUrl = oauth2Client.generateAuthUrl({
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: "code",
           access_type: "offline",
+          prompt: "consent",
           scope: [
             "https://www.googleapis.com/auth/gmail.readonly",
             "https://www.googleapis.com/auth/gmail.modify",
-          ],
-          prompt: "consent",
+          ].join(" "),
         });
 
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
         return new Response(null, { status: 302, headers: { Location: authUrl } });
       },
     },
