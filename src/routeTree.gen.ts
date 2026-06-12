@@ -26,6 +26,7 @@ import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-we
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
 import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callback'
+import { Route as ApiGmailAuthRouteImport } from './routes/api/gmail-auth'
 
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
@@ -112,6 +113,11 @@ const ApiGmailCallbackRoute = ApiGmailCallbackRouteImport.update({
   path: '/api/gmail-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGmailAuthRoute = ApiGmailAuthRouteImport.update({
+  id: '/api/gmail-auth',
+  path: '/api/gmail-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
+  '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
     | '/api/version'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
     | '/api/version'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
+    | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
     | '/api/version'
@@ -239,6 +251,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
   UsuariosRoute: typeof UsuariosRoute
+  ApiGmailAuthRoute: typeof ApiGmailAuthRoute
   ApiGmailCallbackRoute: typeof ApiGmailCallbackRoute
   ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
   ApiVersionRoute: typeof ApiVersionRoute
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGmailCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/gmail-auth': {
+      id: '/api/gmail-auth'
+      path: '/api/gmail-auth'
+      fullPath: '/api/gmail-auth'
+      preLoaderRoute: typeof ApiGmailAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
   UsuariosRoute: UsuariosRoute,
+  ApiGmailAuthRoute: ApiGmailAuthRoute,
   ApiGmailCallbackRoute: ApiGmailCallbackRoute,
   ApiGmailWebhookRoute: ApiGmailWebhookRoute,
   ApiVersionRoute: ApiVersionRoute,

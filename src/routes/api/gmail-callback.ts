@@ -3,7 +3,12 @@ import { google } from "googleapis";
 import { createClient } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/api/gmail-callback")({
-  beforeLoad: async ({ search }: { search: Record<string, string> }) => {
+  server: {
+    handlers: {
+      GET: async ({ request }: { request: Request }) => {
+        const url = new URL(request.url);
+        const code = url.searchParams.get("code");
+        const error = url.searchParams.get("error");
     const code = search.code;
     const error = search.error;
 
@@ -101,5 +106,7 @@ export const Route = createFileRoute("/api/gmail-callback")({
         }
       );
     }
+      },
+    },
   },
 });
