@@ -1,17 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
-import { google } from "googleapis";
 
-// ── Supabase admin client ─────────────────────────────────────────────────────
-function getAdminClient() {
+// ── Supabase admin client (server-only) ───────────────────────────────────────
+async function getAdminClient() {
+  const { createClient } = await import("@supabase/supabase-js");
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
   return createClient(url, key);
 }
 
-// ── OAuth2 Client ─────────────────────────────────────────────────────────────
-function getGoogleAuthClient() {
+// ── OAuth2 Client (server-only) ───────────────────────────────────────────────
+async function getGoogleAuthClient() {
   const clientId = process.env.GMAIL_CLIENT_ID;
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
   const redirectUri = process.env.GMAIL_REDIRECT_URI ?? "http://localhost:3000/api/gmail-callback";
@@ -20,7 +19,13 @@ function getGoogleAuthClient() {
     throw new Error("Gmail credentials not configured");
   }
 
+  const { google } = await import("googleapis");
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+}
+
+async function getGoogleApi() {
+  const { google } = await import("googleapis");
+  return google;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -37,7 +42,7 @@ export type GmailEmail = {
 
 // ── Get Gmail OAuth URL ───────────────────────────────────────────────────────
 export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
-  const auth = getGoogleAuthClient();
+  const auth = await getGoogleAuthClient();
   const url = auth.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/gmail.modify"],
@@ -55,14 +60,14 @@ const SaveGmailTokenSchema = z.object({
 export const saveGmailToken = createServerFn({ method: "POST" })
   .inputValidator(SaveGmailTokenSchema)
   .handler(async ({ data }) => {
-    const auth = getGoogleAuthClient();
+    const auth = await getGoogleAuthClient();
     const { tokens } = await auth.getToken(data.code);
 
     if (!tokens.access_token) {
       throw new Error("Failed to get access token");
     }
 
-    const admin = getAdminClient();
+    const admin = await getAdminClient();
     const { error } = await admin.from("gmail_tokens").upsert(
       {
         user_id: data.userId,
@@ -80,8 +85,8 @@ export const saveGmailToken = createServerFn({ method: "POST" })
 
 // ── Get Gmail Client ──────────────────────────────────────────────────────────
 async function getGmailClient() {
-  const auth = getGoogleAuthClient();
-  const admin = getAdminClient();
+  const auth = await getGoogleAuthClient();
+  const admin = await getAdminClient();
 
   const { data: tokenData } = await admin
     .from("gmail_tokens")
@@ -98,6 +103,7 @@ async function getGmailClient() {
     refresh_token: tokenData.refresh_token,
   });
 
+  const google = await getGoogleApi();
   return google.gmail({ version: "v1", auth });
 }
 
