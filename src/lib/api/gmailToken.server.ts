@@ -1,12 +1,32 @@
+"use server";
+
+import { json } from "@tanstack/react-router";
+
 export async function deleteGmailToken() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const { error } = await supabaseAdmin
-    .from("gmail_tokens")
-    .delete()
-    .eq("user_id", "system");
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured");
+    }
 
-  if (error) throw error;
+    const response = await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.system`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+    });
 
-  return { ok: true, message: "Token deletado com sucesso" };
+    if (!response.ok) {
+      throw new Error(`Failed to delete token: ${response.statusText}`);
+    }
+
+    return { ok: true, message: "Token deletado com sucesso" };
+  } catch (err) {
+    console.error("[deleteGmailToken] Error:", err);
+    throw err;
+  }
 }
