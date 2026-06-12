@@ -17,6 +17,7 @@ export const Route = createFileRoute("/api/delete-gmail-token")({
             {
               method: "DELETE",
               headers: {
+                apikey: supabaseKey,
                 Authorization: `Bearer ${supabaseKey}`,
                 "Content-Type": "application/json",
               },
