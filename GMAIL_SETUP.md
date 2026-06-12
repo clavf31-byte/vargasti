@@ -5,10 +5,12 @@
 Adicione ao seu `.env.local` ou `.env`:
 
 ```env
-GMAIL_CLIENT_ID=145943032171-6ddn618v660i2915ie6qc45f83s99thm.apps.googleusercontent.com
-GMAIL_CLIENT_SECRET=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
+GMAIL_CLIENT_ID=YOUR_CLIENT_ID_HERE
+GMAIL_CLIENT_SECRET=YOUR_CLIENT_SECRET_HERE
 GMAIL_REDIRECT_URI=http://localhost:3000/api/gmail-callback
 ```
+
+Obter credenciais em: https://console.cloud.google.com/apis/credentials
 
 Para produção, usar:
 ```env
