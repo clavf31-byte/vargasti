@@ -40,6 +40,10 @@ export type GmailEmail = {
   labels: string[];
 };
 
+function isGmailAuthorizationError(err: unknown) {
+  return err instanceof Error && err.message === "Gmail not authorized";
+}
+
 // ── Get Gmail OAuth URL ───────────────────────────────────────────────────────
 export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
   const auth = await getGoogleAuthClient();
@@ -111,7 +115,21 @@ async function getGmailClient() {
 export const fetchNewEmails = createServerFn({ method: "POST" })
   .inputValidator(z.object({ maxResults: z.number().default(10) }))
   .handler(async ({ data }) => {
-    const gmail = await getGmailClient();
+    let gmail: Awaited<ReturnType<typeof getGmailClient>>;
+
+    try {
+      gmail = await getGmailClient();
+    } catch (err) {
+      if (isGmailAuthorizationError(err)) {
+        return {
+          emails: [],
+          authorized: false,
+          message: "Gmail precisa ser autorizado antes de processar e-mails.",
+        };
+      }
+
+      throw err;
+    }
 
     const listRes = await gmail.users.messages.list({
       userId: "me",
@@ -120,7 +138,7 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
     });
 
     if (!listRes.data.messages?.length) {
-      return { emails: [] };
+      return { emails: [], authorized: true };
     }
 
     const emails: GmailEmail[] = [];
@@ -159,7 +177,7 @@ export const fetchNewEmails = createServerFn({ method: "POST" })
       });
     }
 
-    return { emails };
+    return { emails, authorized: true };
   });
 
 // ── Mark Email as Read ────────────────────────────────────────────────────────
@@ -278,9 +296,20 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
       // Fetch unread emails
       const emailsResult = await fetchNewEmails({ data: { maxResults: data.maxEmails } });
 
+      if (emailsResult.authorized === false) {
+        console.log("[email-pipeline] Gmail not authorized");
+        return {
+          ok: false,
+          authorized: false,
+          processed: 0,
+          total: 0,
+          message: emailsResult.message,
+        };
+      }
+
       if (!emailsResult.emails.length) {
         console.log("[email-pipeline] No unread emails");
-        return { ok: true, processed: 0, message: "No unread emails" };
+        return { ok: true, authorized: true, processed: 0, total: 0, message: "No unread emails" };
       }
 
       let processedCount = 0;
@@ -327,11 +356,22 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
 
       return {
         ok: true,
+        authorized: true,
         processed: processedCount,
         total: emailsResult.emails.length,
         message: `Processed ${processedCount}/${emailsResult.emails.length} emails`,
       };
     } catch (err) {
+      if (isGmailAuthorizationError(err)) {
+        return {
+          ok: false,
+          authorized: false,
+          processed: 0,
+          total: 0,
+          message: "Gmail precisa ser autorizado antes de processar e-mails.",
+        };
+      }
+
       console.error("[email-pipeline] Fatal error:", err);
       throw err;
     }
