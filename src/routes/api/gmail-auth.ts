@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/gmail-auth")({
           access_type: "offline",
           scope: "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify",
           prompt: "consent",
-        });
+        }).toString();
 
         return new Response(null, { status: 302, headers: { Location: authUrl.toString() } });
       },
