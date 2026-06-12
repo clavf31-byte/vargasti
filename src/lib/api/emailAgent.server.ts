@@ -79,7 +79,7 @@ export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async (
     access_type: "offline",
     scope: "https://www.googleapis.com/auth/gmail.modify",
     prompt: "consent",
-  });
+  }).toString();
   return { url: url.toString() };
 });
 
@@ -114,9 +114,34 @@ export const saveGmailToken = createServerFn({ method: "POST" })
     return { ok: true, authorized: true };
   });
 
-// ── Get Gmail Client ──────────────────────────────────────────────────────────
-async function getGmailClient() {
-  const auth = await getGoogleAuthClient();
+// ── Get Gmail Access Token ───────────────────────────────────────────────────
+async function refreshGmailAccessToken(refreshToken: string) {
+  const { clientId, clientSecret } = getGmailOAuthConfig();
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+
+  const tokens = await response.json() as {
+    access_token?: string;
+    expires_in?: number;
+    error_description?: string;
+  };
+
+  if (!response.ok || !tokens.access_token) {
+    throw new Error(tokens.error_description ?? "Failed to refresh Gmail access token");
+  }
+
+  return tokens;
+}
+
+async function getGmailAccessToken() {
   const admin = await getAdminClient();
 
   const { data: tokenData } = await admin
@@ -129,13 +154,42 @@ async function getGmailClient() {
     throw new Error("Gmail not authorized");
   }
 
-  auth.setCredentials({
-    access_token: tokenData.access_token,
-    refresh_token: tokenData.refresh_token,
+  const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at).getTime() : 0;
+  const shouldRefresh = Boolean(tokenData.refresh_token && expiresAt && expiresAt <= Date.now() + 60_000);
+
+  if (!shouldRefresh) return tokenData.access_token;
+
+  const refreshed = await refreshGmailAccessToken(tokenData.refresh_token as string);
+  await admin
+    .from("gmail_tokens")
+    .update({
+      access_token: refreshed.access_token,
+      expires_at: refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", "system");
+
+  return refreshed.access_token;
+}
+
+async function gmailRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const accessToken = await getGmailAccessToken();
+  const response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
+    ...init,
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
   });
 
-  const google = await getGoogleApi();
-  return google.gmail({ version: "v1", auth });
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Gmail API error: ${response.status} ${details}`);
+  }
+
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
 }
 
 async function fetchUnreadEmails(maxResults: number): Promise<FetchEmailsResult> {
