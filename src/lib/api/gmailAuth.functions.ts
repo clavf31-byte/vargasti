@@ -32,20 +32,14 @@ export const saveGmailToken = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const googleapis = await import("googleapis");
     const { google } = googleapis;
-    const { createClient } = await import("@supabase/supabase-js");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const clientId = process.env.GMAIL_CLIENT_ID;
     const clientSecret = process.env.GMAIL_CLIENT_SECRET;
     const redirectUri = process.env.GMAIL_REDIRECT_URI;
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!clientId || !clientSecret || !redirectUri) {
       throw new Error("Gmail OAuth credentials not configured");
-    }
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase credentials not configured");
     }
 
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
@@ -55,9 +49,7 @@ export const saveGmailToken = createServerFn({ method: "POST" })
       throw new Error("Failed to get access token");
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { error: dbError } = await supabase.from("gmail_tokens").upsert({
+    const { error: dbError } = await supabaseAdmin.from("gmail_tokens").upsert({
       user_id: "system",
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token || null,
