@@ -7,7 +7,7 @@ import {
   resumeConversation,
   pauseConversation,
   isCallingAI,
-} from "@/lib/api/whatsappAgent.functions";
+} from "@/lib/api/whatsappAgent.server";
 
 // Store last message date per contact to detect first message of day
 const lastMessageDateMap = new Map<string, string>();
