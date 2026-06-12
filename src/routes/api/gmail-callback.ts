@@ -28,20 +28,35 @@ export const Route = createFileRoute("/api/gmail-callback")({
         }
 
         try {
-          const { google } = await import("googleapis");
-          const { createClient } = await import("@supabase/supabase-js");
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
-          const { tokens } = await oauth2Client.getToken(code);
+          const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              code,
+              client_id: clientId,
+              client_secret: clientSecret,
+              redirect_uri: redirectUri,
+              grant_type: "authorization_code",
+            }),
+          });
+          const tokens = await tokenResponse.json() as {
+            access_token?: string;
+            refresh_token?: string;
+            expires_in?: number;
+            error_description?: string;
+          };
 
-          if (!tokens.access_token) throw new Error("Failed to get access token");
+          if (!tokenResponse.ok || !tokens.access_token) {
+            throw new Error(tokens.error_description ?? "Failed to get access token");
+          }
 
-          const supabase = createClient(supabaseUrl, supabaseKey);
-          const { error: dbError } = await supabase.from("gmail_tokens").upsert({
+          const { error: dbError } = await supabaseAdmin.from("gmail_tokens").upsert({
             user_id: "system",
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token || null,
-            expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
+            expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
             updated_at: new Date().toISOString(),
           });
 
