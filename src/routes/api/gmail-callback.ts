@@ -20,9 +20,7 @@ export const Route = createFileRoute("/api/gmail-callback")({
         }
 
         try {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-          const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+          const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -33,24 +31,30 @@ export const Route = createFileRoute("/api/gmail-callback")({
               grant_type: "authorization_code",
             }),
           });
-          const tokens = await tokenResponse.json() as {
-            access_token?: string;
-            refresh_token?: string;
-            expires_in?: number;
-            error_description?: string;
-          };
 
-          if (!tokenResponse.ok || !tokens.access_token) {
-            throw new Error(tokens.error_description ?? "Failed to get access token");
+          if (!tokenRes.ok) {
+            throw new Error(`Token exchange failed: ${await tokenRes.text()}`);
           }
 
-          const { error: dbError } = await supabaseAdmin.from("gmail_tokens").upsert({
-            user_id: "system",
-            access_token: tokens.access_token,
-            refresh_token: tokens.refresh_token || null,
-            expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
-            updated_at: new Date().toISOString(),
-          });
+          const tokens = (await tokenRes.json()) as {
+            access_token: string;
+            refresh_token?: string;
+            expires_in: number;
+          };
+
+          if (!tokens.access_token) throw new Error("Failed to get access token");
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { error: dbError } = await supabaseAdmin.from("gmail_tokens").upsert(
+            {
+              user_id: "system",
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token || null,
+              expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          );
 
           if (dbError) throw dbError;
 
