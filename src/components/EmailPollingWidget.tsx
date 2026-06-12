@@ -4,6 +4,9 @@ import { startEmailPolling, stopEmailPolling, triggerEmailPolling, isEmailPollin
 export function EmailPollingWidget() {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [debugLoading, setDebugLoading] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugResult, setDebugResult] = useState<string>("");
   const [lastResult, setLastResult] = useState<{
     processed: number;
     total: number;
@@ -87,6 +90,20 @@ export function EmailPollingWidget() {
     }
   };
 
+  // Debug endpoints
+  const handleDebug = async (endpoint: string) => {
+    setDebugLoading(true);
+    try {
+      const response = await fetch(`/api/${endpoint}`);
+      const data = await response.json();
+      setDebugResult(JSON.stringify(data, null, 2));
+    } catch (err) {
+      setDebugResult(`Erro: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setDebugLoading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto p-4">
       {/* Header */}
@@ -163,6 +180,56 @@ export function EmailPollingWidget() {
       <p className="mt-3 text-xs text-gray-500 text-center">
         Verifica automaticamente a cada 5 minutos
       </p>
+
+      {/* Debug Section */}
+      <details className="mt-4 pt-4 border-t border-border">
+        <summary className="cursor-pointer text-xs text-gray-500 font-medium hover:text-gray-700">
+          🔧 Debug
+        </summary>
+        <div className="mt-3 space-y-2">
+          <button
+            onClick={() => handleDebug("debug-gmail-token")}
+            disabled={debugLoading}
+            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+          >
+            {debugLoading ? "..." : "Token"}
+          </button>
+          <button
+            onClick={() => handleDebug("debug-fetch-emails")}
+            disabled={debugLoading}
+            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+          >
+            {debugLoading ? "..." : "Buscar Emails"}
+          </button>
+          <button
+            onClick={() => handleDebug("debug-process-email")}
+            disabled={debugLoading}
+            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+          >
+            {debugLoading ? "..." : "Processar Email"}
+          </button>
+          <button
+            onClick={() => handleDebug("debug-process-pipeline")}
+            disabled={debugLoading}
+            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+          >
+            {debugLoading ? "..." : "Pipeline"}
+          </button>
+          <button
+            onClick={() => handleDebug("debug-interpret-email")}
+            disabled={debugLoading}
+            className="w-full py-1 px-3 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+          >
+            {debugLoading ? "..." : "Interpretar"}
+          </button>
+
+          {debugResult && (
+            <div className="mt-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs max-h-64 overflow-auto font-mono whitespace-pre-wrap break-words text-gray-700">
+              {debugResult}
+            </div>
+          )}
+        </div>
+      </details>
     </div>
   );
 }
