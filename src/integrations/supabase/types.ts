@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_pauses: {
+        Row: {
+          created_at: string
+          from_number: string
+          id: string
+          instance_name: string
+          is_group: boolean
+          paused_at: string
+          resume_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_number: string
+          id?: string
+          instance_name: string
+          is_group: boolean
+          paused_at?: string
+          resume_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_number?: string
+          id?: string
+          instance_name?: string
+          is_group?: boolean
+          paused_at?: string
+          resume_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_processing_log: {
+        Row: {
+          created_at: string
+          email_id: string
+          error: string | null
+          id: string
+          status: string
+          ticket_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          error?: string | null
+          id?: string
+          status: string
+          ticket_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          error?: string | null
+          id?: string
+          status?: string
+          ticket_id?: string | null
+        }
+        Relationships: []
+      }
       file_records: {
         Row: {
           created_at: string | null
@@ -44,6 +104,36 @@ export type Database = {
           size_bytes?: number | null
           storage_path?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      gmail_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -152,6 +242,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_config: {
         Row: {
           auto_reply: boolean | null
@@ -244,10 +355,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -374,6 +491,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

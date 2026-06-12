@@ -727,3 +727,112 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
 
     return { ok: true, reply: finalReply, noteCreated };
   });
+
+// ── Conversation pause helpers ────────────────────────────────────────────────
+
+// Phrases meaning "I'm taking over this conversation"
+const TAKEOVER_PATTERNS = [
+  /\bdeixa\s+comigo\b/i,
+  /\bassumo\b/i,
+  /\beu\s+(cuido|resolvo|atendo)\b/i,
+  /\bpode\s+(deixar|parar)\b/i,
+  /\bdesativa\s+(a\s+)?ia\b/i,
+  /\bpausa\s+(a\s+)?ia\b/i,
+];
+
+// Phrases meaning "resolved, IA can resume"
+const RESOLVED_PATTERNS = [
+  /\bresolvido\b/i,
+  /\bfinalizado\b/i,
+  /\bencerrado\b/i,
+  /\bpode\s+(voltar|retomar|continuar)\b/i,
+  /\breativa\s+(a\s+)?ia\b/i,
+  /\bia\s+pode\s+voltar\b/i,
+];
+
+// Phrases that explicitly call the IA back
+const CALLING_AI_PATTERNS = [
+  /\b(ia|vargas|assistente|bot)\b/i,
+  /@ia\b/i,
+  /@vargas\b/i,
+];
+
+export function isTakingOver(message: string): boolean {
+  if (!message) return false;
+  return TAKEOVER_PATTERNS.some((re) => re.test(message));
+}
+
+export function isResolved(message: string): boolean {
+  if (!message) return false;
+  return RESOLVED_PATTERNS.some((re) => re.test(message));
+}
+
+export function isCallingAI(message: string): boolean {
+  if (!message) return false;
+  return CALLING_AI_PATTERNS.some((re) => re.test(message));
+}
+
+const PauseSchema = z.object({
+  userId: z.string(),
+  fromNumber: z.string(),
+  instanceName: z.string(),
+  isGroup: z.boolean().optional().default(false),
+});
+
+const PauseLookupSchema = z.object({
+  userId: z.string(),
+  fromNumber: z.string(),
+  instanceName: z.string(),
+});
+
+export const pauseConversation = createServerFn({ method: "POST" })
+  .inputValidator(PauseSchema)
+  .handler(async ({ data }) => {
+    const admin = getAdminClient();
+    // Clear any prior pause for this conversation, then insert a fresh one
+    await admin
+      .from("conversation_pauses")
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("from_number", data.fromNumber)
+      .eq("instance_name", data.instanceName);
+
+    const { error } = await admin.from("conversation_pauses").insert({
+      user_id: data.userId,
+      from_number: data.fromNumber,
+      instance_name: data.instanceName,
+      is_group: data.isGroup ?? false,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  });
+
+export const resumeConversation = createServerFn({ method: "POST" })
+  .inputValidator(PauseLookupSchema)
+  .handler(async ({ data }) => {
+    const admin = getAdminClient();
+    const { error } = await admin
+      .from("conversation_pauses")
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("from_number", data.fromNumber)
+      .eq("instance_name", data.instanceName);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  });
+
+export const isConversationPaused = createServerFn({ method: "POST" })
+  .inputValidator(PauseLookupSchema)
+  .handler(async ({ data }) => {
+    const admin = getAdminClient();
+    const nowIso = new Date().toISOString();
+    const { data: rows } = await admin
+      .from("conversation_pauses")
+      .select("id, resume_at")
+      .eq("user_id", data.userId)
+      .eq("from_number", data.fromNumber)
+      .eq("instance_name", data.instanceName)
+      .gt("resume_at", nowIso)
+      .limit(1);
+    return { isPaused: Boolean(rows && rows.length > 0) };
+  });
