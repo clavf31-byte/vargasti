@@ -338,39 +338,45 @@ export const markEmailAsRead = createServerFn({ method: "POST" })
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
 export async function interpretEmailWithClaude(email: GmailEmail) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("Anthropic API key not configured");
+  const text = `${email.subject} ${email.body}`.toLowerCase();
 
-  const response = await createAnthropicMessage(apiKey, {
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 500,
-    system: `Você é um agente que analisa e-mails de suporte.
-Classifique o e-mail e extraia informações importantes.
-Responda em JSON com os campos: isRequest (bool), category (string), priority (string), summary (string).`,
-    messages: [
-      {
-        role: "user",
-        content: `Analise este e-mail:
-De: ${email.from}
-Assunto: ${email.subject}
-Conteúdo: ${email.body}`,
-      },
-    ],
-  });
+  // Categorização por palavras-chave
+  const categories: Record<string, string[]> = {
+    "Impressora": ["impressora", "printer", "imprimir", "print", "papel"],
+    "Rede": ["internet", "conexão", "wifi", "rede", "conectar", "ping", "latência"],
+    "Email": ["email", "outlook", "gmail", "enviar", "receber", "anexo"],
+    "Software": ["software", "programa", "aplicativo", "erro", "crash", "travado"],
+    "Hardware": ["hardware", "dispositivo", "mouse", "teclado", "monitor", "pc"],
+    "VPN": ["vpn", "remoto", "acesso remoto", "proxy"],
+    "Banco de Dados": ["banco", "banco de dados", "database", "sql", "backup"],
+    "Suporte": ["help", "suporte", "ajuda", "problema", "não funciona", "dúvida"],
+  };
 
-  const content = response.content[0];
-  if (content.type !== "text" || typeof content.text !== "string") throw new Error("Unexpected response type");
-
-  try {
-    return JSON.parse(content.text);
-  } catch {
-    return {
-      isRequest: false,
-      category: "unknown",
-      priority: "media",
-      summary: email.subject,
-    };
+  let category = "Suporte";
+  for (const [cat, keywords] of Object.entries(categories)) {
+    if (keywords.some((kw) => text.includes(kw))) {
+      category = cat;
+      break;
+    }
   }
+
+  // Detectar prioridade
+  const urgentKeywords = ["urgente", "urgency", "asap", "crítico", "crítica", "parado", "offline"];
+  const highKeywords = ["problema", "erro", "não funciona", "quebrado", "travado"];
+  const lowKeywords = ["dúvida", "informação", "pergunta", "como"];
+
+  let priority = "media";
+  if (urgentKeywords.some((kw) => text.includes(kw))) priority = "alta";
+  else if (highKeywords.some((kw) => text.includes(kw))) priority = "alta";
+  else if (lowKeywords.some((kw) => text.includes(kw))) priority = "baixa";
+
+  // Sempre considera como request
+  return {
+    isRequest: true,
+    category,
+    priority,
+    summary: email.subject || "Email recebido",
+  };
 }
 
 // ── Send to Helpdesk Edge Function ────────────────────────────────────────────
