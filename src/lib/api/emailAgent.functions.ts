@@ -167,7 +167,7 @@ async function getGmailAccessToken() {
   }
 
   const response = await fetch(
-    `${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.system&select=access_token,refresh_token,expires_at`,
+    `${supabaseUrl}/rest/v1/gmail_tokens?select=access_token,refresh_token,expires_at&user_id=eq.system`,
     {
       headers: {
         apikey: supabaseKey,
