@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import { startEmailPolling, stopEmailPolling, triggerEmailPolling } from "@/lib/api/emailPolling";
+import { useEmailConfig } from "@/hooks/useEmailConfig";
+import {
+  ConfigCategoriesModal,
+  ConfigWhitelistModal,
+  ConfigPrioritiesModal,
+} from "./EmailConfigModals";
 
 export function EmailPollingWidget() {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [debugLoading, setDebugLoading] = useState(false);
   const [debugResult, setDebugResult] = useState<string>("");
-  const [showConfig, setShowConfig] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showWhitelistModal, setShowWhitelistModal] = useState(false);
+  const [showPrioritiesModal, setShowPrioritiesModal] = useState(false);
   const [lastResult, setLastResult] = useState<{
     processed: number;
     total: number;
@@ -15,6 +23,9 @@ export function EmailPollingWidget() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+
+  const { categories, whitelist, priorities, loaded, saveCategories, saveWhitelist, savePriorities } =
+    useEmailConfig();
 
   useEffect(() => {
     console.log("[EmailPollingWidget] Starting auto-polling");
@@ -183,9 +194,12 @@ export function EmailPollingWidget() {
           <div>
             <h4 className="font-semibold text-sm mb-2">📝 Gerenciar Palavras-chave</h4>
             <p className="text-xs text-gray-600 mb-2">
-              Categorias atuais: Impressora, Rede, Email, Software, Hardware, VPN, Banco de Dados, Suporte
+              {loaded ? `${categories.length} categorias configuradas` : "Carregando..."}
             </p>
-            <button className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90">
+            <button
+              onClick={() => setShowCategoriesModal(true)}
+              className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
+            >
               Editar Palavras-chave
             </button>
           </div>
@@ -194,9 +208,12 @@ export function EmailPollingWidget() {
           <div>
             <h4 className="font-semibold text-sm mb-2">👥 Clientes Permitidos</h4>
             <p className="text-xs text-gray-600 mb-2">
-              Defina quais domínios/emails podem enviar e criar atendimento
+              {loaded ? `${whitelist.length} clientes na whitelist` : "Carregando..."}
             </p>
-            <button className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90">
+            <button
+              onClick={() => setShowWhitelistModal(true)}
+              className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
+            >
               Gerenciar Clientes
             </button>
           </div>
@@ -205,9 +222,12 @@ export function EmailPollingWidget() {
           <div>
             <h4 className="font-semibold text-sm mb-2">🎯 Regras de Prioridade</h4>
             <p className="text-xs text-gray-600 mb-2">
-              Configure palavras-chave e prioridades customizadas
+              {loaded ? `${priorities.length} regras de prioridade` : "Carregando..."}
             </p>
-            <button className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90">
+            <button
+              onClick={() => setShowPrioritiesModal(true)}
+              className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
+            >
               Editar Prioridades
             </button>
           </div>
@@ -261,6 +281,31 @@ export function EmailPollingWidget() {
       <p className="text-xs text-gray-500 text-center">
         Verifica automaticamente a cada 5 minutos
       </p>
+
+      {/* Modals */}
+      {showCategoriesModal && (
+        <ConfigCategoriesModal
+          categories={categories}
+          onSave={saveCategories}
+          onClose={() => setShowCategoriesModal(false)}
+        />
+      )}
+
+      {showWhitelistModal && (
+        <ConfigWhitelistModal
+          whitelist={whitelist}
+          onSave={saveWhitelist}
+          onClose={() => setShowWhitelistModal(false)}
+        />
+      )}
+
+      {showPrioritiesModal && (
+        <ConfigPrioritiesModal
+          priorities={priorities}
+          onSave={savePriorities}
+          onClose={() => setShowPrioritiesModal(false)}
+        />
+      )}
     </div>
   );
 }
