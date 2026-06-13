@@ -361,7 +361,7 @@ const MarkAsReadSchema = z.object({
   messageId: z.string(),
 });
 
-async function markEmailAsReadInternal(messageId: string, userId: string = "system") {
+export async function markEmailAsReadInternal(messageId: string, userId: string = "system") {
   await gmailRequest(`/users/me/messages/${messageId}/modify`, {
     method: "POST",
     body: JSON.stringify({
