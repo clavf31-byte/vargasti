@@ -166,26 +166,6 @@ export function EmailPollingWidget() {
         </button>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 bg-surface-2 border border-border rounded-lg">
-          <h4 className="font-semibold text-sm mb-1">Automático</h4>
-          <p className="text-xs text-gray-600">Verifica Gmail a cada 5 minutos e cria tickets automaticamente no Helpdesk.</p>
-        </div>
-        <div className="p-3 bg-surface-2 border border-border rounded-lg">
-          <h4 className="font-semibold text-sm mb-1">Manual</h4>
-          <p className="text-xs text-gray-600">Clique "Verificar Agora" para forçar uma sincronização imediata.</p>
-        </div>
-        <div className="p-3 bg-surface-2 border border-border rounded-lg">
-          <h4 className="font-semibold text-sm mb-1">IA Inteligente</h4>
-          <p className="text-xs text-gray-600">Claude analisa cada e-mail para categorizar e priorizar automaticamente.</p>
-        </div>
-        <div className="p-3 bg-surface-2 border border-border rounded-lg">
-          <h4 className="font-semibold text-sm mb-1">Zero Config</h4>
-          <p className="text-xs text-gray-600">Após inicial setup do Gmail OAuth, tudo funciona sem intervenção.</p>
-        </div>
-      </div>
-
       {/* Config Card */}
       <details className="p-4 bg-surface-2 border border-border rounded-lg">
         <summary className="cursor-pointer font-semibold text-sm hover:text-brand">
