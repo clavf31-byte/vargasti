@@ -165,6 +165,31 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* ATALHOS RÁPIDOS */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Plus className="size-4 text-select" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atalhos Rápidos</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {actions.map(({ to, icon: Icon, label, desc, iconClass }) => (
+              <Link
+                key={to}
+                to={to}
+                className="card-selectable hover:card-selectable-hover p-4 flex flex-col items-start gap-3"
+              >
+                <div className={`size-10 rounded-lg border ${iconClass} grid place-items-center`}>
+                  <Icon className="size-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* VISÃO DE HOJE + SYSTEM INFO */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2">
@@ -199,57 +224,29 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* ATALHOS RÁPIDOS + ATIVIDADE RECENTE */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* ATALHOS */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Plus className="size-4 text-select" />
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atalhos Rápidos</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {actions.map(({ to, icon: Icon, label, desc, iconClass }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="card-selectable hover:card-selectable-hover p-4 flex flex-col items-start gap-3"
-                >
-                  <div className={`size-10 rounded-lg border ${iconClass} grid place-items-center`}>
-                    <Icon className="size-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+        {/* ATIVIDADE RECENTE */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Clock className="size-4 text-select" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atividade Recente</p>
           </div>
-
-          {/* ATIVIDADE RECENTE */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-2">
-              <Clock className="size-4 text-select" />
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atividade Recente</p>
-            </div>
-            <div className="space-y-2.5">
-              {activity.length === 0 ? (
-                <div className="card-graphite border-dashed p-8 text-center">
-                  <p className="text-sm text-muted-foreground">Nenhuma atividade ainda</p>
-                </div>
-              ) : (
-                activity.map((item) => (
-                  <ActivityCard
-                    key={item.id}
-                    type={item.type}
-                    title={item.label}
-                    description={`Atualizado em ${new Date(item.time).toLocaleDateString("pt-BR")}`}
-                    date={new Date(item.time).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
-                    timeAgo="há pouco"
-                  />
-                ))
-              )}
-            </div>
+          <div className="space-y-2.5">
+            {activity.length === 0 ? (
+              <div className="card-graphite border-dashed p-8 text-center">
+                <p className="text-sm text-muted-foreground">Nenhuma atividade ainda</p>
+              </div>
+            ) : (
+              activity.map((item) => (
+                <ActivityCard
+                  key={item.id}
+                  type={item.type}
+                  title={item.label}
+                  description={`Atualizado em ${new Date(item.time).toLocaleDateString("pt-BR")}`}
+                  date={new Date(item.time).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                  timeAgo="há pouco"
+                />
+              ))
+            )}
           </div>
         </div>
       </div>
