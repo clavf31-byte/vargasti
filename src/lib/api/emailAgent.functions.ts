@@ -493,7 +493,7 @@ const SendToHelpdeskSchema = z.object({
 
 type HelpdeskPayload = z.infer<typeof SendToHelpdeskSchema>;
 
-async function sendToHelpdeskInternal(data: HelpdeskPayload) {
+export async function sendToHelpdeskInternal(data: HelpdeskPayload) {
   const helpdeskUrl = process.env.HELPDESK_EMAIL_INTAKE_URL;
   const helpdeskApiKey = process.env.HELPDESK_EMAIL_INTAKE_API_KEY;
 
