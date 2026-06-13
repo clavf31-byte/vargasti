@@ -1,7 +1,18 @@
 import { useState } from "react";
+import { X, Plus, Trash2 } from "lucide-react";
 import type { EmailCategory, EmailWhitelist, EmailPriority, EmailBlacklist } from "@/hooks/useEmailConfig";
 
-// Modal Categorias
+const ModalOverlay = ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div onClick={(e) => e.stopPropagation()} className="bg-gradient-to-br from-surface to-surface-2 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl border border-border">
+      {children}
+    </div>
+  </div>
+);
+
+// ============================================
+// MODAL CATEGORIAS
+// ============================================
 export function ConfigCategoriesModal({
   categories,
   onSave,
@@ -34,83 +45,86 @@ export function ConfigCategoriesModal({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6">
-        <h2 className="text-xl font-bold mb-4">Gerenciar Categorias</h2>
+  const colors = ["bg-blue-500/20 text-blue-600 border-blue-200", "bg-teal-500/20 text-teal-600 border-teal-200", "bg-cyan-500/20 text-cyan-600 border-cyan-200"];
 
-        <div className="space-y-4">
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">📝 Categorias de E-mail</h2>
+            <p className="text-sm text-muted-foreground mt-1">Organize e-mails por tipo automaticamente</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-surface rounded-lg transition">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {localCategories.map((cat, idx) => (
-            <div key={idx} className="border rounded p-3">
-              <h3 className="font-semibold mb-2">{cat.name}</h3>
-              <div className="flex flex-wrap gap-2 mb-2">
+            <div key={idx} className="bg-surface border border-border rounded-xl p-4 hover:border-brand/50 transition">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-3 h-3 bg-brand rounded-full"></div>
+                <h3 className="font-semibold text-foreground">{cat.name}</h3>
+                <span className="ml-auto text-xs bg-brand/10 text-brand px-2 py-1 rounded">{cat.keywords.length} palavras</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4">
                 {cat.keywords.map((kw, kidx) => (
-                  <span
-                    key={kidx}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center gap-1"
-                  >
+                  <div key={kidx} className={`${colors[kidx % 3]} border px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2`}>
                     {kw}
-                    <button
-                      onClick={() => removeKeyword(idx, kidx)}
-                      className="text-red-600 hover:text-red-800 font-bold"
-                    >
-                      ×
+                    <button onClick={() => removeKeyword(idx, kidx)} className="hover:opacity-70 transition">
+                      <X className="w-3 h-3" />
                     </button>
-                  </span>
+                  </div>
                 ))}
               </div>
 
               {editingIndex === idx ? (
                 <div className="flex gap-2">
                   <input
+                    autoFocus
                     type="text"
-                    placeholder="Nova palavra-chave"
+                    placeholder="Digite a nova palavra-chave..."
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
-                    className="flex-1 px-2 py-1 border rounded text-sm"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") addKeyword(idx);
+                    }}
+                    className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
-                  <button
-                    onClick={() => addKeyword(idx)}
-                    className="px-2 py-1 bg-green-500 text-white rounded text-sm"
-                  >
+                  <button onClick={() => addKeyword(idx)} className="px-4 py-2 bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition text-sm font-medium">
                     Adicionar
                   </button>
-                  <button
-                    onClick={() => setEditingIndex(null)}
-                    className="px-2 py-1 bg-gray-300 rounded text-sm"
-                  >
+                  <button onClick={() => setEditingIndex(null)} className="px-4 py-2 bg-surface-2 rounded-lg hover:bg-surface-3 transition text-sm font-medium">
                     Fechar
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setEditingIndex(idx)}
-                  className="text-sm px-2 py-1 bg-blue-500 text-white rounded"
-                >
-                  + Adicionar Palavra
+                <button onClick={() => setEditingIndex(idx)} className="w-full py-2 border border-dashed border-brand/30 rounded-lg hover:bg-brand/5 transition text-sm font-medium text-brand flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" /> Adicionar Palavra-chave
                 </button>
               )}
             </div>
           ))}
         </div>
 
-        <div className="flex gap-2 mt-6">
-          <button
-            onClick={handleSave}
-            className="flex-1 py-2 bg-green-600 text-white rounded font-semibold"
-          >
-            Salvar
+        <div className="flex gap-3 p-6 border-t border-border bg-surface-2">
+          <button onClick={handleSave} className="flex-1 py-3 bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition font-semibold">
+            Salvar Categorias
           </button>
-          <button onClick={onClose} className="flex-1 py-2 bg-gray-300 rounded font-semibold">
+          <button onClick={onClose} className="flex-1 py-3 bg-surface border border-border rounded-lg hover:bg-surface-2 transition font-semibold">
             Cancelar
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
 
-// Modal Clientes Permitidos
+// ============================================
+// MODAL WHITELIST
+// ============================================
 export function ConfigWhitelistModal({
   whitelist,
   onSave,
@@ -146,69 +160,76 @@ export function ConfigWhitelistModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6">
-        <h2 className="text-xl font-bold mb-4">Clientes Permitidos</h2>
-
-        <div className="space-y-2 mb-4">
-          {localWhitelist.map((entry) => (
-            <div key={entry.id} className="flex justify-between items-center border p-2 rounded">
-              <span className="text-sm">
-                {entry.email || `@${entry.domain}`}
-              </span>
-              <button
-                onClick={() => removeEntry(entry.id)}
-                className="text-red-600 hover:text-red-800 font-bold"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+    <ModalOverlay onClose={onClose}>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">👥 Clientes Permitidos</h2>
+            <p className="text-sm text-muted-foreground mt-1">Autorize e-mails automaticamente por email ou domínio</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-surface rounded-lg transition">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="border-t pt-4">
-          <h3 className="font-semibold mb-2">Adicionar Cliente</h3>
-          <div className="space-y-2">
-            <input
-              type="email"
-              placeholder="Email específico (opcional)"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              className="w-full px-2 py-1 border rounded text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Domínio (exemplo: company.com)"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-              className="w-full px-2 py-1 border rounded text-sm"
-            />
-            <button
-              onClick={addEntry}
-              className="w-full py-1 bg-green-500 text-white rounded text-sm"
-            >
-              Adicionar
+        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+          {localWhitelist.length > 0 ? (
+            localWhitelist.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between bg-surface border border-border rounded-lg p-4 hover:border-info/50 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-info/10 rounded-lg flex items-center justify-center">
+                    <span className="text-sm font-semibold text-info">✓</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{entry.email || `@${entry.domain}`}</p>
+                    <p className="text-xs text-muted-foreground">{entry.email ? "Email específico" : "Domínio"}</p>
+                  </div>
+                </div>
+                <button onClick={() => removeEntry(entry.id)} className="p-2 hover:bg-destructive/10 rounded-lg transition text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Nenhum cliente permitido ainda</p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-border p-6 bg-surface-2">
+          <h3 className="font-semibold text-foreground mb-4">Adicionar Novo Cliente</h3>
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Específico (opcional)</label>
+              <input type="email" placeholder="exemplo@empresa.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="w-full px-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info/50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Domínio (opcional)</label>
+              <input type="text" placeholder="empresa.com" value={newDomain} onChange={(e) => setNewDomain(e.target.value)} className="w-full px-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info/50" />
+            </div>
+            <button onClick={addEntry} className="w-full py-2 bg-info text-info-foreground rounded-lg hover:bg-info/90 transition font-medium flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" /> Adicionar Cliente
             </button>
           </div>
         </div>
 
-        <div className="flex gap-2 mt-6">
-          <button
-            onClick={handleSave}
-            className="flex-1 py-2 bg-green-600 text-white rounded font-semibold"
-          >
-            Salvar
+        <div className="flex gap-3 p-6 border-t border-border">
+          <button onClick={handleSave} className="flex-1 py-3 bg-info text-info-foreground rounded-lg hover:bg-info/90 transition font-semibold">
+            Salvar Whitelist
           </button>
-          <button onClick={onClose} className="flex-1 py-2 bg-gray-300 rounded font-semibold">
+          <button onClick={onClose} className="flex-1 py-3 bg-surface border border-border rounded-lg hover:bg-surface-2 transition font-semibold">
             Cancelar
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
 
-// Modal Prioridades
+// ============================================
+// MODAL PRIORIDADES
+// ============================================
 export function ConfigPrioritiesModal({
   priorities,
   onSave,
@@ -219,24 +240,23 @@ export function ConfigPrioritiesModal({
   onClose: () => void;
 }) {
   const [localPriorities, setLocalPriorities] = useState(priorities);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [newKeyword, setNewKeyword] = useState("");
 
   const updatePriority = (id: string, field: string, value: string) => {
     const updated = localPriorities.map((p) => (p.id === id ? { ...p, [field]: value } : p));
     setLocalPriorities(updated);
   };
 
-  const addKeyword = (id: string, keyword: string) => {
-    if (!keyword.trim()) return;
-    const updated = localPriorities.map((p) =>
-      p.id === id ? { ...p, keywords: [...p.keywords, keyword.toLowerCase()] } : p
-    );
+  const addKeyword = (id: string) => {
+    if (!newKeyword.trim()) return;
+    const updated = localPriorities.map((p) => (p.id === id ? { ...p, keywords: [...p.keywords, newKeyword.toLowerCase()] } : p));
     setLocalPriorities(updated);
+    setNewKeyword("");
   };
 
   const removeKeyword = (id: string, keyword: string) => {
-    const updated = localPriorities.map((p) =>
-      p.id === id ? { ...p, keywords: p.keywords.filter((k) => k !== keyword) } : p
-    );
+    const updated = localPriorities.map((p) => (p.id === id ? { ...p, keywords: p.keywords.filter((k) => k !== keyword) } : p));
     setLocalPriorities(updated);
   };
 
@@ -245,75 +265,102 @@ export function ConfigPrioritiesModal({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6">
-        <h2 className="text-xl font-bold mb-4">Regras de Prioridade</h2>
+  const priorityColors = {
+    alta: "bg-red-500/20 border-red-200 text-red-700",
+    media: "bg-yellow-500/20 border-yellow-200 text-yellow-700",
+    baixa: "bg-blue-500/20 border-blue-200 text-blue-700",
+  };
 
-        <div className="space-y-3">
+  const priorityBadges = {
+    alta: "bg-red-100 text-red-800",
+    media: "bg-yellow-100 text-yellow-800",
+    baixa: "bg-blue-100 text-blue-800",
+  };
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">🎯 Regras de Prioridade</h2>
+            <p className="text-sm text-muted-foreground mt-1">Configure palavras-chave que definem urgência</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-surface rounded-lg transition">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {localPriorities.map((p) => (
-            <div key={p.id} className="border rounded p-3">
-              <div className="flex gap-2 mb-2">
+            <div key={p.id} className={`border rounded-xl p-4 ${priorityColors[p.priority]}`}>
+              <div className="flex items-center justify-between mb-3">
                 <select
                   value={p.priority}
                   onChange={(e) => updatePriority(p.id, "priority", e.target.value)}
-                  className="px-2 py-1 border rounded text-sm font-semibold"
+                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm ${priorityBadges[p.priority]} border-0 cursor-pointer`}
                 >
-                  <option value="alta">Alta</option>
-                  <option value="media">Média</option>
-                  <option value="baixa">Baixa</option>
+                  <option value="alta">🔴 Alta</option>
+                  <option value="media">🟡 Média</option>
+                  <option value="baixa">🔵 Baixa</option>
                 </select>
               </div>
 
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {p.keywords.map((kw) => (
-                  <span
-                    key={kw}
-                    className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs flex items-center gap-1"
-                  >
+                  <div key={kw} className={`${priorityBadges[p.priority]} px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2`}>
                     {kw}
-                    <button
-                      onClick={() => removeKeyword(p.id, kw)}
-                      className="text-red-600 font-bold"
-                    >
-                      ×
+                    <button onClick={() => removeKeyword(p.id, kw)} className="hover:opacity-70">
+                      <X className="w-3 h-3" />
                     </button>
-                  </span>
+                  </div>
                 ))}
               </div>
 
-              <input
-                type="text"
-                placeholder="Nova palavra-chave"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    addKeyword(p.id, e.currentTarget.value);
-                    e.currentTarget.value = "";
-                  }
-                }}
-                className="w-full px-2 py-1 border rounded text-sm"
-              />
+              {editingId === p.id ? (
+                <div className="flex gap-2">
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Digite a palavra-chave..."
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") addKeyword(p.id);
+                    }}
+                    className="flex-1 px-3 py-2 border border-current border-opacity-30 rounded-lg text-sm focus:outline-none"
+                  />
+                  <button onClick={() => addKeyword(p.id)} className="px-3 py-2 bg-current bg-opacity-20 rounded-lg hover:bg-opacity-30 transition font-medium text-sm">
+                    Adicionar
+                  </button>
+                  <button onClick={() => setEditingId(null)} className="px-3 py-2 bg-current bg-opacity-10 rounded-lg hover:bg-opacity-20 transition font-medium text-sm">
+                    Fechar
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setEditingId(p.id)} className="w-full py-2 border border-dashed border-current border-opacity-40 rounded-lg hover:bg-current hover:bg-opacity-10 transition font-medium text-sm flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" /> Adicionar Palavra-chave
+                </button>
+              )}
             </div>
           ))}
         </div>
 
-        <div className="flex gap-2 mt-6">
-          <button
-            onClick={handleSave}
-            className="flex-1 py-2 bg-green-600 text-white rounded font-semibold"
-          >
-            Salvar
+        <div className="flex gap-3 p-6 border-t border-border bg-surface-2">
+          <button onClick={handleSave} className="flex-1 py-3 bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition font-semibold">
+            Salvar Prioridades
           </button>
-          <button onClick={onClose} className="flex-1 py-2 bg-gray-300 rounded font-semibold">
+          <button onClick={onClose} className="flex-1 py-3 bg-surface border border-border rounded-lg hover:bg-surface-2 transition font-semibold">
             Cancelar
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
 
-// Modal Blacklist
+// ============================================
+// MODAL BLACKLIST
+// ============================================
 export function ConfigBlacklistModal({
   blacklist,
   onSave,
@@ -351,87 +398,95 @@ export function ConfigBlacklistModal({
     onClose();
   };
 
+  const reasonIcons = {
+    spam: "🚨",
+    fornecedor: "🏢",
+    "dominio-bloqueado": "🔒",
+    outro: "❓",
+  };
+
   const reasonLabels = {
-    spam: "🚨 SPAM",
-    fornecedor: "🏢 Fornecedor",
-    "dominio-bloqueado": "🔒 Domínio Bloqueado",
-    outro: "❓ Outro",
+    spam: "SPAM",
+    fornecedor: "Fornecedor",
+    "dominio-bloqueado": "Domínio Bloqueado",
+    outro: "Outro",
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6">
-        <h2 className="text-xl font-bold mb-4">Gerenciar Blacklist</h2>
-
-        <div className="space-y-2 mb-4">
-          {localBlacklist.map((entry) => (
-            <div key={entry.id} className="flex justify-between items-center border p-2 rounded">
-              <div className="text-sm flex-1">
-                <div className="font-medium">
-                  {entry.email || `@${entry.domain}`}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {reasonLabels[entry.reason]}
-                </div>
-              </div>
-              <button
-                onClick={() => removeEntry(entry.id)}
-                className="text-red-600 hover:text-red-800 font-bold"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+    <ModalOverlay onClose={onClose}>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-6 border-b border-destructive/30 bg-destructive/5">
+          <div>
+            <h2 className="text-2xl font-bold text-destructive">🚫 Gerenciar Blacklist</h2>
+            <p className="text-sm text-muted-foreground mt-1">Bloqueie e-mails de spam e fornecedores indesejados</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-destructive/10 rounded-lg transition">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="border-t pt-4">
-          <h3 className="font-semibold mb-2">Adicionar à Blacklist</h3>
-          <div className="space-y-2">
-            <input
-              type="email"
-              placeholder="Email específico (opcional)"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              className="w-full px-2 py-1 border rounded text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Domínio (exemplo: spam.com)"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-              className="w-full px-2 py-1 border rounded text-sm"
-            />
-            <select
-              value={newReason}
-              onChange={(e) => setNewReason(e.target.value as any)}
-              className="w-full px-2 py-1 border rounded text-sm"
-            >
-              <option value="spam">🚨 SPAM</option>
-              <option value="fornecedor">🏢 Fornecedor</option>
-              <option value="dominio-bloqueado">🔒 Domínio Bloqueado</option>
-              <option value="outro">❓ Outro</option>
-            </select>
-            <button
-              onClick={addEntry}
-              className="w-full py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-            >
-              Adicionar à Blacklist
+        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+          {localBlacklist.length > 0 ? (
+            localBlacklist.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between bg-destructive/5 border border-destructive/30 rounded-lg p-4 hover:border-destructive/60 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-destructive/20 rounded-lg flex items-center justify-center text-lg">{reasonIcons[entry.reason]}</div>
+                  <div>
+                    <p className="font-medium text-foreground">{entry.email || `@${entry.domain}`}</p>
+                    <p className="text-xs text-muted-foreground">{reasonLabels[entry.reason]}</p>
+                  </div>
+                </div>
+                <button onClick={() => removeEntry(entry.id)} className="p-2 hover:bg-destructive/20 rounded-lg transition text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Nenhuma entrada na blacklist</p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-destructive/30 p-6 bg-destructive/5">
+          <h3 className="font-semibold text-foreground mb-4">Adicionar à Blacklist</h3>
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Específico (opcional)</label>
+              <input type="email" placeholder="spam@example.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="w-full px-4 py-2 border border-destructive/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-destructive/50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Domínio (opcional)</label>
+              <input type="text" placeholder="spam.com" value={newDomain} onChange={(e) => setNewDomain(e.target.value)} className="w-full px-4 py-2 border border-destructive/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-destructive/50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Motivo do Bloqueio</label>
+              <select
+                value={newReason}
+                onChange={(e) => setNewReason(e.target.value as any)}
+                className="w-full px-4 py-2 border border-destructive/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-destructive/50"
+              >
+                <option value="spam">🚨 SPAM</option>
+                <option value="fornecedor">🏢 Fornecedor</option>
+                <option value="dominio-bloqueado">🔒 Domínio Bloqueado</option>
+                <option value="outro">❓ Outro</option>
+              </select>
+            </div>
+            <button onClick={addEntry} className="w-full py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition font-medium flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" /> Adicionar à Blacklist
             </button>
           </div>
         </div>
 
-        <div className="flex gap-2 mt-6">
-          <button
-            onClick={handleSave}
-            className="flex-1 py-2 bg-green-600 text-white rounded font-semibold"
-          >
-            Salvar
+        <div className="flex gap-3 p-6 border-t border-destructive/30">
+          <button onClick={handleSave} className="flex-1 py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition font-semibold">
+            Salvar Blacklist
           </button>
-          <button onClick={onClose} className="flex-1 py-2 bg-gray-300 rounded font-semibold">
+          <button onClick={onClose} className="flex-1 py-3 bg-surface border border-border rounded-lg hover:bg-surface-2 transition font-semibold">
             Cancelar
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
