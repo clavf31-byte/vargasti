@@ -44,13 +44,11 @@ export const Route = createFileRoute("/api/debug-interpret-email")({
         } catch (err) {
           console.error("[debug-interpret-email] Error:", err);
           return new Response(
-            JSON.stringify({
-              error: err instanceof Error ? err.message : "Unknown error",
-              stack: err instanceof Error ? err.stack : undefined,
-            }),
+            JSON.stringify({ error: "Internal server error" }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
+
       },
     },
   },
