@@ -33,7 +33,8 @@ function EmailsPage() {
           </div>
 
           {/* Info cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mt-6">Funcionamento do Agente:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
             <div className="bg-brand/5 border border-brand/20 rounded-lg p-4">
               <h3 className="text-sm font-semibold text-foreground mb-1">Automático</h3>
               <p className="text-xs text-muted-foreground">
