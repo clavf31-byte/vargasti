@@ -352,6 +352,7 @@ async function fetchUnreadEmails(maxResults: number, userId: string = "system"):
 
 // ── Fetch New Emails ──────────────────────────────────────────────────────────
 export const fetchNewEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ maxResults: z.number().default(10) }))
   .handler(async ({ data }) => fetchUnreadEmails(data.maxResults));
 
@@ -372,8 +373,10 @@ async function markEmailAsReadInternal(messageId: string, userId: string = "syst
 }
 
 export const markEmailAsRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(MarkAsReadSchema)
   .handler(async ({ data }) => markEmailAsReadInternal(data.messageId));
+
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
 async function getEmailConfig() {
