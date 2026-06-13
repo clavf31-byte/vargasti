@@ -526,16 +526,21 @@ async function sendToHelpdeskInternal(data: HelpdeskPayload) {
 }
 
 export const sendToHelpdeskApi = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(SendToHelpdeskSchema)
   .handler(async ({ data }) => sendToHelpdeskInternal(data));
 
 // ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
 export const processEmailPipeline = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ maxEmails: z.number().default(1), userId: z.string().optional() }))
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ maxEmails: z.number().default(1) }))
   .handler(async ({ data }) => {
     try {
-      const userId = data.userId ?? "system";
+      // userId is always "system" — Gmail account is shared, not per-user.
+      // Auth is required just to gate access to triggering the pipeline.
+      const userId = "system";
       console.log("[email-pipeline] Starting email processing for user:", userId);
+
 
       // Fetch unread emails
       const emailsResult = await fetchUnreadEmails(data.maxEmails, userId);
