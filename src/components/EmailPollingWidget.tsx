@@ -5,6 +5,7 @@ import {
   ConfigCategoriesModal,
   ConfigWhitelistModal,
   ConfigPrioritiesModal,
+  ConfigBlacklistModal,
 } from "./EmailConfigModals";
 
 export function EmailPollingWidget() {
@@ -15,6 +16,7 @@ export function EmailPollingWidget() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showWhitelistModal, setShowWhitelistModal] = useState(false);
   const [showPrioritiesModal, setShowPrioritiesModal] = useState(false);
+  const [showBlacklistModal, setShowBlacklistModal] = useState(false);
   const [lastResult, setLastResult] = useState<{
     processed: number;
     total: number;
@@ -24,7 +26,7 @@ export function EmailPollingWidget() {
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  const { categories, whitelist, priorities, loaded, saveCategories, saveWhitelist, savePriorities } =
+  const { categories, whitelist, priorities, blacklist, loaded, saveCategories, saveWhitelist, savePriorities, saveBlacklist } =
     useEmailConfig();
 
   useEffect(() => {
@@ -231,6 +233,20 @@ export function EmailPollingWidget() {
               Editar Prioridades
             </button>
           </div>
+
+          {/* Blacklist */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">🚫 Blacklist</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              {loaded ? `${blacklist.length} entradas bloqueadas` : "Carregando..."}
+            </p>
+            <button
+              onClick={() => setShowBlacklistModal(true)}
+              className="w-full py-2 px-3 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Gerenciar Blacklist
+            </button>
+          </div>
         </div>
       </details>
 
@@ -304,6 +320,14 @@ export function EmailPollingWidget() {
           priorities={priorities}
           onSave={savePriorities}
           onClose={() => setShowPrioritiesModal(false)}
+        />
+      )}
+
+      {showBlacklistModal && (
+        <ConfigBlacklistModal
+          blacklist={blacklist}
+          onSave={saveBlacklist}
+          onClose={() => setShowBlacklistModal(false)}
         />
       )}
     </div>

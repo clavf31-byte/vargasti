@@ -18,6 +18,13 @@ export type EmailPriority = {
   priority: "alta" | "media" | "baixa";
 };
 
+export type EmailBlacklist = {
+  id: string;
+  email: string;
+  domain: string;
+  reason: "spam" | "fornecedor" | "dominio-bloqueado" | "outro";
+};
+
 const DEFAULT_CATEGORIES: EmailCategory[] = [
   { name: "Impressora", keywords: ["impressora", "printer", "imprimir", "print", "papel"] },
   { name: "Rede", keywords: ["internet", "conexão", "wifi", "rede", "conectar", "ping", "latência"] },
@@ -51,6 +58,7 @@ export function useEmailConfig() {
   const [categories, setCategories] = useState<EmailCategory[]>(DEFAULT_CATEGORIES);
   const [whitelist, setWhitelist] = useState<EmailWhitelist[]>([]);
   const [priorities, setPriorities] = useState<EmailPriority[]>(DEFAULT_PRIORITIES);
+  const [blacklist, setBlacklist] = useState<EmailBlacklist[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Carregar do Supabase
@@ -69,6 +77,7 @@ export function useEmailConfig() {
           if (data.categories?.length > 0) setCategories(data.categories);
           if (data.whitelist?.length > 0) setWhitelist(data.whitelist);
           if (data.priorities?.length > 0) setPriorities(data.priorities);
+          if (data.blacklist?.length > 0) setBlacklist(data.blacklist);
         }
       } catch (err) {
         console.error("[useEmailConfig] Error loading from Supabase:", err);
@@ -76,9 +85,11 @@ export function useEmailConfig() {
         const savedCat = localStorage.getItem("email_categories");
         const savedWL = localStorage.getItem("email_whitelist");
         const savedPri = localStorage.getItem("email_priorities");
+        const savedBL = localStorage.getItem("email_blacklist");
         if (savedCat) setCategories(JSON.parse(savedCat));
         if (savedWL) setWhitelist(JSON.parse(savedWL));
         if (savedPri) setPriorities(JSON.parse(savedPri));
+        if (savedBL) setBlacklist(JSON.parse(savedBL));
       } finally {
         setLoaded(true);
       }
@@ -127,13 +138,28 @@ export function useEmailConfig() {
     }
   };
 
+  const saveBlacklist = async (newBlacklist: EmailBlacklist[]) => {
+    setBlacklist(newBlacklist);
+    try {
+      await supabase
+        .from("email_settings")
+        .update({ blacklist: newBlacklist, updated_at: new Date().toISOString() })
+        .eq("id", "00000000-0000-0000-0000-000000000000");
+    } catch (err) {
+      console.error("[useEmailConfig] Error saving blacklist:", err);
+      localStorage.setItem("email_blacklist", JSON.stringify(newBlacklist));
+    }
+  };
+
   return {
     categories,
     whitelist,
     priorities,
+    blacklist,
     loaded,
     saveCategories,
     saveWhitelist,
     savePriorities,
+    saveBlacklist,
   };
 }

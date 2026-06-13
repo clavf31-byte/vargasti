@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { EmailCategory, EmailWhitelist, EmailPriority } from "@/hooks/useEmailConfig";
+import type { EmailCategory, EmailWhitelist, EmailPriority, EmailBlacklist } from "@/hooks/useEmailConfig";
 
 // Modal Categorias
 export function ConfigCategoriesModal({
@@ -295,6 +295,129 @@ export function ConfigPrioritiesModal({
               />
             </div>
           ))}
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <button
+            onClick={handleSave}
+            className="flex-1 py-2 bg-green-600 text-white rounded font-semibold"
+          >
+            Salvar
+          </button>
+          <button onClick={onClose} className="flex-1 py-2 bg-gray-300 rounded font-semibold">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal Blacklist
+export function ConfigBlacklistModal({
+  blacklist,
+  onSave,
+  onClose,
+}: {
+  blacklist: EmailBlacklist[];
+  onSave: (blacklist: EmailBlacklist[]) => void;
+  onClose: () => void;
+}) {
+  const [localBlacklist, setLocalBlacklist] = useState(blacklist);
+  const [newEmail, setNewEmail] = useState("");
+  const [newDomain, setNewDomain] = useState("");
+  const [newReason, setNewReason] = useState<"spam" | "fornecedor" | "dominio-bloqueado" | "outro">("spam");
+
+  const addEntry = () => {
+    if (!newEmail && !newDomain) return;
+    const entry: EmailBlacklist = {
+      id: Date.now().toString(),
+      email: newEmail.toLowerCase(),
+      domain: newDomain.toLowerCase(),
+      reason: newReason,
+    };
+    setLocalBlacklist([...localBlacklist, entry]);
+    setNewEmail("");
+    setNewDomain("");
+    setNewReason("spam");
+  };
+
+  const removeEntry = (id: string) => {
+    setLocalBlacklist(localBlacklist.filter((b) => b.id !== id));
+  };
+
+  const handleSave = () => {
+    onSave(localBlacklist);
+    onClose();
+  };
+
+  const reasonLabels = {
+    spam: "🚨 SPAM",
+    fornecedor: "🏢 Fornecedor",
+    "dominio-bloqueado": "🔒 Domínio Bloqueado",
+    outro: "❓ Outro",
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6">
+        <h2 className="text-xl font-bold mb-4">Gerenciar Blacklist</h2>
+
+        <div className="space-y-2 mb-4">
+          {localBlacklist.map((entry) => (
+            <div key={entry.id} className="flex justify-between items-center border p-2 rounded">
+              <div className="text-sm flex-1">
+                <div className="font-medium">
+                  {entry.email || `@${entry.domain}`}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {reasonLabels[entry.reason]}
+                </div>
+              </div>
+              <button
+                onClick={() => removeEntry(entry.id)}
+                className="text-red-600 hover:text-red-800 font-bold"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="font-semibold mb-2">Adicionar à Blacklist</h3>
+          <div className="space-y-2">
+            <input
+              type="email"
+              placeholder="Email específico (opcional)"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="w-full px-2 py-1 border rounded text-sm"
+            />
+            <input
+              type="text"
+              placeholder="Domínio (exemplo: spam.com)"
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              className="w-full px-2 py-1 border rounded text-sm"
+            />
+            <select
+              value={newReason}
+              onChange={(e) => setNewReason(e.target.value as any)}
+              className="w-full px-2 py-1 border rounded text-sm"
+            >
+              <option value="spam">🚨 SPAM</option>
+              <option value="fornecedor">🏢 Fornecedor</option>
+              <option value="dominio-bloqueado">🔒 Domínio Bloqueado</option>
+              <option value="outro">❓ Outro</option>
+            </select>
+            <button
+              onClick={addEntry}
+              className="w-full py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+            >
+              Adicionar à Blacklist
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 mt-6">
