@@ -290,7 +290,7 @@ async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: str
   return response.json() as Promise<T>;
 }
 
-async function fetchUnreadEmails(maxResults: number, userId: string = "system"): Promise<FetchEmailsResult> {
+export async function fetchUnreadEmails(maxResults: number, userId: string = "system"): Promise<FetchEmailsResult> {
     try {
       await getGmailAccessToken(userId);
     } catch (err) {
