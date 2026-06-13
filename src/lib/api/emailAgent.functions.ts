@@ -109,12 +109,15 @@ export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async (
 // ── Save Gmail Token ──────────────────────────────────────────────────────────
 const SaveGmailTokenSchema = z.object({
   code: z.string(),
-  userId: z.string(),
 });
 
 export const saveGmailToken = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(SaveGmailTokenSchema)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
+    if (!userId) throw new Error("Unauthorized");
+
     const tokens = await exchangeGmailCodeForTokens(data.code);
 
     if (!tokens.access_token) {
@@ -134,9 +137,10 @@ export const saveGmailToken = createServerFn({ method: "POST" })
         apikey: supabaseKey,
         Authorization: `Bearer ${supabaseKey}`,
         "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
-        user_id: data.userId,
+        user_id: userId,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? null,
         expires_at: tokens.expires_in
@@ -148,11 +152,13 @@ export const saveGmailToken = createServerFn({ method: "POST" })
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Failed to save Gmail token: ${error}`);
+      console.error("[saveGmailToken] Failed to save:", error);
+      throw new Error("Failed to save Gmail token");
     }
 
     return { ok: true, authorized: true };
   });
+
 
 // ── Refresh Gmail Access Token with Retry Logic ──────────────────────────────
 async function refreshGmailAccessTokenWithRetry(
