@@ -464,7 +464,7 @@ export function ConfigBlacklistModal({
               <select
                 value={newReason}
                 onChange={(e) => setNewReason(e.target.value as any)}
-                className="w-full px-4 py-2 border border-destructive/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-destructive/50"
+                className="w-full px-4 py-2 bg-surface text-foreground border border-destructive/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-destructive/50"
               >
                 <option value="spam">🚨 SPAM</option>
                 <option value="fornecedor">🏢 Fornecedor</option>
