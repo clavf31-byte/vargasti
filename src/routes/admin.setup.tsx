@@ -33,7 +33,7 @@ function AdminSetupPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Setup do CRM" description="Crie as tabelas necessárias" />
+      <PageHeader title="Setup do CRM" subtitle="Crie as tabelas necessárias" />
 
       <div style={{ maxWidth: "600px", margin: "2rem auto", padding: "2rem" }}>
         <div
