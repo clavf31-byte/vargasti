@@ -1,9 +1,9 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
 import {
   Upload, ChevronLeft, FileSpreadsheet, Search, Clock, Trash2, PanelLeftClose, PanelLeft,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useExcelStore, detectColType, SheetData } from "./useExcelStore";
 import { ExcelTable } from "./ExcelTable";
 import { ExcelFilters } from "./ExcelFilters";
@@ -24,6 +24,7 @@ export function ExcelEditor() {
   const [showHistory, setShowHistory] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const state = useRouterState({ select: (s) => s.state });
 
   function parseFile(file: File) {
     store.setFileName(file.name);
@@ -53,6 +54,41 @@ export function ExcelEditor() {
     };
     reader.readAsBinaryString(file);
   }
+
+  useEffect(() => {
+    if (!state) return;
+    const s = state as any;
+
+    if (s.fileBlob) {
+      // Arquivo do Supabase (Blob)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const wb = XLSX.read(e.target?.result, { type: "binary" });
+        const names = wb.SheetNames;
+        const parsed: Record<string, SheetData> = {};
+        names.forEach((name) => {
+          const ws = wb.Sheets[name];
+          const raw: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+          const [firstRow = [], ...rows] = raw;
+          const headers = firstRow.map(String);
+          const dataRows = rows.map((r) => r.map(String));
+          const types = headers.map((_, ci) => detectColType(dataRows.map((r) => r[ci] ?? "")));
+          parsed[name] = { headers, rows: dataRows, types };
+        });
+        store.loadSheetData(parsed, names, names[0]);
+        store.setFileName(s.fileName);
+        setTab("table");
+      };
+      reader.readAsBinaryString(s.fileBlob);
+    } else if (s.fileData) {
+      // Arquivo local (já parseado)
+      store.setFileName(s.fileName);
+      const names = Object.keys(s.fileData);
+      store.loadSheetData(s.fileData, names, names[0]);
+      setTab("table");
+    }
+  }, [state]);
+
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

@@ -219,7 +219,20 @@ function ArquivosPage() {
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
                             {canOpen && (
                               <button
-                                onClick={() => navigate({ to: "/ferramentas/excel" })}
+                                onClick={async () => {
+                                  if (isLocal) {
+                                    const h = JSON.parse(localStorage.getItem("excel-history") || "[]");
+                                    const item = h.find((item: Record<string, unknown>) => String(item.id) === f.id.replace("local-", ""));
+                                    if (item?.fileData) {
+                                      navigate({ to: "/ferramentas/excel", state: { fileData: item.fileData, fileName: f.name } });
+                                    }
+                                  } else if (f.storage_path) {
+                                    const { data } = await supabase.storage.from("uploads").download(f.storage_path);
+                                    if (data) {
+                                      navigate({ to: "/ferramentas/excel", state: { fileBlob: data, fileName: f.name } });
+                                    }
+                                  }
+                                }}
                                 title="Abrir no Editor Excel"
                                 className="p-1.5 rounded-lg text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
                               >
