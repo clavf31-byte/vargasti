@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Plus, Trash2, FileText, Search, Tag,
   Lock, Eye, EyeOff, ShieldAlert, ShieldCheck,
+  LayoutList, LayoutGrid,
 } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
@@ -90,6 +91,16 @@ function NotesPage() {
   const [selected, setSelected] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"vertical" | "horizontal">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("notesLayoutMode") as "vertical" | "horizontal") || "horizontal";
+    }
+    return "horizontal";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("notesLayoutMode", layoutMode);
+  }, [layoutMode]);
 
   // editor
   const [title, setTitle] = useState("");
@@ -296,15 +307,41 @@ function NotesPage() {
 
   return (
     <AppShell>
-      <div className="flex h-[calc(100vh-2.5rem)] overflow-hidden">
+      <div className={`${layoutMode === "vertical" ? "flex-row" : "flex-col"} flex h-[calc(100vh-2.5rem)] overflow-hidden`}>
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-        <div className="w-64 border-r border-border flex flex-col shrink-0 bg-surface">
+        <div className={`${layoutMode === "vertical" ? "w-64 border-r" : "h-40 border-b"} border-border flex ${layoutMode === "vertical" ? "flex-col" : "flex-row"} shrink-0 bg-surface overflow-x-auto`}>
           {/* Header da sidebar */}
-          <div className="px-3 pt-3 pb-2 border-b border-border space-y-2">
-            <div className="flex items-center justify-between">
+          <div className={`px-3 pt-3 pb-2 border-b border-border space-y-2 ${layoutMode === "horizontal" ? "flex items-center gap-2" : ""}`}>
+            <div className="flex items-center justify-between flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Anotações</p>
-              <button
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setLayoutMode(layoutMode === "vertical" ? "horizontal" : "vertical")}
+                  title={`Trocar para ${layoutMode === "vertical" ? "horizontal" : "vertical"}`}
+                  className="p-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors"
+                >
+                  {layoutMode === "vertical" ? <LayoutList className="size-3.5" /> : <LayoutGrid className="size-3.5" />}
+                </button>
+              </div>
+            </div>
+            {layoutMode === "horizontal" && (
+              <>
+                <div className="flex gap-1.5">
+                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                    <option value="todos">Todos status</option>
+                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
+                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                    <option value="todas">Todas cat.</option>
+                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
+            <button
                 onClick={async () => {
                   const { data, error } = await supabase.from("notes")
                     .insert({ user_id: user!.id, title: "Nova anotação", content: "", category: "Geral", tags: "", status: "rascunho" })
@@ -322,21 +359,23 @@ function NotesPage() {
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar anotação..."
                 className="w-full bg-background border border-border rounded-xl px-2.5 pl-7 py-1.5 text-xs focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all" />
             </div>
-            <div className="flex gap-1.5">
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
-                <option value="todos">Todos status</option>
-                {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
-                <option value="todas">Todas cat.</option>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
+            {layoutMode === "vertical" && (
+              <div className="flex gap-1.5">
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                  <option value="todos">Todos status</option>
+                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
+                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                  <option value="todas">Todas cat.</option>
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className={`flex-1 ${layoutMode === "vertical" ? "overflow-y-auto" : "overflow-x-auto"} p-2 flex ${layoutMode === "vertical" ? "flex-col space-y-1" : "flex-row space-x-1"}`}>
             {loading ? (
               <p className="text-[10px] text-muted-foreground text-center py-8">Carregando...</p>
             ) : filtered.length === 0 ? (
@@ -347,7 +386,7 @@ function NotesPage() {
               const isActive = selected?.id === note.id;
               return (
                 <button key={note.id} onClick={() => openNote(note)}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-start gap-2.5 group ${
+                  className={`${layoutMode === "horizontal" ? "flex-shrink-0 min-w-[200px]" : "w-full"} text-left px-3 py-2.5 rounded-xl transition-all flex items-start gap-2.5 group ${
                     isActive
                       ? "bg-brand/10 border border-brand/25 shadow-[inset_0_0_0_1px_rgba(var(--brand)/0.1)]"
                       : "hover:bg-surface-2 border border-transparent"
@@ -385,7 +424,7 @@ function NotesPage() {
 
         {/* ── Editor ──────────────────────────────────────────────────────── */}
         {!selected ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className={`flex-1 flex items-center justify-center ${layoutMode === "vertical" ? "border-l" : "border-t"} border-border`}>
             <div className="text-center text-muted-foreground">
               <FileText className="size-6 mx-auto mb-2 opacity-20" />
               <p className="text-[10px]">Selecione ou crie uma anotação</p>
