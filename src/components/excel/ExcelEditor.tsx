@@ -49,6 +49,7 @@ export function ExcelEditor() {
         rows: parsed[names[0]]?.rows.length ?? 0,
         cols: parsed[names[0]]?.headers.length ?? 0,
         importedAt: new Date().toISOString(),
+        fileData: parsed,
       });
       setTab("table");
     };

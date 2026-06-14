@@ -17,6 +17,7 @@ export type HistoryItem = {
   rows: number;
   cols: number;
   importedAt: string;
+  fileData?: Record<string, SheetData>;
 };
 
 export type SheetData = {
