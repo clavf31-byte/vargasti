@@ -1,7 +1,7 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Mail, FileSpreadsheet, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -10,21 +10,17 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_MODULES = [
   {
-    group: "📧 Email Agent",
+    group: "🛠️ Ferramentas",
     items: [
-      { to: "/ferramentas/emails", label: "Gerenciador", icon: Mail },
-    ],
-  },
-  {
-    group: "📊 Excel Tool",
-    items: [
-      { to: "/ferramentas/excel", label: "Editor", icon: FileSpreadsheet },
+      { to: "/ferramentas/emails", label: "Email Agent", icon: Mail },
+      { to: "/ferramentas/excel", label: "Excel Tool", icon: FileSpreadsheet },
+      { to: "/ferramentas/whatsapp", label: "WhatsApp", icon: MessageCircle },
     ],
   },
   {
     group: "📝 Projetos & Notas",
     items: [
-      { to: "/projetos", label: "Projetos", icon: FolderKanban, badge: null },
+      { to: "/projetos", label: "Projetos", icon: FolderKanban },
       { to: "/anotacoes", label: "Anotações", icon: NotebookPen },
     ],
   },
@@ -50,9 +46,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    "📧 Email Agent": true,
-    "📊 Excel Tool": true,
+    "🛠️ Ferramentas": true,
     "📝 Projetos & Notas": true,
+    "💾 Storage": true,
   });
 
   const displayName =
