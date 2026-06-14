@@ -74,13 +74,30 @@ function LoginPage() {
         <section style={styles.brandSide}>
           <div style={styles.logo}>
             <svg viewBox="0 0 220 220" fill="none" style={{ width: "140px", height: "140px" }}>
+              {/* V Checkmark Main */}
               <path d="M42 70L110 185L178 70H144L110 129L76 70H42Z" stroke="url(#g1)" strokeWidth="12" strokeLinejoin="round"/>
-              <path d="M74 68V34M110 88V26M146 68V34M92 95V56M128 95V56" stroke="url(#g2)" strokeWidth="8" strokeLinecap="round"/>
-              <circle cx="74" cy="32" r="10" fill="#04d9ff"/>
-              <circle cx="110" cy="24" r="10" fill="#18e66b"/>
-              <circle cx="146" cy="32" r="10" fill="#04d9ff"/>
-              <circle cx="92" cy="55" r="8" fill="#04d9ff"/>
-              <circle cx="128" cy="55" r="8" fill="#18e66b"/>
+
+              {/* Circuit lines connecting to circles */}
+              <path d="M74 68L74 40" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M110 88L110 30" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M146 68L146 40" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M92 95L85 62" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M128 95L135 62" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
+
+              {/* Circuit connections between circles */}
+              <path d="M74 40L92 50" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
+              <path d="M110 30L128 50" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
+              <path d="M146 40L128 50" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
+              <path d="M74 40L110 30" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
+              <path d="M110 30L146 40" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
+
+              {/* Circle nodes */}
+              <circle cx="74" cy="32" r="5" fill="#04d9ff" filter="url(#glow)"/>
+              <circle cx="110" cy="22" r="6" fill="#18e66b" filter="url(#glow)"/>
+              <circle cx="146" cy="32" r="5" fill="#04d9ff" filter="url(#glow)"/>
+              <circle cx="92" cy="55" r="4" fill="#04d9ff" filter="url(#glow)"/>
+              <circle cx="128" cy="55" r="4" fill="#18e66b" filter="url(#glow)"/>
+
               <defs>
                 <linearGradient id="g1" x1="42" y1="70" x2="178" y2="185">
                   <stop stopColor="#04d9ff"/>
@@ -91,12 +108,19 @@ function LoginPage() {
                   <stop stopColor="#18e66b"/>
                   <stop offset="1" stopColor="#0078ff"/>
                 </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
               </defs>
             </svg>
           </div>
           <h1 style={styles.brandName}>
             Vargas
-            <span style={{ background: "linear-gradient(135deg,#0cd8ff,#0080ff 52%,#20ef75)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ color: "#04d9ff", textShadow: "0 0 30px rgba(4,217,255,.8), 0 0 60px rgba(4,217,255,.4)" }}>
               TI
             </span>
           </h1>
@@ -215,13 +239,15 @@ const styles = {
     fontFamily: "Inter, Segoe UI, Arial, sans-serif",
     color: "#f4f8fb",
     background: `
-      linear-gradient(rgba(0,120,255,.07) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(0,120,255,.07) 1px,transparent 1px),
-      radial-gradient(circle at 10% 70%,rgba(0,120,255,.22),transparent 32%),
-      radial-gradient(circle at 85% 20%,rgba(0,255,130,.12),transparent 32%),
+      linear-gradient(45deg, rgba(0,120,255,.08) 1px, transparent 1px),
+      linear-gradient(-45deg, rgba(4,217,255,.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,120,255,.05) 1px, transparent 1px),
+      linear-gradient(rgba(0,120,255,.05) 1px, transparent 1px),
+      radial-gradient(circle at 10% 70%,rgba(0,120,255,.25),transparent 35%),
+      radial-gradient(circle at 85% 20%,rgba(4,217,255,.15),transparent 35%),
       linear-gradient(135deg,#020711,#031323 45%,#020914)
     `,
-    backgroundSize: "72px 72px,72px 72px,100% 100%,100% 100%,100% 100%",
+    backgroundSize: "60px 60px, 60px 60px, 80px 80px, 80px 80px, 100% 100%, 100% 100%, 100% 100%",
     overflowX: "hidden",
   } as React.CSSProperties,
   wave: {
