@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VargasTI CRM - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a1e2e 0%, #16213e 50%, #0f3460 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background Elements */
+        .blob-1 {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(19, 200, 211, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -200px;
+            left: -200px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .blob-2 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(102, 187, 106, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -150px;
+            right: -150px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(0deg, transparent 24%, rgba(19, 200, 211, 0.05) 25%, rgba(19, 200, 211, 0.05) 26%, transparent 27%, transparent 74%, rgba(19, 200, 211, 0.05) 75%, rgba(19, 200, 211, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(19, 200, 211, 0.05) 25%, rgba(19, 200, 211, 0.05) 26%, transparent 27%, transparent 74%, rgba(19, 200, 211, 0.05) 75%, rgba(19, 200, 211, 0.05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Left Side */
+        .left-side {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #13c8d3 0%, #0bd0d7 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 40px rgba(19, 200, 211, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+            font-size: 40px;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 800;
+            color: #eaf3f8;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #13c8d3, #0bd0d7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #8da2b4;
+            margin-top: 10px;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .feature {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(19, 200, 211, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(19, 200, 211, 0.2);
+            font-size: 24px;
+        }
+
+        .feature-title {
+            margin: 0;
+            font-weight: 600;
+            color: #eaf3f8;
+        }
+
+        .feature-desc {
+            margin: 5px 0 0 0;
+            font-size: 13px;
+            color: #8da2b4;
+        }
+
+        .quote {
+            background: rgba(19, 200, 211, 0.05);
+            border: 1px solid rgba(19, 200, 211, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid #13c8d3;
+        }
+
+        .quote p {
+            margin: 0;
+            font-size: 14px;
+            color: #13c8d3;
+            font-style: italic;
+        }
+
+        /* Right Side - Login Form */
+        .form-container {
+            background: rgba(6, 34, 53, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(19, 200, 211, 0.2);
+            border-radius: 24px;
+            padding: 50px 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #eaf3f8;
+            margin: 0 0 10px 0;
+        }
+
+        .form-header p {
+            font-size: 14px;
+            color: #8da2b4;
+            margin: 0;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #8da2b4;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(6, 34, 53, 0.8);
+            border: 1px solid rgba(19, 200, 211, 0.3);
+            border-radius: 12px;
+            color: #eaf3f8;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: rgba(19, 200, 211, 0.8);
+            background: rgba(6, 34, 53, 1);
+        }
+
+        input::placeholder {
+            color: rgba(141, 162, 180, 0.5);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        input[type="password"] {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #8da2b4;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: #13c8d3;
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .remember {
+            color: #8da2b4;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .forgot {
+            color: #13c8d3;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot:hover {
+            color: #0bd0d7;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #13c8d3 0%, #0bd0d7 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(19, 200, 211, 0.3);
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(19, 200, 211, 0.4);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .divider::before {
+            content: '';
+            display: block;
+            border-top: 1px solid rgba(19, 200, 211, 0.2);
+        }
+
+        .divider-text {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(6, 34, 53, 0.4);
+            padding: 0 10px;
+            color: #8da2b4;
+            font-size: 12px;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(19, 200, 211, 0.1);
+            border: 1px solid rgba(19, 200, 211, 0.3);
+            border-radius: 12px;
+            color: #13c8d3;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .google-btn:hover {
+            background: rgba(19, 200, 211, 0.2);
+            border-color: rgba(19, 200, 211, 0.5);
+        }
+
+        .signup {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(19, 200, 211, 0.1);
+        }
+
+        .signup p {
+            color: #8da2b4;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .signup a {
+            color: #13c8d3;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .signup a:hover {
+            color: #0bd0d7;
+        }
+
+        /* Version Info */
+        .version-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #8da2b4;
+            text-align: right;
+            z-index: 10;
+        }
+
+        .version-number {
+            margin-bottom: 4px;
+        }
+
+        .version-number span {
+            color: #13c8d3;
+            font-weight: 600;
+        }
+
+        .build-info {
+            margin-bottom: 4px;
+        }
+
+        .system-status {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #4a6b7e;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 20px 40px rgba(19, 200, 211, 0.3); }
+            50% { box-shadow: 0 20px 60px rgba(19, 200, 211, 0.5); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .left-side {
+                display: none;
+            }
+
+            .form-container {
+                padding: 40px 30px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .form-header h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob-1"></div>
+    <div class="blob-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container">
+        <div class="content">
+            <!-- Left Side -->
+            <div class="left-side">
+                <div>
+                    <div class="logo-box">⚡</div>
+                    <h1>
+                        VargasTI<br>
+                        <span class="gradient-text">CRM Hub</span>
+                    </h1>
+                    <p class="subtitle">
+                        Gerencie orçamentos, clientes e automações em um único lugar
+                    </p>
+                </div>
+
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">🛡️</div>
+                        <div>
+                            <p class="feature-title">Seguro</p>
+                            <p class="feature-desc">Dados protegidos com RLS por usuário</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🚀</div>
+                        <div>
+                            <p class="feature-title">Rápido</p>
+                            <p class="feature-desc">Automações em tempo real</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">⚡</div>
+                        <div>
+                            <p class="feature-title">Poderoso</p>
+                            <p class="feature-desc">Tudo que você precisa no CRM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quote">
+                    <p>"A automação não é sobre fazer menos. É sobre fazer melhor."</p>
+                </div>
+            </div>
+
+            <!-- Right Side -->
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Bem-vindo</h2>
+                    <p>Digite seu email e senha para continuar</p>
+                </div>
+
+                <form onsubmit="handleSubmit(event)">
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="seu@email.com"
+                            required
+                        >
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="password">Senha</label>
+                        <div class="password-wrapper">
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="••••••••"
+                                required
+                            >
+                            <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="form-footer">
+                        <label class="remember">
+                            <input type="checkbox"> Lembrar-me
+                        </label>
+                        <a href="#" class="forgot">Esqueceu a senha?</a>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit">Entrar</button>
+
+                    <!-- Divider -->
+                    <div class="divider">
+                        <div class="divider-text">OU</div>
+                    </div>
+
+                    <!-- Google Login -->
+                    <button type="button" class="google-btn" onclick="alert('Login com Google')">
+                        🔵 Entrar com Google
+                    </button>
+                </form>
+
+                <!-- Sign Up -->
+                <div class="signup">
+                    <p>Não tem conta? <a href="#">Criar conta</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version Info -->
+    <div class="version-info">
+        <div class="version-number"><span>v2.0.1</span></div>
+        <div class="build-info">Build #376 • 2026-06-14</div>
+        <div class="system-status">✓ Sistema Online</div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const button = document.querySelector('.toggle-password');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '👁️‍🗨️';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            alert(`Login com: ${email}`);
+        }
+    </script>
+</body>
+</html>
