@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/debug-fetch-emails")({
         } catch (err) {
           console.error("[debug-fetch-emails] Error:", err);
           return new Response(
-            JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
+            JSON.stringify({ error: "Internal server error" }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }

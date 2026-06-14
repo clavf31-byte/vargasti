@@ -94,9 +94,7 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
 
           // "Deixa comigo" → pause IA
           if (isTakingOver(finalMessage)) {
-            await pauseConversation({
-              data: { ...pauseKey, isGroup },
-            }).catch(() => null);
+            await pauseConversation({ ...pauseKey, isGroup }).catch(() => null);
 
             console.log("[webhook] Claudio assumiu conversa:", { fromNumber, instanceName });
             return new Response(JSON.stringify({ ok: true, skipped: true, reason: "claudio_taking_over" }), {
@@ -106,16 +104,16 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
 
           // "Resolvido" → resume IA
           if (isResolved(finalMessage)) {
-            await resumeConversation({ data: pauseKey }).catch(() => null);
+            await resumeConversation(pauseKey).catch(() => null);
             console.log("[webhook] Resolvido — retomando IA:", { fromNumber, instanceName });
           }
 
           // Conversation paused?
-          const { isPaused } = await isConversationPaused({ data: pauseKey });
+          const { isPaused } = await isConversationPaused(pauseKey);
 
           if (isPaused) {
             if (isCallingAI(finalMessage)) {
-              await resumeConversation({ data: pauseKey }).catch(() => null);
+              await resumeConversation(pauseKey).catch(() => null);
               console.log("[webhook] IA chamada durante pausa — retomando:", { fromNumber, instanceName });
             } else {
               console.log("[webhook] Conversa pausada — Claudio cuidando:", { fromNumber, instanceName });
