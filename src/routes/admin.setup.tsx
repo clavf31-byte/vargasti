@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { setupCRMTables } from "@/lib/api/example.functions";
+import { setupCRMTables } from "@/lib/api/setup-crm.server";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
