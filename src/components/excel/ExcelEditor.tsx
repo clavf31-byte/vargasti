@@ -24,7 +24,7 @@ export function ExcelEditor() {
   const [showHistory, setShowHistory] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(true);
   const [dragging, setDragging] = useState(false);
-  const state = useRouterState({ select: (s) => s.state });
+  const state = typeof window !== "undefined" ? (window.history.state as any) : null;
 
   function parseFile(file: File) {
     store.setFileName(file.name);
