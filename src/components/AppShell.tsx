@@ -7,6 +7,8 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const NAV_MODULES = [
   {
@@ -50,6 +52,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     "📝 Projetos & Notas": false,
     "💾 Storage": false,
   });
+  const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
 
   const displayName =
     user?.user_metadata?.full_name?.split(" ")[0] ??
@@ -344,7 +347,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
           {/* Actions */}
           <div className="flex items-center gap-2">
             <button
-              title="Busca global"
+              onClick={() => setCommandPaletteOpen(true)}
+              title="Busca global (CTRL K)"
               className="p-2 rounded-lg text-[#8da2b4] hover:text-[#eaf3f8] transition-colors"
             >
               <Search className="size-3.5" />
@@ -361,6 +365,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
 
         <div className="flex-1">{children ?? <Outlet />}</div>
       </main>
+
+      {/* Command Palette */}
+      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
     </div>
   );
 }
