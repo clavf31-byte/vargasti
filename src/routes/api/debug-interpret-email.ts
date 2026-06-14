@@ -28,6 +28,7 @@ export const Route = createFileRoute("/api/debug-interpret-email")({
           const testEmail = {
             id: "test",
             from: "user@example.com",
+            to: "support@example.com",
             subject: "Impressora não está imprimindo",
             body: "A impressora parou de funcionar. Pode verificar?",
             threadId: "test",
