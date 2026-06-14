@@ -37,7 +37,6 @@ import { Route as ApiDebugProcessEmailRouteImport } from './routes/api/debug-pro
 import { Route as ApiDebugInterpretEmailRouteImport } from './routes/api/debug-interpret-email'
 import { Route as ApiDebugGmailTokenRouteImport } from './routes/api/debug-gmail-token'
 import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetch-emails'
-import { Route as AdminCrmSetupRouteImport } from './routes/admin.crm-setup'
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 
 const UsuariosRoute = UsuariosRouteImport.update({
@@ -180,11 +179,6 @@ const ApiDebugFetchEmailsRoute = ApiDebugFetchEmailsRouteImport.update({
   path: '/api/debug-fetch-emails',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminCrmSetupRoute = AdminCrmSetupRouteImport.update({
-  id: '/crm-setup',
-  path: '/crm-setup',
-  getParentRoute: () => AdminRoute,
-} as any)
 const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -193,7 +187,7 @@ const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
@@ -202,7 +196,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
-  '/admin/crm-setup': typeof AdminCrmSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
   '/api/debug-interpret-email': typeof ApiDebugInterpretEmailRoute
@@ -225,7 +218,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
@@ -233,7 +226,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
-  '/admin/crm-setup': typeof AdminCrmSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
   '/api/debug-interpret-email': typeof ApiDebugInterpretEmailRoute
@@ -257,7 +249,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
@@ -266,7 +258,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
-  '/admin/crm-setup': typeof AdminCrmSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
   '/api/debug-interpret-email': typeof ApiDebugInterpretEmailRoute
@@ -300,7 +291,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
-    | '/admin/crm-setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
     | '/api/debug-interpret-email'
@@ -331,7 +321,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
-    | '/admin/crm-setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
     | '/api/debug-interpret-email'
@@ -363,7 +352,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/projetos'
     | '/usuarios'
-    | '/admin/crm-setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
     | '/api/debug-interpret-email'
@@ -387,7 +375,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
+  AdminRoute: typeof AdminRoute
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
   ConfigRoute: typeof ConfigRoute
@@ -607,13 +595,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDebugFetchEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/crm-setup': {
-      id: '/admin/crm-setup'
-      path: '/crm-setup'
-      fullPath: '/admin/crm-setup'
-      preLoaderRoute: typeof AdminCrmSetupRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/crm/orcamentos/$id': {
       id: '/crm/orcamentos/$id'
       path: '/$id'
@@ -623,16 +604,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AdminRouteChildren {
-  AdminCrmSetupRoute: typeof AdminCrmSetupRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminCrmSetupRoute: AdminCrmSetupRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface CrmOrcamentosRouteChildren {
   CrmOrcamentosIdRoute: typeof CrmOrcamentosIdRoute
@@ -680,7 +651,7 @@ const FerramentasRouteWithChildren = FerramentasRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
+  AdminRoute: AdminRoute,
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
   ConfigRoute: ConfigRoute,
