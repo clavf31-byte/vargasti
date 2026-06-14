@@ -236,6 +236,11 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     minHeight: "auto",
+    position: "relative",
+    background: "linear-gradient(135deg, rgba(2,7,17,.95), rgba(3,19,35,.95))",
+    borderRight: "1px solid rgba(0,120,255,.15)",
+    padding: "2rem",
+    borderRadius: "12px",
   } as React.CSSProperties,
   logo: {
     width: "150px",
