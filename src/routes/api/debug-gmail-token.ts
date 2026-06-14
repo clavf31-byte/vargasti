@@ -52,7 +52,7 @@ export const Route = createFileRoute("/api/debug-gmail-token")({
         } catch (err) {
           console.error("[debug-gmail-token] Error:", err);
           return new Response(
-            JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
+            JSON.stringify({ error: "Internal server error" }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
