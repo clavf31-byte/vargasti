@@ -173,15 +173,15 @@ function LoginPage() {
           <footer style={styles.footer}>
             <div style={styles.foot}>
               <div style={{ ...styles.icon, color: "#18e66b" }}>●</div>
-              <div><strong style={{ display: "block", fontSize: "18px", marginBottom: "4px" }}>Sistema Online</strong><small style={{ color: "#a7b4c2", fontSize: "15px" }}>Todos os serviços OK</small></div>
+              <div><strong style={{ display: "block", fontSize: "13px", marginBottom: "2px" }}>Sistema Online</strong><small style={{ color: "#a7b4c2", fontSize: "11px" }}>Todos os serviços OK</small></div>
             </div>
             <div style={styles.foot}>
               <div style={styles.icon}>▱</div>
-              <div><strong style={{ display: "block", fontSize: "18px", marginBottom: "4px" }}>V2.5.0</strong><small style={{ color: "#a7b4c2", fontSize: "15px" }}>22/05/2026</small></div>
+              <div><strong style={{ display: "block", fontSize: "13px", marginBottom: "2px" }}>V2.5.0</strong><small style={{ color: "#a7b4c2", fontSize: "11px" }}>22/05/2026</small></div>
             </div>
             <div style={styles.foot}>
               <div style={{ ...styles.icon, color: "#18e66b" }}>🛡</div>
-              <div><strong style={{ display: "block", fontSize: "18px", marginBottom: "4px" }}>Ambiente Seguro</strong><small style={{ color: "#a7b4c2", fontSize: "15px" }}>Seus dados protegidos</small></div>
+              <div><strong style={{ display: "block", fontSize: "13px", marginBottom: "2px" }}>Ambiente Seguro</strong><small style={{ color: "#a7b4c2", fontSize: "11px" }}>Seus dados protegidos</small></div>
             </div>
           </footer>
         </section>
