@@ -53,9 +53,8 @@ export const Route = createFileRoute("/api/delete-gmail-token")({
           );
         } catch (err) {
           console.error("[delete-gmail-token] Error:", err);
-          const msg = err instanceof Error ? err.message : "Unknown error";
           return new Response(
-            JSON.stringify({ ok: false, error: msg }),
+            JSON.stringify({ ok: false, error: "Internal server error" }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }

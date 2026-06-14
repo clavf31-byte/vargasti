@@ -76,9 +76,8 @@ export const Route = createFileRoute("/api/gmail-callback")({
           );
         } catch (err) {
           console.error("[gmail-callback] Error:", err);
-          const msg = err instanceof Error ? err.message : "Unknown error";
           return new Response(
-            `<html><body style="font-family:sans-serif;padding:40px;background:#0a0e27;color:#fff;"><h1 style="color:#ff6b6b;">❌ Erro</h1><p>${msg}</p></body></html>`,
+            `<html><body style="font-family:sans-serif;padding:40px;background:#0a0e27;color:#fff;"><h1 style="color:#ff6b6b;">❌ Erro</h1><p>Não foi possível concluir a autorização do Gmail. Tente novamente.</p></body></html>`,
             { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } }
           );
         }

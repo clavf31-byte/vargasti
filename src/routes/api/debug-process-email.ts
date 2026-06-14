@@ -106,7 +106,7 @@ export const Route = createFileRoute("/api/debug-process-email")({
         } catch (err) {
           console.error("[debug-process-email] Error:", err);
           return new Response(
-            JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
+            JSON.stringify({ error: "Internal server error" }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
