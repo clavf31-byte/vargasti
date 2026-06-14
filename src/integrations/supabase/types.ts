@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      alertas: {
+        Row: {
+          created_at: string
+          data_criacao: string
+          data_leitura: string | null
+          id: string
+          lido: boolean
+          mensagem: string
+          orcamento_id: string | null
+          severidade: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          data_criacao?: string
+          data_leitura?: string | null
+          id?: string
+          lido?: boolean
+          mensagem: string
+          orcamento_id?: string | null
+          severidade?: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          data_criacao?: string
+          data_leitura?: string | null
+          id?: string
+          lido?: boolean
+          mensagem?: string
+          orcamento_id?: string | null
+          severidade?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          created_at: string
+          documento: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          documento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          documento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_pauses: {
         Row: {
           created_at: string
@@ -46,6 +129,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      email_logs: {
+        Row: {
+          created_at: string
+          id: string
+          orcamento_id: string | null
+          recipient: string
+          sent_at: string
+          status: string
+          subject: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          orcamento_id?: string | null
+          recipient: string
+          sent_at?: string
+          status?: string
+          subject: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          orcamento_id?: string | null
+          recipient?: string
+          sent_at?: string
+          status?: string
+          subject?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_processing_log: {
         Row: {
@@ -164,6 +288,63 @@ export type Database = {
         }
         Relationships: []
       }
+      notas_fiscais: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_emissao: string
+          id: string
+          numero: string
+          orcamento_id: string
+          pdf_url: string | null
+          status: string
+          updated_at: string
+          valor_total: number
+          xml_url: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_emissao: string
+          id?: string
+          numero: string
+          orcamento_id: string
+          pdf_url?: string | null
+          status?: string
+          updated_at?: string
+          valor_total: number
+          xml_url?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_emissao?: string
+          id?: string
+          numero?: string
+          orcamento_id?: string
+          pdf_url?: string | null
+          status?: string
+          updated_at?: string
+          valor_total?: number
+          xml_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_fiscais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           category: string | null
@@ -199,6 +380,59 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      orcamentos: {
+        Row: {
+          alerta_enviado: boolean
+          cliente_id: string
+          created_at: string
+          data_criacao: string
+          data_vencimento: string | null
+          id: string
+          notas: string | null
+          numero: string
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alerta_enviado?: boolean
+          cliente_id: string
+          created_at?: string
+          data_criacao?: string
+          data_vencimento?: string | null
+          id?: string
+          notas?: string | null
+          numero: string
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alerta_enviado?: boolean
+          cliente_id?: string
+          created_at?: string
+          data_criacao?: string
+          data_vencimento?: string | null
+          id?: string
+          notas?: string | null
+          numero?: string
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
