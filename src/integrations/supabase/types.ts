@@ -60,10 +60,13 @@ export type Database = {
       }
       clientes: {
         Row: {
+          cep: string | null
+          cidade: string | null
+          cnpj_cpf: string | null
           created_at: string
-          documento: string | null
           email: string | null
           endereco: string | null
+          estado: string | null
           id: string
           nome: string
           observacoes: string | null
@@ -72,10 +75,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cep?: string | null
+          cidade?: string | null
+          cnpj_cpf?: string | null
           created_at?: string
-          documento?: string | null
           email?: string | null
           endereco?: string | null
+          estado?: string | null
           id?: string
           nome: string
           observacoes?: string | null
@@ -84,10 +90,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cep?: string | null
+          cidade?: string | null
+          cnpj_cpf?: string | null
           created_at?: string
-          documento?: string | null
           email?: string | null
           endereco?: string | null
+          estado?: string | null
           id?: string
           nome?: string
           observacoes?: string | null
@@ -430,6 +439,50 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos: {
+        Row: {
+          created_at: string
+          data_pagamento: string
+          id: string
+          metodo: string | null
+          orcamento_id: string
+          referencia: string | null
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string
+          id?: string
+          metodo?: string | null
+          orcamento_id: string
+          referencia?: string | null
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string
+          id?: string
+          metodo?: string | null
+          orcamento_id?: string
+          referencia?: string | null
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
             referencedColumns: ["id"]
           },
         ]
