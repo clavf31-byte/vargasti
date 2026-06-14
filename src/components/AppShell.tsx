@@ -4,7 +4,7 @@ import {
   Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
@@ -47,12 +47,22 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    "🛠️ Ferramentas": false,
-    "📝 Projetos & Notas": false,
-    "💾 Storage": false,
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebarExpandedGroups");
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      "🛠️ Ferramentas": false,
+      "📝 Projetos & Notas": false,
+      "💾 Storage": false,
+    };
   });
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
+
+  useEffect(() => {
+    localStorage.setItem("sidebarExpandedGroups", JSON.stringify(expandedGroups));
+  }, [expandedGroups]);
 
   const displayName =
     user?.user_metadata?.full_name?.split(" ")[0] ??
