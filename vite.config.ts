@@ -44,5 +44,10 @@ export default defineConfig({
       "process.env.SUPABASE_URL": JSON.stringify(supabaseUrl),
       "process.env.SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabasePublishableKey),
     },
+    server: {
+      hmr: {
+        overlay: false,
+      },
+    },
   },
 });
