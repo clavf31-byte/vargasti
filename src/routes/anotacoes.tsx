@@ -373,7 +373,6 @@ function NotesPage() {
                 </select>
               </div>
             )}
-          </div>
 
           <div className={`flex-1 ${layoutMode === "vertical" ? "overflow-y-auto" : "overflow-x-auto"} p-2 flex ${layoutMode === "vertical" ? "flex-col space-y-1" : "flex-row space-x-1"}`}>
             {loading ? (
