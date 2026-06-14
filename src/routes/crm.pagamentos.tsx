@@ -15,9 +15,9 @@ type Pagamento = {
   orcamento_id: string;
   valor: number;
   data_pagamento: string;
-  metodo?: string;
-  referencia?: string;
-  criado_em: string;
+  metodo?: string | null;
+  referencia?: string | null;
+  created_at: string;
 };
 
 function PagamentosPage() {

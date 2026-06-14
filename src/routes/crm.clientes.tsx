@@ -14,11 +14,11 @@ export const Route = createFileRoute("/crm/clientes")({
 type Cliente = {
   id: string;
   nome: string;
-  email?: string;
-  telefone?: string;
-  cnpj_cpf?: string;
-  endereco?: string;
-  criado_em: string;
+  email?: string | null;
+  telefone?: string | null;
+  cnpj_cpf?: string | null;
+  endereco?: string | null;
+  created_at: string;
 };
 
 function ClientesPage() {

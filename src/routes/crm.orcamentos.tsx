@@ -19,7 +19,7 @@ type Orcamento = {
   status: string;
   total: number;
   data_criacao: string;
-  criado_em: string;
+  created_at: string;
 };
 
 function OrcamentosPage() {

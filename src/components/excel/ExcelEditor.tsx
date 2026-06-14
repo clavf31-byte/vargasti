@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import {
   Upload, ChevronLeft, FileSpreadsheet, Search, Clock, Trash2, PanelLeftClose, PanelLeft,
 } from "lucide-react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useExcelStore, detectColType, SheetData } from "./useExcelStore";
 import { ExcelTable } from "./ExcelTable";
 import { ExcelFilters } from "./ExcelFilters";
@@ -24,7 +24,7 @@ export function ExcelEditor() {
   const [showHistory, setShowHistory] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(true);
   const [dragging, setDragging] = useState(false);
-  const state = useRouterState({ select: (s) => s.state });
+  const state = typeof window !== "undefined" ? (window.history.state as any) : null;
 
   function parseFile(file: File) {
     store.setFileName(file.name);

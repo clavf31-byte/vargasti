@@ -18,10 +18,11 @@ export async function verificarOrcamentosVencidos() {
     }
 
     for (const orc of orcamentosVencidos) {
+      const venc = orc.data_vencimento ? new Date(orc.data_vencimento).toLocaleDateString("pt-BR") : "—";
       await adicionarAlerta({
         orcamento_id: orc.id,
         tipo: "vencimento",
-        mensagem: `Orçamento ${orc.numero} venceu em ${new Date(orc.data_vencimento).toLocaleDateString("pt-BR")}`,
+        mensagem: `Orçamento ${orc.numero} venceu em ${venc}`,
         severidade: "warning",
       });
 
