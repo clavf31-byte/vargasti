@@ -57,7 +57,6 @@ export default function LoginPage() {
             {/* Hidden on mobile */}
           </div>
           <div style={{
-            "@media (max-width: 768px)": { display: "none" },
             display: "flex",
             flexDirection: "column",
             gap: "40px"
