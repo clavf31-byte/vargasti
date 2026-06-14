@@ -235,38 +235,40 @@ export function EmailPollingWidget() {
         <summary className="cursor-pointer font-semibold text-sm hover:text-brand">
           🔧 Debug
         </summary>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            onClick={() => handleDebug("debug-gmail-token")}
-            disabled={debugLoading}
-            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-          >
-            Token
-          </button>
-          <button
-            onClick={() => handleDebug("debug-fetch-emails")}
-            disabled={debugLoading}
-            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-          >
-            Buscar
-          </button>
-          <button
-            onClick={() => handleDebug("debug-process-email")}
-            disabled={debugLoading}
-            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-          >
-            Processar
-          </button>
-          <button
-            onClick={() => handleDebug("debug-process-pipeline")}
-            disabled={debugLoading}
-            className="py-1 px-2 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-          >
-            Pipeline
-          </button>
+        <div className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleDebug("debug-gmail-token")}
+              disabled={debugLoading}
+              className="py-2 px-3 text-sm bg-surface-3 text-foreground rounded-lg hover:bg-surface-3/80 border border-border transition-colors disabled:opacity-50"
+            >
+              Token
+            </button>
+            <button
+              onClick={() => handleDebug("debug-fetch-emails")}
+              disabled={debugLoading}
+              className="py-2 px-3 text-sm bg-surface-3 text-foreground rounded-lg hover:bg-surface-3/80 border border-border transition-colors disabled:opacity-50"
+            >
+              Buscar
+            </button>
+            <button
+              onClick={() => handleDebug("debug-process-email")}
+              disabled={debugLoading}
+              className="py-2 px-3 text-sm bg-surface-3 text-foreground rounded-lg hover:bg-surface-3/80 border border-border transition-colors disabled:opacity-50"
+            >
+              Processar
+            </button>
+            <button
+              onClick={() => handleDebug("debug-process-pipeline")}
+              disabled={debugLoading}
+              className="py-2 px-3 text-sm bg-surface-3 text-foreground rounded-lg hover:bg-surface-3/80 border border-border transition-colors disabled:opacity-50"
+            >
+              Pipeline
+            </button>
+          </div>
 
           {debugResult && (
-            <div className="col-span-2 mt-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs max-h-48 overflow-auto font-mono whitespace-pre-wrap break-words text-gray-700">
+            <div className="p-3 bg-surface border border-border rounded-lg text-xs max-h-48 overflow-auto font-mono whitespace-pre-wrap break-words text-muted-foreground">
               {debugResult}
             </div>
           )}
