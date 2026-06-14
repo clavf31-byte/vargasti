@@ -47,7 +47,7 @@ function Dashboard() {
         const results = await Promise.allSettled([
           supabase.from("notes").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
           supabase.from("projects").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
-          supabase.from("arquivos").select("*", { count: "exact", head: true }),
+          (supabase as any).from("arquivos").select("*", { count: "exact", head: true }),
           supabase.from("notes").select("id, title, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(4),
           supabase.from("projects").select("id, name, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(4),
         ]);

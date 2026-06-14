@@ -1,7 +1,5 @@
 "use server";
 
-import { json } from "@tanstack/react-router";
-
 export async function deleteGmailToken(userId: string = "system") {
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
