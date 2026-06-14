@@ -176,7 +176,7 @@ export const setupCRMTables = createServerFn({ method: "POST" })
           FOR SELECT USING (auth.uid() = user_id);
       `;
 
-      const { error } = await supabaseAdmin.rpc("execute_sql", { sql });
+      const { error } = await (supabaseAdmin.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>)("execute_sql", { sql });
 
       if (error) {
         console.error("❌ Erro ao criar tabelas:", error);
