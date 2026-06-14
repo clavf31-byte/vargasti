@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { OrcamentoForm } from "@/components/crm/OrcamentoForm";
 import { FileSpreadsheet } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ function OrcamentosPage() {
   const { user } = useAuth();
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -76,7 +78,14 @@ function OrcamentosPage() {
         <PageHeader
           title="Orçamentos"
           subtitle={`${orcamentos.length} orçamento${orcamentos.length !== 1 ? "s" : ""} registrado${orcamentos.length !== 1 ? "s" : ""}`}
-          action={<button style={{ padding: "8px 16px", background: "#13c8d3", color: "#07111c", border: "none", borderRadius: "6px", cursor: "pointer" }}>+ Novo Orçamento</button>}
+          action={<button onClick={() => setIsFormOpen(true)} style={{ padding: "8px 16px", background: "#13c8d3", color: "#07111c", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>+ Novo Orçamento</button>}
+        />
+
+        <OrcamentoForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSuccess={() => loadOrcamentos()}
+          userId={user!.id}
         />
 
         {loading ? (

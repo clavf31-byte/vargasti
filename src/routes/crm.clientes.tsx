@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { ClienteForm } from "@/components/crm/ClienteForm";
 import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ function ClientesPage() {
   const { user } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -54,7 +56,14 @@ function ClientesPage() {
         <PageHeader
           title="Clientes"
           subtitle={`${clientes.length} cliente${clientes.length !== 1 ? "s" : ""} cadastrado${clientes.length !== 1 ? "s" : ""}`}
-          action={<button style={{ padding: "8px 16px", background: "#13c8d3", color: "#07111c", border: "none", borderRadius: "6px", cursor: "pointer" }}>+ Novo Cliente</button>}
+          action={<button onClick={() => setIsFormOpen(true)} style={{ padding: "8px 16px", background: "#13c8d3", color: "#07111c", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>+ Novo Cliente</button>}
+        />
+
+        <ClienteForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSuccess={() => loadClientes()}
+          userId={user!.id}
         />
 
         {loading ? (
