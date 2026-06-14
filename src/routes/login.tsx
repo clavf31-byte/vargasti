@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable";
 import { Loader2 } from "lucide-react";
+import vargasLogo from "@/assets/vargasti-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -73,26 +74,7 @@ function LoginPage() {
         {/* Brand Side */}
         <section style={styles.brandSide}>
           <div style={styles.logo}>
-            <svg viewBox="0 0 220 220" fill="none" style={{ width: "180px", height: "180px" }}>
-              <path d="M42 70L110 185L178 70H144L110 129L76 70H42Z" stroke="url(#g1)" strokeWidth="12" strokeLinejoin="round"/>
-              <path d="M74 68V34M110 88V26M146 68V34M92 95V56M128 95V56" stroke="url(#g2)" strokeWidth="8" strokeLinecap="round"/>
-              <circle cx="74" cy="32" r="10" fill="#04d9ff"/>
-              <circle cx="110" cy="24" r="10" fill="#18e66b"/>
-              <circle cx="146" cy="32" r="10" fill="#04d9ff"/>
-              <circle cx="92" cy="55" r="8" fill="#04d9ff"/>
-              <circle cx="128" cy="55" r="8" fill="#18e66b"/>
-              <defs>
-                <linearGradient id="g1" x1="42" y1="70" x2="178" y2="185">
-                  <stop stopColor="#04d9ff"/>
-                  <stop offset=".55" stopColor="#0078ff"/>
-                  <stop offset="1" stopColor="#18e66b"/>
-                </linearGradient>
-                <linearGradient id="g2" x1="74" y1="24" x2="146" y2="95">
-                  <stop stopColor="#18e66b"/>
-                  <stop offset="1" stopColor="#0078ff"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src={vargasLogo.url} alt="VargasTI" style={{ width: "180px", height: "180px", objectFit: "contain" }} />
           </div>
           <h1 style={styles.brandName}>
             Vargas
