@@ -93,7 +93,13 @@ function NotesPage() {
   const [dbError, setDbError] = useState(false);
   const [layoutMode, setLayoutMode] = useState<"vertical" | "horizontal">(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("notesLayoutMode") as "vertical" | "horizontal") || "vertical";
+      const saved = localStorage.getItem("notesLayoutMode") as "vertical" | "horizontal" | null;
+      // Always default to vertical, ignore horizontal from localStorage
+      if (saved === "horizontal") {
+        localStorage.removeItem("notesLayoutMode");
+        return "vertical";
+      }
+      return saved || "vertical";
     }
     return "vertical";
   });
@@ -310,7 +316,7 @@ function NotesPage() {
       <div className={`${layoutMode === "vertical" ? "flex-row" : "flex-col"} flex h-[calc(100vh-2.5rem)] overflow-hidden`}>
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-        <div className={`${layoutMode === "vertical" ? "w-64 border-r" : "h-40 border-b"} border-border flex ${layoutMode === "vertical" ? "flex-col" : "flex-row"} shrink-0 bg-surface overflow-x-auto`}>
+        <div className={`${layoutMode === "vertical" ? "w-64 border-r" : "h-40 border-b"} border-border flex ${layoutMode === "vertical" ? "flex-col" : "flex-row"} shrink-0 overflow-x-auto`} style={{ background: layoutMode === "vertical" ? "#07111c" : "#0a1422" }}>
           {/* Header da sidebar */}
           <div className={`px-3 pt-3 pb-2 border-b border-border space-y-2 ${layoutMode === "horizontal" ? "flex items-center gap-2" : ""}`}>
             <div className="flex items-center justify-between flex-1">
