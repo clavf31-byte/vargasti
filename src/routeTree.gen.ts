@@ -13,6 +13,7 @@ import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
+import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
 import { Route as AnotacoesRouteImport } from './routes/anotacoes'
@@ -22,6 +23,9 @@ import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
+import { Route as CrmPagamentosRouteImport } from './routes/crm.pagamentos'
+import { Route as CrmOrcamentosRouteImport } from './routes/crm.orcamentos'
+import { Route as CrmClientesRouteImport } from './routes/crm.clientes'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
@@ -33,6 +37,7 @@ import { Route as ApiDebugProcessEmailRouteImport } from './routes/api/debug-pro
 import { Route as ApiDebugInterpretEmailRouteImport } from './routes/api/debug-interpret-email'
 import { Route as ApiDebugGmailTokenRouteImport } from './routes/api/debug-gmail-token'
 import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetch-emails'
+import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
@@ -52,6 +57,11 @@ const LoginRoute = LoginRouteImport.update({
 const FerramentasRoute = FerramentasRouteImport.update({
   id: '/ferramentas',
   path: '/ferramentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmRoute = CrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfigRoute = ConfigRouteImport.update({
@@ -98,6 +108,21 @@ const FerramentasEmailsRoute = FerramentasEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
   getParentRoute: () => FerramentasRoute,
+} as any)
+const CrmPagamentosRoute = CrmPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmOrcamentosRoute = CrmOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmClientesRoute = CrmClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => CrmRoute,
 } as any)
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
@@ -154,6 +179,11 @@ const ApiDebugFetchEmailsRoute = ApiDebugFetchEmailsRouteImport.update({
   path: '/api/debug-fetch-emails',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmOrcamentosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -161,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
+  '/crm': typeof CrmRouteWithChildren
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -176,10 +207,14 @@ export interface FileRoutesByFullPath {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/crm/clientes': typeof CrmClientesRoute
+  '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
+  '/crm/pagamentos': typeof CrmPagamentosRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
+  '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,6 +222,7 @@ export interface FileRoutesByTo {
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
+  '/crm': typeof CrmRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/usuarios': typeof UsuariosRoute
@@ -201,10 +237,14 @@ export interface FileRoutesByTo {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/crm/clientes': typeof CrmClientesRoute
+  '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
+  '/crm/pagamentos': typeof CrmPagamentosRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas': typeof FerramentasIndexRoute
+  '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -213,6 +253,7 @@ export interface FileRoutesById {
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRoute
+  '/crm': typeof CrmRouteWithChildren
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -228,10 +269,14 @@ export interface FileRoutesById {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/crm/clientes': typeof CrmClientesRoute
+  '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
+  '/crm/pagamentos': typeof CrmPagamentosRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
+  '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -241,6 +286,7 @@ export interface FileRouteTypes {
     | '/anotacoes'
     | '/arquivos'
     | '/config'
+    | '/crm'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -256,10 +302,14 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/crm/clientes'
+    | '/crm/orcamentos'
+    | '/crm/pagamentos'
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
+    | '/crm/orcamentos/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -267,6 +317,7 @@ export interface FileRouteTypes {
     | '/anotacoes'
     | '/arquivos'
     | '/config'
+    | '/crm'
     | '/login'
     | '/projetos'
     | '/usuarios'
@@ -281,10 +332,14 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/crm/clientes'
+    | '/crm/orcamentos'
+    | '/crm/pagamentos'
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas'
+    | '/crm/orcamentos/$id'
   id:
     | '__root__'
     | '/'
@@ -292,6 +347,7 @@ export interface FileRouteTypes {
     | '/anotacoes'
     | '/arquivos'
     | '/config'
+    | '/crm'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -307,10 +363,14 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/crm/clientes'
+    | '/crm/orcamentos'
+    | '/crm/pagamentos'
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
+    | '/crm/orcamentos/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -319,6 +379,7 @@ export interface RootRouteChildren {
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
   ConfigRoute: typeof ConfigRoute
+  CrmRoute: typeof CrmRouteWithChildren
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
@@ -364,6 +425,13 @@ declare module '@tanstack/react-router' {
       path: '/ferramentas'
       fullPath: '/ferramentas'
       preLoaderRoute: typeof FerramentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm': {
+      id: '/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof CrmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/config': {
@@ -428,6 +496,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/ferramentas/emails'
       preLoaderRoute: typeof FerramentasEmailsRouteImport
       parentRoute: typeof FerramentasRoute
+    }
+    '/crm/pagamentos': {
+      id: '/crm/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/crm/pagamentos'
+      preLoaderRoute: typeof CrmPagamentosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/orcamentos': {
+      id: '/crm/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/crm/orcamentos'
+      preLoaderRoute: typeof CrmOrcamentosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/clientes': {
+      id: '/crm/clientes'
+      path: '/clientes'
+      fullPath: '/crm/clientes'
+      preLoaderRoute: typeof CrmClientesRouteImport
+      parentRoute: typeof CrmRoute
     }
     '/api/whatsapp-webhook': {
       id: '/api/whatsapp-webhook'
@@ -506,8 +595,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDebugFetchEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/orcamentos/$id': {
+      id: '/crm/orcamentos/$id'
+      path: '/$id'
+      fullPath: '/crm/orcamentos/$id'
+      preLoaderRoute: typeof CrmOrcamentosIdRouteImport
+      parentRoute: typeof CrmOrcamentosRoute
+    }
   }
 }
+
+interface CrmOrcamentosRouteChildren {
+  CrmOrcamentosIdRoute: typeof CrmOrcamentosIdRoute
+}
+
+const CrmOrcamentosRouteChildren: CrmOrcamentosRouteChildren = {
+  CrmOrcamentosIdRoute: CrmOrcamentosIdRoute,
+}
+
+const CrmOrcamentosRouteWithChildren = CrmOrcamentosRoute._addFileChildren(
+  CrmOrcamentosRouteChildren,
+)
+
+interface CrmRouteChildren {
+  CrmClientesRoute: typeof CrmClientesRoute
+  CrmOrcamentosRoute: typeof CrmOrcamentosRouteWithChildren
+  CrmPagamentosRoute: typeof CrmPagamentosRoute
+}
+
+const CrmRouteChildren: CrmRouteChildren = {
+  CrmClientesRoute: CrmClientesRoute,
+  CrmOrcamentosRoute: CrmOrcamentosRouteWithChildren,
+  CrmPagamentosRoute: CrmPagamentosRoute,
+}
+
+const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
 interface FerramentasRouteChildren {
   FerramentasEmailsRoute: typeof FerramentasEmailsRoute
@@ -533,6 +655,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
   ConfigRoute: ConfigRoute,
+  CrmRoute: CrmRouteWithChildren,
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,

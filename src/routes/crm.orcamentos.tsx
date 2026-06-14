@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { OrcamentoForm } from "@/components/crm/OrcamentoForm";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { obterAlertas } from "@/lib/crm/alertService";
 
 export const Route = createFileRoute("/crm/orcamentos")({
   head: () => ({ meta: [{ title: "Orçamentos · CRM VargasTI" }] }),
@@ -23,7 +24,9 @@ type Orcamento = {
 
 function OrcamentosPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const [alertas, setAlertas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -43,6 +46,9 @@ function OrcamentosPage() {
 
       if (error) throw error;
       setOrcamentos((data as Orcamento[]) || []);
+
+      const alerts = await obterAlertas();
+      setAlertas(alerts);
     } catch (e) {
       console.error("Erro ao carregar orçamentos:", e);
     } finally {
@@ -87,6 +93,30 @@ function OrcamentosPage() {
           onSuccess={() => loadOrcamentos()}
           userId={user!.id}
         />
+
+        {alertas.length > 0 && (
+          <div style={{
+            background: "rgba(255, 152, 0, 0.1)",
+            border: "1px solid rgba(255, 152, 0, 0.3)",
+            borderRadius: "12px",
+            padding: "1rem",
+            marginBottom: "2rem"
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+              <AlertCircle size={20} style={{ color: "#ffb74d", marginTop: "2px" }} />
+              <div>
+                <p style={{ color: "#ffb74d", fontWeight: 600, marginBottom: "0.5rem" }}>
+                  ⚠️ {alertas.length} alerta{alertas.length > 1 ? "s" : ""} de vencimento
+                </p>
+                {alertas.map((alerta) => (
+                  <p key={alerta.id} style={{ fontSize: "13px", color: "#ffd89b", marginBottom: "0.25rem" }}>
+                    • {alerta.mensagem}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <p style={{ color: "#8da2b4" }}>Carregando orçamentos...</p>
@@ -134,7 +164,11 @@ function OrcamentosPage() {
                       </span>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <button style={{ padding: "4px 8px", fontSize: "12px", background: "rgba(19, 200, 211, 0.1)", border: "1px solid rgba(19, 200, 211, 0.3)", color: "#13c8d3", borderRadius: "4px", cursor: "pointer" }}>Visualizar</button>
+                      <button
+                        onClick={() => navigate({ to: `/crm/orcamentos/${orcamento.id}` })}
+                        style={{ padding: "4px 8px", fontSize: "12px", background: "rgba(19, 200, 211, 0.1)", border: "1px solid rgba(19, 200, 211, 0.3)", color: "#13c8d3", borderRadius: "4px", cursor: "pointer" }}>
+                        Visualizar
+                      </button>
                     </td>
                   </tr>
                 ))}
