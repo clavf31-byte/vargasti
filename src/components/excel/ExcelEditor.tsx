@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import {
   Upload, ChevronLeft, FileSpreadsheet, Search, Clock, Trash2, PanelLeftClose, PanelLeft,
 } from "lucide-react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useExcelStore, detectColType, SheetData } from "./useExcelStore";
 import { ExcelTable } from "./ExcelTable";
 import { ExcelFilters } from "./ExcelFilters";
