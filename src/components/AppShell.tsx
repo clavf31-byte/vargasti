@@ -272,7 +272,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
             >
               <span>⌕ Busca rápida</span>
               <span className="text-[9px] px-1.5 py-0.5 border rounded" style={{ borderColor: "rgba(255,255,255,.14)", background: "rgba(255,255,255,.06)" }}>
-                Cmd+K
+                CTRL K
               </span>
             </div>
           </div>
