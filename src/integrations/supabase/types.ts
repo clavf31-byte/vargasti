@@ -25,6 +25,7 @@ export type Database = {
           orcamento_id: string | null
           severidade: string
           tipo: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -36,6 +37,7 @@ export type Database = {
           orcamento_id?: string | null
           severidade?: string
           tipo: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -47,6 +49,7 @@ export type Database = {
           orcamento_id?: string | null
           severidade?: string
           tipo?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -149,6 +152,7 @@ export type Database = {
           status: string
           subject: string
           type: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -159,6 +163,7 @@ export type Database = {
           status?: string
           subject: string
           type: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -169,6 +174,7 @@ export type Database = {
           status?: string
           subject?: string
           type?: string
+          user_id?: string | null
         }
         Relationships: [
           {
