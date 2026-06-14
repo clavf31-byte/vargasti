@@ -2,16 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import vargasLogo from "@/assets/vargasti-icon.png";
 import { lovable } from "@/integrations/lovable";
-import { Loader2, Mail, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
 function LoginPage() {
-  const { session, loading, accessDenied } = useAuth();
+  const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -19,6 +18,7 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!loading && session) {
@@ -48,174 +48,406 @@ function LoginPage() {
 
     if (mode === "signup") {
       const { error } = await supabase.auth.signUp({ email, password });
+      setSubmitting(false);
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("Conta criada! Verifique seu e-mail para confirmar o cadastro.");
+        setSuccess("Conta criada! Verifique seu e-mail para confirmar.");
         setEmail("");
         setPassword("");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
+      setSubmitting(false);
+      if (error) {
+        setError(error.message);
+      }
     }
-
-    setSubmitting(false);
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-info/4 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen" style={styles.body}>
+      <div style={styles.wave}></div>
 
-      <div className="relative w-full max-w-sm animate-fade-in">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="size-28 rounded-[28px] bg-brand/10 border border-brand/20 grid place-items-center mb-5 shadow-[0_0_60px_rgba(59,220,138,.15)]">
-            <img
-              src={vargasLogo}
-              alt="VargasTI"
-              className="size-[4.5rem] object-contain"
-            />
+      <main style={styles.page}>
+        {/* Brand Side */}
+        <section style={styles.brandSide}>
+          <div style={styles.logo}>
+            <svg viewBox="0 0 220 220" fill="none" style={{ width: "180px", height: "180px" }}>
+              <path d="M42 70L110 185L178 70H144L110 129L76 70H42Z" stroke="url(#g1)" strokeWidth="12" strokeLinejoin="round"/>
+              <path d="M74 68V34M110 88V26M146 68V34M92 95V56M128 95V56" stroke="url(#g2)" strokeWidth="8" strokeLinecap="round"/>
+              <circle cx="74" cy="32" r="10" fill="#04d9ff"/>
+              <circle cx="110" cy="24" r="10" fill="#18e66b"/>
+              <circle cx="146" cy="32" r="10" fill="#04d9ff"/>
+              <circle cx="92" cy="55" r="8" fill="#04d9ff"/>
+              <circle cx="128" cy="55" r="8" fill="#18e66b"/>
+              <defs>
+                <linearGradient id="g1" x1="42" y1="70" x2="178" y2="185">
+                  <stop stopColor="#04d9ff"/>
+                  <stop offset=".55" stopColor="#0078ff"/>
+                  <stop offset="1" stopColor="#18e66b"/>
+                </linearGradient>
+                <linearGradient id="g2" x1="74" y1="24" x2="146" y2="95">
+                  <stop stopColor="#18e66b"/>
+                  <stop offset="1" stopColor="#0078ff"/>
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">
-            Vargas<span className="text-brand">TI</span>
+          <h1 style={styles.brandName}>
+            Vargas
+            <span style={{ background: "linear-gradient(135deg,#0cd8ff,#0080ff 52%,#20ef75)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              TI
+            </span>
           </h1>
-          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] mt-1">
-            Knowledge Hub
+          <div style={styles.neon}></div>
+          <p style={styles.tagline}>
+            Soluções que conectam.<br/>
+            Suporte que <span style={{ color: "#0089ff", textShadow: "0 0 18px rgba(0,120,255,.65)" }}>transforma.</span>
           </p>
-        </div>
+        </section>
 
-        {/* Card */}
-        <div className="card-graphite p-6 space-y-4">
-          {accessDenied && (
-            <div className="px-3 py-2.5 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-xs text-destructive text-center">
-                Acesso não autorizado para este e-mail.
-              </p>
+        {/* Login Card */}
+        <section style={styles.card}>
+          <div style={styles.inner}>
+            <div style={styles.head}>
+              <div>
+                <h2 style={styles.h2}>
+                  Bem-vindo <span style={{ color: "#18e66b" }}>de volta!</span>
+                </h2>
+                <p style={styles.headP}>Informe seu e-mail e senha<br/>para acessar o sistema.</p>
+              </div>
+              <div style={styles.safe}>🛡 Ambiente Seguro</div>
             </div>
-          )}
 
-          {mode === "login" && (
-            <>
-              {/* Google */}
-              <button
-                onClick={handleGoogle}
-                className="w-full flex items-center justify-center gap-3 bg-white/5 border border-border rounded-xl py-2.5 text-sm font-medium text-foreground hover:bg-white/10 hover:border-border/80 active:scale-[0.98] transition-all duration-150"
-              >
-                <svg className="size-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                Entrar com Google
-              </button>
+            <button type="button" onClick={handleGoogle} style={styles.button} disabled={submitting}>
+              <svg width="28" height="28" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.4 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.8-3.3-11.4-8l-6.5 5C9.4 39.5 16.1 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.4-2.3 4.4-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+              </svg>
+              Entrar com Google
+            </button>
 
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border/50" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-card px-3 text-[10px] text-muted-foreground uppercase tracking-widest">
-                    ou
-                  </span>
+            <div style={styles.sep}>ou</div>
+
+            <form onSubmit={handleSubmit}>
+              <div style={styles.group}>
+                <label style={styles.label}>E-mail</label>
+                <div style={styles.input}>
+                  <span>✉</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Digite seu e-mail"
+                    style={styles.inputField}
+                  />
                 </div>
               </div>
-            </>
-          )}
 
-          {/* Email form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {mode === "signup" && (
-              <p className="text-xs text-muted-foreground text-center pb-1">
-                Criar conta de administrador
-              </p>
-            )}
+              <div style={styles.group}>
+                <label style={styles.label}>Senha</label>
+                <div style={styles.input}>
+                  <span>🔒</span>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Digite sua senha"
+                    style={styles.inputField}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ background: "none", border: "none", color: "#91a7bb", cursor: "pointer", fontSize: "18px", padding: 0 }}
+                  >
+                    {showPassword ? "👁" : "👁"}
+                  </button>
+                </div>
+              </div>
 
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="email"
-                placeholder="E-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full bg-white/5 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all"
-              />
-            </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="password"
-                placeholder={mode === "signup" ? "Senha (mín. 6 caracteres)" : "Senha"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={mode === "signup" ? 6 : undefined}
-                className="w-full bg-white/5 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all"
-              />
-            </div>
+              <div style={styles.options}>
+                <label style={styles.remember}>
+                  <input type="checkbox" style={{ marginRight: "8px" }} /> Lembrar-me
+                </label>
+                <a href="#" style={styles.forgot}>Esqueci minha senha ›</a>
+              </div>
 
-            {error && (
-              <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
+              {error && <div style={{ color: "#ff6b6b", fontSize: "14px", marginBottom: "16px" }}>{error}</div>}
+              {success && <div style={{ color: "#18e66b", fontSize: "14px", marginBottom: "16px" }}>{success}</div>}
 
-            {success && (
-              <p className="text-xs text-brand bg-brand/10 border border-brand/20 rounded-lg px-3 py-2">
-                {success}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 bg-brand rounded-xl py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand/90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="size-3.5 animate-spin" />
-                  {mode === "signup" ? "Criando conta..." : "Entrando..."}
-                </>
-              ) : mode === "signup" ? (
-                "Criar conta"
-              ) : (
-                "Entrar"
-              )}
-            </button>
-          </form>
-
-          <div className="pt-1 text-center">
-            {mode === "login" ? (
-              <button
-                type="button"
-                onClick={() => switchMode("signup")}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Não tem conta?{" "}
-                <span className="text-brand font-medium">Criar conta</span>
+              <button type="submit" style={styles.loginBtn} disabled={submitting}>
+                {submitting ? <Loader2 style={{ animation: "spin 1s linear infinite" }} size={20} /> : "↪ Entrar"}
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Já tem conta?{" "}
-                <span className="text-brand font-medium">Entrar</span>
-              </button>
-            )}
+            </form>
+
+            <div style={styles.create}>
+              <span>Não tem conta? <a href="#" onClick={(e) => { e.preventDefault(); switchMode("signup"); }} style={{ color: "#18e66b", textDecoration: "none", fontWeight: "800" }}>Criar conta</a></span>
+            </div>
           </div>
-        </div>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-5">
-          VargasTI Lab · v2.0
-        </p>
-      </div>
+          <footer style={styles.footer}>
+            <div style={styles.foot}>
+              <div style={{ ...styles.icon, color: "#18e66b" }}>●</div>
+              <div><strong style={{ display: "block", fontSize: "18px", marginBottom: "4px" }}>Sistema Online</strong><small style={{ color: "#a7b4c2", fontSize: "15px" }}>Todos os serviços OK</small></div>
+            </div>
+            <div style={styles.foot}>
+              <div style={styles.icon}>▱</div>
+              <div><strong style={{ display: "block", fontSize: "18px", marginBottom: "4px" }}>V2.5.0</strong><small style={{ color: "#a7b4c2", fontSize: "15px" }}>22/05/2026</small></div>
+            </div>
+            <div style={styles.foot}>
+              <div style={{ ...styles.icon, color: "#18e66b" }}>🛡</div>
+              <div><strong style={{ display: "block", fontSize: "18px", marginBottom: "4px" }}>Ambiente Seguro</strong><small style={{ color: "#a7b4c2", fontSize: "15px" }}>Seus dados protegidos</small></div>
+            </div>
+          </footer>
+        </section>
+      </main>
     </div>
   );
 }
+
+const styles = {
+  body: {
+    margin: 0,
+    minHeight: "100vh",
+    fontFamily: "Inter, Segoe UI, Arial, sans-serif",
+    color: "#f4f8fb",
+    background: `
+      linear-gradient(rgba(0,120,255,.07) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,120,255,.07) 1px,transparent 1px),
+      radial-gradient(circle at 10% 70%,rgba(0,120,255,.22),transparent 32%),
+      radial-gradient(circle at 85% 20%,rgba(0,255,130,.12),transparent 32%),
+      linear-gradient(135deg,#020711,#031323 45%,#020914)
+    `,
+    backgroundSize: "72px 72px,72px 72px,100% 100%,100% 100%,100% 100%",
+    overflowX: "hidden",
+  } as React.CSSProperties,
+  wave: {
+    position: "fixed",
+    left: "-80px",
+    bottom: "-120px",
+    width: "620px",
+    height: "300px",
+    opacity: 0.45,
+    background: "radial-gradient(circle,rgba(0,180,255,.85) 1px,transparent 2px)",
+    backgroundSize: "16px 16px",
+    clipPath: "polygon(0 45%,18% 38%,38% 54%,60% 42%,78% 52%,100% 37%,100% 100%,0 100%)",
+    filter: "drop-shadow(0 0 20px rgba(0,120,255,.55))",
+  } as React.CSSProperties,
+  page: {
+    minHeight: "100vh",
+    display: "grid",
+    gridTemplateColumns: "0.92fr 1.08fr",
+    alignItems: "center",
+    gap: "44px",
+    padding: "52px 76px",
+    position: "relative",
+  } as React.CSSProperties,
+  brandSide: {
+    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "620px",
+  } as React.CSSProperties,
+  logo: {
+    width: "180px",
+    height: "180px",
+    filter: "drop-shadow(0 0 24px rgba(0,130,255,.55))",
+    marginBottom: "10px",
+  } as React.CSSProperties,
+  brandName: {
+    fontSize: "clamp(58px, 6vw, 92px)",
+    fontWeight: 900,
+    letterSpacing: "-3px",
+    margin: "10px 0 0",
+    textShadow: "0 12px 30px rgba(0,0,0,.45)",
+  } as React.CSSProperties,
+  neon: {
+    width: "160px",
+    height: "4px",
+    borderRadius: "999px",
+    margin: "34px auto 36px",
+    background: "linear-gradient(90deg,transparent,#00b9ff,transparent)",
+    boxShadow: "0 0 22px rgba(0,140,255,.8)",
+  } as React.CSSProperties,
+  tagline: {
+    fontSize: "18px",
+    letterSpacing: "12px",
+    lineHeight: 1.6,
+    fontWeight: 600,
+    textTransform: "uppercase",
+    margin: 0,
+  } as React.CSSProperties,
+  card: {
+    width: "min(100%,780px)",
+    justifySelf: "center",
+    background: "radial-gradient(circle at 92% 10%,rgba(0,255,130,.07),transparent 22%),radial-gradient(circle at 14% 18%,rgba(0,160,255,.08),transparent 28%),rgba(3,14,26,.82)",
+    border: "1px solid rgba(20,190,255,.45)",
+    borderRightColor: "rgba(20,255,110,.65)",
+    borderRadius: "30px",
+    boxShadow: "0 28px 90px rgba(0,0,0,.38),0 0 55px rgba(0,120,255,.12)",
+    backdropFilter: "blur(18px)",
+    overflow: "hidden",
+  } as React.CSSProperties,
+  inner: {
+    padding: "64px 58px 34px",
+  } as React.CSSProperties,
+  head: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: "20px",
+    marginBottom: "34px",
+  } as React.CSSProperties,
+  h2: {
+    fontSize: "clamp(32px, 3.2vw, 46px)",
+    margin: "0 0 16px",
+    letterSpacing: "-1.4px",
+    color: "#f4f8fb",
+  } as React.CSSProperties,
+  headP: {
+    margin: 0,
+    color: "#c7d3df",
+    fontSize: "22px",
+    lineHeight: 1.35,
+  } as React.CSSProperties,
+  safe: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "14px 18px",
+    borderRadius: "14px",
+    border: "1px solid rgba(120,180,220,.24)",
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    background: "rgba(5,18,30,.64)",
+    color: "#fff",
+  } as React.CSSProperties,
+  button: {
+    width: "100%",
+    minHeight: "66px",
+    borderRadius: "14px",
+    border: "1px solid rgba(130,180,220,.36)",
+    background: "rgba(2,12,22,.56)",
+    color: "#f4f8fb",
+    fontSize: "22px",
+    fontWeight: 800,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "18px",
+    cursor: "pointer",
+    transition: ".2s",
+  } as React.CSSProperties,
+  sep: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: "22px",
+    margin: "40px 0 34px",
+    color: "#b7c5d1",
+    fontSize: "18px",
+  } as React.CSSProperties,
+  group: {
+    marginBottom: "24px",
+  } as React.CSSProperties,
+  label: {
+    display: "block",
+    fontSize: "20px",
+    fontWeight: 800,
+    marginBottom: "12px",
+    color: "#f4f8fb",
+  } as React.CSSProperties,
+  input: {
+    minHeight: "66px",
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    border: "1px solid rgba(130,180,220,.34)",
+    borderRadius: "14px",
+    background: "rgba(3,18,32,.78)",
+    padding: "0 20px",
+    color: "#91a7bb",
+  } as React.CSSProperties,
+  inputField: {
+    flex: 1,
+    border: 0,
+    outline: 0,
+    background: "transparent",
+    color: "#f4f8fb",
+    fontSize: "20px",
+    minWidth: 0,
+  } as React.CSSProperties,
+  options: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    margin: "22px 0 32px",
+    gap: "20px",
+    flexWrap: "wrap",
+  } as React.CSSProperties,
+  remember: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "12px",
+    color: "#d5e0ea",
+    fontSize: "18px",
+    cursor: "pointer",
+  } as React.CSSProperties,
+  forgot: {
+    color: "#04d9ff",
+    textDecoration: "none",
+    fontSize: "18px",
+    fontWeight: 700,
+  } as React.CSSProperties,
+  loginBtn: {
+    width: "100%",
+    minHeight: "72px",
+    borderRadius: "14px",
+    border: 0,
+    background: "linear-gradient(135deg,#18e66b,#0bb7c4 50%,#006cff)",
+    color: "#f4f8fb",
+    fontSize: "22px",
+    fontWeight: 800,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "18px",
+    cursor: "pointer",
+    boxShadow: "0 20px 38px rgba(0,110,255,.22)",
+    marginTop: "20px",
+  } as React.CSSProperties,
+  create: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: "20px",
+    margin: "34px 0 2px",
+    color: "#c7d4df",
+    fontSize: "18px",
+    textAlign: "center",
+  } as React.CSSProperties,
+  footer: {
+    borderTop: "1px solid rgba(130,180,220,.22)",
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+  } as React.CSSProperties,
+  foot: {
+    padding: "28px 34px",
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    borderRight: "1px solid rgba(130,180,220,.22)",
+  } as React.CSSProperties,
+  icon: {
+    width: "42px",
+    height: "42px",
+    display: "grid",
+    placeItems: "center",
+    color: "#04d9ff",
+  } as React.CSSProperties,
+};
