@@ -325,7 +325,7 @@ function NotesPage() {
                 <button
                   onClick={() => setLayoutMode(layoutMode === "vertical" ? "horizontal" : "vertical")}
                   title={`Trocar para ${layoutMode === "vertical" ? "horizontal" : "vertical"}`}
-                  className="p-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors"
+                  className="p-1.5 rounded-lg bg-surface-2 border border-border text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-colors"
                 >
                   {layoutMode === "vertical" ? <LayoutList className="size-3.5" /> : <LayoutGrid className="size-3.5" />}
                 </button>
@@ -335,12 +335,12 @@ function NotesPage() {
               <>
                 <div className="flex gap-1.5">
                   <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
                     <option value="todos">Todos status</option>
                     {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                   <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
                     <option value="todas">Todas cat.</option>
                     {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -354,7 +354,7 @@ function NotesPage() {
                     .select().single();
                   if (!error && data) { setNotes((prev) => [data as Note, ...prev]); openNote(data as Note); }
                 }}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand/10 border border-brand/20 text-brand text-[10px] font-medium hover:bg-brand/20 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-3 border border-border text-foreground text-[10px] font-medium hover:bg-surface-3/80 transition-colors"
               >
                 <Plus className="size-3" />
                 Nova
@@ -363,17 +363,17 @@ function NotesPage() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar anotação..."
-                className="w-full bg-background border border-border rounded-xl px-2.5 pl-7 py-1.5 text-xs focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 placeholder:text-muted-foreground transition-all" />
+                className="w-full bg-background border border-border rounded-xl px-2.5 pl-7 py-1.5 text-xs focus:outline-none focus:border-muted-foreground/40 focus:ring-1 focus:ring-muted-foreground/20 placeholder:text-muted-foreground transition-all" />
             </div>
             {layoutMode === "vertical" && (
               <div className="flex gap-1.5">
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
                   <option value="todos">Todos status</option>
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer">
+                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
                   <option value="todas">Todas cat.</option>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -393,15 +393,15 @@ function NotesPage() {
                 <button key={note.id} onClick={() => openNote(note)}
                   className={`${layoutMode === "horizontal" ? "flex-shrink-0 min-w-[200px]" : "w-full"} text-left px-3 py-2.5 rounded-xl transition-all flex items-start gap-2.5 group ${
                     isActive
-                      ? "bg-brand/10 border border-brand/25 shadow-[inset_0_0_0_1px_rgba(var(--brand)/0.1)]"
-                      : "hover:bg-surface-2 border border-transparent"
+                      ? "bg-surface-2 border border-border shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]"
+                      : "hover:bg-surface-2/50 border border-transparent"
                   }`}
                 >
-                  <div className={`mt-0.5 shrink-0 ${isActive ? "text-brand" : "text-muted-foreground/50"}`}>
+                  <div className={`mt-0.5 shrink-0 ${isActive ? "text-foreground" : "text-muted-foreground/50"}`}>
                     {locked ? <Lock className="size-3.5" /> : <FileText className="size-3.5" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate text-xs font-medium leading-snug ${isActive ? "text-brand" : "text-foreground"}`}>
+                    <p className={`truncate text-xs font-medium leading-snug ${isActive ? "text-foreground" : "text-foreground/80"}`}>
                       {locked && mode === "hidden" ? "Anotação protegida" : (note.title || "Sem título")}
                     </p>
                     <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -473,7 +473,7 @@ function NotesPage() {
                     </div>
                     {unlockError && <p className="text-xs text-destructive">{unlockError}</p>}
                     <button onClick={handleUnlock} disabled={!unlockPwd.trim()}
-                      className="w-full py-2.5 text-sm bg-brand text-brand-foreground rounded-xl hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      className="w-full py-2.5 text-sm bg-foreground text-background rounded-xl hover:bg-foreground/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                       Desbloquear
                     </button>
                   </div>
@@ -487,15 +487,15 @@ function NotesPage() {
             return (
               <div className="flex-1 flex items-center justify-center p-6">
                 <div className="w-full max-w-xs space-y-4 text-center">
-                  <div className="size-14 rounded-2xl bg-brand/10 border border-brand/20 grid place-items-center mx-auto">
-                    <ShieldCheck className="size-6 text-brand" />
+                  <div className="size-14 rounded-2xl bg-surface-2 border border-border grid place-items-center mx-auto">
+                    <ShieldCheck className="size-6 text-muted-foreground" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">Desbloqueado</p>
                     <p className="text-[11px] text-muted-foreground mt-1">Clique para revelar o conteúdo desta sessão</p>
                   </div>
                   <button onClick={() => setRevealed((prev) => new Set(prev).add(selected.id))}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm bg-brand/10 border border-brand/20 text-brand rounded-xl hover:bg-brand/20 transition-colors">
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm bg-surface-2 border border-border text-foreground rounded-xl hover:bg-surface-3 transition-colors">
                     <Eye className="size-4" />
                     Revelar conteúdo
                   </button>
@@ -514,7 +514,7 @@ function NotesPage() {
                   className="flex-1 bg-transparent text-sm font-semibold text-foreground focus:outline-none placeholder:text-muted-foreground/50 min-w-0" />
                 <div className="flex items-center gap-1.5 shrink-0">
                   {saveStatus === "saving" && <span className="text-[9px] text-muted-foreground/60">salvando...</span>}
-                  {saveStatus === "saved" && <span className="text-[9px] text-brand/80">salvo</span>}
+                  {saveStatus === "saved" && <span className="text-[9px] text-muted-foreground/80">salvo</span>}
                   {saveStatus === "error" && <span className="text-[9px] text-destructive">erro</span>}
                   {mode === "hidden" && unlocked.has(selected.id) && (
                     <button onClick={() => setRevealed((prev) => { const s = new Set(prev); s.delete(selected.id); return s; })}
@@ -537,7 +537,7 @@ function NotesPage() {
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <select value={category} onChange={(e) => handleFieldChange("category", e.target.value)}
-                  className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-brand/40 appearance-none cursor-pointer transition-colors">
+                  className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer transition-colors">
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
