@@ -224,12 +224,12 @@ function ArquivosPage() {
                                     const h = JSON.parse(localStorage.getItem("excel-history") || "[]");
                                     const item = h.find((item: Record<string, unknown>) => String(item.id) === f.id.replace("local-", ""));
                                     if (item?.fileData) {
-                                      navigate({ to: "/ferramentas/excel", state: { fileData: item.fileData, fileName: f.name } });
+                                      navigate({ to: "/ferramentas/excel", state: ({ fileData: item.fileData, fileName: f.name } as any) });
                                     }
                                   } else if (f.storage_path) {
                                     const { data } = await supabase.storage.from("uploads").download(f.storage_path);
                                     if (data) {
-                                      navigate({ to: "/ferramentas/excel", state: { fileBlob: data, fileName: f.name } });
+                                      navigate({ to: "/ferramentas/excel", state: ({ fileBlob: data, fileName: f.name } as any) });
                                     }
                                   }
                                 }}
