@@ -9,6 +9,10 @@ const COMMANDS = [
   { id: "whatsapp", label: "WhatsApp", icon: "💬", path: "/ferramentas/whatsapp" },
   { id: "projetos", label: "Projetos", icon: "📁", path: "/projetos" },
   { id: "anotacoes", label: "Anotações", icon: "📝", path: "/anotacoes" },
+  { id: "crm", label: "CRM Dashboard", icon: "💼", path: "/crm" },
+  { id: "clientes", label: "Clientes", icon: "👥", path: "/crm/clientes" },
+  { id: "orcamentos", label: "Orçamentos", icon: "📄", path: "/crm/orcamentos" },
+  { id: "pagamentos", label: "Pagamentos", icon: "💳", path: "/crm/pagamentos" },
   { id: "arquivos", label: "Arquivos", icon: "📦", path: "/arquivos" },
   { id: "config", label: "Configurações", icon: "⚙️", path: "/config" },
 ];

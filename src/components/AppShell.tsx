@@ -1,7 +1,7 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Mail, FileSpreadsheet, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
@@ -24,6 +24,15 @@ const NAV_MODULES = [
     items: [
       { to: "/projetos", label: "Projetos", icon: FolderKanban },
       { to: "/anotacoes", label: "Anotações", icon: NotebookPen },
+    ],
+  },
+  {
+    group: "💼 CRM",
+    items: [
+      { to: "/crm", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/crm/clientes", label: "Clientes", icon: Users },
+      { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet },
+      { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail },
     ],
   },
   {
@@ -55,6 +64,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     return {
       "🛠️ Ferramentas": false,
       "📝 Projetos & Notas": false,
+      "💼 CRM": false,
       "💾 Storage": false,
     };
   });
