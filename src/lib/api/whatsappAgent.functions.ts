@@ -636,67 +636,68 @@ export function isCallingAI(message: string): boolean {
   return CALLING_AI_PATTERNS.some((re) => re.test(message));
 }
 
-const PauseSchema = z.object({
-  userId: z.string(),
-  fromNumber: z.string(),
-  instanceName: z.string(),
-  isGroup: z.boolean().optional().default(false),
-});
+// Internal helper types — these functions are called server-side only
+// (from the WhatsApp webhook route). They are intentionally NOT exposed as
+// createServerFn endpoints to avoid an unauthenticated public RPC surface.
+type PauseInput = {
+  userId: string;
+  fromNumber: string;
+  instanceName: string;
+  isGroup?: boolean;
+};
+type PauseLookup = {
+  userId: string;
+  fromNumber: string;
+  instanceName: string;
+};
 
-const PauseLookupSchema = z.object({
-  userId: z.string(),
-  fromNumber: z.string(),
-  instanceName: z.string(),
-});
+export async function pauseConversation(input: PauseInput): Promise<{ ok: boolean; error?: string }> {
+  const admin = getAdminClient();
+  await admin
+    .from("conversation_pauses")
+    .delete()
+    .eq("user_id", input.userId)
+    .eq("from_number", input.fromNumber)
+    .eq("instance_name", input.instanceName);
 
-export const pauseConversation = createServerFn({ method: "POST" })
-  .inputValidator(PauseSchema)
-  .handler(async ({ data }) => {
-    const admin = getAdminClient();
-    // Clear any prior pause for this conversation, then insert a fresh one
-    await admin
-      .from("conversation_pauses")
-      .delete()
-      .eq("user_id", data.userId)
-      .eq("from_number", data.fromNumber)
-      .eq("instance_name", data.instanceName);
-
-    const { error } = await admin.from("conversation_pauses").insert({
-      user_id: data.userId,
-      from_number: data.fromNumber,
-      instance_name: data.instanceName,
-      is_group: data.isGroup ?? false,
-    });
-    if (error) return { ok: false, error: error.message };
-    return { ok: true };
+  const { error } = await admin.from("conversation_pauses").insert({
+    user_id: input.userId,
+    from_number: input.fromNumber,
+    instance_name: input.instanceName,
+    is_group: input.isGroup ?? false,
   });
+  if (error) {
+    console.error("[pauseConversation] insert error:", error);
+    return { ok: false, error: "Failed to pause conversation" };
+  }
+  return { ok: true };
+}
 
-export const resumeConversation = createServerFn({ method: "POST" })
-  .inputValidator(PauseLookupSchema)
-  .handler(async ({ data }) => {
-    const admin = getAdminClient();
-    const { error } = await admin
-      .from("conversation_pauses")
-      .delete()
-      .eq("user_id", data.userId)
-      .eq("from_number", data.fromNumber)
-      .eq("instance_name", data.instanceName);
-    if (error) return { ok: false, error: error.message };
-    return { ok: true };
-  });
+export async function resumeConversation(input: PauseLookup): Promise<{ ok: boolean; error?: string }> {
+  const admin = getAdminClient();
+  const { error } = await admin
+    .from("conversation_pauses")
+    .delete()
+    .eq("user_id", input.userId)
+    .eq("from_number", input.fromNumber)
+    .eq("instance_name", input.instanceName);
+  if (error) {
+    console.error("[resumeConversation] delete error:", error);
+    return { ok: false, error: "Failed to resume conversation" };
+  }
+  return { ok: true };
+}
 
-export const isConversationPaused = createServerFn({ method: "POST" })
-  .inputValidator(PauseLookupSchema)
-  .handler(async ({ data }) => {
-    const admin = getAdminClient();
-    const nowIso = new Date().toISOString();
-    const { data: rows } = await admin
-      .from("conversation_pauses")
-      .select("id, resume_at")
-      .eq("user_id", data.userId)
-      .eq("from_number", data.fromNumber)
-      .eq("instance_name", data.instanceName)
-      .gt("resume_at", nowIso)
-      .limit(1);
-    return { isPaused: Boolean(rows && rows.length > 0) };
-  });
+export async function isConversationPaused(input: PauseLookup): Promise<{ isPaused: boolean }> {
+  const admin = getAdminClient();
+  const nowIso = new Date().toISOString();
+  const { data: rows } = await admin
+    .from("conversation_pauses")
+    .select("id, resume_at")
+    .eq("user_id", input.userId)
+    .eq("from_number", input.fromNumber)
+    .eq("instance_name", input.instanceName)
+    .gt("resume_at", nowIso)
+    .limit(1);
+  return { isPaused: Boolean(rows && rows.length > 0) };
+}
