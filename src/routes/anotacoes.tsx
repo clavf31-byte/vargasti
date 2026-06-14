@@ -93,9 +93,9 @@ function NotesPage() {
   const [dbError, setDbError] = useState(false);
   const [layoutMode, setLayoutMode] = useState<"vertical" | "horizontal">(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("notesLayoutMode") as "vertical" | "horizontal") || "horizontal";
+      return (localStorage.getItem("notesLayoutMode") as "vertical" | "horizontal") || "vertical";
     }
-    return "horizontal";
+    return "vertical";
   });
 
   useEffect(() => {

@@ -46,9 +46,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    "🛠️ Ferramentas": true,
-    "📝 Projetos & Notas": true,
-    "💾 Storage": true,
+    "🛠️ Ferramentas": false,
+    "📝 Projetos & Notas": false,
+    "💾 Storage": false,
   });
 
   const displayName =
