@@ -40,11 +40,27 @@ function OrcamentosPage() {
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Orçamentos</h1>
-        <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
-          {orcamentos.length} orçamento{orcamentos.length !== 1 ? "s" : ""}
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+        <div>
+          <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Orçamentos</h1>
+          <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
+            {orcamentos.length} orçamento{orcamentos.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <button
+          style={{
+            padding: "10px 20px",
+            background: "#13c8d3",
+            color: "#061b2a",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: 600,
+            fontSize: "14px",
+          }}
+        >
+          + Novo Orçamento
+        </button>
       </div>
 
       {loading ? (
