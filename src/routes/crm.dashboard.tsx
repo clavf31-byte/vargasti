@@ -80,7 +80,7 @@ function DashboardPage() {
   );
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "1400px", margin: "0 auto" }}>
+    <div style={{ padding: "2rem" }}>
       <div style={{ marginBottom: "3rem" }}>
         <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "40px" }}>Dashboard</h1>
         <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
