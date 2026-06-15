@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ClienteForm } from "@/components/crm/ClienteForm";
 import { Users } from "lucide-react";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -22,22 +21,43 @@ type Cliente = {
 
 function ClientesPage() {
   const { user } = useAuth();
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const { data: clientes = [], isLoading, refetch } = useQuery({
-    queryKey: ["clientes", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
+  useEffect(() => {
+    if (!user) return;
 
-      if (error) throw error;
-      return (data as Cliente[]) || [];
-    },
-    enabled: !!user,
-  });
+    const loadClientes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("clientes")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Erro:", error);
+          return;
+        }
+
+        setClientes((data as Cliente[]) || []);
+      } catch (e) {
+        console.error("Erro ao carregar:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadClientes();
+  }, [user]);
+
+  const handleSuccess = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("clientes").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    setClientes((data as Cliente[]) || []);
+    setIsFormOpen(false);
+  };
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
@@ -68,14 +88,11 @@ function ClientesPage() {
       <ClienteForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        onSuccess={() => {
-          refetch();
-          setIsFormOpen(false);
-        }}
+        onSuccess={handleSuccess}
         userId={user!.id}
       />
 
-      {isLoading ? (
+      {loading ? (
         <p style={{ color: "#8da2b4" }}>Carregando clientes...</p>
       ) : clientes.length === 0 ? (
         <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>

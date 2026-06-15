@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard } from "lucide-react";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -21,21 +20,35 @@ type Pagamento = {
 
 function PagamentosPage() {
   const { user } = useAuth();
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: pagamentos = [], isLoading } = useQuery({
-    queryKey: ["pagamentos", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pagamentos")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("data_pagamento", { ascending: false });
+  useEffect(() => {
+    if (!user) return;
 
-      if (error) throw error;
-      return (data as Pagamento[]) || [];
-    },
-    enabled: !!user,
-  });
+    const loadPagamentos = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("pagamentos")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("data_pagamento", { ascending: false });
+
+        if (error) {
+          console.error("Erro:", error);
+          return;
+        }
+
+        setPagamentos((data as Pagamento[]) || []);
+      } catch (e) {
+        console.error("Erro ao carregar:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPagamentos();
+  }, [user]);
 
   const totalPago = pagamentos.reduce((sum, p) => sum + (p.valor || 0), 0);
 
@@ -86,7 +99,7 @@ function PagamentosPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {loading ? (
         <p style={{ color: "#8da2b4" }}>Carregando pagamentos...</p>
       ) : pagamentos.length === 0 ? (
         <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
