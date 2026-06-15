@@ -1,17 +1,22 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { CRMLayout } from "@/components/crm/CRMLayout";
 
 export const Route = createFileRoute("/crm")({
   head: () => ({ meta: [{ title: "CRM · VargasTI Lab" }] }),
-  component: CRMLayout,
+  component: CRMLayoutPage,
 });
 
-function CRMLayout() {
+function CRMLayoutPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
     navigate({ to: "/crm/dashboard", replace: true });
   }, [navigate]);
 
-  return <Outlet />;
+  return (
+    <CRMLayout>
+      <Outlet />
+    </CRMLayout>
+  );
 }
