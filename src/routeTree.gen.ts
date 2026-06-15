@@ -30,7 +30,6 @@ import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-we
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
 import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callback'
-import { Route as ApiGmailAuthRouteImport } from './routes/api/gmail-auth'
 import { Route as ApiDeleteGmailTokenRouteImport } from './routes/api/delete-gmail-token'
 import { Route as ApiDebugProcessPipelineRouteImport } from './routes/api/debug-process-pipeline'
 import { Route as ApiDebugProcessEmailRouteImport } from './routes/api/debug-process-email'
@@ -145,11 +144,6 @@ const ApiGmailCallbackRoute = ApiGmailCallbackRouteImport.update({
   path: '/api/gmail-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGmailAuthRoute = ApiGmailAuthRouteImport.update({
-  id: '/api/gmail-auth',
-  path: '/api/gmail-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiDeleteGmailTokenRoute = ApiDeleteGmailTokenRouteImport.update({
   id: '/api/delete-gmail-token',
   path: '/api/delete-gmail-token',
@@ -209,7 +203,6 @@ export interface FileRoutesByFullPath {
   '/api/debug-process-email': typeof ApiDebugProcessEmailRoute
   '/api/debug-process-pipeline': typeof ApiDebugProcessPipelineRoute
   '/api/delete-gmail-token': typeof ApiDeleteGmailTokenRoute
-  '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
@@ -240,7 +233,6 @@ export interface FileRoutesByTo {
   '/api/debug-process-email': typeof ApiDebugProcessEmailRoute
   '/api/debug-process-pipeline': typeof ApiDebugProcessPipelineRoute
   '/api/delete-gmail-token': typeof ApiDeleteGmailTokenRoute
-  '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
@@ -273,7 +265,6 @@ export interface FileRoutesById {
   '/api/debug-process-email': typeof ApiDebugProcessEmailRoute
   '/api/debug-process-pipeline': typeof ApiDebugProcessPipelineRoute
   '/api/delete-gmail-token': typeof ApiDeleteGmailTokenRoute
-  '/api/gmail-auth': typeof ApiGmailAuthRoute
   '/api/gmail-callback': typeof ApiGmailCallbackRoute
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
@@ -307,7 +298,6 @@ export interface FileRouteTypes {
     | '/api/debug-process-email'
     | '/api/debug-process-pipeline'
     | '/api/delete-gmail-token'
-    | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
     | '/api/version'
@@ -338,7 +328,6 @@ export interface FileRouteTypes {
     | '/api/debug-process-email'
     | '/api/debug-process-pipeline'
     | '/api/delete-gmail-token'
-    | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
     | '/api/version'
@@ -370,7 +359,6 @@ export interface FileRouteTypes {
     | '/api/debug-process-email'
     | '/api/debug-process-pipeline'
     | '/api/delete-gmail-token'
-    | '/api/gmail-auth'
     | '/api/gmail-callback'
     | '/api/gmail-webhook'
     | '/api/version'
@@ -402,7 +390,6 @@ export interface RootRouteChildren {
   ApiDebugProcessEmailRoute: typeof ApiDebugProcessEmailRoute
   ApiDebugProcessPipelineRoute: typeof ApiDebugProcessPipelineRoute
   ApiDeleteGmailTokenRoute: typeof ApiDeleteGmailTokenRoute
-  ApiGmailAuthRoute: typeof ApiGmailAuthRoute
   ApiGmailCallbackRoute: typeof ApiGmailCallbackRoute
   ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
   ApiVersionRoute: typeof ApiVersionRoute
@@ -558,13 +545,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGmailCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/gmail-auth': {
-      id: '/api/gmail-auth'
-      path: '/api/gmail-auth'
-      fullPath: '/api/gmail-auth'
-      preLoaderRoute: typeof ApiGmailAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/delete-gmail-token': {
       id: '/api/delete-gmail-token'
       path: '/api/delete-gmail-token'
@@ -695,7 +675,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDebugProcessEmailRoute: ApiDebugProcessEmailRoute,
   ApiDebugProcessPipelineRoute: ApiDebugProcessPipelineRoute,
   ApiDeleteGmailTokenRoute: ApiDeleteGmailTokenRoute,
-  ApiGmailAuthRoute: ApiGmailAuthRoute,
   ApiGmailCallbackRoute: ApiGmailCallbackRoute,
   ApiGmailWebhookRoute: ApiGmailWebhookRoute,
   ApiVersionRoute: ApiVersionRoute,

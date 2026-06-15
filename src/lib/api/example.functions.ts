@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getServerConfig } from "../config.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Example createServerFn. Server-side handler invoked from the client:
 //   const result = await getGreeting({ data: { name: "Ada" } })
@@ -22,9 +23,16 @@ export const getGreeting = createServerFn({ method: "POST" })
     };
   });
 
-// Setup CRM Tables
+// Setup CRM Tables — admin-only
 export const setupCRMTables = createServerFn({ method: "POST" })
-  .handler(async () => {
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    if (!context.userId) throw new Error("Unauthorized");
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
     try {
       console.log("🚀 Iniciando criação de tabelas CRM...");
 

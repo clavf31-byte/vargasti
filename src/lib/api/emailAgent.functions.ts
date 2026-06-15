@@ -91,20 +91,35 @@ function isGmailAuthorizationError(err: unknown) {
   return err instanceof Error && err.message === "Gmail not authorized";
 }
 
-// ── Get Gmail OAuth URL ───────────────────────────────────────────────────────
-export const getGmailAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
-  const { clientId, redirectUri } = getGmailOAuthConfig();
-  const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  url.search = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: "code",
-    access_type: "offline",
-    scope: "https://www.googleapis.com/auth/gmail.modify",
-    prompt: "consent",
-  }).toString();
-  return { url: url.toString() };
-});
+// ── Get Gmail OAuth URL (auth-required, signed state binds the user) ─────────
+function signGmailState(userId: string): string {
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) throw new Error("Server signing key not configured");
+  const payload = `${userId}.${Date.now()}`;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createHmac } = require("crypto") as typeof import("crypto");
+  const sig = createHmac("sha256", secret).update(payload).digest("hex");
+  return Buffer.from(`${payload}.${sig}`).toString("base64url");
+}
+
+export const getGmailAuthUrl = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const userId = context.userId;
+    if (!userId) throw new Error("Unauthorized");
+    const { clientId, redirectUri } = getGmailOAuthConfig();
+    const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    url.search = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      access_type: "offline",
+      scope: "https://www.googleapis.com/auth/gmail.modify",
+      prompt: "consent",
+      state: signGmailState(userId),
+    }).toString();
+    return { url: url.toString() };
+  });
 
 // ── Save Gmail Token ──────────────────────────────────────────────────────────
 const SaveGmailTokenSchema = z.object({

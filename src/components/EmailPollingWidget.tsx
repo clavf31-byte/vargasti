@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { startEmailPolling, stopEmailPolling, triggerEmailPolling } from "@/lib/api/emailPolling";
+import { getGmailAuthUrl } from "@/lib/api/emailAgent.functions";
 import { useEmailConfig } from "@/hooks/useEmailConfig";
 import {
   ConfigCategoriesModal,
@@ -122,12 +123,20 @@ export function EmailPollingWidget() {
             )}
           </p>
           {lastResult.authorized === false && (
-            <a
-              href="/api/gmail-auth"
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { url } = await getGmailAuthUrl();
+                  window.location.href = url;
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Não foi possível iniciar autorização");
+                }
+              }}
               className="inline-flex h-9 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
             >
               Autorizar Gmail
-            </a>
+            </button>
           )}
         </div>
       )}
