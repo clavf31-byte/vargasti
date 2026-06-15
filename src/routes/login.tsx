@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, Shield, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -19,11 +19,10 @@ function LoginPage() {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) {
-      navigate({ to: "/" });
-    }
+    if (!loading && session) navigate({ to: "/" });
   }, [session, loading, navigate]);
 
   function switchMode(next: "login" | "signup") {
@@ -49,9 +48,8 @@ function LoginPage() {
     if (mode === "signup") {
       const { error } = await supabase.auth.signUp({ email, password });
       setSubmitting(false);
-      if (error) {
-        setError(error.message);
-      } else {
+      if (error) setError(error.message);
+      else {
         setSuccess("Conta criada! Verifique seu e-mail para confirmar.");
         setEmail("");
         setPassword("");
@@ -59,93 +57,188 @@ function LoginPage() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setSubmitting(false);
-      if (error) {
-        setError(error.message);
-      }
+      if (error) setError(error.message);
     }
   }
 
   return (
-    <div className="min-h-screen" style={styles.body}>
-      <div style={styles.wave}></div>
+    <div style={{
+      minHeight: "100vh",
+      fontFamily: "Inter, Segoe UI, Arial, sans-serif",
+      color: "#f4f8fb",
+      background: "#0a1628",
+      position: "relative",
+      overflow: "hidden",
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      alignItems: "center",
+    }}>
+      {/* Circuit background overlay */}
+      <svg
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.15, pointerEvents: "none" }}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Horizontal lines */}
+        {[80, 160, 240, 320, 400, 480].map((y) => (
+          <line key={`h${y}`} x1="0" y1={y} x2="600" y2={y} stroke="#13c8d3" strokeWidth="0.5" />
+        ))}
+        {/* Vertical lines */}
+        {[60, 140, 220, 300, 380, 460, 540].map((x) => (
+          <line key={`v${x}`} x1={x} y1="0" x2={x} y2="600" stroke="#13c8d3" strokeWidth="0.5" />
+        ))}
+        {/* Nodes */}
+        {[[60,80],[140,160],[220,240],[300,320],[380,80],[460,160],[140,400],[300,480]].map(([cx,cy],i) => (
+          <circle key={i} cx={cx} cy={cy} r="3" fill="#13c8d3" />
+        ))}
+        {/* Right side lines */}
+        {[120, 200, 280, 360, 440, 520].map((y) => (
+          <line key={`rh${y}`} x1="700" y1={y} x2="1400" y2={y} stroke="#13c8d3" strokeWidth="0.5" />
+        ))}
+        {[760, 840, 920, 1000, 1080, 1160, 1240, 1320].map((x) => (
+          <line key={`rv${x}`} x1={x} y1="0" x2={x} y2="600" stroke="#13c8d3" strokeWidth="0.5" />
+        ))}
+      </svg>
 
-      <main style={styles.page}>
-        {/* Brand Side */}
-        <section style={styles.brandSide}>
-          <div style={styles.logo}>
-            <svg viewBox="0 0 220 220" fill="none" style={{ width: "140px", height: "140px" }}>
-              {/* V Checkmark Main */}
-              <path d="M42 70L110 185L178 70H144L110 129L76 70H42Z" stroke="url(#g1)" strokeWidth="12" strokeLinejoin="round"/>
+      {/* Glow effects */}
+      <div style={{
+        position: "absolute", top: "-200px", left: "-200px",
+        width: "600px", height: "600px",
+        background: "radial-gradient(circle, rgba(0,100,255,0.2) 0%, transparent 60%)",
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", bottom: "-100px", right: "-100px",
+        width: "400px", height: "400px",
+        background: "radial-gradient(circle, rgba(19,200,211,0.15) 0%, transparent 60%)",
+        pointerEvents: "none",
+      }} />
 
-              {/* Circuit lines connecting to circles */}
-              <path d="M74 68L74 40" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M110 88L110 30" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M146 68L146 40" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M92 95L85 62" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M128 95L135 62" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* LEFT — Brand */}
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", padding: "60px 40px", position: "relative", zIndex: 1,
+      }}>
+        {/* Logo SVG */}
+        <div style={{ marginBottom: "32px", filter: "drop-shadow(0 0 32px rgba(19,200,211,0.5))" }}>
+          <svg viewBox="0 0 200 200" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="logoGrad" x1="30" y1="80" x2="170" y2="190">
+                <stop offset="0%" stopColor="#13c8d3" />
+                <stop offset="50%" stopColor="#0066ff" />
+                <stop offset="100%" stopColor="#13c8d3" />
+              </linearGradient>
+              <linearGradient id="circuitGrad" x1="60" y1="10" x2="140" y2="90">
+                <stop offset="0%" stopColor="#13c8d3" />
+                <stop offset="100%" stopColor="#0066ff" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            {/* V shape */}
+            <path d="M35 75 L100 175 L165 75 H132 L100 128 L68 75 Z"
+              stroke="url(#logoGrad)" strokeWidth="10" strokeLinejoin="round" fill="none" />
+            {/* Circuit lines up */}
+            <line x1="68" y1="73" x2="68" y2="42" stroke="url(#circuitGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="100" y1="73" x2="100" y2="22" stroke="url(#circuitGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="132" y1="73" x2="132" y2="42" stroke="url(#circuitGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="84" y1="92" x2="84" y2="55" stroke="url(#circuitGrad)" strokeWidth="2" strokeLinecap="round" />
+            <line x1="116" y1="92" x2="116" y2="55" stroke="url(#circuitGrad)" strokeWidth="2" strokeLinecap="round" />
+            {/* Connector lines */}
+            <line x1="68" y1="42" x2="84" y2="55" stroke="url(#circuitGrad)" strokeWidth="1.5" strokeDasharray="3 2" />
+            <line x1="100" y1="22" x2="84" y2="55" stroke="url(#circuitGrad)" strokeWidth="1.5" strokeDasharray="3 2" />
+            <line x1="100" y1="22" x2="116" y2="55" stroke="url(#circuitGrad)" strokeWidth="1.5" strokeDasharray="3 2" />
+            <line x1="132" y1="42" x2="116" y2="55" stroke="url(#circuitGrad)" strokeWidth="1.5" strokeDasharray="3 2" />
+            <line x1="68" y1="42" x2="100" y2="22" stroke="url(#circuitGrad)" strokeWidth="1.5" strokeDasharray="3 2" />
+            <line x1="100" y1="22" x2="132" y2="42" stroke="url(#circuitGrad)" strokeWidth="1.5" strokeDasharray="3 2" />
+            {/* Nodes */}
+            <circle cx="68" cy="34" r="5" fill="#13c8d3" filter="url(#glow)" />
+            <circle cx="100" cy="14" r="6" fill="#13c8d3" filter="url(#glow)" />
+            <circle cx="132" cy="34" r="5" fill="#13c8d3" filter="url(#glow)" />
+            <circle cx="84" cy="52" r="4" fill="#0066ff" filter="url(#glow)" />
+            <circle cx="116" cy="52" r="4" fill="#0066ff" filter="url(#glow)" />
+          </svg>
+        </div>
 
-              {/* Circuit connections between circles */}
-              <path d="M74 40L92 50" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
-              <path d="M110 30L128 50" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
-              <path d="M146 40L128 50" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
-              <path d="M74 40L110 30" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
-              <path d="M110 30L146 40" stroke="url(#g2)" strokeWidth="1.8" strokeDasharray="2,2"/>
+        {/* Brand name */}
+        <h1 style={{
+          fontSize: "52px", fontWeight: 900, margin: "0 0 24px",
+          letterSpacing: "-2px", lineHeight: 1,
+        }}>
+          Vargas<span style={{ color: "#13c8d3" }}>TI</span>
+        </h1>
 
-              {/* Circle nodes */}
-              <circle cx="74" cy="32" r="5" fill="#04d9ff" filter="url(#glow)"/>
-              <circle cx="110" cy="22" r="6" fill="#18e66b" filter="url(#glow)"/>
-              <circle cx="146" cy="32" r="5" fill="#04d9ff" filter="url(#glow)"/>
-              <circle cx="92" cy="55" r="4" fill="#04d9ff" filter="url(#glow)"/>
-              <circle cx="128" cy="55" r="4" fill="#18e66b" filter="url(#glow)"/>
+        {/* Tagline */}
+        <p style={{
+          fontSize: "11px", letterSpacing: "5px", lineHeight: 2,
+          fontWeight: 600, textTransform: "uppercase", textAlign: "center",
+          color: "#8da2b4", margin: 0,
+        }}>
+          Soluções que conectam.<br />
+          Suporte que{" "}
+          <span style={{ color: "#13c8d3" }}>transforma.</span>
+        </p>
+      </div>
 
-              <defs>
-                <linearGradient id="g1" x1="42" y1="70" x2="178" y2="185">
-                  <stop stopColor="#04d9ff"/>
-                  <stop offset=".55" stopColor="#0078ff"/>
-                  <stop offset="1" stopColor="#18e66b"/>
-                </linearGradient>
-                <linearGradient id="g2" x1="74" y1="24" x2="146" y2="95">
-                  <stop stopColor="#18e66b"/>
-                  <stop offset="1" stopColor="#0078ff"/>
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-            </svg>
-          </div>
-          <h1 style={styles.brandName}>
-            Vargas
-            <span style={{ color: "#04d9ff", textShadow: "0 0 30px rgba(4,217,255,.8), 0 0 60px rgba(4,217,255,.4)" }}>
-              TI
-            </span>
-          </h1>
-          <div style={styles.neon}></div>
-          <p style={styles.tagline}>
-            Soluções que conectam.<br/>
-            Suporte que <span style={{ color: "#0089ff", textShadow: "0 0 18px rgba(0,120,255,.65)" }}>transforma.</span>
-          </p>
-        </section>
-
-        {/* Login Card */}
-        <section style={styles.card}>
-          <div style={styles.inner}>
-            <div style={styles.head}>
+      {/* RIGHT — Login Card */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "40px 60px 40px 20px", position: "relative", zIndex: 1,
+      }}>
+        <div style={{
+          width: "100%", maxWidth: "480px",
+          background: "rgba(10, 20, 40, 0.85)",
+          border: "1px solid rgba(19,200,211,0.3)",
+          borderRadius: "20px",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.5), 0 0 40px rgba(19,200,211,0.08)",
+          backdropFilter: "blur(20px)",
+          overflow: "hidden",
+        }}>
+          <div style={{ padding: "32px 32px 24px" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px" }}>
               <div>
-                <h2 style={styles.h2}>
-                  Bem-vindo <span style={{ color: "#18e66b" }}>de volta!</span>
+                <h2 style={{ fontSize: "26px", fontWeight: 800, margin: "0 0 8px", color: "#f4f8fb" }}>
+                  Bem-vindo{" "}
+                  <span style={{ color: "#f5c842" }}>de volta!</span>
                 </h2>
-                <p style={styles.headP}>Informe seu e-mail e senha<br/>para acessar o sistema.</p>
+                <p style={{ margin: 0, color: "#8da2b4", fontSize: "13px", lineHeight: 1.5 }}>
+                  Informe seu e-mail e senha<br />para acessar o sistema.
+                </p>
               </div>
-              <div style={styles.safe}>🛡 Ambiente Seguro</div>
+              <div style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "6px 12px", borderRadius: "20px",
+                border: "1px solid rgba(19,200,211,0.3)",
+                background: "rgba(19,200,211,0.08)",
+                fontSize: "12px", fontWeight: 600, color: "#f4f8fb",
+                whiteSpace: "nowrap",
+              }}>
+                <Shield size={14} color="#13c8d3" />
+                <span style={{ color: "#8da2b4" }}>Ambiente</span>
+                <span style={{ color: "#13c8d3" }}>Seguro</span>
+              </div>
             </div>
 
-            <button type="button" onClick={handleGoogle} style={styles.button} disabled={submitting}>
-              <svg width="28" height="28" viewBox="0 0 48 48">
+            {/* Google Button */}
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={submitting}
+              style={{
+                width: "100%", height: "48px", borderRadius: "12px",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.05)",
+                color: "#f4f8fb", fontSize: "14px", fontWeight: 600,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                gap: "12px", cursor: "pointer", transition: "all 0.2s",
+                marginBottom: "20px",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+            >
+              <svg width="20" height="20" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
                 <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.4 6.3 14.7z"/>
                 <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.8-3.3-11.4-8l-6.5 5C9.4 39.5 16.1 44 24 44z"/>
@@ -154,335 +247,168 @@ function LoginPage() {
               Entrar com Google
             </button>
 
-            <div style={styles.sep}>ou</div>
+            {/* Divider */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: "12px",
+              marginBottom: "20px", color: "#4a5568", fontSize: "13px",
+            }}>
+              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+              ou
+              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+            </div>
 
+            {/* Form */}
             <form onSubmit={handleSubmit}>
-              <div style={styles.group}>
-                <label style={styles.label}>E-mail</label>
-                <div style={styles.input}>
-                  <span>✉</span>
+              {/* Email */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: "#f4f8fb" }}>
+                  E-mail
+                </label>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px",
+                  background: "rgba(255,255,255,0.05)", padding: "0 14px", height: "48px",
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
                   <input
-                    type="email"
-                    value={email}
+                    type="email" value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Digite seu e-mail"
-                    style={styles.inputField}
+                    style={{
+                      flex: 1, border: 0, outline: 0, background: "transparent",
+                      color: "#f4f8fb", fontSize: "14px",
+                    }}
                   />
                 </div>
               </div>
 
-              <div style={styles.group}>
-                <label style={styles.label}>Senha</label>
-                <div style={styles.input}>
-                  <span>🔒</span>
+              {/* Senha */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: "#f4f8fb" }}>
+                  Senha
+                </label>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px",
+                  background: "rgba(255,255,255,0.05)", padding: "0 14px", height: "48px",
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
+                    type={showPassword ? "text" : "password"} value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Digite sua senha"
-                    style={styles.inputField}
+                    style={{
+                      flex: 1, border: 0, outline: 0, background: "transparent",
+                      color: "#f4f8fb", fontSize: "14px",
+                    }}
                   />
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ background: "none", border: "none", color: "#91a7bb", cursor: "pointer", fontSize: "18px", padding: 0 }}
+                    type="button" onClick={() => setShowPassword(!showPassword)}
+                    style={{ background: "none", border: "none", color: "#4a5568", cursor: "pointer", padding: 0, display: "flex" }}
                   >
-                    {showPassword ? "👁" : "👁"}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              <div style={styles.options}>
-                <label style={styles.remember}>
-                  <input type="checkbox" style={{ marginRight: "8px" }} /> Lembrar-me
+              {/* Options */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px", color: "#8da2b4" }}>
+                  <input
+                    type="checkbox" checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                    style={{ width: "16px", height: "16px", accentColor: "#13c8d3" }}
+                  />
+                  Lembrar-me
                 </label>
-                <a href="#" style={styles.forgot}>Esqueci minha senha ›</a>
+                <a href="#" style={{ color: "#13c8d3", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>
+                  Esqueci minha senha &rsaquo;
+                </a>
               </div>
 
-              {error && <div style={{ color: "#ff6b6b", fontSize: "14px", marginBottom: "16px" }}>{error}</div>}
-              {success && <div style={{ color: "#18e66b", fontSize: "14px", marginBottom: "16px" }}>{success}</div>}
+              {error && <p style={{ color: "#ef4444", fontSize: "13px", marginBottom: "16px" }}>{error}</p>}
+              {success && <p style={{ color: "#22c55e", fontSize: "13px", marginBottom: "16px" }}>{success}</p>}
 
-              <button type="submit" style={styles.loginBtn} disabled={submitting}>
-                {submitting ? <Loader2 style={{ animation: "spin 1s linear infinite" }} size={20} /> : "↪ Entrar"}
+              {/* Submit */}
+              <button
+                type="submit" disabled={submitting}
+                style={{
+                  width: "100%", height: "50px", borderRadius: "12px", border: 0,
+                  background: "linear-gradient(135deg, #13c8d3, #0066ff)",
+                  color: "#fff", fontSize: "16px", fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  gap: "10px", cursor: submitting ? "not-allowed" : "pointer",
+                  boxShadow: "0 8px 30px rgba(0,100,255,0.4)",
+                  opacity: submitting ? 0.7 : 1, transition: "all 0.2s",
+                }}
+              >
+                {submitting ? (
+                  <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                      <polyline points="10 17 15 12 10 7" />
+                      <line x1="15" y1="12" x2="3" y2="12" />
+                    </svg>
+                    {mode === "login" ? "Entrar" : "Criar Conta"}
+                  </>
+                )}
               </button>
             </form>
 
-            <div style={styles.create}>
-              <span>Não tem conta? <a href="#" onClick={(e) => { e.preventDefault(); switchMode("signup"); }} style={{ color: "#18e66b", textDecoration: "none", fontWeight: "800" }}>Criar conta</a></span>
-            </div>
+            {/* Switch mode */}
+            <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#8da2b4" }}>
+              {mode === "login" ? (
+                <>Não tem conta?{" "}
+                  <a href="#" onClick={(e) => { e.preventDefault(); switchMode("signup"); }}
+                    style={{ color: "#13c8d3", fontWeight: 700, textDecoration: "none" }}>
+                    Criar conta
+                  </a>
+                </>
+              ) : (
+                <>Já tem conta?{" "}
+                  <a href="#" onClick={(e) => { e.preventDefault(); switchMode("login"); }}
+                    style={{ color: "#13c8d3", fontWeight: 700, textDecoration: "none" }}>
+                    Entrar
+                  </a>
+                </>
+              )}
+            </p>
           </div>
 
-          <footer style={styles.footer}>
-            <div style={styles.foot}>
-              <div style={{ ...styles.icon, color: "#18e66b" }}>●</div>
-              <div><strong style={{ display: "block", fontSize: "13px", marginBottom: "2px" }}>Sistema Online</strong><small style={{ color: "#a7b4c2", fontSize: "11px" }}>Todos os serviços OK</small></div>
-            </div>
-            <div style={styles.foot}>
-              <div style={styles.icon}>▱</div>
-              <div><strong style={{ display: "block", fontSize: "13px", marginBottom: "2px" }}>V2.5.0</strong><small style={{ color: "#a7b4c2", fontSize: "11px" }}>22/05/2026</small></div>
-            </div>
-            <div style={styles.foot}>
-              <div style={{ ...styles.icon, color: "#18e66b" }}>🛡</div>
-              <div><strong style={{ display: "block", fontSize: "13px", marginBottom: "2px" }}>Ambiente Seguro</strong><small style={{ color: "#a7b4c2", fontSize: "11px" }}>Seus dados protegidos</small></div>
-            </div>
-          </footer>
-        </section>
-      </main>
+          {/* Footer */}
+          <div style={{
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+          }}>
+            {[
+              { icon: <span style={{ fontSize: "10px", color: "#22c55e" }}>●</span>, title: "Sistema Online", sub: "Todos os serviços OK" },
+              { icon: <Layers size={16} color="#13c8d3" />, title: "V2.5.0", sub: "22/05/2026" },
+              { icon: <Shield size={16} color="#22c55e" />, title: "Ambiente Seguro", sub: "Seus dados protegidos" },
+            ].map((item, i) => (
+              <div key={i} style={{
+                padding: "16px 14px", display: "flex", alignItems: "center", gap: "10px",
+                borderRight: i < 2 ? "1px solid rgba(255,255,255,0.08)" : "none",
+              }}>
+                <div style={{ flexShrink: 0 }}>{item.icon}</div>
+                <div>
+                  <p style={{ margin: 0, fontSize: "12px", fontWeight: 700, color: "#f4f8fb" }}>{item.title}</p>
+                  <p style={{ margin: 0, fontSize: "11px", color: "#4a5568" }}>{item.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
-
-const styles = {
-  body: {
-    margin: 0,
-    minHeight: "100vh",
-    fontFamily: "Inter, Segoe UI, Arial, sans-serif",
-    color: "#f4f8fb",
-    background: `
-      linear-gradient(45deg, rgba(0,120,255,.08) 1px, transparent 1px),
-      linear-gradient(-45deg, rgba(4,217,255,.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,120,255,.05) 1px, transparent 1px),
-      linear-gradient(rgba(0,120,255,.05) 1px, transparent 1px),
-      radial-gradient(circle at 10% 70%,rgba(0,120,255,.25),transparent 35%),
-      radial-gradient(circle at 85% 20%,rgba(4,217,255,.15),transparent 35%),
-      linear-gradient(135deg,#020711,#031323 45%,#020914)
-    `,
-    backgroundSize: "60px 60px, 60px 60px, 80px 80px, 80px 80px, 100% 100%, 100% 100%, 100% 100%",
-    overflowX: "hidden",
-  } as React.CSSProperties,
-  wave: {
-    position: "fixed",
-    left: "-80px",
-    bottom: "-120px",
-    width: "620px",
-    height: "300px",
-    opacity: 0.45,
-    background: "radial-gradient(circle,rgba(0,180,255,.85) 1px,transparent 2px)",
-    backgroundSize: "16px 16px",
-    clipPath: "polygon(0 45%,18% 38%,38% 54%,60% 42%,78% 52%,100% 37%,100% 100%,0 100%)",
-    filter: "drop-shadow(0 0 20px rgba(0,120,255,.55))",
-  } as React.CSSProperties,
-  page: {
-    minHeight: "100vh",
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    alignItems: "center",
-    gap: "24px",
-    padding: "24px 40px",
-    position: "relative",
-    maxWidth: "1200px",
-    margin: "0 auto",
-  } as React.CSSProperties,
-  brandSide: {
-    textAlign: "center",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "auto",
-    position: "relative",
-    background: "linear-gradient(135deg, rgba(2,7,17,.95), rgba(3,19,35,.95))",
-    borderRight: "1px solid rgba(0,120,255,.15)",
-    padding: "2rem",
-    borderRadius: "12px",
-  } as React.CSSProperties,
-  logo: {
-    width: "150px",
-    height: "150px",
-    filter: "drop-shadow(0 0 24px rgba(0,130,255,.55))",
-    marginBottom: "8px",
-  } as React.CSSProperties,
-  brandName: {
-    fontSize: "clamp(34px, 4vw, 48px)",
-    fontWeight: 900,
-    letterSpacing: "-1.5px",
-    margin: "8px 0 0",
-    textShadow: "0 12px 30px rgba(0,0,0,.45)",
-  } as React.CSSProperties,
-  neon: {
-    width: "130px",
-    height: "3px",
-    borderRadius: "999px",
-    margin: "20px auto 18px",
-    background: "linear-gradient(90deg,transparent,#00b9ff,transparent)",
-    boxShadow: "0 0 22px rgba(0,140,255,.8)",
-  } as React.CSSProperties,
-  tagline: {
-    fontSize: "11px",
-    letterSpacing: "6px",
-    lineHeight: 1.5,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    margin: 0,
-  } as React.CSSProperties,
-  card: {
-    width: "min(100%,520px)",
-    justifySelf: "center",
-    background: "radial-gradient(circle at 92% 10%,rgba(0,255,130,.07),transparent 22%),radial-gradient(circle at 14% 18%,rgba(0,160,255,.08),transparent 28%),rgba(3,14,26,.82)",
-    border: "1px solid rgba(20,190,255,.45)",
-    borderRightColor: "rgba(20,255,110,.65)",
-    borderRadius: "22px",
-    boxShadow: "0 28px 90px rgba(0,0,0,.38),0 0 55px rgba(0,120,255,.12)",
-    backdropFilter: "blur(18px)",
-    overflow: "hidden",
-  } as React.CSSProperties,
-  inner: {
-    padding: "28px 28px 18px",
-  } as React.CSSProperties,
-  head: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: "14px",
-    marginBottom: "20px",
-  } as React.CSSProperties,
-  h2: {
-    fontSize: "clamp(20px, 2vw, 26px)",
-    margin: "0 0 8px",
-    letterSpacing: "-0.5px",
-    color: "#f4f8fb",
-  } as React.CSSProperties,
-  headP: {
-    margin: 0,
-    color: "#c7d3df",
-    fontSize: "13px",
-    lineHeight: 1.35,
-  } as React.CSSProperties,
-  safe: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "8px 12px",
-    borderRadius: "10px",
-    border: "1px solid rgba(120,180,220,.24)",
-    fontWeight: 600,
-    fontSize: "12px",
-    whiteSpace: "nowrap",
-    background: "rgba(5,18,30,.64)",
-    color: "#fff",
-  } as React.CSSProperties,
-  button: {
-    width: "100%",
-    minHeight: "44px",
-    borderRadius: "10px",
-    border: "1px solid rgba(130,180,220,.36)",
-    background: "rgba(2,12,22,.56)",
-    color: "#f4f8fb",
-    fontSize: "14px",
-    fontWeight: 600,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
-    cursor: "pointer",
-    transition: ".2s",
-  } as React.CSSProperties,
-  sep: {
-    display: "grid",
-    gridTemplateColumns: "1fr auto 1fr",
-    alignItems: "center",
-    gap: "16px",
-    margin: "20px 0 18px",
-    color: "#b7c5d1",
-    fontSize: "13px",
-  } as React.CSSProperties,
-  group: {
-    marginBottom: "16px",
-  } as React.CSSProperties,
-  label: {
-    display: "block",
-    fontSize: "13px",
-    fontWeight: 600,
-    marginBottom: "6px",
-    color: "#f4f8fb",
-  } as React.CSSProperties,
-  input: {
-    minHeight: "42px",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    border: "1px solid rgba(130,180,220,.34)",
-    borderRadius: "10px",
-    background: "rgba(3,18,32,.78)",
-    padding: "0 14px",
-    color: "#91a7bb",
-  } as React.CSSProperties,
-  inputField: {
-    flex: 1,
-    border: 0,
-    outline: 0,
-    background: "transparent",
-    color: "#f4f8fb",
-    fontSize: "14px",
-    minWidth: 0,
-  } as React.CSSProperties,
-  options: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    margin: "12px 0 18px",
-    gap: "16px",
-    flexWrap: "wrap",
-  } as React.CSSProperties,
-  remember: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    color: "#d5e0ea",
-    fontSize: "13px",
-    cursor: "pointer",
-  } as React.CSSProperties,
-  forgot: {
-    color: "#04d9ff",
-    textDecoration: "none",
-    fontSize: "13px",
-    fontWeight: 600,
-  } as React.CSSProperties,
-  loginBtn: {
-    width: "100%",
-    minHeight: "46px",
-    borderRadius: "10px",
-    border: 0,
-    background: "linear-gradient(135deg,#18e66b,#0bb7c4 50%,#006cff)",
-    color: "#f4f8fb",
-    fontSize: "15px",
-    fontWeight: 700,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
-    cursor: "pointer",
-    boxShadow: "0 20px 38px rgba(0,110,255,.22)",
-    marginTop: "10px",
-  } as React.CSSProperties,
-  create: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "6px",
-    margin: "16px 0 2px",
-    color: "#c7d4df",
-    fontSize: "13px",
-    textAlign: "center",
-  } as React.CSSProperties,
-  footer: {
-    borderTop: "1px solid rgba(130,180,220,.22)",
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-  } as React.CSSProperties,
-  foot: {
-    padding: "16px 14px",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    borderRight: "1px solid rgba(130,180,220,.22)",
-    fontSize: "12px",
-  } as React.CSSProperties,
-  icon: {
-    width: "32px",
-    height: "32px",
-    display: "grid",
-    placeItems: "center",
-    color: "#04d9ff",
-  } as React.CSSProperties,
-};
