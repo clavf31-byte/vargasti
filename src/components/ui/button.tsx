@@ -1,50 +1,91 @@
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+﻿import { ReactNode } from "react";
+import { colors, borderRadius, shadows } from "@/lib/colors";
 
-import { cn } from "@/lib/utils";
+type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-  {
-    variants: {
-      variant: {
-        default: "bg-brand text-brand-foreground shadow-sm hover:bg-brand/90",
-        select: "bg-select text-select-foreground shadow-sm hover:bg-select/90",
-        destructive: "bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/25",
-        outline:
-          "border border-border bg-surface/60 text-foreground shadow-sm hover:bg-surface-2 hover:border-select/40",
-        secondary: "bg-surface-2 text-foreground border border-border hover:bg-surface-2/80",
-        ghost: "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-        link: "text-select underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-11 rounded-lg px-6",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
+interface ButtonProps {
+  children: ReactNode;
+  variant?: ButtonVariant;
+  size?: "sm" | "md" | "lg";
+  onClick?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
-    );
-  },
-);
-Button.displayName = "Button";
+export function Button({
+  children,
+  variant = "primary",
+  size = "md",
+  onClick,
+  disabled = false,
+  loading = false,
+  type = "button",
+}: ButtonProps) {
+  const variants = {
+    primary: {
+      bg: colors.primary,
+      text: colors.background,
+      hover: colors.primaryLight,
+    },
+    secondary: {
+      bg: `rgba(19, 200, 211, 0.1)`,
+      text: colors.primary,
+      hover: `rgba(19, 200, 211, 0.2)`,
+    },
+    danger: {
+      bg: colors.error,
+      text: "#fff",
+      hover: "#ff5252",
+    },
+    ghost: {
+      bg: "transparent",
+      text: colors.text,
+      hover: colors.backgroundTertiary,
+    },
+  };
 
-export { Button, buttonVariants };
+  const sizes = {
+    sm: "8px 12px",
+    md: "10px 20px",
+    lg: "12px 24px",
+  };
+
+  const variantStyle = variants[variant];
+  const padding = sizes[size];
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || loading}
+      style={{
+        background: variantStyle.bg,
+        color: variantStyle.text,
+        border: "none",
+        borderRadius: borderRadius.md,
+        padding,
+        cursor: disabled || loading ? "not-allowed" : "pointer",
+        fontWeight: 600,
+        fontSize: "14px",
+        transition: "all 0.3s ease",
+        opacity: disabled || loading ? 0.6 : 1,
+        boxShadow: shadows.small,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled && !loading) {
+          e.currentTarget.style.background = variantStyle.hover;
+          e.currentTarget.style.boxShadow = shadows.medium;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled && !loading) {
+          e.currentTarget.style.background = variantStyle.bg;
+          e.currentTarget.style.boxShadow = shadows.small;
+        }
+      }}
+    >
+      {loading ? "Carregando..." : children}
+    </button>
+  );
+}
