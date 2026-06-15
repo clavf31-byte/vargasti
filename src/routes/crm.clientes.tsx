@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ClienteForm } from "@/components/crm/ClienteForm";
 
 export const Route = createFileRoute("/crm/clientes")({
   head: () => ({ meta: [{ title: "Clientes · CRM VargasTI" }] }),
@@ -22,6 +23,22 @@ function ClientesPage() {
   const { user } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const loadClientes = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setClientes((data as Cliente[]) || []);
+    } catch (e) {
+      console.error("Erro:", e);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -29,24 +46,14 @@ function ClientesPage() {
       return;
     }
 
-    const loadClientes = async () => {
-      try {
-        const { data } = await supabase
-          .from("clientes")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-
-        setClientes((data as Cliente[]) || []);
-      } catch (e) {
-        console.error("Erro:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadClientes();
+    setLoading(false);
   }, [user]);
+
+  const handleSuccess = () => {
+    loadClientes();
+    setIsFormOpen(false);
+  };
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
@@ -58,6 +65,7 @@ function ClientesPage() {
           </p>
         </div>
         <button
+          onClick={() => setIsFormOpen(true)}
           style={{
             padding: "10px 20px",
             background: "#13c8d3",
@@ -72,6 +80,13 @@ function ClientesPage() {
           + Novo Cliente
         </button>
       </div>
+
+      <ClienteForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={handleSuccess}
+        userId={user!.id}
+      />
 
       {loading ? (
         <p style={{ color: "#8da2b4" }}>Carregando...</p>

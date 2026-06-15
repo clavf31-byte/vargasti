@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { OrcamentoForm } from "@/components/crm/OrcamentoForm";
 
 export const Route = createFileRoute("/crm/orcamentos")({
   head: () => ({ meta: [{ title: "Orçamentos · CRM VargasTI" }] }),
@@ -11,7 +12,24 @@ export const Route = createFileRoute("/crm/orcamentos")({
 function OrcamentosPage() {
   const { user } = useAuth();
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const loadData = async () => {
+    if (!user) return;
+    try {
+      const [orcRes, clientRes] = await Promise.all([
+        supabase.from("orcamentos").select("*").eq("user_id", user.id).order("data_criacao", { ascending: false }),
+        supabase.from("clientes").select("id, nome").eq("user_id", user.id),
+      ]);
+
+      setOrcamentos(orcRes.data || []);
+      setClientes(clientRes.data || []);
+    } catch (e) {
+      console.error("Erro:", e);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -19,24 +37,14 @@ function OrcamentosPage() {
       return;
     }
 
-    const loadOrcamentos = async () => {
-      try {
-        const { data } = await supabase
-          .from("orcamentos")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("data_criacao", { ascending: false });
-
-        setOrcamentos(data || []);
-      } catch (e) {
-        console.error("Erro:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOrcamentos();
+    loadData();
+    setLoading(false);
   }, [user]);
+
+  const handleSuccess = () => {
+    loadData();
+    setIsFormOpen(false);
+  };
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
@@ -48,6 +56,7 @@ function OrcamentosPage() {
           </p>
         </div>
         <button
+          onClick={() => setIsFormOpen(true)}
           style={{
             padding: "10px 20px",
             background: "#13c8d3",
@@ -62,6 +71,14 @@ function OrcamentosPage() {
           + Novo Orçamento
         </button>
       </div>
+
+      <OrcamentoForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={handleSuccess}
+        userId={user!.id}
+        clientes={clientes}
+      />
 
       {loading ? (
         <p style={{ color: "#8da2b4" }}>Carregando...</p>
