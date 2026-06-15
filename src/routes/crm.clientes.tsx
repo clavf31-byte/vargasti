@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ClienteForm } from "@/components/crm/ClienteForm";
+import { ClienteFormInline } from "@/components/crm/ClienteFormInline";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { Search, Trash2, Eye } from "lucide-react";
@@ -55,7 +55,6 @@ function ClientesPage() {
     setLoading(false);
   }, [user]);
 
-  // Filtrar clientes
   useEffect(() => {
     let resultado = clientes;
 
@@ -93,55 +92,66 @@ function ClientesPage() {
         title="Clientes"
         subtitle={`${clientes.length} total • ${filtrados.length} exibindo`}
         action={
-          <Button variant="primary" onClick={() => setIsFormOpen(true)}>
-            + Novo Cliente
+          <Button 
+            variant="primary" 
+            onClick={() => setIsFormOpen(!isFormOpen)}
+          >
+            {isFormOpen ? "Cancelar" : "+ Novo Cliente"}
           </Button>
         }
         icon={<Users size={32} />}
       />
 
-      <ClienteForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSuccess={handleSuccess}
-        userId={user!.id}
-      />
+      {/* Formulário Inline */}
+      {isFormOpen && (
+        <>
+          <ClienteFormInline
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            onSuccess={handleSuccess}
+            userId={user!.id}
+          />
+          <div style={{ marginBottom: spacing.xl }} />
+        </>
+      )}
 
       {/* Busca */}
-      <Card>
-        <div style={{ position: "relative" }}>
-          <Search
-            size={18}
-            style={{
-              position: "absolute",
-              left: spacing.md,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: colors.textSecondary,
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Buscar por nome, email ou CPF/CNPJ..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
-              background: colors.background,
-              border: `1px solid ${colors.border}`,
-              borderRadius: borderRadius.md,
-              color: colors.text,
-              fontSize: "14px",
-            }}
-          />
-        </div>
-      </Card>
+      {!isFormOpen && (
+        <Card>
+          <div style={{ position: "relative" }}>
+            <Search
+              size={18}
+              style={{
+                position: "absolute",
+                left: spacing.md,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: colors.textSecondary,
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Buscar por nome, email ou CPF/CNPJ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
+                background: colors.background,
+                border: `1px solid ${colors.border}`,
+                borderRadius: borderRadius.md,
+                color: colors.text,
+                fontSize: "14px",
+              }}
+            />
+          </div>
+        </Card>
+      )}
 
       {/* Tabela */}
       {loading ? (
         <p style={{ color: colors.textSecondary }}>Carregando...</p>
-      ) : filtrados.length === 0 ? (
+      ) : filtrados.length === 0 && !isFormOpen ? (
         <Card>
           <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
             {clientes.length === 0
@@ -149,7 +159,7 @@ function ClientesPage() {
               : "Nenhum cliente encontrado"}
           </p>
         </Card>
-      ) : (
+      ) : !isFormOpen ? (
         <Card>
           <div style={{ overflowX: "auto" }}>
             <table
@@ -227,8 +237,7 @@ function ClientesPage() {
                       transition: "background 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        colors.backgroundTertiary;
+                      e.currentTarget.style.background = colors.backgroundTertiary;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "transparent";
@@ -318,7 +327,7 @@ function ClientesPage() {
             </table>
           </div>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }
