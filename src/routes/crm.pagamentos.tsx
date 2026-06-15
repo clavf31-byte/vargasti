@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -103,9 +102,7 @@ function PagamentosPage() {
         <p style={{ color: "#8da2b4" }}>Carregando pagamentos...</p>
       ) : pagamentos.length === 0 ? (
         <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
-          <CreditCard style={{ width: "48px", height: "48px", opacity: 0.2, margin: "0 auto 1rem" }} />
           <p>Nenhum pagamento registrado</p>
-          <p style={{ fontSize: "12px" }}>Os pagamentos aparecerão aqui quando registrados</p>
         </div>
       ) : (
         <div
