@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
@@ -40,11 +39,6 @@ import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetc
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 
-const UsuariosRoute = UsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
@@ -201,7 +195,6 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
-  '/usuarios': typeof UsuariosRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
@@ -232,7 +225,6 @@ export interface FileRoutesByTo {
   '/crm': typeof CrmRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
-  '/usuarios': typeof UsuariosRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
@@ -265,7 +257,6 @@ export interface FileRoutesById {
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
-  '/usuarios': typeof UsuariosRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
@@ -299,7 +290,6 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/login'
     | '/projetos'
-    | '/usuarios'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
@@ -330,7 +320,6 @@ export interface FileRouteTypes {
     | '/crm'
     | '/login'
     | '/projetos'
-    | '/usuarios'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
@@ -362,7 +351,6 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/login'
     | '/projetos'
-    | '/usuarios'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
@@ -395,7 +383,6 @@ export interface RootRouteChildren {
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
-  UsuariosRoute: typeof UsuariosRoute
   ApiDebugFetchEmailsRoute: typeof ApiDebugFetchEmailsRoute
   ApiDebugGmailTokenRoute: typeof ApiDebugGmailTokenRoute
   ApiDebugInterpretEmailRoute: typeof ApiDebugInterpretEmailRoute
@@ -410,13 +397,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/usuarios': {
-      id: '/usuarios'
-      path: '/usuarios'
-      fullPath: '/usuarios'
-      preLoaderRoute: typeof UsuariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/projetos': {
       id: '/projetos'
       path: '/projetos'
@@ -689,7 +669,6 @@ const rootRouteChildren: RootRouteChildren = {
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
-  UsuariosRoute: UsuariosRoute,
   ApiDebugFetchEmailsRoute: ApiDebugFetchEmailsRoute,
   ApiDebugGmailTokenRoute: ApiDebugGmailTokenRoute,
   ApiDebugInterpretEmailRoute: ApiDebugInterpretEmailRoute,
