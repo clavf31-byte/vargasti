@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, StatCard } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { Search, Trash2 } from "lucide-react";
@@ -83,246 +84,248 @@ function PagamentosPage() {
   const totalFiltrado = filtrados.reduce((sum, p) => sum + (p.valor || 0), 0);
 
   return (
-    <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
-      <PageHeader
-        title="Pagamentos"
-        subtitle={`${pagamentos.length} total • ${filtrados.length} exibindo`}
-        icon="💰"
-      />
-
-      {/* KPIs */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: spacing.lg,
-          marginBottom: spacing.xxl,
-        }}
-      >
-        <StatCard
-          label="Total Recebido"
-          value={`R$ ${totalPago.toFixed(2)}`}
-          color={colors.success}
+    <AppShell>
+      <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
+        <PageHeader
+          title="Pagamentos"
+          subtitle={`${pagamentos.length} total • ${filtrados.length} exibindo`}
+          icon="💰"
         />
-        <StatCard
-          label="Pagamentos"
-          value={pagamentos.length}
-          color={colors.primary}
-        />
-      </div>
 
-      {/* Busca */}
-      <Card>
-        <div style={{ position: "relative" }}>
-          <Search
-            size={18}
-            style={{
-              position: "absolute",
-              left: spacing.md,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: colors.textSecondary,
-            }}
+        {/* KPIs */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: spacing.lg,
+            marginBottom: spacing.xxl,
+          }}
+        >
+          <StatCard
+            label="Total Recebido"
+            value={`R$ ${totalPago.toFixed(2)}`}
+            color={colors.success}
           />
-          <input
-            type="text"
-            placeholder="Buscar por orçamento, referência ou método..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
-              background: colors.background,
-              border: `1px solid ${colors.border}`,
-              borderRadius: borderRadius.md,
-              color: colors.text,
-              fontSize: "14px",
-            }}
+          <StatCard
+            label="Pagamentos"
+            value={pagamentos.length}
+            color={colors.primary}
           />
         </div>
-      </Card>
 
-      {/* Tabela */}
-      {loading ? (
-        <p style={{ color: colors.textSecondary }}>Carregando...</p>
-      ) : filtrados.length === 0 ? (
+        {/* Busca */}
         <Card>
-          <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
-            {pagamentos.length === 0
-              ? "Nenhum pagamento registrado"
-              : "Nenhum pagamento encontrado"}
-          </p>
-        </Card>
-      ) : (
-        <Card>
-          <div style={{ overflowX: "auto" }}>
-            <table
+          <div style={{ position: "relative" }}>
+            <Search
+              size={18}
+              style={{
+                position: "absolute",
+                left: spacing.md,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: colors.textSecondary,
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Buscar por orçamento, referência ou método..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width: "100%",
-                borderCollapse: "collapse",
+                padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
+                background: colors.background,
+                border: `1px solid ${colors.border}`,
+                borderRadius: borderRadius.md,
+                color: colors.text,
                 fontSize: "14px",
               }}
-            >
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Orçamento
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Valor
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Data
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Método
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Referência
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "center",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtrados.map((pag) => (
-                  <tr
-                    key={pag.id}
-                    style={{
-                      borderBottom: `1px solid ${colors.borderLight}`,
-                      transition: "background 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        colors.backgroundTertiary;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <td
+            />
+          </div>
+        </Card>
+
+        {/* Tabela */}
+        {loading ? (
+          <p style={{ color: colors.textSecondary }}>Carregando...</p>
+        ) : filtrados.length === 0 ? (
+          <Card>
+            <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
+              {pagamentos.length === 0
+                ? "Nenhum pagamento registrado"
+                : "Nenhum pagamento encontrado"}
+            </p>
+          </Card>
+        ) : (
+          <Card>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "14px",
+                }}
+              >
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                    <th
                       style={{
                         padding: spacing.md,
-                        color: colors.primary,
+                        textAlign: "left",
+                        color: colors.textSecondary,
                         fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {pag.orcamento_id.slice(0, 8)}...
-                    </td>
-                    <td
+                      Orçamento
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
-                        color: colors.success,
+                        textAlign: "left",
+                        color: colors.textSecondary,
                         fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      R$ {pag.valor.toFixed(2)}
-                    </td>
-                    <td
+                      Valor
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
+                        textAlign: "left",
                         color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {new Date(pag.data_pagamento).toLocaleDateString("pt-BR")}
-                    </td>
-                    <td
+                      Data
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
+                        textAlign: "left",
                         color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {pag.metodo || "—"}
-                    </td>
-                    <td
+                      Método
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
+                        textAlign: "left",
                         color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {pag.referencia || "—"}
-                    </td>
-                    <td
+                      Referência
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
                         textAlign: "center",
+                        color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      <button
-                        onClick={() => handleDelete(pag.id)}
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtrados.map((pag) => (
+                    <tr
+                      key={pag.id}
+                      style={{
+                        borderBottom: `1px solid ${colors.borderLight}`,
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background =
+                          colors.backgroundTertiary;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <td
                         style={{
-                          background: colors.background,
-                          border: `1px solid ${colors.error}`,
-                          color: colors.error,
-                          padding: `${spacing.sm} ${spacing.md}`,
-                          borderRadius: borderRadius.sm,
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          display: "flex",
-                          gap: "4px",
-                          alignItems: "center",
+                          padding: spacing.md,
+                          color: colors.primary,
+                          fontWeight: 600,
                         }}
                       >
-                        <Trash2 size={14} />
-                        Deletar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
-    </div>
+                        {pag.orcamento_id.slice(0, 8)}...
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.success,
+                          fontWeight: 600,
+                        }}
+                      >
+                        R$ {pag.valor.toFixed(2)}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {new Date(pag.data_pagamento).toLocaleDateString("pt-BR")}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {pag.metodo || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {pag.referencia || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          textAlign: "center",
+                        }}
+                      >
+                        <button
+                          onClick={() => handleDelete(pag.id)}
+                          style={{
+                            background: colors.background,
+                            border: `1px solid ${colors.error}`,
+                            color: colors.error,
+                            padding: `${spacing.sm} ${spacing.md}`,
+                            borderRadius: borderRadius.sm,
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            display: "flex",
+                            gap: "4px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Trash2 size={14} />
+                          Deletar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+      </div>
+    </AppShell>
   );
 }

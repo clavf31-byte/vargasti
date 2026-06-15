@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { AppShell } from "@/components/AppShell";
 import { ClienteFormInline } from "@/components/crm/ClienteFormInline";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
@@ -87,247 +88,249 @@ function ClientesPage() {
   };
 
   return (
-    <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
-      <PageHeader
-        title="Clientes"
-        subtitle={`${clientes.length} total • ${filtrados.length} exibindo`}
-        action={
-          <Button 
-            variant="primary" 
-            onClick={() => setIsFormOpen(!isFormOpen)}
-          >
-            {isFormOpen ? "Cancelar" : "+ Novo Cliente"}
-          </Button>
-        }
-        icon={<Users size={32} />}
-      />
-
-      {/* Formulário Inline */}
-      {isFormOpen && (
-        <>
-          <ClienteFormInline
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-            onSuccess={handleSuccess}
-            userId={user!.id}
-          />
-          <div style={{ marginBottom: spacing.xl }} />
-        </>
-      )}
-
-      {/* Busca */}
-      {!isFormOpen && (
-        <Card>
-          <div style={{ position: "relative" }}>
-            <Search
-              size={18}
-              style={{
-                position: "absolute",
-                left: spacing.md,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: colors.textSecondary,
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Buscar por nome, email ou CPF/CNPJ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: "100%",
-                padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
-                background: colors.background,
-                border: `1px solid ${colors.border}`,
-                borderRadius: borderRadius.md,
-                color: colors.text,
-                fontSize: "14px",
-              }}
-            />
-          </div>
-        </Card>
-      )}
-
-      {/* Tabela */}
-      {loading ? (
-        <p style={{ color: colors.textSecondary }}>Carregando...</p>
-      ) : filtrados.length === 0 && !isFormOpen ? (
-        <Card>
-          <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
-            {clientes.length === 0
-              ? "Nenhum cliente cadastrado"
-              : "Nenhum cliente encontrado"}
-          </p>
-        </Card>
-      ) : !isFormOpen ? (
-        <Card>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "14px",
-              }}
+    <AppShell>
+      <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
+        <PageHeader
+          title="Clientes"
+          subtitle={`${clientes.length} total • ${filtrados.length} exibindo`}
+          action={
+            <Button
+              variant="primary"
+              onClick={() => setIsFormOpen(!isFormOpen)}
             >
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Nome
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Email
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Telefone
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "left",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    CPF/CNPJ
-                  </th>
-                  <th
-                    style={{
-                      padding: spacing.md,
-                      textAlign: "center",
-                      color: colors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: "12px",
-                    }}
-                  >
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtrados.map((cliente) => (
-                  <tr
-                    key={cliente.id}
-                    style={{
-                      borderBottom: `1px solid ${colors.borderLight}`,
-                      transition: "background 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = colors.backgroundTertiary;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <td
+              {isFormOpen ? "Cancelar" : "+ Novo Cliente"}
+            </Button>
+          }
+          icon={<Users size={32} />}
+        />
+
+        {/* Formulário Inline */}
+        {isFormOpen && (
+          <>
+            <ClienteFormInline
+              isOpen={isFormOpen}
+              onClose={() => setIsFormOpen(false)}
+              onSuccess={handleSuccess}
+              userId={user!.id}
+            />
+            <div style={{ marginBottom: spacing.xl }} />
+          </>
+        )}
+
+        {/* Busca */}
+        {!isFormOpen && (
+          <Card>
+            <div style={{ position: "relative" }}>
+              <Search
+                size={18}
+                style={{
+                  position: "absolute",
+                  left: spacing.md,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: colors.textSecondary,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Buscar por nome, email ou CPF/CNPJ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
+                  background: colors.background,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: borderRadius.md,
+                  color: colors.text,
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+          </Card>
+        )}
+
+        {/* Tabela */}
+        {loading ? (
+          <p style={{ color: colors.textSecondary }}>Carregando...</p>
+        ) : filtrados.length === 0 && !isFormOpen ? (
+          <Card>
+            <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
+              {clientes.length === 0
+                ? "Nenhum cliente cadastrado"
+                : "Nenhum cliente encontrado"}
+            </p>
+          </Card>
+        ) : !isFormOpen ? (
+          <Card>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "14px",
+                }}
+              >
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                    <th
                       style={{
                         padding: spacing.md,
-                        color: colors.text,
-                        fontWeight: 500,
-                      }}
-                    >
-                      {cliente.nome}
-                    </td>
-                    <td
-                      style={{
-                        padding: spacing.md,
+                        textAlign: "left",
                         color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {cliente.email || "—"}
-                    </td>
-                    <td
+                      Nome
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
+                        textAlign: "left",
                         color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {cliente.telefone || "—"}
-                    </td>
-                    <td
+                      Email
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
+                        textAlign: "left",
                         color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      {cliente.cnpj_cpf || "—"}
-                    </td>
-                    <td
+                      Telefone
+                    </th>
+                    <th
+                      style={{
+                        padding: spacing.md,
+                        textAlign: "left",
+                        color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
+                      }}
+                    >
+                      CPF/CNPJ
+                    </th>
+                    <th
                       style={{
                         padding: spacing.md,
                         textAlign: "center",
-                        display: "flex",
-                        gap: spacing.sm,
-                        justifyContent: "center",
+                        color: colors.textSecondary,
+                        fontWeight: 600,
+                        fontSize: "12px",
                       }}
                     >
-                      <button
-                        style={{
-                          background: colors.background,
-                          border: `1px solid ${colors.border}`,
-                          color: colors.primary,
-                          padding: `${spacing.sm} ${spacing.md}`,
-                          borderRadius: borderRadius.sm,
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          display: "flex",
-                          gap: "4px",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Eye size={14} />
-                        Ver
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cliente.id)}
-                        style={{
-                          background: colors.background,
-                          border: `1px solid ${colors.error}`,
-                          color: colors.error,
-                          padding: `${spacing.sm} ${spacing.md}`,
-                          borderRadius: borderRadius.sm,
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          display: "flex",
-                          gap: "4px",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Trash2 size={14} />
-                        Deletar
-                      </button>
-                    </td>
+                      Ações
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      ) : null}
-    </div>
+                </thead>
+                <tbody>
+                  {filtrados.map((cliente) => (
+                    <tr
+                      key={cliente.id}
+                      style={{
+                        borderBottom: `1px solid ${colors.borderLight}`,
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = colors.backgroundTertiary;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.text,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {cliente.nome}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {cliente.email || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {cliente.telefone || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {cliente.cnpj_cpf || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: spacing.md,
+                          textAlign: "center",
+                          display: "flex",
+                          gap: spacing.sm,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <button
+                          style={{
+                            background: colors.background,
+                            border: `1px solid ${colors.border}`,
+                            color: colors.primary,
+                            padding: `${spacing.sm} ${spacing.md}`,
+                            borderRadius: borderRadius.sm,
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            display: "flex",
+                            gap: "4px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Eye size={14} />
+                          Ver
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cliente.id)}
+                          style={{
+                            background: colors.background,
+                            border: `1px solid ${colors.error}`,
+                            color: colors.error,
+                            padding: `${spacing.sm} ${spacing.md}`,
+                            borderRadius: borderRadius.sm,
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            display: "flex",
+                            gap: "4px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Trash2 size={14} />
+                          Deletar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        ) : null}
+      </div>
+    </AppShell>
   );
 }
