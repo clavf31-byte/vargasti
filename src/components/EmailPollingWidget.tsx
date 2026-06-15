@@ -187,6 +187,20 @@ export function EmailPollingWidget() {
             <p className="text-xs text-gray-600 mb-2">
               {loaded ? `${categories.length} categorias configuradas` : "Carregando..."}
             </p>
+            {loaded && categories.length > 0 && (
+              <div className="mb-3 pb-2 overflow-x-auto border border-border rounded-lg bg-surface-2">
+                <div className="flex gap-2 p-2 min-w-min">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex-shrink-0 px-3 py-1 bg-brand/10 border border-brand/20 rounded-full text-xs font-medium text-brand whitespace-nowrap"
+                    >
+                      {cat.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <button
               onClick={() => setShowCategoriesModal(true)}
               className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
