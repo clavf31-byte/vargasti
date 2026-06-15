@@ -24,7 +24,8 @@ function OrcamentosPage() {
         const { data } = await supabase
           .from("orcamentos")
           .select("*")
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .order("data_criacao", { ascending: false });
 
         setOrcamentos(data || []);
       } catch (e) {
@@ -38,12 +39,54 @@ function OrcamentosPage() {
   }, [user]);
 
   return (
-    <div style={{ padding: "2rem", color: "#eaf3f8" }}>
-      <h1>Orçamentos</h1>
-      {loading && <p>Carregando...</p>}
-      {!loading && orcamentos.length === 0 && <p>Nenhum orçamento</p>}
-      {!loading && orcamentos.length > 0 && (
-        <p>Total: {orcamentos.length} orçamento(s)</p>
+    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "2rem" }}>
+        <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Orçamentos</h1>
+        <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
+          {orcamentos.length} orçamento{orcamentos.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {loading ? (
+        <p style={{ color: "#8da2b4" }}>Carregando...</p>
+      ) : orcamentos.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
+          <p>Nenhum orçamento cadastrado</p>
+        </div>
+      ) : (
+        <div
+          style={{
+            background: "rgba(6, 34, 53, 0.6)",
+            border: "1px solid rgba(19, 200, 211, 0.16)",
+            borderRadius: "12px",
+            overflow: "hidden",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+            <thead>
+              <tr style={{ background: "rgba(19, 200, 211, 0.08)", borderBottom: "1px solid rgba(19, 200, 211, 0.16)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  Número
+                </th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  Status
+                </th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  Valor
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {orcamentos.map((orc) => (
+                <tr key={orc.id} style={{ borderBottom: "1px solid rgba(19, 200, 211, 0.08)" }}>
+                  <td style={{ padding: "12px 16px", color: "#eaf3f8" }}>{orc.numero}</td>
+                  <td style={{ padding: "12px 16px", color: "#13c8d3" }}>{orc.status}</td>
+                  <td style={{ padding: "12px 16px", color: "#66bb6a" }}>R$ {(orc.total || 0).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
