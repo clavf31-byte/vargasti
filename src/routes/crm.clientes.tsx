@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ClienteForm } from "@/components/crm/ClienteForm";
 import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,27 +22,24 @@ function ClientesPage() {
   const { user } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const loadClientes = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("clientes")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Erro:", error);
-          return;
-        }
-
         setClientes((data as Cliente[]) || []);
       } catch (e) {
-        console.error("Erro ao carregar:", e);
+        console.error("Erro:", e);
       } finally {
         setLoading(false);
       }
@@ -52,24 +48,16 @@ function ClientesPage() {
     loadClientes();
   }, [user]);
 
-  const handleSuccess = async () => {
-    if (!user) return;
-    const { data } = await supabase.from("clientes").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setClientes((data as Cliente[]) || []);
-    setIsFormOpen(false);
-  };
-
   return (
     <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
           <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Clientes</h1>
           <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
-            {clientes.length} cliente{clientes.length !== 1 ? "s" : ""} cadastrado{clientes.length !== 1 ? "s" : ""}
+            {clientes.length} cliente{clientes.length !== 1 ? "s" : ""}
           </p>
         </div>
         <button
-          onClick={() => setIsFormOpen(true)}
           style={{
             padding: "10px 20px",
             background: "#13c8d3",
@@ -85,20 +73,12 @@ function ClientesPage() {
         </button>
       </div>
 
-      <ClienteForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSuccess={handleSuccess}
-        userId={user!.id}
-      />
-
       {loading ? (
-        <p style={{ color: "#8da2b4" }}>Carregando clientes...</p>
+        <p style={{ color: "#8da2b4" }}>Carregando...</p>
       ) : clientes.length === 0 ? (
         <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
           <Users style={{ width: "48px", height: "48px", opacity: 0.2, margin: "0 auto 1rem" }} />
           <p>Nenhum cliente cadastrado</p>
-          <p style={{ fontSize: "12px" }}>Clique em "+ Novo Cliente" para começar</p>
         </div>
       ) : (
         <div
