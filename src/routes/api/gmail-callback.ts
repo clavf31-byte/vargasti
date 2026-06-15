@@ -1,4 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createHmac, timingSafeEqual } from "crypto";
+
+const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+function verifyGmailState(state: string | null): string | null {
+  if (!state) return null;
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) return null;
+  try {
+    const decoded = Buffer.from(state, "base64url").toString("utf8");
+    const lastDot = decoded.lastIndexOf(".");
+    if (lastDot < 0) return null;
+    const payload = decoded.slice(0, lastDot);
+    const sig = decoded.slice(lastDot + 1);
+    const expected = createHmac("sha256", secret).update(payload).digest("hex");
+    const a = Buffer.from(sig, "hex");
+    const b = Buffer.from(expected, "hex");
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+    const [userId, tsStr] = payload.split(".");
+    const ts = Number(tsStr);
+    if (!userId || !Number.isFinite(ts)) return null;
+    if (Date.now() - ts > STATE_MAX_AGE_MS) return null;
+    return userId;
+  } catch {
+    return null;
+  }
+}
 
 export const Route = createFileRoute("/api/gmail-callback")({
   server: {
@@ -7,9 +34,18 @@ export const Route = createFileRoute("/api/gmail-callback")({
         const url = new URL(request.url);
         const code = url.searchParams.get("code");
         const error = url.searchParams.get("error");
+        const state = url.searchParams.get("state");
 
         if (error) return new Response(`Authorization failed: ${error}`, { status: 400 });
         if (!code) return new Response("Missing authorization code", { status: 400 });
+
+        const userId = verifyGmailState(state);
+        if (!userId) {
+          return new Response(
+            `<html><body style="font-family:sans-serif;padding:40px;background:#0a0e27;color:#fff;"><h1 style="color:#ff6b6b;">❌ Sessão inválida</h1><p>Inicie a autorização novamente a partir do aplicativo.</p></body></html>`,
+            { status: 401, headers: { "Content-Type": "text/html; charset=utf-8" } }
+          );
+        }
 
         const clientId = process.env.GMAIL_CLIENT_ID;
         const clientSecret = process.env.GMAIL_CLIENT_SECRET;
@@ -21,22 +57,6 @@ export const Route = createFileRoute("/api/gmail-callback")({
 
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-          // Get current authenticated user from Authorization header
-          const authHeader = request.headers.get("authorization");
-          let userId = "system"; // Fallback for backward compatibility
-
-          if (authHeader?.startsWith("Bearer ")) {
-            const token = authHeader.replace("Bearer ", "");
-            try {
-              const { data, error: authError } = await supabaseAdmin.auth.getClaims(token);
-              if (!authError && data?.claims?.sub) {
-                userId = data.claims.sub;
-              }
-            } catch {
-              console.warn("[gmail-callback] Could not extract user from auth header");
-            }
-          }
 
           const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
