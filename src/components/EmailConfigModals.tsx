@@ -4,7 +4,7 @@ import type { EmailCategory, EmailWhitelist, EmailPriority, EmailBlacklist } fro
 
 const ModalOverlay = ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
   <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
-    <div onClick={(e) => e.stopPropagation()} className="bg-gradient-to-br from-surface to-surface-2 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl border border-border">
+    <div onClick={(e) => e.stopPropagation()} className="bg-gradient-to-br from-surface to-surface-2 rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-border">
       {children}
     </div>
   </div>
