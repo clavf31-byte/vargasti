@@ -87,12 +87,7 @@ function OrcamentosPage() {
           action={<button onClick={() => setIsFormOpen(true)} style={{ padding: "8px 16px", background: "#13c8d3", color: "#07111c", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>+ Novo Orçamento</button>}
         />
 
-        <OrcamentoForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSuccess={() => loadOrcamentos()}
-          userId={user!.id}
-        />
+        {/* OrcamentoForm removido temporariamente para diagnóstico */}
 
         {alertas.length > 0 && (
           <div style={{
