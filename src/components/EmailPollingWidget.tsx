@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { startEmailPolling, stopEmailPolling, triggerEmailPolling } from "@/lib/api/emailPolling";
+import { getGmailAuthUrl } from "@/lib/api/emailAgent.functions";
 import { useEmailConfig } from "@/hooks/useEmailConfig";
 import {
   ConfigCategoriesModal,
