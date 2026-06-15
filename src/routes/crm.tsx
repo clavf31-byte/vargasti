@@ -1,5 +1,4 @@
-import { createFileRoute, useNavigate, Outlet } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/crm")({
   head: () => ({ meta: [{ title: "CRM · VargasTI Lab" }] }),
@@ -7,11 +6,5 @@ export const Route = createFileRoute("/crm")({
 });
 
 function CRMLayout() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    navigate({ to: "/crm/orcamentos" });
-  }, [navigate]);
-
   return <Outlet />;
 }
