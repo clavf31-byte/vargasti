@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 
@@ -14,6 +14,7 @@ export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormP
     nome: "",
     email: "",
     telefone: "",
+    empresa: "",
     cnpj_cpf: "",
     endereco: "",
     cidade: "",
@@ -21,22 +22,22 @@ export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormP
     cep: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const { error: insertError } = await supabase
-        .from("clientes")
-        .insert([{ ...formData, user_id: userId }]);
+      const { error: insertError } = await supabase.from("clientes").insert([
+        {
+          ...formData,
+          user_id: userId,
+        },
+      ]);
 
       if (insertError) throw insertError;
 
@@ -44,6 +45,7 @@ export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormP
         nome: "",
         email: "",
         telefone: "",
+        empresa: "",
         cnpj_cpf: "",
         endereco: "",
         cidade: "",
@@ -54,227 +56,274 @@ export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormP
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar cliente");
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  };
-
-  if (!isOpen) return null;
+  }
 
   return (
     <div
       style={{
         position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.6)",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0, 0, 0, 0.5)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: 999,
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: "#0b1820",
-          border: "1px solid rgba(19, 200, 211, 0.2)",
+          background: "#061b2a",
+          border: "1px solid rgba(19, 200, 211, 0.16)",
           borderRadius: "12px",
           padding: "2rem",
-          width: "90%",
           maxWidth: "500px",
-          maxHeight: "90vh",
-          overflow: "auto",
+          width: "90%",
+          color: "#eaf3f8",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#eaf3f8" }}>Novo Cliente</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#8da2b4" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: "20px" }}>Novo Cliente</h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#8da2b4",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
             <X size={20} />
           </button>
         </div>
 
         {error && (
-          <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "6px", padding: "12px", marginBottom: "1rem", color: "#ef5350", fontSize: "13px" }}>
+          <div
+            style={{
+              background: "rgba(211, 47, 47, 0.1)",
+              border: "1px solid rgba(211, 47, 47, 0.3)",
+              borderRadius: "6px",
+              padding: "1rem",
+              marginBottom: "1rem",
+              color: "#ff6b6b",
+              fontSize: "14px",
+            }}
+          >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div>
-            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>Nome *</label>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              Nome *
+            </label>
             <input
               type="text"
-              name="nome"
-              value={formData.nome}
-              onChange={handleChange}
               required
+              value={formData.nome}
+              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
               style={{
                 width: "100%",
-                padding: "10px 12px",
+                padding: "8px 12px",
                 background: "rgba(6, 34, 53, 0.8)",
                 border: "1px solid rgba(19, 200, 211, 0.2)",
                 borderRadius: "6px",
                 color: "#eaf3f8",
-                fontSize: "13px",
+                boxSizing: "border-box",
               }}
-              placeholder="Nome completo ou razão social"
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "rgba(6, 34, 53, 0.8)",
-                  border: "1px solid rgba(19, 200, 211, 0.2)",
-                  borderRadius: "6px",
-                  color: "#eaf3f8",
-                  fontSize: "13px",
-                }}
-                placeholder="email@exemplo.com"
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>Telefone</label>
-              <input
-                type="tel"
-                name="telefone"
-                value={formData.telefone}
-                onChange={handleChange}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "rgba(6, 34, 53, 0.8)",
-                  border: "1px solid rgba(19, 200, 211, 0.2)",
-                  borderRadius: "6px",
-                  color: "#eaf3f8",
-                  fontSize: "13px",
-                }}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(6, 34, 53, 0.8)",
+                border: "1px solid rgba(19, 200, 211, 0.2)",
+                borderRadius: "6px",
+                color: "#eaf3f8",
+                boxSizing: "border-box",
+              }}
+            />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>CPF/CNPJ</label>
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              Telefone
+            </label>
+            <input
+              type="tel"
+              value={formData.telefone}
+              onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(6, 34, 53, 0.8)",
+                border: "1px solid rgba(19, 200, 211, 0.2)",
+                borderRadius: "6px",
+                color: "#eaf3f8",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              Empresa
+            </label>
             <input
               type="text"
-              name="cnpj_cpf"
+              value={formData.empresa}
+              onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(6, 34, 53, 0.8)",
+                border: "1px solid rgba(19, 200, 211, 0.2)",
+                borderRadius: "6px",
+                color: "#eaf3f8",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              CPF/CNPJ
+            </label>
+            <input
+              type="text"
               value={formData.cnpj_cpf}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, cnpj_cpf: e.target.value })}
               style={{
                 width: "100%",
-                padding: "10px 12px",
+                padding: "8px 12px",
                 background: "rgba(6, 34, 53, 0.8)",
                 border: "1px solid rgba(19, 200, 211, 0.2)",
                 borderRadius: "6px",
                 color: "#eaf3f8",
-                fontSize: "13px",
+                boxSizing: "border-box",
               }}
-              placeholder="000.000.000-00 ou 00.000.000/0000-00"
             />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>Endereço</label>
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              Endereço
+            </label>
             <input
               type="text"
-              name="endereco"
               value={formData.endereco}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
               style={{
                 width: "100%",
-                padding: "10px 12px",
+                padding: "8px 12px",
                 background: "rgba(6, 34, 53, 0.8)",
                 border: "1px solid rgba(19, 200, 211, 0.2)",
                 borderRadius: "6px",
                 color: "#eaf3f8",
-                fontSize: "13px",
+                boxSizing: "border-box",
               }}
-              placeholder="Rua, número, complemento"
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>Cidade</label>
+              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+                Cidade
+              </label>
               <input
                 type="text"
-                name="cidade"
                 value={formData.cidade}
-                onChange={handleChange}
+                onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
+                  padding: "8px 12px",
                   background: "rgba(6, 34, 53, 0.8)",
                   border: "1px solid rgba(19, 200, 211, 0.2)",
                   borderRadius: "6px",
                   color: "#eaf3f8",
-                  fontSize: "13px",
+                  boxSizing: "border-box",
                 }}
-                placeholder="Cidade"
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>UF</label>
+              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+                Estado
+              </label>
               <input
                 type="text"
-                name="estado"
-                value={formData.estado}
-                onChange={handleChange}
                 maxLength={2}
+                value={formData.estado}
+                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
+                  padding: "8px 12px",
                   background: "rgba(6, 34, 53, 0.8)",
                   border: "1px solid rgba(19, 200, 211, 0.2)",
                   borderRadius: "6px",
                   color: "#eaf3f8",
-                  fontSize: "13px",
+                  boxSizing: "border-box",
                 }}
-                placeholder="SP"
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem", fontWeight: 500 }}>CEP</label>
-              <input
-                type="text"
-                name="cep"
-                value={formData.cep}
-                onChange={handleChange}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "rgba(6, 34, 53, 0.8)",
-                  border: "1px solid rgba(19, 200, 211, 0.2)",
-                  borderRadius: "6px",
-                  color: "#eaf3f8",
-                  fontSize: "13px",
-                }}
-                placeholder="00000-000"
               />
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label style={{ display: "block", fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
+              CEP
+            </label>
+            <input
+              type="text"
+              value={formData.cep}
+              onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(6, 34, 53, 0.8)",
+                border: "1px solid rgba(19, 200, 211, 0.2)",
+                borderRadius: "6px",
+                color: "#eaf3f8",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "1rem" }}>
             <button
               type="button"
               onClick={onClose}
               style={{
                 flex: 1,
                 padding: "10px 16px",
-                background: "rgba(255,255,255,.035)",
-                border: "1px solid rgba(255,255,255,.055)",
+                background: "rgba(19, 200, 211, 0.1)",
+                border: "1px solid rgba(19, 200, 211, 0.3)",
                 borderRadius: "6px",
-                color: "#d7e4ec",
+                color: "#13c8d3",
                 cursor: "pointer",
                 fontWeight: 600,
               }}
@@ -287,16 +336,16 @@ export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormP
               style={{
                 flex: 1,
                 padding: "10px 16px",
-                background: "linear-gradient(135deg, #0bd0d7, #08718b)",
+                background: "#13c8d3",
                 border: "none",
                 borderRadius: "6px",
-                color: "white",
-                cursor: "pointer",
+                color: "#061b2a",
+                cursor: loading ? "not-allowed" : "pointer",
                 fontWeight: 600,
                 opacity: loading ? 0.6 : 1,
               }}
             >
-              {loading ? "Salvando..." : "Criar Cliente"}
+              {loading ? "Criando..." : "Criar Cliente"}
             </button>
           </div>
         </form>

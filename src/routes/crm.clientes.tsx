@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, PageHeader } from "@/components/AppShell";
 import { ClienteForm } from "@/components/crm/ClienteForm";
 import { Users } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -17,24 +17,16 @@ type Cliente = {
   email?: string | null;
   telefone?: string | null;
   cnpj_cpf?: string | null;
-  endereco?: string | null;
   created_at: string;
 };
 
 function ClientesPage() {
   const { user } = useAuth();
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    loadClientes();
-  }, [user]);
-
-  async function loadClientes() {
-    setLoading(true);
-    try {
+  const { data: clientes = [], isLoading, refetch } = useQuery({
+    queryKey: ["clientes", user?.id],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("clientes")
         .select("*")
@@ -42,73 +34,94 @@ function ClientesPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setClientes((data as Cliente[]) || []);
-    } catch (e) {
-      console.error("Erro ao carregar clientes:", e);
-    } finally {
-      setLoading(false);
-    }
-  }
+      return (data as Cliente[]) || [];
+    },
+    enabled: !!user,
+  });
 
   return (
-    <AppShell>
-      <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-        <PageHeader
-          title="Clientes"
-          subtitle={`${clientes.length} cliente${clientes.length !== 1 ? "s" : ""} cadastrado${clientes.length !== 1 ? "s" : ""}`}
-          action={<button onClick={() => setIsFormOpen(true)} style={{ padding: "8px 16px", background: "#13c8d3", color: "#07111c", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>+ Novo Cliente</button>}
-        />
+    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+        <div>
+          <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Clientes</h1>
+          <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
+            {clientes.length} cliente{clientes.length !== 1 ? "s" : ""} cadastrado{clientes.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <button
+          onClick={() => setIsFormOpen(true)}
+          style={{
+            padding: "10px 20px",
+            background: "#13c8d3",
+            color: "#061b2a",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: 600,
+            fontSize: "14px",
+          }}
+        >
+          + Novo Cliente
+        </button>
+      </div>
 
-        <ClienteForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSuccess={() => loadClientes()}
-          userId={user!.id}
-        />
+      <ClienteForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={() => {
+          refetch();
+          setIsFormOpen(false);
+        }}
+        userId={user!.id}
+      />
 
-        {loading ? (
-          <p style={{ color: "#8da2b4" }}>Carregando clientes...</p>
-        ) : clientes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
-            <Users style={{ width: "48px", height: "48px", opacity: 0.2, margin: "0 auto 1rem" }} />
-            <p>Nenhum cliente cadastrado</p>
-            <p style={{ fontSize: "12px" }}>Clique em "+ Novo Cliente" para começar</p>
-          </div>
-        ) : (
-          <div style={{
+      {isLoading ? (
+        <p style={{ color: "#8da2b4" }}>Carregando clientes...</p>
+      ) : clientes.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
+          <Users style={{ width: "48px", height: "48px", opacity: 0.2, margin: "0 auto 1rem" }} />
+          <p>Nenhum cliente cadastrado</p>
+          <p style={{ fontSize: "12px" }}>Clique em "+ Novo Cliente" para começar</p>
+        </div>
+      ) : (
+        <div
+          style={{
             background: "rgba(6, 34, 53, 0.6)",
             border: "1px solid rgba(19, 200, 211, 0.16)",
             borderRadius: "12px",
             overflow: "hidden",
-            marginTop: "2rem"
-          }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-              <thead>
-                <tr style={{ background: "rgba(19, 200, 211, 0.08)", borderBottom: "1px solid rgba(19, 200, 211, 0.16)" }}>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>Nome</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>Email</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>Telefone</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>CPF/CNPJ</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>Ações</th>
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+            <thead>
+              <tr style={{ background: "rgba(19, 200, 211, 0.08)", borderBottom: "1px solid rgba(19, 200, 211, 0.16)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  Nome
+                </th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  Email
+                </th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  Telefone
+                </th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
+                  CPF/CNPJ
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientes.map((cliente) => (
+                <tr key={cliente.id} style={{ borderBottom: "1px solid rgba(19, 200, 211, 0.08)" }}>
+                  <td style={{ padding: "12px 16px", color: "#eaf3f8" }}>{cliente.nome}</td>
+                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.email || "—"}</td>
+                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.telefone || "—"}</td>
+                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.cnpj_cpf || "—"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {clientes.map((cliente) => (
-                  <tr key={cliente.id} style={{ borderBottom: "1px solid rgba(19, 200, 211, 0.08)" }}>
-                    <td style={{ padding: "12px 16px", color: "#eaf3f8" }}>{cliente.nome}</td>
-                    <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.email || "—"}</td>
-                    <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.telefone || "—"}</td>
-                    <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.cnpj_cpf || "—"}</td>
-                    <td style={{ padding: "12px 16px" }}>
-                      <button style={{ padding: "4px 8px", fontSize: "12px", background: "rgba(19, 200, 211, 0.1)", border: "1px solid rgba(19, 200, 211, 0.3)", color: "#13c8d3", borderRadius: "4px", cursor: "pointer" }}>Editar</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </AppShell>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
