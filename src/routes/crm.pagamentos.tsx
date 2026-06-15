@@ -1,7 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader, Card, StatCard } from "@/components/ui";
+import { colors, spacing, borderRadius } from "@/lib/colors";
+import { Search, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/crm/pagamentos")({
   head: () => ({ meta: [{ title: "Pagamentos · CRM VargasTI" }] }),
@@ -20,142 +23,305 @@ type Pagamento = {
 function PagamentosPage() {
   const { user } = useAuth();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [filtrados, setFiltrados] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const loadPagamentos = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from("pagamentos")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("data_pagamento", { ascending: false });
+
+      setPagamentos((data as Pagamento[]) || []);
+    } catch (e) {
+      console.error("Erro:", e);
+    }
+  };
 
   useEffect(() => {
-    if (!user) return;
-
-    const loadPagamentos = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("pagamentos")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("data_pagamento", { ascending: false });
-
-        if (error) {
-          console.error("Erro:", error);
-          return;
-        }
-
-        setPagamentos((data as Pagamento[]) || []);
-      } catch (e) {
-        console.error("Erro ao carregar:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     loadPagamentos();
+    setLoading(false);
   }, [user]);
 
+  // Filtrar pagamentos
+  useEffect(() => {
+    let resultado = pagamentos;
+
+    if (searchTerm) {
+      resultado = resultado.filter(
+        (p) =>
+          p.orcamento_id.includes(searchTerm) ||
+          p.referencia?.includes(searchTerm) ||
+          p.metodo?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFiltrados(resultado);
+  }, [pagamentos, searchTerm]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja deletar este pagamento?")) return;
+    try {
+      await supabase.from("pagamentos").delete().eq("id", id);
+      loadPagamentos();
+    } catch (e) {
+      console.error("Erro:", e);
+      alert("Erro ao deletar pagamento");
+    }
+  };
+
   const totalPago = pagamentos.reduce((sum, p) => sum + (p.valor || 0), 0);
+  const totalFiltrado = filtrados.reduce((sum, p) => sum + (p.valor || 0), 0);
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Pagamentos</h1>
-        <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
-          {pagamentos.length} pagamento{pagamentos.length !== 1 ? "s" : ""} registrado{pagamentos.length !== 1 ? "s" : ""}
-        </p>
-      </div>
+    <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
+      <PageHeader
+        title="Pagamentos"
+        subtitle={`${pagamentos.length} total • ${filtrados.length} exibindo`}
+        icon="💰"
+      />
 
+      {/* KPIs */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "1.5rem",
-          marginBottom: "2rem",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: spacing.lg,
+          marginBottom: spacing.xxl,
         }}
       >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #0b2538 0%, #061b2a 100%)",
-            border: "1px solid rgba(19, 200, 211, 0.16)",
-            borderRadius: "12px",
-            padding: "1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <div style={{ fontSize: "12px", color: "#8da2b4", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-            Total Recebido
-          </div>
-          <div style={{ fontSize: "32px", fontWeight: 700, color: "#66bb6a" }}>R$ {totalPago.toFixed(2)}</div>
-        </div>
-        <div
-          style={{
-            background: "linear-gradient(135deg, #0b2538 0%, #061b2a 100%)",
-            border: "1px solid rgba(19, 200, 211, 0.16)",
-            borderRadius: "12px",
-            padding: "1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <div style={{ fontSize: "12px", color: "#8da2b4", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-            Pagamentos
-          </div>
-          <div style={{ fontSize: "32px", fontWeight: 700, color: "#13c8d3" }}>{pagamentos.length}</div>
-        </div>
+        <StatCard
+          label="Total Recebido"
+          value={`R$ ${totalPago.toFixed(2)}`}
+          color={colors.success}
+        />
+        <StatCard
+          label="Pagamentos"
+          value={pagamentos.length}
+          color={colors.primary}
+        />
       </div>
 
+      {/* Busca */}
+      <Card>
+        <div style={{ position: "relative" }}>
+          <Search
+            size={18}
+            style={{
+              position: "absolute",
+              left: spacing.md,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: colors.textSecondary,
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por orçamento, referência ou método..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
+              background: colors.background,
+              border: `1px solid ${colors.border}`,
+              borderRadius: borderRadius.md,
+              color: colors.text,
+              fontSize: "14px",
+            }}
+          />
+        </div>
+      </Card>
+
+      {/* Tabela */}
       {loading ? (
-        <p style={{ color: "#8da2b4" }}>Carregando pagamentos...</p>
-      ) : pagamentos.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
-          <p>Nenhum pagamento registrado</p>
-        </div>
+        <p style={{ color: colors.textSecondary }}>Carregando...</p>
+      ) : filtrados.length === 0 ? (
+        <Card>
+          <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
+            {pagamentos.length === 0
+              ? "Nenhum pagamento registrado"
+              : "Nenhum pagamento encontrado"}
+          </p>
+        </Card>
       ) : (
-        <div
-          style={{
-            background: "rgba(6, 34, 53, 0.6)",
-            border: "1px solid rgba(19, 200, 211, 0.16)",
-            borderRadius: "12px",
-            overflow: "hidden",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-            <thead>
-              <tr style={{ background: "rgba(19, 200, 211, 0.08)", borderBottom: "1px solid rgba(19, 200, 211, 0.16)" }}>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Orçamento
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Valor
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Data
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Método
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Referência
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagamentos.map((pagamento) => (
-                <tr key={pagamento.id} style={{ borderBottom: "1px solid rgba(19, 200, 211, 0.08)" }}>
-                  <td style={{ padding: "12px 16px", color: "#13c8d3", fontWeight: 600 }}>
-                    {pagamento.orcamento_id.slice(0, 8)}
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#66bb6a", fontWeight: 500 }}>
-                    R$ {(pagamento.valor || 0).toFixed(2)}
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>
-                    {new Date(pagamento.data_pagamento).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>
-                    {pagamento.metodo || "—"}
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>
-                    {pagamento.referencia || "—"}
-                  </td>
+        <Card>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "14px",
+              }}
+            >
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Orçamento
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Valor
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Data
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Método
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Referência
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "center",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Ações
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtrados.map((pag) => (
+                  <tr
+                    key={pag.id}
+                    style={{
+                      borderBottom: `1px solid ${colors.borderLight}`,
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        colors.backgroundTertiary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.primary,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {pag.orcamento_id.slice(0, 8)}...
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.success,
+                        fontWeight: 600,
+                      }}
+                    >
+                      R$ {pag.valor.toFixed(2)}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {new Date(pag.data_pagamento).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {pag.metodo || "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {pag.referencia || "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        textAlign: "center",
+                      }}
+                    >
+                      <button
+                        onClick={() => handleDelete(pag.id)}
+                        style={{
+                          background: colors.background,
+                          border: `1px solid ${colors.error}`,
+                          color: colors.error,
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderRadius: borderRadius.sm,
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          display: "flex",
+                          gap: "4px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        Deletar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
     </div>
   );

@@ -1,8 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { OrcamentoForm } from "@/components/crm/OrcamentoForm";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { colors, spacing, borderRadius } from "@/lib/colors";
+import { Search, Filter, Trash2, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/crm/orcamentos")({
   head: () => ({ meta: [{ title: "Orçamentos · CRM VargasTI" }] }),
@@ -12,15 +15,22 @@ export const Route = createFileRoute("/crm/orcamentos")({
 function OrcamentosPage() {
   const { user } = useAuth();
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [filtrados, setFiltrados] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!user) return;
     try {
       const [orcRes, clientRes] = await Promise.all([
-        supabase.from("orcamentos").select("*").eq("user_id", user.id).order("data_criacao", { ascending: false }),
+        supabase
+          .from("orcamentos")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("data_criacao", { ascending: false }),
         supabase.from("clientes").select("id, nome").eq("user_id", user.id),
       ]);
 
@@ -41,36 +51,65 @@ function OrcamentosPage() {
     setLoading(false);
   }, [user]);
 
+  // Filtrar orçamentos baseado em search e status
+  useEffect(() => {
+    let resultado = orcamentos;
+
+    if (searchTerm) {
+      resultado = resultado.filter(
+        (orc) =>
+          orc.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          orc.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (statusFilter) {
+      resultado = resultado.filter((orc) => orc.status === statusFilter);
+    }
+
+    setFiltrados(resultado);
+  }, [orcamentos, searchTerm, statusFilter]);
+
   const handleSuccess = () => {
     loadData();
     setIsFormOpen(false);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja deletar este orçamento?")) return;
+    try {
+      await supabase.from("orcamentos").delete().eq("id", id);
+      loadData();
+    } catch (e) {
+      console.error("Erro:", e);
+      alert("Erro ao deletar orçamento");
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors_map: Record<string, string> = {
+      rascunho: colors.textSecondary,
+      enviado: colors.primary,
+      aprovado: colors.success,
+      rejeitado: colors.error,
+    };
+    return colors_map[status] || colors.text;
+  };
+
+  const statuses = ["rascunho", "enviado", "aprovado", "rejeitado"];
+
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <div>
-          <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Orçamentos</h1>
-          <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
-            {orcamentos.length} orçamento{orcamentos.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          style={{
-            padding: "10px 20px",
-            background: "#13c8d3",
-            color: "#061b2a",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: "14px",
-          }}
-        >
-          + Novo Orçamento
-        </button>
-      </div>
+    <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
+      <PageHeader
+        title="Orçamentos"
+        subtitle={`${orcamentos.length} total • ${filtrados.length} exibindo`}
+        action={
+          <Button variant="primary" onClick={() => setIsFormOpen(true)}>
+            + Novo Orçamento
+          </Button>
+        }
+        icon="📋"
+      />
 
       <OrcamentoForm
         isOpen={isFormOpen}
@@ -80,46 +119,259 @@ function OrcamentosPage() {
         clientes={clientes}
       />
 
-      {loading ? (
-        <p style={{ color: "#8da2b4" }}>Carregando...</p>
-      ) : orcamentos.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
-          <p>Nenhum orçamento cadastrado</p>
-        </div>
-      ) : (
+      {/* Filtros e Busca */}
+      <Card>
         <div
           style={{
-            background: "rgba(6, 34, 53, 0.6)",
-            border: "1px solid rgba(19, 200, 211, 0.16)",
-            borderRadius: "12px",
-            overflow: "hidden",
+            display: "flex",
+            gap: spacing.md,
+            alignItems: "center",
+            flexWrap: "wrap",
           }}
         >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-            <thead>
-              <tr style={{ background: "rgba(19, 200, 211, 0.08)", borderBottom: "1px solid rgba(19, 200, 211, 0.16)" }}>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Número
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Status
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Valor
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {orcamentos.map((orc) => (
-                <tr key={orc.id} style={{ borderBottom: "1px solid rgba(19, 200, 211, 0.08)" }}>
-                  <td style={{ padding: "12px 16px", color: "#eaf3f8" }}>{orc.numero}</td>
-                  <td style={{ padding: "12px 16px", color: "#13c8d3" }}>{orc.status}</td>
-                  <td style={{ padding: "12px 16px", color: "#66bb6a" }}>R$ {(orc.total || 0).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ flex: 1, minWidth: "200px", position: "relative" }}>
+            <Search
+              size={18}
+              style={{
+                position: "absolute",
+                left: spacing.md,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: colors.textSecondary,
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Buscar orçamento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
+                background: colors.background,
+                border: `1px solid ${colors.border}`,
+                borderRadius: borderRadius.md,
+                color: colors.text,
+                fontSize: "14px",
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: spacing.sm, alignItems: "center" }}>
+            <Filter size={18} color={colors.textSecondary} />
+            {statuses.map((status) => (
+              <button
+                key={status}
+                onClick={() =>
+                  setStatusFilter(statusFilter === status ? null : status)
+                }
+                style={{
+                  padding: `${spacing.sm} ${spacing.md}`,
+                  background:
+                    statusFilter === status
+                      ? getStatusColor(status)
+                      : colors.background,
+                  color:
+                    statusFilter === status ? colors.background : colors.text,
+                  border: `1px solid ${
+                    statusFilter === status
+                      ? getStatusColor(status)
+                      : colors.border
+                  }`,
+                  borderRadius: borderRadius.full,
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  textTransform: "capitalize",
+                  transition: "all 0.3s",
+                }}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
+      </Card>
+
+      {/* Tabela */}
+      {loading ? (
+        <p style={{ color: colors.textSecondary }}>Carregando...</p>
+      ) : filtrados.length === 0 ? (
+        <Card>
+          <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
+            {orcamentos.length === 0
+              ? "Nenhum orçamento cadastrado"
+              : "Nenhum orçamento encontrado com os filtros selecionados"}
+          </p>
+        </Card>
+      ) : (
+        <Card>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "14px",
+              }}
+            >
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Número
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Valor
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Criado em
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "center",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtrados.map((orc) => (
+                  <tr
+                    key={orc.id}
+                    style={{
+                      borderBottom: `1px solid ${colors.borderLight}`,
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        colors.backgroundTertiary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.text,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {orc.numero}
+                    </td>
+                    <td style={{ padding: spacing.md }}>
+                      <span
+                        style={{
+                          color: getStatusColor(orc.status),
+                          fontWeight: 600,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {orc.status}
+                      </span>
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.success,
+                        fontWeight: 600,
+                      }}
+                    >
+                      R$ {(orc.total || 0).toFixed(2)}
+                    </td>
+                    <td style={{ padding: spacing.md, color: colors.textSecondary }}>
+                      {new Date(orc.data_criacao).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        textAlign: "center",
+                        display: "flex",
+                        gap: spacing.sm,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <button
+                        style={{
+                          background: colors.background,
+                          border: `1px solid ${colors.border}`,
+                          color: colors.primary,
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderRadius: borderRadius.sm,
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          display: "flex",
+                          gap: "4px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Eye size={14} />
+                        Ver
+                      </button>
+                      <button
+                        onClick={() => handleDelete(orc.id)}
+                        style={{
+                          background: colors.background,
+                          border: `1px solid ${colors.error}`,
+                          color: colors.error,
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderRadius: borderRadius.sm,
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          display: "flex",
+                          gap: "4px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        Deletar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
     </div>
   );

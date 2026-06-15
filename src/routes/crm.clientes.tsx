@@ -1,9 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClienteForm } from "@/components/crm/ClienteForm";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { colors, spacing, borderRadius } from "@/lib/colors";
+import { Search, Trash2, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/crm/clientes")({
   head: () => ({ meta: [{ title: "Clientes · CRM VargasTI" }] }),
@@ -22,8 +25,10 @@ type Cliente = {
 function ClientesPage() {
   const { user } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [filtrados, setFiltrados] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadClientes = async () => {
     if (!user) return;
@@ -50,36 +55,50 @@ function ClientesPage() {
     setLoading(false);
   }, [user]);
 
+  // Filtrar clientes
+  useEffect(() => {
+    let resultado = clientes;
+
+    if (searchTerm) {
+      resultado = resultado.filter(
+        (c) =>
+          c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.cnpj_cpf?.includes(searchTerm)
+      );
+    }
+
+    setFiltrados(resultado);
+  }, [clientes, searchTerm]);
+
   const handleSuccess = () => {
     loadClientes();
     setIsFormOpen(false);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja deletar este cliente?")) return;
+    try {
+      await supabase.from("clientes").delete().eq("id", id);
+      loadClientes();
+    } catch (e) {
+      console.error("Erro:", e);
+      alert("Erro ao deletar cliente");
+    }
+  };
+
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <div>
-          <h1 style={{ margin: "0 0 0.5rem 0", color: "#eaf3f8", fontSize: "32px" }}>Clientes</h1>
-          <p style={{ margin: 0, color: "#8da2b4", fontSize: "14px" }}>
-            {clientes.length} cliente{clientes.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          style={{
-            padding: "10px 20px",
-            background: "#13c8d3",
-            color: "#061b2a",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: "14px",
-          }}
-        >
-          + Novo Cliente
-        </button>
-      </div>
+    <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
+      <PageHeader
+        title="Clientes"
+        subtitle={`${clientes.length} total • ${filtrados.length} exibindo`}
+        action={
+          <Button variant="primary" onClick={() => setIsFormOpen(true)}>
+            + Novo Cliente
+          </Button>
+        }
+        icon={<Users size={32} />}
+      />
 
       <ClienteForm
         isOpen={isFormOpen}
@@ -88,51 +107,217 @@ function ClientesPage() {
         userId={user!.id}
       />
 
+      {/* Busca */}
+      <Card>
+        <div style={{ position: "relative" }}>
+          <Search
+            size={18}
+            style={{
+              position: "absolute",
+              left: spacing.md,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: colors.textSecondary,
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por nome, email ou CPF/CNPJ..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`,
+              background: colors.background,
+              border: `1px solid ${colors.border}`,
+              borderRadius: borderRadius.md,
+              color: colors.text,
+              fontSize: "14px",
+            }}
+          />
+        </div>
+      </Card>
+
+      {/* Tabela */}
       {loading ? (
-        <p style={{ color: "#8da2b4" }}>Carregando...</p>
-      ) : clientes.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#8da2b4" }}>
-          <Users style={{ width: "48px", height: "48px", opacity: 0.2, margin: "0 auto 1rem" }} />
-          <p>Nenhum cliente cadastrado</p>
-        </div>
+        <p style={{ color: colors.textSecondary }}>Carregando...</p>
+      ) : filtrados.length === 0 ? (
+        <Card>
+          <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
+            {clientes.length === 0
+              ? "Nenhum cliente cadastrado"
+              : "Nenhum cliente encontrado"}
+          </p>
+        </Card>
       ) : (
-        <div
-          style={{
-            background: "rgba(6, 34, 53, 0.6)",
-            border: "1px solid rgba(19, 200, 211, 0.16)",
-            borderRadius: "12px",
-            overflow: "hidden",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-            <thead>
-              <tr style={{ background: "rgba(19, 200, 211, 0.08)", borderBottom: "1px solid rgba(19, 200, 211, 0.16)" }}>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Nome
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Email
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  Telefone
-                </th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "12px", color: "#8da2b4", fontWeight: 600 }}>
-                  CPF/CNPJ
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((cliente) => (
-                <tr key={cliente.id} style={{ borderBottom: "1px solid rgba(19, 200, 211, 0.08)" }}>
-                  <td style={{ padding: "12px 16px", color: "#eaf3f8" }}>{cliente.nome}</td>
-                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.email || "—"}</td>
-                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.telefone || "—"}</td>
-                  <td style={{ padding: "12px 16px", color: "#8da2b4", fontSize: "13px" }}>{cliente.cnpj_cpf || "—"}</td>
+        <Card>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "14px",
+              }}
+            >
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Nome
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Email
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Telefone
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "left",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    CPF/CNPJ
+                  </th>
+                  <th
+                    style={{
+                      padding: spacing.md,
+                      textAlign: "center",
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Ações
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtrados.map((cliente) => (
+                  <tr
+                    key={cliente.id}
+                    style={{
+                      borderBottom: `1px solid ${colors.borderLight}`,
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        colors.backgroundTertiary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.text,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {cliente.nome}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {cliente.email || "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {cliente.telefone || "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {cliente.cnpj_cpf || "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: spacing.md,
+                        textAlign: "center",
+                        display: "flex",
+                        gap: spacing.sm,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <button
+                        style={{
+                          background: colors.background,
+                          border: `1px solid ${colors.border}`,
+                          color: colors.primary,
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderRadius: borderRadius.sm,
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          display: "flex",
+                          gap: "4px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Eye size={14} />
+                        Ver
+                      </button>
+                      <button
+                        onClick={() => handleDelete(cliente.id)}
+                        style={{
+                          background: colors.background,
+                          border: `1px solid ${colors.error}`,
+                          color: colors.error,
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderRadius: borderRadius.sm,
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          display: "flex",
+                          gap: "4px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        Deletar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
     </div>
   );
