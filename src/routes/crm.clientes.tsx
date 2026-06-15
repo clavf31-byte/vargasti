@@ -39,7 +39,7 @@ function ClientesPage() {
         .from("clientes")
         .select("*")
         .eq("user_id", user!.id)
-        .order("criado_em", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setClientes((data as Cliente[]) || []);
