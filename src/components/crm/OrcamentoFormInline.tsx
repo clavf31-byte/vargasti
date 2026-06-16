@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { OrcamentoItensTable } from "./OrcamentoItensTable";
+import { OrcamentoItemForm } from "./OrcamentoItemForm";
 import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
 import { gerarNumeroOrcamento } from "@/hooks/useOrcamentoNumero";
 
@@ -32,6 +33,7 @@ export function OrcamentoFormInline({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showItemForm, setShowItemForm] = useState(false);
   const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
 
   useEffect(() => {
@@ -258,10 +260,22 @@ export function OrcamentoFormInline({
 
         <OrcamentoItensTable
           itens={itens}
-          onAddItem={addItem}
+          onAddItem={() => setShowItemForm(true)}
           onUpdateItem={updateItem}
           onRemoveItem={removeItem}
         />
+
+        {showItemForm && (
+          <OrcamentoItemForm
+            onAdd={(item) => {
+              addItem();
+              const lastIdx = itens.length;
+              updateItem(lastIdx, item);
+              setShowItemForm(false);
+            }}
+            onClose={() => setShowItemForm(false)}
+          />
+        )}
 
         {/* Resumo de Totais */}
         <div
