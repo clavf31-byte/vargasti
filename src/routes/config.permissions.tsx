@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Check, X, Lock, Unlock } from "lucide-react";
+import { Check, X, Lock, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/config/permissions")({
   head: () => ({ meta: [{ title: "Gerenciar Permissões · VargasTI" }] }),
@@ -27,49 +27,138 @@ interface UserAccess {
 
 function PermissionsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserAccess[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    checkAdminAccess();
+  }, [user]);
+
+  async function checkAdminAccess() {
+    if (!user?.id) {
+      navigate({ to: "/login" });
+      return;
+    }
+
+    try {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+      const userRole = roleData?.role;
+      if (userRole !== "admin") {
+        setError("Apenas administradores podem gerenciar permissões");
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(true);
+      await loadUsers();
+    } catch (err) {
+      console.error("Erro ao verificar permissões:", err);
+      setError("Erro ao verificar permissões");
+    }
+  }
 
   async function loadUsers() {
     try {
-      const { data, error } = await supabase
+      const { data, error: profileError } = await supabase
         .from("profiles")
         .select("id, email, full_name, role")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      const enrichedUsers = (data || []).map((u: any) => ({
-        id: u.id,
-        email: u.email,
-        name: u.full_name || u.email,
-        role: u.role || "user",
-        can_access_crm: true,
-        can_access_email: true,
-        can_access_excel: true,
-        can_access_notes: true,
-        can_access_projects: true,
-        can_access_files: true,
-      }));
+      const userIds = (data || []).map((u: any) => u.id);
+      if (userIds.length === 0) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: permData, error: permError } = await supabase
+        .from("user_module_permissions")
+        .select("*")
+        .in("user_id", userIds);
+
+      if (permError && permError.code !== "PGRST116") {
+        throw permError;
+      }
+
+      const permsByUserId = new Map(
+        (permData || []).map((p: any) => [p.user_id, p])
+      );
+
+      const enrichedUsers = (data || []).map((u: any) => {
+        const perms = permsByUserId.get(u.id) || {};
+        return {
+          id: u.id,
+          email: u.email,
+          name: u.full_name || u.email,
+          role: u.role || "user",
+          can_access_crm: perms.can_access_crm !== false,
+          can_access_email: perms.can_access_email !== false,
+          can_access_excel: perms.can_access_excel !== false,
+          can_access_notes: perms.can_access_notes !== false,
+          can_access_projects: perms.can_access_projects !== false,
+          can_access_files: perms.can_access_files !== false,
+        };
+      });
 
       setUsers(enrichedUsers);
     } catch (err) {
       console.error("Erro ao carregar usuários:", err);
+      setError("Erro ao carregar dados de permissões");
     } finally {
       setLoading(false);
     }
   }
 
   async function toggleAccess(userId: string, permission: string) {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+
+    const newValue = !user[permission as keyof UserAccess];
+
     setUsers(
       users.map((u) =>
-        u.id === userId ? { ...u, [permission]: !u[permission] } : u
+        u.id === userId ? { ...u, [permission]: newValue } : u
       )
     );
+
+    setSaving(userId);
+
+    try {
+      const { error } = await supabase
+        .from("user_module_permissions")
+        .upsert(
+          {
+            user_id: userId,
+            [permission]: newValue,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (error) throw error;
+    } catch (err) {
+      console.error(`Erro ao atualizar permissão ${permission}:`, err);
+      setError(`Erro ao atualizar permissão`);
+
+      setUsers(
+        users.map((u) =>
+          u.id === userId ? { ...u, [permission]: !newValue } : u
+        )
+      );
+    } finally {
+      setSaving(null);
+    }
   }
 
   const modules = [
@@ -94,8 +183,27 @@ function PermissionsPage() {
           </p>
         </div>
 
-        {/* LOADING */}
-        {loading ? (
+        {/* ERROR MESSAGE */}
+        {error && !isAdmin && (
+          <Card>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: spacing.md, padding: spacing.lg, background: "#7f1d1d", borderRadius: borderRadius.md }}>
+              <AlertCircle size={20} color="#fca5a5" style={{ flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <p style={{ color: "#fca5a5", fontWeight: 600, margin: 0 }}>Acesso Restrito</p>
+                <p style={{ color: "#fee2e2", fontSize: "14px", margin: "0.5rem 0 0 0" }}>{error}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* CONTENT */}
+        {!isAdmin && error ? (
+          <Card>
+            <div style={{ textAlign: "center", padding: spacing.xl, color: colors.textSecondary }}>
+              Você não tem permissão para acessar esta página
+            </div>
+          </Card>
+        ) : loading ? (
           <Card>
             <div style={{ textAlign: "center", padding: spacing.xl, color: colors.textSecondary }}>
               Carregando usuários...
@@ -154,6 +262,7 @@ function PermissionsPage() {
                       <td key={key} style={{ padding: spacing.md, textAlign: "center" }}>
                         <button
                           onClick={() => toggleAccess(userAccess.id, key)}
+                          disabled={saving === userAccess.id}
                           style={{
                             width: "32px",
                             height: "32px",
@@ -161,11 +270,12 @@ function PermissionsPage() {
                             borderRadius: borderRadius.sm,
                             background: userAccess[key as keyof UserAccess] ? colors.success : colors.backgroundTertiary,
                             color: "#fff",
-                            cursor: "pointer",
+                            cursor: saving === userAccess.id ? "wait" : "pointer",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             transition: "all 0.2s",
+                            opacity: saving === userAccess.id ? 0.6 : 1,
                           }}
                           title={userAccess[key as keyof UserAccess] ? "Revogar acesso" : "Conceder acesso"}
                         >
