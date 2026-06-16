@@ -29,7 +29,6 @@ const NAV_MODULES = [
   {
     group: "💼 CRM",
     items: [
-      { to: "/crm", label: "Dashboard", icon: LayoutDashboard },
       { to: "/crm/clientes", label: "Clientes", icon: Users },
       { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet },
       { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail },
