@@ -239,27 +239,27 @@ function LoginPage() {
             </p>
 
             {/* Status bar */}
-            <div className="mt-7 pt-5 border-t border-white/5 grid grid-cols-3 gap-2 text-center">
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
-                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">Online</span>
+            <div className="mt-7 pt-5 border-t border-white/5 grid grid-cols-3 gap-3 text-[11px]">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <div className="min-w-0">
+                  <div className="text-slate-200 font-medium truncate">Sistema Online</div>
+                  <div className="text-slate-500 truncate">Todos os serviços OK</div>
                 </div>
-                <span className="text-[9px] text-slate-500">Serviços OK</span>
               </div>
-              <div className="flex flex-col items-center gap-1 border-x border-white/5">
-                <div className="flex items-center gap-1.5">
-                  <Layers size={11} className="text-cyan-400" />
-                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">V2.5.0</span>
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-cyan-400 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-slate-200 font-medium truncate">V2.5.0</div>
+                  <div className="text-slate-500 truncate">22/05/2026</div>
                 </div>
-                <span className="text-[9px] text-slate-500">22/05/2026</span>
               </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Shield size={11} className="text-emerald-400" />
-                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">AES-256</span>
+              <div className="flex items-center gap-2">
+                <Shield size={14} className="text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-slate-200 font-medium truncate">Ambiente Seguro</div>
+                  <div className="text-slate-500 truncate">Seus dados protegidos</div>
                 </div>
-                <span className="text-[9px] text-slate-500">Criptografado</span>
               </div>
             </div>
           </div>
