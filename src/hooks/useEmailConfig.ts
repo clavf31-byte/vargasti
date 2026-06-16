@@ -62,49 +62,24 @@ export function useEmailConfig() {
   const [blacklist, setBlacklist] = useState<EmailBlacklist[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Carregar do Supabase
+  // Carregar do Supabase via RPC
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const SINGLETON_ID = "00000000-0000-0000-0000-000000000000";
+        const { data, error } = await supabase.rpc("load_email_settings");
 
-        // Primeiro, tentar carregar
-        let { data, error } = await supabase
-          .from("email_settings")
-          .select("*")
-          .eq("id", SINGLETON_ID)
-          .single();
+        if (error) throw error;
 
-        // Se não encontrar, criar o singleton
-        if (error?.code === "PGRST116") {
-          console.warn("[useEmailConfig] Singleton not found, creating...");
-          const { data: created, error: createError } = await supabase
-            .from("email_settings")
-            .insert({
-              id: SINGLETON_ID,
-              categories: DEFAULT_CATEGORIES,
-              whitelist: [],
-              priorities: DEFAULT_PRIORITIES,
-              blacklist: []
-            })
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          data = created;
-        } else if (error) {
-          throw error;
-        }
-
-        if (data) {
-          if (data.categories?.length > 0) setCategories(data.categories);
+        if (data && data.length > 0) {
+          const result = data[0];
+          if (result.categories?.length > 0) setCategories(result.categories);
           else setCategories(DEFAULT_CATEGORIES);
 
-          if (data.whitelist?.length > 0) setWhitelist(data.whitelist);
-          if (data.priorities?.length > 0) setPriorities(data.priorities);
+          if (result.whitelist?.length > 0) setWhitelist(result.whitelist);
+          if (result.priorities?.length > 0) setPriorities(result.priorities);
           else setPriorities(DEFAULT_PRIORITIES);
 
-          if (data.blacklist?.length > 0) setBlacklist(data.blacklist);
+          if (result.blacklist?.length > 0) setBlacklist(result.blacklist);
         }
       } catch (err) {
         console.error("[useEmailConfig] Error loading from Supabase:", err);
@@ -125,20 +100,16 @@ export function useEmailConfig() {
     loadConfig();
   }, []);
 
-  // Salvar no Supabase
+  // Salvar via RPC (com permissões elevadas)
   const saveCategories = async (newCategories: EmailCategory[]) => {
     setCategories(newCategories);
     try {
-      const { error } = await supabase
-        .from("email_settings")
-        .upsert({
-          id: "00000000-0000-0000-0000-000000000000",
-          categories: newCategories,
-          updated_at: new Date().toISOString()
-        }, { onConflict: "id" });
+      const { data, error } = await supabase.rpc("save_email_settings", {
+        p_categories: newCategories,
+      });
 
       if (error) throw error;
-      console.log("[useEmailConfig] Categories saved successfully");
+      console.log("[useEmailConfig] Categories saved:", data);
     } catch (err) {
       console.error("[useEmailConfig] Error saving categories:", err);
       localStorage.setItem("email_categories", JSON.stringify(newCategories));
@@ -148,16 +119,12 @@ export function useEmailConfig() {
   const saveWhitelist = async (newWhitelist: EmailWhitelist[]) => {
     setWhitelist(newWhitelist);
     try {
-      const { error } = await supabase
-        .from("email_settings")
-        .upsert({
-          id: "00000000-0000-0000-0000-000000000000",
-          whitelist: newWhitelist,
-          updated_at: new Date().toISOString()
-        }, { onConflict: "id" });
+      const { data, error } = await supabase.rpc("save_email_settings", {
+        p_whitelist: newWhitelist,
+      });
 
       if (error) throw error;
-      console.log("[useEmailConfig] Whitelist saved successfully");
+      console.log("[useEmailConfig] Whitelist saved:", data);
     } catch (err) {
       console.error("[useEmailConfig] Error saving whitelist:", err);
       localStorage.setItem("email_whitelist", JSON.stringify(newWhitelist));
@@ -167,16 +134,12 @@ export function useEmailConfig() {
   const savePriorities = async (newPriorities: EmailPriority[]) => {
     setPriorities(newPriorities);
     try {
-      const { error } = await supabase
-        .from("email_settings")
-        .upsert({
-          id: "00000000-0000-0000-0000-000000000000",
-          priorities: newPriorities,
-          updated_at: new Date().toISOString()
-        }, { onConflict: "id" });
+      const { data, error } = await supabase.rpc("save_email_settings", {
+        p_priorities: newPriorities,
+      });
 
       if (error) throw error;
-      console.log("[useEmailConfig] Priorities saved successfully");
+      console.log("[useEmailConfig] Priorities saved:", data);
     } catch (err) {
       console.error("[useEmailConfig] Error saving priorities:", err);
       localStorage.setItem("email_priorities", JSON.stringify(newPriorities));
@@ -186,16 +149,12 @@ export function useEmailConfig() {
   const saveBlacklist = async (newBlacklist: EmailBlacklist[]) => {
     setBlacklist(newBlacklist);
     try {
-      const { error } = await supabase
-        .from("email_settings")
-        .upsert({
-          id: "00000000-0000-0000-0000-000000000000",
-          blacklist: newBlacklist,
-          updated_at: new Date().toISOString()
-        }, { onConflict: "id" });
+      const { data, error } = await supabase.rpc("save_email_settings", {
+        p_blacklist: newBlacklist,
+      });
 
       if (error) throw error;
-      console.log("[useEmailConfig] Blacklist saved successfully");
+      console.log("[useEmailConfig] Blacklist saved:", data);
     } catch (err) {
       console.error("[useEmailConfig] Error saving blacklist:", err);
       localStorage.setItem("email_blacklist", JSON.stringify(newBlacklist));
