@@ -110,11 +110,8 @@ function LoginPage() {
         onSubmit={handleSubmit}
         style={{
           position: "relative",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: "min(100vw, calc(100vh * 1536 / 1024))",
+          height: "min(100vh, calc(100vw * 1024 / 1536))",
         }}
       >
         <img
@@ -125,7 +122,7 @@ function LoginPage() {
             inset: 0,
             width: "100%",
             height: "100%",
-            objectFit: "contain",
+            objectFit: "fill",
             userSelect: "none",
             pointerEvents: "none",
           }}
