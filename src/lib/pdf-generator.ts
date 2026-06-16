@@ -25,6 +25,9 @@ interface OrcamentoPDF {
   itens: OrcamentoItem[];
   total: number;
   status: string;
+  desconto?: number;
+  impostos?: number;
+  approval_url?: string;
 }
 
 const CORES = {
@@ -227,27 +230,70 @@ export function gerarPDFOrcamento(orcamento: OrcamentoPDF) {
 
   yPosition += 15;
 
-  // === SEÇÃO DE AÇÃO ===
+  // === SEÇÃO DE ASSINATURA/APROVAÇÃO ===
+  if (yPosition > pageHeight - 40) {
+    doc.addPage();
+    yPosition = margin;
+  }
+
   doc.setFillColor(...CORES.light);
-  doc.rect(margin, yPosition, contentWidth, 20, "F");
+  doc.rect(margin, yPosition, contentWidth, 35, "F");
 
   doc.setFontSize(10);
   doc.setFont(undefined, "bold");
   doc.setTextColor(...CORES.dark);
-  doc.text("Aprovar Orçamento", margin + 3, yPosition + 5);
+  doc.text("✓ Aprovação Online", margin + 3, yPosition + 5);
 
   doc.setFontSize(8);
   doc.setFont(undefined, "normal");
   doc.setTextColor(100, 100, 100);
-  doc.text("Tudo certo? Solicite alterações se necessário ou aprove este orçamento.", margin + 3, yPosition + 10);
-  doc.text("Botões: Solicitar alterações | Aprovar Orçamento", margin + 3, yPosition + 15);
+  doc.text("Você pode aprovar ou rejeitar este orçamento online.", margin + 3, yPosition + 10);
+  doc.text("Acesse o link abaixo ou escaneie o QR code com seu celular:", margin + 3, yPosition + 14);
+
+  if (orcamento.approval_url) {
+    // Link de aprovação
+    doc.setTextColor(11, 208, 215);
+    doc.setFont(undefined, "bold");
+    const urlText = orcamento.approval_url.replace("https://", "").substring(0, 40);
+    doc.text(urlText, margin + 3, yPosition + 19);
+    doc.setFont(undefined, "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text("(link expira em 30 dias)", margin + 3, yPosition + 23);
+
+    // Instruções
+    doc.setFontSize(7);
+    doc.text("Este orçamento será automaticamente marcado como aprovado ao confirmar online.", margin + 3, yPosition + 28);
+  } else {
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Link de aprovação será enviado por email", margin + 3, yPosition + 19);
+  }
+
+  yPosition += 40;
+
+  // === SEÇÃO DE ASSINATURA FÍSICA (OPCIONAL) ===
+  doc.setFontSize(9);
+  doc.setFont(undefined, "bold");
+  doc.setTextColor(...CORES.dark);
+  doc.text("Assinatura do Cliente", margin, yPosition);
+
+  yPosition += 8;
+  doc.setDrawColor(...CORES.border);
+  doc.line(margin, yPosition, margin + 60, yPosition);
+
+  yPosition += 5;
+  doc.setFontSize(7);
+  doc.setFont(undefined, "normal");
+  doc.setTextColor(150, 150, 150);
+  doc.text("Assinatura / Data", margin, yPosition);
 
   // === RODAPÉ ===
+  yPosition = pageHeight - 8;
   doc.setFontSize(7);
   doc.setFont(undefined, "normal");
   doc.setTextColor(150, 150, 150);
   const dataHora = new Date(orcamento.data_criacao).toLocaleString("pt-BR");
-  doc.text(`Orçamento emitido em ${dataHora}`, pageWidth / 2, pageHeight - 5, { align: "center" });
+  doc.text(`Orçamento emitido em ${dataHora} | VargasTI`, pageWidth / 2, yPosition, { align: "center" });
 
   return doc;
 }
