@@ -60,8 +60,8 @@ function TarefasPage() {
           title="Tarefas & Follow-ups"
           subtitle={`${tarefas.length} tarefas`}
           icon={<CheckCircle2 size={32} />}
-          iconClass="text-brand"
         />
+
 
         <div style={{ marginTop: "20px" }}>
           <TarefasTable
