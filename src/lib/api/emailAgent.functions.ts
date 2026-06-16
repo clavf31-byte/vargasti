@@ -531,11 +531,12 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
       // userId is always "system" — Gmail account is shared, not per-user.
       // Auth is required just to gate access to triggering the pipeline.
       const userId = "system";
+      const supabase = await getEmailDbClient();
       console.log("[email-pipeline] Starting email processing for user:", userId);
 
 
       // Fetch unread emails
-      const emailsResult = await fetchUnreadEmails(data.maxEmails, userId);
+      const emailsResult = await fetchUnreadEmails(data.maxEmails, userId, supabase);
 
       if (emailsResult.authorized === false) {
         console.log("[email-pipeline] Gmail not authorized");
@@ -560,28 +561,19 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           console.log("[email-pipeline] Processing:", { from: email.from, subject: email.subject });
 
           // Check if ticket already exists for this email (deduplication)
-          const supabaseUrl = process.env.SUPABASE_URL;
-          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-          if (supabaseUrl && supabaseKey) {
-            const checkResponse = await fetch(
-              `${supabaseUrl}/rest/v1/tickets?select=id&external_ref=eq.gmail-${email.id}`,
-              {
-                headers: {
-                  apikey: supabaseKey,
-                  Authorization: `Bearer ${supabaseKey}`,
-                },
-              }
-            );
-            const existingData = (await checkResponse.json()) as Array<{ id: string }>;
-            if (existingData && existingData.length > 0) {
-              console.log("[email-pipeline] Ticket already exists for", email.id);
-              await markEmailAsReadInternal(email.id, userId);
-              continue;
-            }
+          const { data: existingLog } = await supabase
+            .from("email_processing_log")
+            .select("id")
+            .eq("email_id", email.id)
+            .maybeSingle();
+          if (existingLog) {
+            console.log("[email-pipeline] Email already processed", email.id);
+            await markEmailAsReadInternal(email.id, userId, supabase);
+            continue;
           }
 
           // Interpret with Claude
-          const analysis = await interpretEmailWithClaude(email);
+          const analysis = await interpretEmailWithClaude(email, supabase);
           console.log("[email-pipeline] Analysis:", analysis);
 
           // If it's a request, send to Helpdesk
@@ -597,11 +589,17 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
                 summary: analysis.summary || email.subject,
               });
 
+              await supabase.from("email_processing_log").upsert({
+                email_id: email.id,
+                status: "processed",
+                error: null,
+              });
+
               console.log("[email-pipeline] Sent to Helpdesk:", email.subject);
               processedCount++;
 
               // Mark as read only after successful ticket creation
-              await markEmailAsReadInternal(email.id, userId);
+              await markEmailAsReadInternal(email.id, userId, supabase);
               console.log("[email-pipeline] Marked as read:", email.id);
             } catch (err) {
               console.error("[email-pipeline] Error sending to Helpdesk:", err);
