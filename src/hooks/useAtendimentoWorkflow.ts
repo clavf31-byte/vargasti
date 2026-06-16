@@ -5,6 +5,7 @@ export type AtendimentoStatus = "rascunho" | "pendente" | "confirmado" | "em and
 
 export function useAtendimentoWorkflow() {
   const { user } = useAuth();
+  const db = supabase as any;
 
   /**
    * Criar atendimento a partir de email (sem número)
@@ -16,7 +17,7 @@ export function useAtendimentoWorkflow() {
   }) => {
     if (!user?.id) throw new Error("User not authenticated");
 
-    const { data: created, error } = await supabase
+    const { data: created, error } = await db
       .from("atendimentos")
       .insert({
         user_id: user.id,
@@ -47,7 +48,7 @@ export function useAtendimentoWorkflow() {
     // Status padrão é "pendente" (vai alocar número automaticamente)
     const status = data.status || "pendente";
 
-    const { data: created, error } = await supabase
+    const { data: created, error } = await db
       .from("atendimentos")
       .insert({
         user_id: user.id,
@@ -68,7 +69,7 @@ export function useAtendimentoWorkflow() {
    * Aprovar rascunho (muda para pendente e aloca número)
    */
   const approveDraft = async (id: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("atendimentos")
       .update({ status: "pendente" }) // Trigger aloca número automaticamente
       .eq("id", id)
@@ -84,7 +85,7 @@ export function useAtendimentoWorkflow() {
    * Deletar rascunho (sem gastar número)
    */
   const discardDraft = async (id: string) => {
-    const { error } = await supabase
+    const { error } = await db
       .from("atendimentos")
       .delete()
       .eq("id", id)
@@ -98,7 +99,7 @@ export function useAtendimentoWorkflow() {
    * Mudar status (e alocar número se necessário)
    */
   const updateStatus = async (id: string, newStatus: AtendimentoStatus) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("atendimentos")
       .update({ status: newStatus })
       .eq("id", id)
