@@ -100,7 +100,16 @@ function LoginPage() {
         overflow: "hidden",
       }}
     >
-      <form onSubmit={handleSubmit} style={{ position: "relative", width: "min(100vw, calc(100vh * 1.5))", height: "min(calc(100vw / 1.5), 100vh)", maxWidth: "100vw", maxHeight: "100vh" }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          position: "relative",
+          width: "min(100vw, calc(100vh * 1.5))",
+          height: "min(calc(100vw / 1.5), 100vh)",
+          maxWidth: "100vw",
+          maxHeight: "100vh",
+        }}
+      >
         <img
           src={loginBg.url}
           alt="VargasTI - Soluções que conectam, suporte que transforma"
@@ -199,7 +208,6 @@ function LoginPage() {
         >
           {submitting && <Loader2 size={20} color="#fff" style={{ animation: "spin 1s linear infinite" }} />}
         </button>
-      </form>
 
         {error && (
           <p
