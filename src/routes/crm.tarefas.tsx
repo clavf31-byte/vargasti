@@ -41,7 +41,7 @@ function TarefasPage() {
 
   const toggleStatus = (index: number) => {
     const tarefa = tarefas[index];
-    const statusMap = {
+    const statusMap: Record<string, string> = {
       aberta: "em_progresso",
       em_progresso: "concluida",
       concluida: "aberta",
@@ -50,6 +50,7 @@ function TarefasPage() {
       ...tarefa,
       status: statusMap[tarefa.status] as any,
     });
+
   };
 
   return (
