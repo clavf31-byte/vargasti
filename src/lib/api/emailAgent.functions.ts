@@ -244,7 +244,10 @@ async function getGmailAccessToken(userId: string = "system", client?: EmailDbCl
 
   if (!shouldRefresh) return tokenData.access_token;
 
-  const refreshed = await refreshGmailAccessTokenWithRetry(tokenData.refresh_token);
+  const refreshToken = tokenData.refresh_token;
+  if (!refreshToken) return tokenData.access_token;
+
+  const refreshed = await refreshGmailAccessTokenWithRetry(refreshToken);
 
   if (!refreshed?.access_token) {
     throw new Error("Failed to refresh Gmail token after multiple retries");
@@ -359,13 +362,13 @@ const MarkAsReadSchema = z.object({
   messageId: z.string(),
 });
 
-export async function markEmailAsReadInternal(messageId: string, userId: string = "system") {
+export async function markEmailAsReadInternal(messageId: string, userId: string = "system", client?: EmailDbClient) {
   await gmailRequest(`/users/me/messages/${messageId}/modify`, {
     method: "POST",
     body: JSON.stringify({
       removeLabelIds: ["UNREAD"],
     }),
-  }, userId);
+  }, userId, client);
 
   return { ok: true };
 }
