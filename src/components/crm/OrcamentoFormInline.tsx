@@ -41,7 +41,7 @@ export function OrcamentoFormInline({
         {
           numero: formData.numero,
           cliente_id: formData.cliente_id,
-          descricao: formData.descricao,
+          notas: formData.descricao,
           total: parseFloat(formData.total) || 0,
           status: formData.status,
           data_vencimento: formData.data_vencimento || null,

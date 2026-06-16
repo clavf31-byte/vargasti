@@ -192,7 +192,7 @@ export function EmailPollingWidget() {
                 <div className="flex gap-2 p-2 min-w-min">
                   {categories.map((cat) => (
                     <div
-                      key={cat.id}
+                      key={cat.name}
                       className="flex-shrink-0 px-3 py-1 bg-brand/10 border border-brand/20 rounded-full text-xs font-medium text-brand whitespace-nowrap"
                     >
                       {cat.name}
