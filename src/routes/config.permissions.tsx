@@ -68,7 +68,7 @@ function PermissionsPage() {
 
   async function loadUsers() {
     try {
-      const { data, error: profileError } = await supabase
+      const { data, error: profileError } = await (supabase as any)
         .from("profiles")
         .select("id, email, full_name, role")
         .order("created_at", { ascending: false });
@@ -142,7 +142,7 @@ function PermissionsPage() {
             user_id: userId,
             [permission]: newValue,
             updated_at: new Date().toISOString(),
-          },
+          } as any,
           { onConflict: "user_id" }
         );
 
