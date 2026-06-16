@@ -41,7 +41,7 @@ function TarefasPage() {
 
   const toggleStatus = (index: number) => {
     const tarefa = tarefas[index];
-    const statusMap = {
+    const statusMap: Record<string, string> = {
       aberta: "em_progresso",
       em_progresso: "concluida",
       concluida: "aberta",
@@ -50,6 +50,7 @@ function TarefasPage() {
       ...tarefa,
       status: statusMap[tarefa.status] as any,
     });
+
   };
 
   return (
@@ -59,8 +60,8 @@ function TarefasPage() {
           title="Tarefas & Follow-ups"
           subtitle={`${tarefas.length} tarefas`}
           icon={<CheckCircle2 size={32} />}
-          iconClass="text-brand"
         />
+
 
         <div style={{ marginTop: "20px" }}>
           <TarefasTable
