@@ -52,6 +52,10 @@ export function Button({
   };
 
   const variantStyle = variants[variant];
+  if (!variantStyle) {
+    console.error(`AppButton: invalid variant "${variant}". Valid variants: ${Object.keys(variants).join(", ")}`);
+    return null;
+  }
   const padding = sizes[size];
 
   return (
