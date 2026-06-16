@@ -63,14 +63,14 @@ function LoginPage() {
   return (
     <div className="fixed inset-0 flex bg-[#04060e] text-slate-100 overflow-hidden">
       {/* Brand panel (unchanged) */}
-      <div className="hidden md:block relative flex-1 overflow-hidden">
+      <div className="hidden md:flex relative flex-1 overflow-hidden items-center justify-center bg-gradient-to-br from-[#04060e] via-[#06121f] to-[#04060e]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.15),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(16,185,129,0.12),transparent_55%)]" />
         <img
-          src={loginBg.url}
+          src={vargastiLogo.url}
           alt="VargasTI"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="relative z-10 max-w-[70%] max-h-[60%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
           draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#04060e]/30 via-transparent to-[#04060e]" />
       </div>
 
       {/* Form panel — styled to match reference card */}
