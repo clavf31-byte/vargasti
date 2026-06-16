@@ -73,10 +73,12 @@ function LoginPage() {
     paddingLeft: "3.2%",
     paddingRight: "3.2%",
     fontFamily: "Inter, Segoe UI, Arial, sans-serif",
-    zIndex: 10,
+    zIndex: 100,
     borderRadius: "8px",
     transition: "all 0.2s",
-  };
+    pointerEvents: "auto",
+    cursor: "text",
+  } as React.CSSProperties;
 
   const btnReset: React.CSSProperties = {
     position: "absolute",
