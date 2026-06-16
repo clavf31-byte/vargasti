@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import loginBg from "@/assets/login-bg.png.asset.json";
 
 export const Route = createFileRoute("/login")({
@@ -15,6 +15,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -59,176 +60,148 @@ function LoginPage() {
     }
   }
 
-  // Image is 1536 x 1024 (3:2)
-  // Overlay positions tuned to match the artwork's form area.
-  const inputBase: React.CSSProperties = {
-    position: "absolute",
-    width: "37.9%",
-    left: "52.6%",
-    height: "5.4%",
-    background: "transparent",
-    border: 0,
-    outline: 0,
-    color: "#f4f8fb",
-    fontSize: "clamp(11px, 1.05vw, 16px)",
-    paddingLeft: "3.2%",
-    paddingRight: "3.2%",
-    fontFamily: "Inter, Segoe UI, Arial, sans-serif",
-    zIndex: 100,
-    borderRadius: "8px",
-    pointerEvents: "auto",
-    cursor: "text",
-  } as React.CSSProperties;
-
-  const btnReset: React.CSSProperties = {
-    position: "absolute",
-    background: "transparent",
-    border: 0,
-    cursor: "pointer",
-    padding: 0,
-  };
-
   return (
-    <div
-      style={{
-        height: "100vh",
-        width: "100vw",
-        background: "#04060e",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        margin: 0,
-        padding: 0,
-        position: "fixed",
-        top: 0,
-        left: 0,
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          position: "relative",
-          width: "min(100vw, calc(100vh * 1536 / 1024))",
-          height: "min(100vh, calc(100vw * 1024 / 1536))",
-        }}
-      >
+    <div className="fixed inset-0 flex bg-[#04060e] text-slate-100 overflow-hidden">
+      {/* Brand panel */}
+      <div className="hidden lg:block relative flex-1 overflow-hidden">
         <img
           src={loginBg.url}
-          alt="VargasTI - Soluções que conectam, suporte que transforma"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "fill",
-            userSelect: "none",
-            pointerEvents: "none",
-          }}
+          alt="VargasTI"
+          className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
         />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#04060e]/30 via-transparent to-[#04060e]" />
+      </div>
 
-        {/* Google button overlay */}
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={googleLoading || submitting}
-          aria-label="Entrar com Google"
-          style={{
-            position: "absolute",
-            ...btnReset,
-            left: "52.6%",
-            top: "26.8%",
-            width: "37.9%",
-            height: "6.8%",
-            cursor: googleLoading || submitting ? "not-allowed" : "pointer",
-            opacity: googleLoading || submitting ? 0.6 : 1,
-            transition: "opacity 0.2s",
-            zIndex: 100,
-            pointerEvents: "auto",
-          }}
-          title={googleLoading ? "Conectando ao Google..." : "Entrar com Google"}
-        />
+      {/* Form panel */}
+      <div className="flex w-full lg:w-[480px] xl:w-[560px] items-center justify-center px-6 py-10 bg-[#04060e] relative">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-bold text-white">Bem-vindo</h1>
+            <p className="mt-2 text-sm text-slate-400">
+              Faça login para acessar o painel VargasTI
+            </p>
+          </div>
 
-        {/* Email input */}
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-label="E-mail"
-          autoComplete="email"
-          style={{ ...inputBase, top: "43.4%" }}
-        />
-
-        {/* Password input */}
-        <input
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          aria-label="Senha"
-          autoComplete="current-password"
-          style={{ ...inputBase, top: "54.8%" }}
-        />
-
-        {/* Show/hide password toggle */}
-        <button
-          type="button"
-          onClick={() => setShowPassword((s) => !s)}
-          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-          style={{
-            position: "absolute",
-            ...btnReset,
-            left: "87.5%",
-            top: "54.8%",
-            width: "3%",
-            height: "5.4%",
-            zIndex: 100,
-            pointerEvents: "auto",
-          }}
-        />
-
-        {/* Submit button overlay */}
-        <button
-          type="submit"
-          disabled={submitting}
-          aria-label="Entrar"
-          style={{
-            position: "absolute",
-            ...btnReset,
-            left: "52.6%",
-            top: "66.8%",
-            width: "37.9%",
-            height: "7.2%",
-            cursor: submitting ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            pointerEvents: "auto",
-          }}
-        >
-          {submitting && <Loader2 size={20} color="#fff" style={{ animation: "spin 1s linear infinite" }} />}
-        </button>
-
-        {error && (
-          <p
-            style={{
-              position: "absolute",
-              left: "52.6%",
-              top: "76%",
-              width: "37.9%",
-              margin: 0,
-              color: "#ff6b6b",
-              fontSize: "clamp(11px, 0.9vw, 13px)",
-              textAlign: "center",
-              fontFamily: "Inter, sans-serif",
-              zIndex: 100,
-            }}
+          {/* Google */}
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading || submitting}
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-lg border border-slate-700 bg-slate-900/60 hover:bg-slate-800 transition text-sm font-medium text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {error}
+            {googleLoading ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <>
+                <GoogleIcon />
+                Entrar com Google
+              </>
+            )}
+          </button>
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-slate-800" />
+            <span className="text-xs uppercase tracking-wider text-slate-500">ou</span>
+            <div className="flex-1 h-px bg-slate-800" />
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+                E-mail
+              </label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  autoComplete="email"
+                  className="w-full h-11 pl-10 pr-3 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
+                Senha
+              </label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  autoComplete="current-password"
+                  className="w-full h-11 pl-10 pr-10 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 text-slate-300 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-500/30"
+                />
+                Lembrar-me
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-cyan-400 hover:text-cyan-300 font-medium"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-11 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 transition text-sm font-semibold text-slate-950 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {submitting ? <Loader2 size={18} className="animate-spin" /> : "Entrar"}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} VargasTI · Soluções que conectam
           </p>
-        )}
-      </form>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
+      <path fill="#FF3D00" d="M6.3 14.1l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.1z"/>
+      <path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 13.9-5.4l-6.4-5.3c-2.1 1.5-4.7 2.4-7.5 2.4-5.3 0-9.7-3.4-11.3-8L6.1 33C9.5 39.5 16.2 44 24 44z"/>
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.4 5.3C41 35.5 44 30.2 44 24c0-1.3-.1-2.3-.4-3.5z"/>
+    </svg>
   );
 }
