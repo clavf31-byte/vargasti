@@ -5,6 +5,7 @@ import { useEmailConfig } from "@/hooks/useEmailConfig";
 import {
   ConfigCategoriesInline,
   ConfigBlacklistInline,
+  ConfigPrioritiesInline,
 } from "./EmailConfigInline";
 
 export function EmailPollingWidget() {
@@ -14,6 +15,7 @@ export function EmailPollingWidget() {
   const [debugResult, setDebugResult] = useState<string>("");
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showBlacklistModal, setShowBlacklistModal] = useState(false);
+  const [showPrioritiesModal, setShowPrioritiesModal] = useState(false);
   const [lastResult, setLastResult] = useState<{
     processed: number;
     total: number;
@@ -205,20 +207,6 @@ export function EmailPollingWidget() {
             </button>
           </div>
 
-          {/* Clientes Permitidos */}
-          <div>
-            <h4 className="font-semibold text-sm mb-2">👥 Clientes Permitidos</h4>
-            <p className="text-xs text-gray-600 mb-2">
-              {loaded ? `${whitelist.length} clientes na whitelist` : "Carregando..."}
-            </p>
-            <button
-              disabled
-              className="w-full py-2 px-3 text-sm bg-muted text-muted-foreground rounded cursor-not-allowed opacity-50"
-            >
-              Gerenciar Clientes (em breve)
-            </button>
-          </div>
-
           {/* Prioridades */}
           <div>
             <h4 className="font-semibold text-sm mb-2">🎯 Regras de Prioridade</h4>
@@ -226,10 +214,10 @@ export function EmailPollingWidget() {
               {loaded ? `${priorities.length} regras de prioridade` : "Carregando..."}
             </p>
             <button
-              disabled
-              className="w-full py-2 px-3 text-sm bg-muted text-muted-foreground rounded cursor-not-allowed opacity-50"
+              onClick={() => setShowPrioritiesModal(true)}
+              className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
             >
-              Editar Prioridades (em breve)
+              Editar Prioridades
             </button>
           </div>
 
@@ -316,6 +304,16 @@ export function EmailPollingWidget() {
             blacklist={blacklist}
             onSave={saveBlacklist}
             onClose={() => setShowBlacklistModal(false)}
+          />
+        </div>
+      )}
+
+      {showPrioritiesModal && (
+        <div className="mt-6">
+          <ConfigPrioritiesInline
+            priorities={priorities}
+            onSave={savePriorities}
+            onClose={() => setShowPrioritiesModal(false)}
           />
         </div>
       )}
