@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, Shield, Layers, ChevronRight } from "lucide-react";
 import loginBg from "@/assets/login-bg.png.asset.json";
 
 export const Route = createFileRoute("/login")({
@@ -62,7 +62,7 @@ function LoginPage() {
 
   return (
     <div className="fixed inset-0 flex bg-[#04060e] text-slate-100 overflow-hidden">
-      {/* Brand panel */}
+      {/* Brand panel (unchanged) */}
       <div className="hidden lg:block relative flex-1 overflow-hidden">
         <img
           src={loginBg.url}
@@ -73,120 +73,178 @@ function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#04060e]/30 via-transparent to-[#04060e]" />
       </div>
 
-      {/* Form panel */}
-      <div className="flex w-full lg:w-[480px] xl:w-[560px] items-center justify-center px-6 py-10 bg-[#04060e] relative">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold text-white">Bem-vindo</h1>
-            <p className="mt-2 text-sm text-slate-400">
-              Faça login para acessar o painel VargasTI
-            </p>
-          </div>
-
-          {/* Google */}
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={googleLoading || submitting}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-lg border border-slate-700 bg-slate-900/60 hover:bg-slate-800 transition text-sm font-medium text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {googleLoading ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <>
-                <GoogleIcon />
-                Entrar com Google
-              </>
-            )}
-          </button>
-
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-slate-800" />
-            <span className="text-xs uppercase tracking-wider text-slate-500">ou</span>
-            <div className="flex-1 h-px bg-slate-800" />
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
-                E-mail
-              </label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  autoComplete="email"
-                  className="w-full h-11 pl-10 pr-3 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
-                />
+      {/* Form panel — styled to match reference card */}
+      <div className="flex w-full lg:w-[600px] xl:w-[680px] items-center justify-center px-6 py-8 bg-[#04060e] relative overflow-y-auto">
+        <div className="w-full max-w-[480px]">
+          {/* Card */}
+          <div className="relative rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/60 to-slate-950/80 backdrop-blur-sm shadow-[0_0_60px_-15px_rgba(34,211,238,0.25)] p-7">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h1 className="text-2xl font-bold text-white leading-tight">
+                  Bem-vindo{" "}
+                  <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+                    de volta!
+                  </span>
+                </h1>
+                <p className="mt-2 text-sm text-slate-400 leading-snug">
+                  Informe seu e-mail e senha<br />para acessar o sistema.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-medium text-emerald-400 shrink-0">
+                <Shield size={12} />
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  Ambiente Seguro
+                </span>
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
-                Senha
-              </label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua senha"
-                  autoComplete="current-password"
-                  className="w-full h-11 pl-10 pr-10 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-slate-300 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-500/30"
-                />
-                Lembrar-me
-              </label>
-              <Link
-                to="/forgot-password"
-                className="text-cyan-400 hover:text-cyan-300 font-medium"
-              >
-                Esqueci minha senha
-              </Link>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2">
-                {error}
-              </p>
-            )}
-
+            {/* Google */}
             <button
-              type="submit"
-              disabled={submitting}
-              className="w-full h-11 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 transition text-sm font-semibold text-slate-950 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleLoading || submitting}
+              className="w-full flex items-center justify-center gap-2.5 h-12 rounded-xl border border-slate-700/70 bg-slate-900/70 hover:bg-slate-800/80 transition text-sm font-medium text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? <Loader2 size={18} className="animate-spin" /> : "Entrar"}
+              {googleLoading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <>
+                  <GoogleIcon />
+                  Entrar com Google
+                </>
+              )}
             </button>
-          </form>
 
-          <p className="mt-6 text-center text-xs text-slate-500">
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-slate-700/50" />
+              <span className="text-xs text-slate-500">ou</span>
+              <div className="flex-1 h-px bg-slate-700/50" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+                  E-mail
+                </label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Digite seu e-mail"
+                    autoComplete="email"
+                    className="w-full h-12 pl-10 pr-3 rounded-xl bg-slate-900/70 border border-slate-700/70 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
+                  Senha
+                </label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Digite sua senha"
+                    autoComplete="current-password"
+                    className="w-full h-12 pl-10 pr-10 rounded-xl bg-slate-900/70 border border-slate-700/70 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 text-slate-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-500/30"
+                  />
+                  Lembrar-me
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="inline-flex items-center gap-1 text-slate-400 hover:text-cyan-300 font-medium"
+                >
+                  Esqueci minha senha
+                  <ChevronRight size={14} />
+                </Link>
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition text-sm font-semibold text-slate-950 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_8px_24px_-8px_rgba(16,185,129,0.5)]"
+              >
+                {submitting ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <>
+                    <LogIn size={18} />
+                    Entrar
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="mt-5 text-center text-sm text-slate-400">
+              Não tem conta?{" "}
+              <Link to="/signup" className="text-emerald-400 hover:text-emerald-300 font-medium">
+                Criar conta
+              </Link>
+            </p>
+
+            {/* Status bar */}
+            <div className="mt-6 pt-5 border-t border-slate-800/70 grid grid-cols-3 gap-3 text-[11px]">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <div>
+                  <div className="text-slate-200 font-medium">Sistema Online</div>
+                  <div className="text-slate-500">Todos os serviços OK</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-cyan-400" />
+                <div>
+                  <div className="text-slate-200 font-medium">V2.5.0</div>
+                  <div className="text-slate-500">22/05/2026</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield size={14} className="text-emerald-400" />
+                <div>
+                  <div className="text-slate-200 font-medium">Ambiente Seguro</div>
+                  <div className="text-slate-500">Seus dados protegidos</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-4 text-center text-xs text-slate-600">
             © {new Date().getFullYear()} VargasTI · Soluções que conectam
           </p>
         </div>
