@@ -205,6 +205,33 @@ export function EmailPollingWidget() {
             </button>
           </div>
 
+          {/* Clientes Permitidos */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">👥 Clientes Permitidos</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              {loaded ? `${whitelist.length} clientes na whitelist` : "Carregando..."}
+            </p>
+            <button
+              disabled
+              className="w-full py-2 px-3 text-sm bg-muted text-muted-foreground rounded cursor-not-allowed opacity-50"
+            >
+              Gerenciar Clientes (em breve)
+            </button>
+          </div>
+
+          {/* Prioridades */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">🎯 Regras de Prioridade</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              {loaded ? `${priorities.length} regras de prioridade` : "Carregando..."}
+            </p>
+            <button
+              disabled
+              className="w-full py-2 px-3 text-sm bg-muted text-muted-foreground rounded cursor-not-allowed opacity-50"
+            >
+              Editar Prioridades (em breve)
+            </button>
+          </div>
 
           {/* Blacklist */}
           <div>
