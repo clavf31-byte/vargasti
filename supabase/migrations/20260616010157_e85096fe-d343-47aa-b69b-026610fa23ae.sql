@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated can read email_settings" ON public.email_settings;
