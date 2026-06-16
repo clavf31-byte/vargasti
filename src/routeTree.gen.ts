@@ -25,6 +25,7 @@ import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emai
 import { Route as CrmPagamentosRouteImport } from './routes/crm.pagamentos'
 import { Route as CrmOrcamentosRouteImport } from './routes/crm.orcamentos'
 import { Route as CrmClientesRouteImport } from './routes/crm.clientes'
+import { Route as ConfigPermissionsRouteImport } from './routes/config.permissions'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
@@ -118,6 +119,11 @@ const CrmClientesRoute = CrmClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => CrmRoute,
 } as any)
+const ConfigPermissionsRoute = ConfigPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => ConfigRoute,
+} as any)
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
@@ -184,7 +190,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
-  '/config': typeof ConfigRoute
+  '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/config/permissions': typeof ConfigPermissionsRoute
   '/crm/clientes': typeof CrmClientesRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
@@ -214,7 +221,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
-  '/config': typeof ConfigRoute
+  '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/config/permissions': typeof ConfigPermissionsRoute
   '/crm/clientes': typeof CrmClientesRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
@@ -244,7 +252,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
-  '/config': typeof ConfigRoute
+  '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/config/permissions': typeof ConfigPermissionsRoute
   '/crm/clientes': typeof CrmClientesRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/config/permissions'
     | '/crm/clientes'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/config/permissions'
     | '/crm/clientes'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/config/permissions'
     | '/crm/clientes'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
@@ -366,7 +378,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
-  ConfigRoute: typeof ConfigRoute
+  ConfigRoute: typeof ConfigRouteWithChildren
   CrmRoute: typeof CrmRouteWithChildren
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -497,6 +509,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmClientesRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/config/permissions': {
+      id: '/config/permissions'
+      path: '/permissions'
+      fullPath: '/config/permissions'
+      preLoaderRoute: typeof ConfigPermissionsRouteImport
+      parentRoute: typeof ConfigRoute
+    }
     '/api/whatsapp-webhook': {
       id: '/api/whatsapp-webhook'
       path: '/api/whatsapp-webhook'
@@ -594,6 +613,17 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface ConfigRouteChildren {
+  ConfigPermissionsRoute: typeof ConfigPermissionsRoute
+}
+
+const ConfigRouteChildren: ConfigRouteChildren = {
+  ConfigPermissionsRoute: ConfigPermissionsRoute,
+}
+
+const ConfigRouteWithChildren =
+  ConfigRoute._addFileChildren(ConfigRouteChildren)
+
 interface CrmOrcamentosRouteChildren {
   CrmOrcamentosIdRoute: typeof CrmOrcamentosIdRoute
 }
@@ -643,7 +673,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
-  ConfigRoute: ConfigRoute,
+  ConfigRoute: ConfigRouteWithChildren,
   CrmRoute: CrmRouteWithChildren,
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,

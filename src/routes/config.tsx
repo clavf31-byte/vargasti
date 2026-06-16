@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import {
   User, Shield, Monitor, LayoutDashboard, NotebookPen, Wrench,
-  FolderKanban, Files, Settings, LogOut,
+  FolderKanban, Files, Settings, LogOut, Lock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/config")({
@@ -139,6 +139,26 @@ function ConfigPage() {
               </div>
             ))}
             <p className="text-[9px] text-muted-foreground px-3 pt-2">Controles salvos localmente neste navegador.</p>
+          </div>
+        </section>
+
+        {/* Permissões de Acesso */}
+        <section className="bg-surface border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-surface-2/50">
+            <Lock className="size-3.5 text-amber-400" />
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Acesso</span>
+          </div>
+          <div className="p-4">
+            <Link
+              to="/config/permissions"
+              className="flex items-center justify-between py-3 px-3 bg-background/50 border border-border/50 hover:border-brand/30 hover:bg-brand/5 rounded-xl transition-colors"
+            >
+              <div>
+                <p className="text-sm font-medium text-foreground">Permissões de Usuários</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Gerenciar acesso aos módulos</p>
+              </div>
+              <Shield className="size-4 text-brand" />
+            </Link>
           </div>
         </section>
 
