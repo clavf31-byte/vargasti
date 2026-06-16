@@ -63,15 +63,15 @@ function LoginPage() {
   return (
     <div className="fixed inset-0 flex bg-[#04060e] text-slate-100 overflow-hidden">
       {/* Brand panel (unchanged) */}
-      <div className="hidden md:flex relative flex-1 overflow-hidden flex-col items-center justify-center bg-gradient-to-br from-[#04060e] via-[#06121f] to-[#04060e] px-8">
+      <div className="hidden md:flex relative flex-1 overflow-hidden flex-col items-center justify-start pt-16 bg-gradient-to-br from-[#04060e] via-[#06121f] to-[#04060e] px-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.15),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(16,185,129,0.12),transparent_55%)]" />
         <img
           src={vargastiLogo.url}
           alt="VargasTI"
-          className="relative z-10 max-w-[60%] max-h-[45%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
+          className="relative z-10 w-[45%] max-h-[35%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
           draggable={false}
         />
-        <div className="relative z-10 -mt-4 flex flex-col items-center text-center">
+        <div className="relative z-10 -mt-10 flex flex-col items-center text-center">
           <h2 className="text-5xl font-extrabold tracking-tight leading-none">
             <span className="text-white">Vargas</span>
             <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent">TI</span>
