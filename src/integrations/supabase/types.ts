@@ -61,6 +61,35 @@ export type Database = {
           },
         ]
       }
+      cliente_tags: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          id: string
+          tag: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          id?: string
+          tag: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_tags_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           cep: string | null
@@ -73,6 +102,7 @@ export type Database = {
           id: string
           nome: string
           observacoes: string | null
+          tags: string[]
           telefone: string | null
           updated_at: string
           user_id: string
@@ -88,6 +118,7 @@ export type Database = {
           id?: string
           nome: string
           observacoes?: string | null
+          tags?: string[]
           telefone?: string | null
           updated_at?: string
           user_id: string
@@ -103,6 +134,7 @@ export type Database = {
           id?: string
           nome?: string
           observacoes?: string | null
+          tags?: string[]
           telefone?: string | null
           updated_at?: string
           user_id?: string
@@ -422,6 +454,62 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      oportunidades: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_fechamento_esperada: string | null
+          descricao: string | null
+          etapa_data: string | null
+          id: string
+          motivo_perda: string | null
+          probabilidade: number | null
+          status: string
+          titulo: string
+          updated_at: string
+          user_id: string
+          valor: number | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_fechamento_esperada?: string | null
+          descricao?: string | null
+          etapa_data?: string | null
+          id?: string
+          motivo_perda?: string | null
+          probabilidade?: number | null
+          status?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+          valor?: number | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_fechamento_esperada?: string | null
+          descricao?: string | null
+          etapa_data?: string | null
+          id?: string
+          motivo_perda?: string | null
+          probabilidade?: number | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oportunidades_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orcamento_itens: {
         Row: {
