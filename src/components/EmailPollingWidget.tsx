@@ -3,11 +3,9 @@ import { startEmailPolling, stopEmailPolling, triggerEmailPolling } from "@/lib/
 import { getGmailAuthUrl } from "@/lib/api/emailAgent.functions";
 import { useEmailConfig } from "@/hooks/useEmailConfig";
 import {
-  ConfigCategoriesModal,
-  ConfigWhitelistModal,
-  ConfigPrioritiesModal,
-  ConfigBlacklistModal,
-} from "./EmailConfigModals";
+  ConfigCategoriesInline,
+  ConfigBlacklistInline,
+} from "./EmailConfigInline";
 
 export function EmailPollingWidget() {
   const [loading, setLoading] = useState(false);
@@ -15,8 +13,6 @@ export function EmailPollingWidget() {
   const [debugLoading, setDebugLoading] = useState(false);
   const [debugResult, setDebugResult] = useState<string>("");
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [showWhitelistModal, setShowWhitelistModal] = useState(false);
-  const [showPrioritiesModal, setShowPrioritiesModal] = useState(false);
   const [showBlacklistModal, setShowBlacklistModal] = useState(false);
   const [lastResult, setLastResult] = useState<{
     processed: number;
@@ -209,33 +205,6 @@ export function EmailPollingWidget() {
             </button>
           </div>
 
-          {/* Clientes Permitidos */}
-          <div>
-            <h4 className="font-semibold text-sm mb-2">👥 Clientes Permitidos</h4>
-            <p className="text-xs text-gray-600 mb-2">
-              {loaded ? `${whitelist.length} clientes na whitelist` : "Carregando..."}
-            </p>
-            <button
-              onClick={() => setShowWhitelistModal(true)}
-              className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
-            >
-              Gerenciar Clientes
-            </button>
-          </div>
-
-          {/* Prioridades */}
-          <div>
-            <h4 className="font-semibold text-sm mb-2">🎯 Regras de Prioridade</h4>
-            <p className="text-xs text-gray-600 mb-2">
-              {loaded ? `${priorities.length} regras de prioridade` : "Carregando..."}
-            </p>
-            <button
-              onClick={() => setShowPrioritiesModal(true)}
-              className="w-full py-2 px-3 text-sm bg-brand text-brand-foreground rounded hover:bg-brand/90"
-            >
-              Editar Prioridades
-            </button>
-          </div>
 
           {/* Blacklist */}
           <div>
@@ -303,37 +272,25 @@ export function EmailPollingWidget() {
         Verifica automaticamente a cada 5 minutos
       </p>
 
-      {/* Modals */}
+      {/* Inline Components */}
       {showCategoriesModal && (
-        <ConfigCategoriesModal
-          categories={categories}
-          onSave={saveCategories}
-          onClose={() => setShowCategoriesModal(false)}
-        />
-      )}
-
-      {showWhitelistModal && (
-        <ConfigWhitelistModal
-          whitelist={whitelist}
-          onSave={saveWhitelist}
-          onClose={() => setShowWhitelistModal(false)}
-        />
-      )}
-
-      {showPrioritiesModal && (
-        <ConfigPrioritiesModal
-          priorities={priorities}
-          onSave={savePriorities}
-          onClose={() => setShowPrioritiesModal(false)}
-        />
+        <div className="mt-6">
+          <ConfigCategoriesInline
+            categories={categories}
+            onSave={saveCategories}
+            onClose={() => setShowCategoriesModal(false)}
+          />
+        </div>
       )}
 
       {showBlacklistModal && (
-        <ConfigBlacklistModal
-          blacklist={blacklist}
-          onSave={saveBlacklist}
-          onClose={() => setShowBlacklistModal(false)}
-        />
+        <div className="mt-6">
+          <ConfigBlacklistInline
+            blacklist={blacklist}
+            onSave={saveBlacklist}
+            onClose={() => setShowBlacklistModal(false)}
+          />
+        </div>
       )}
     </div>
   );
