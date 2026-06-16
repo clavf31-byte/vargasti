@@ -5,7 +5,7 @@ const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
 function verifyGmailState(state: string | null): string | null {
   if (!state) return null;
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secret = process.env.GMAIL_CLIENT_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!secret) return null;
   try {
     const decoded = Buffer.from(state, "base64url").toString("utf8");
