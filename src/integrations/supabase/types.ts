@@ -213,6 +213,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          categories: Json
+          created_at: string
+          id: string
+          priorities: Json
+          updated_at: string
+          whitelist: Json
+        }
+        Insert: {
+          categories?: Json
+          created_at?: string
+          id?: string
+          priorities?: Json
+          updated_at?: string
+          whitelist?: Json
+        }
+        Update: {
+          categories?: Json
+          created_at?: string
+          id?: string
+          priorities?: Json
+          updated_at?: string
+          whitelist?: Json
+        }
+        Relationships: []
+      }
       file_records: {
         Row: {
           created_at: string | null
