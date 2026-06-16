@@ -68,48 +68,24 @@ export function ClienteFormInline({
     }
   }
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const inputStyle = {
+    width: "100%",
+    padding: spacing.md,
+    background: colors.background,
+    border: `1px solid ${colors.border}`,
+    borderRadius: borderRadius.md,
+    color: colors.text,
+    fontSize: "14px",
+    boxSizing: "border-box" as const,
   };
 
-  const InputField = ({
-    label,
-    field,
-    type = "text",
-  }: {
-    label: string;
-    field: keyof typeof formData;
-    type?: string;
-  }) => (
-    <div style={{ marginBottom: spacing.lg }}>
-      <label
-        style={{
-          display: "block",
-          fontSize: "14px",
-          color: colors.textSecondary,
-          marginBottom: spacing.sm,
-          fontWeight: 600,
-        }}
-      >
-        {label}
-      </label>
-      <input
-        type={type}
-        value={formData[field]}
-        onChange={(e) => handleChange(field, e.target.value)}
-        style={{
-          width: "100%",
-          padding: spacing.md,
-          background: colors.background,
-          border: `1px solid ${colors.border}`,
-          borderRadius: borderRadius.md,
-          color: colors.text,
-          fontSize: "14px",
-          boxSizing: "border-box",
-        }}
-      />
-    </div>
-  );
+  const labelStyle = {
+    display: "block" as const,
+    fontSize: "14px",
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    fontWeight: 600 as const,
+  };
 
   return (
     <Card>
@@ -158,12 +134,65 @@ export function ClienteFormInline({
       )}
 
       <form onSubmit={handleSubmit}>
-        <InputField label="Nome *" field="nome" />
-        <InputField label="Email" type="email" field="email" />
-        <InputField label="Telefone" field="telefone" />
-        <InputField label="Empresa" field="empresa" />
-        <InputField label="CPF/CNPJ" field="cnpj_cpf" />
-        <InputField label="Endereço" field="endereco" />
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Nome *</label>
+          <input
+            type="text"
+            value={formData.nome}
+            onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Email</label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Telefone</label>
+          <input
+            type="text"
+            value={formData.telefone}
+            onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Empresa</label>
+          <input
+            type="text"
+            value={formData.empresa}
+            onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>CPF/CNPJ</label>
+          <input
+            type="text"
+            value={formData.cnpj_cpf}
+            onChange={(e) => setFormData({ ...formData, cnpj_cpf: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Endereço</label>
+          <input
+            type="text"
+            value={formData.endereco}
+            onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
 
         <div
           style={{
@@ -173,11 +202,35 @@ export function ClienteFormInline({
             marginBottom: spacing.lg,
           }}
         >
-          <InputField label="Cidade" field="cidade" />
-          <InputField label="Estado" field="estado" />
+          <div>
+            <label style={labelStyle}>Cidade</label>
+            <input
+              type="text"
+              value={formData.cidade}
+              onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Estado</label>
+            <input
+              type="text"
+              value={formData.estado}
+              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
         </div>
 
-        <InputField label="CEP" field="cep" />
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>CEP</label>
+          <input
+            type="text"
+            value={formData.cep}
+            onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
 
         <div
           style={{

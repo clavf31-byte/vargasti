@@ -69,48 +69,24 @@ export function OrcamentoFormInline({
     }
   }
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const inputStyle = {
+    width: "100%",
+    padding: spacing.md,
+    background: colors.background,
+    border: `1px solid ${colors.border}`,
+    borderRadius: borderRadius.md,
+    color: colors.text,
+    fontSize: "14px",
+    boxSizing: "border-box" as const,
   };
 
-  const InputField = ({
-    label,
-    field,
-    type = "text",
-  }: {
-    label: string;
-    field: keyof typeof formData;
-    type?: string;
-  }) => (
-    <div style={{ marginBottom: spacing.lg }}>
-      <label
-        style={{
-          display: "block",
-          fontSize: "14px",
-          color: colors.textSecondary,
-          marginBottom: spacing.sm,
-          fontWeight: 600,
-        }}
-      >
-        {label}
-      </label>
-      <input
-        type={type}
-        value={formData[field]}
-        onChange={(e) => handleChange(field, e.target.value)}
-        style={{
-          width: "100%",
-          padding: spacing.md,
-          background: colors.background,
-          border: `1px solid ${colors.border}`,
-          borderRadius: borderRadius.md,
-          color: colors.text,
-          fontSize: "14px",
-          boxSizing: "border-box",
-        }}
-      />
-    </div>
-  );
+  const labelStyle = {
+    display: "block" as const,
+    fontSize: "14px",
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    fontWeight: 600 as const,
+  };
 
   return (
     <Card>
@@ -159,32 +135,22 @@ export function OrcamentoFormInline({
       )}
 
       <form onSubmit={handleSubmit}>
-        <InputField label="Número *" field="numero" type="text" />
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Número *</label>
+          <input
+            type="text"
+            value={formData.numero}
+            onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
 
         <div style={{ marginBottom: spacing.lg }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: "14px",
-              color: colors.textSecondary,
-              marginBottom: spacing.sm,
-              fontWeight: 600,
-            }}
-          >
-            Cliente *
-          </label>
+          <label style={labelStyle}>Cliente *</label>
           <select
             value={formData.cliente_id}
-            onChange={(e) => handleChange("cliente_id", e.target.value)}
-            style={{
-              width: "100%",
-              padding: spacing.md,
-              background: colors.background,
-              border: `1px solid ${colors.border}`,
-              borderRadius: borderRadius.md,
-              color: colors.text,
-              fontSize: "14px",
-            }}
+            onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
+            style={inputStyle}
           >
             <option value="">Selecione um cliente</option>
             {clientes.map((c) => (
@@ -196,63 +162,44 @@ export function OrcamentoFormInline({
         </div>
 
         <div style={{ marginBottom: spacing.lg }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: "14px",
-              color: colors.textSecondary,
-              marginBottom: spacing.sm,
-              fontWeight: 600,
-            }}
-          >
-            Descrição
-          </label>
+          <label style={labelStyle}>Descrição</label>
           <textarea
             value={formData.descricao}
-            onChange={(e) => handleChange("descricao", e.target.value)}
+            onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
             style={{
-              width: "100%",
-              padding: spacing.md,
-              background: colors.background,
-              border: `1px solid ${colors.border}`,
-              borderRadius: borderRadius.md,
-              color: colors.text,
-              fontSize: "14px",
+              ...inputStyle,
               minHeight: "100px",
-              boxSizing: "border-box",
               fontFamily: "inherit",
             }}
           />
         </div>
 
-        <InputField label="Valor Total (R$)" type="number" field="total" />
-
-        <InputField label="Data de Vencimento" type="date" field="data_vencimento" />
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Valor Total (R$)</label>
+          <input
+            type="number"
+            value={formData.total}
+            onChange={(e) => setFormData({ ...formData, total: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
 
         <div style={{ marginBottom: spacing.lg }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: "14px",
-              color: colors.textSecondary,
-              marginBottom: spacing.sm,
-              fontWeight: 600,
-            }}
-          >
-            Status
-          </label>
+          <label style={labelStyle}>Data de Vencimento</label>
+          <input
+            type="date"
+            value={formData.data_vencimento}
+            onChange={(e) => setFormData({ ...formData, data_vencimento: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: spacing.lg }}>
+          <label style={labelStyle}>Status</label>
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            style={{
-              width: "100%",
-              padding: spacing.md,
-              background: colors.background,
-              border: `1px solid ${colors.border}`,
-              borderRadius: borderRadius.md,
-              color: colors.text,
-              fontSize: "14px",
-            }}
+            style={inputStyle}
           >
             <option value="rascunho">Rascunho</option>
             <option value="enviado">Enviado</option>
