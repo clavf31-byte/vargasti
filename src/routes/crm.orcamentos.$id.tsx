@@ -29,6 +29,10 @@ type Cliente = {
   id: string;
   nome: string;
   email: string;
+  telefone?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
 };
 
 function OrcamentoDetalhePage() {
@@ -183,9 +187,15 @@ function OrcamentoDetalhePage() {
         .select("*")
         .eq("orcamento_id", orcamento.id);
 
+      const endereco = [cliente.endereco, cliente.cidade, cliente.estado]
+        .filter(Boolean)
+        .join(" - ");
+
       baixarPDFOrcamento({
         numero: orcamento.numero,
         cliente_nome: cliente.nome,
+        cliente_telefone: cliente.telefone,
+        cliente_endereco: endereco || undefined,
         data_criacao: orcamento.data_criacao,
         data_vencimento: orcamento.data_vencimento,
         itens: itens || [],

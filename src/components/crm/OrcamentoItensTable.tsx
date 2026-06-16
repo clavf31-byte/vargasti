@@ -8,6 +8,7 @@ interface OrcamentoItem {
   quantidade: number;
   preco_unitario: number;
   subtotal: number;
+  categoria?: string;
 }
 
 interface OrcamentoItensTableProps {
@@ -57,9 +58,10 @@ export function OrcamentoItensTable({
             <thead>
               <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
                 <th style={{ padding: spacing.sm, textAlign: "left", color: colors.textSecondary, fontSize: "12px", fontWeight: 600 }}>Descrição</th>
-                <th style={{ padding: spacing.sm, textAlign: "center", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "80px" }}>Qtd</th>
-                <th style={{ padding: spacing.sm, textAlign: "right", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "100px" }}>Preço Unit.</th>
-                <th style={{ padding: spacing.sm, textAlign: "right", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "100px" }}>Subtotal</th>
+                <th style={{ padding: spacing.sm, textAlign: "center", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "120px" }}>Categoria</th>
+                <th style={{ padding: spacing.sm, textAlign: "center", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "60px" }}>Qtd</th>
+                <th style={{ padding: spacing.sm, textAlign: "right", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "90px" }}>Preço Unit.</th>
+                <th style={{ padding: spacing.sm, textAlign: "right", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "90px" }}>Subtotal</th>
                 <th style={{ padding: spacing.sm, textAlign: "center", width: "40px" }}></th>
               </tr>
             </thead>
@@ -74,6 +76,16 @@ export function OrcamentoItensTable({
                       placeholder="Descrição do item"
                       style={inputStyle}
                     />
+                  </td>
+                  <td style={{ padding: spacing.sm }}>
+                    <select
+                      value={item.categoria || "Produtos, peças e materiais"}
+                      onChange={(e) => onUpdateItem(idx, { ...item, categoria: e.target.value })}
+                      style={inputStyle}
+                    >
+                      <option value="Serviços">Serviços</option>
+                      <option value="Produtos, peças e materiais">Produtos, peças e materiais</option>
+                    </select>
                   </td>
                   <td style={{ padding: spacing.sm }}>
                     <input

@@ -8,6 +8,7 @@ interface OrcamentoItem {
   quantidade: number;
   preco_unitario: number;
   subtotal: number;
+  categoria?: string;
 }
 
 export function useOrcamentoItens(orcamentoId?: string) {
@@ -44,6 +45,7 @@ export function useOrcamentoItens(orcamentoId?: string) {
       quantidade: 1,
       preco_unitario: 0,
       subtotal: 0,
+      categoria: "Produtos, peças e materiais",
     };
     setItens([...itens, newItem]);
   }
@@ -75,6 +77,7 @@ export function useOrcamentoItens(orcamentoId?: string) {
           quantidade: item.quantidade,
           preco_unitario: item.preco_unitario,
           subtotal: item.subtotal,
+          categoria: item.categoria || "Produtos, peças e materiais",
           ordem: idx,
         }));
 
