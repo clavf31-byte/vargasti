@@ -10,7 +10,7 @@ function CRMLayoutPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate({ to: "/crm/dashboard", replace: true });
+    navigate({ to: "/crm/clientes", replace: true });
   }, [navigate]);
 
   return <Outlet />;

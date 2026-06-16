@@ -1,7 +1,7 @@
 ﻿import { ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { LayoutGrid, Users, FileText, DollarSign, LogOut } from "lucide-react";
+import { Users, FileText, DollarSign, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface CRMLayoutProps {
@@ -13,7 +13,6 @@ export function CRMLayout({ children }: CRMLayoutProps) {
   const { signOut: logout } = useAuth();
 
   const menuItems = [
-    { label: "Dashboard", icon: LayoutGrid, path: "/crm/dashboard" },
     { label: "Clientes", icon: Users, path: "/crm/clientes" },
     { label: "Orçamentos", icon: FileText, path: "/crm/orcamentos" },
     { label: "Pagamentos", icon: DollarSign, path: "/crm/pagamentos" },

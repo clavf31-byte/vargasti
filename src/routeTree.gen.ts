@@ -24,7 +24,6 @@ import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel
 import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
 import { Route as CrmPagamentosRouteImport } from './routes/crm.pagamentos'
 import { Route as CrmOrcamentosRouteImport } from './routes/crm.orcamentos'
-import { Route as CrmDashboardRouteImport } from './routes/crm.dashboard'
 import { Route as CrmClientesRouteImport } from './routes/crm.clientes'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
@@ -112,11 +111,6 @@ const CrmPagamentosRoute = CrmPagamentosRouteImport.update({
 const CrmOrcamentosRoute = CrmOrcamentosRouteImport.update({
   id: '/orcamentos',
   path: '/orcamentos',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmDashboardRoute = CrmDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmClientesRoute = CrmClientesRouteImport.update({
@@ -207,7 +201,6 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/crm/clientes': typeof CrmClientesRoute
-  '/crm/dashboard': typeof CrmDashboardRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
@@ -237,7 +230,6 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/crm/clientes': typeof CrmClientesRoute
-  '/crm/dashboard': typeof CrmDashboardRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
@@ -269,7 +261,6 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/crm/clientes': typeof CrmClientesRoute
-  '/crm/dashboard': typeof CrmDashboardRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
@@ -302,7 +293,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/api/whatsapp-webhook'
     | '/crm/clientes'
-    | '/crm/dashboard'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
     | '/ferramentas/emails'
@@ -332,7 +322,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/api/whatsapp-webhook'
     | '/crm/clientes'
-    | '/crm/dashboard'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
     | '/ferramentas/emails'
@@ -363,7 +352,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/api/whatsapp-webhook'
     | '/crm/clientes'
-    | '/crm/dashboard'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
     | '/ferramentas/emails'
@@ -502,13 +490,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmOrcamentosRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/crm/dashboard': {
-      id: '/crm/dashboard'
-      path: '/dashboard'
-      fullPath: '/crm/dashboard'
-      preLoaderRoute: typeof CrmDashboardRouteImport
-      parentRoute: typeof CrmRoute
-    }
     '/crm/clientes': {
       id: '/crm/clientes'
       path: '/clientes'
@@ -627,14 +608,12 @@ const CrmOrcamentosRouteWithChildren = CrmOrcamentosRoute._addFileChildren(
 
 interface CrmRouteChildren {
   CrmClientesRoute: typeof CrmClientesRoute
-  CrmDashboardRoute: typeof CrmDashboardRoute
   CrmOrcamentosRoute: typeof CrmOrcamentosRouteWithChildren
   CrmPagamentosRoute: typeof CrmPagamentosRoute
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
   CrmClientesRoute: CrmClientesRoute,
-  CrmDashboardRoute: CrmDashboardRoute,
   CrmOrcamentosRoute: CrmOrcamentosRouteWithChildren,
   CrmPagamentosRoute: CrmPagamentosRoute,
 }
