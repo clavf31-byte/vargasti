@@ -2,10 +2,26 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createAnthropicMessage } from "./anthropicRest";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 
 
 // ── Gmail REST helpers (server-only) ──────────────────────────────────────────
+type EmailDbClient = Pick<SupabaseClient<Database>, "from">;
+
+async function getEmailDbClient(client?: EmailDbClient): Promise<EmailDbClient> {
+  if (client) return client;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+function getServerSigningSecret() {
+  const secret = process.env.GMAIL_CLIENT_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) throw new Error("Server signing key not configured");
+  return secret;
+}
+
 function getGmailOAuthConfig() {
   const clientId = process.env.GMAIL_CLIENT_ID;
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
@@ -93,8 +109,7 @@ function isGmailAuthorizationError(err: unknown) {
 
 // ── Get Gmail OAuth URL (auth-required, signed state binds the user) ─────────
 function signGmailState(userId: string): string {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!secret) throw new Error("Server signing key not configured");
+  const secret = getServerSigningSecret();
   const payload = `${userId}.${Date.now()}`;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createHmac } = require("crypto") as typeof import("crypto");
@@ -139,22 +154,8 @@ export const saveGmailToken = createServerFn({ method: "POST" })
       throw new Error("Failed to get access token");
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase credentials not configured");
-    }
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/gmail_tokens`, {
-      method: "POST",
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
-      },
-      body: JSON.stringify({
+    const { error } = await context.supabase.from("gmail_tokens").upsert(
+      {
         user_id: userId,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? null,
@@ -162,11 +163,11 @@ export const saveGmailToken = createServerFn({ method: "POST" })
           ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
           : null,
         updated_at: new Date().toISOString(),
-      }),
-    });
+      },
+      { onConflict: "user_id" }
+    );
 
-    if (!response.ok) {
-      const error = await response.text();
+    if (error) {
       console.error("[saveGmailToken] Failed to save:", error);
       throw new Error("Failed to save Gmail token");
     }
@@ -220,35 +221,18 @@ async function refreshGmailAccessTokenWithRetry(
   return null;
 }
 
-async function getGmailAccessToken(userId: string = "system") {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+async function getGmailAccessToken(userId: string = "system", client?: EmailDbClient) {
+  const supabase = await getEmailDbClient(client);
+  const { data: tokenData, error } = await supabase
+    .from("gmail_tokens")
+    .select("access_token,refresh_token,expires_at")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase credentials not configured");
+  if (error) {
+    throw new Error(`Failed to fetch Gmail token: ${error.message}`);
   }
 
-  const response = await fetch(
-    `${supabaseUrl}/rest/v1/gmail_tokens?select=access_token,refresh_token,expires_at&user_id=eq.${userId}`,
-    {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Gmail token: ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as Array<{
-    access_token: string;
-    refresh_token: string;
-    expires_at: string | null;
-  }>;
-
-  const tokenData = data[0];
   if (!tokenData?.access_token) {
     throw new Error("Gmail not authorized");
   }
@@ -260,33 +244,35 @@ async function getGmailAccessToken(userId: string = "system") {
 
   if (!shouldRefresh) return tokenData.access_token;
 
-  const refreshed = await refreshGmailAccessTokenWithRetry(tokenData.refresh_token);
+  const refreshToken = tokenData.refresh_token;
+  if (!refreshToken) return tokenData.access_token;
+
+  const refreshed = await refreshGmailAccessTokenWithRetry(refreshToken);
 
   if (!refreshed?.access_token) {
     throw new Error("Failed to refresh Gmail token after multiple retries");
   }
 
-  await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.${userId}`, {
-    method: "PATCH",
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const { error: updateError } = await supabase
+    .from("gmail_tokens")
+    .update({
       access_token: refreshed.access_token,
       expires_at: refreshed.expires_in
         ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
         : null,
       updated_at: new Date().toISOString(),
-    }),
-  });
+    })
+    .eq("user_id", userId);
+
+  if (updateError) {
+    throw new Error(`Failed to update Gmail token: ${updateError.message}`);
+  }
 
   return refreshed.access_token;
 }
 
-async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: string = "system"): Promise<T> {
-  const accessToken = await getGmailAccessToken(userId);
+async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: string = "system", client?: EmailDbClient): Promise<T> {
+  const accessToken = await getGmailAccessToken(userId, client);
   const response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
     ...init,
     headers: {
@@ -305,9 +291,9 @@ async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: str
   return response.json() as Promise<T>;
 }
 
-export async function fetchUnreadEmails(maxResults: number, userId: string = "system"): Promise<FetchEmailsResult> {
+export async function fetchUnreadEmails(maxResults: number, userId: string = "system", client?: EmailDbClient): Promise<FetchEmailsResult> {
     try {
-      await getGmailAccessToken(userId);
+      await getGmailAccessToken(userId, client);
     } catch (err) {
       if (isGmailAuthorizationError(err)) {
         return {
@@ -324,7 +310,7 @@ export async function fetchUnreadEmails(maxResults: number, userId: string = "sy
       q: "is:unread",
       maxResults: String(maxResults),
     });
-    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`, {}, userId);
+    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`, {}, userId, client);
 
     if (!listRes.messages?.length) {
       return { emails: [], authorized: true };
@@ -335,7 +321,7 @@ export async function fetchUnreadEmails(maxResults: number, userId: string = "sy
     for (const msg of listRes.messages) {
       if (!msg.id) continue;
 
-      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`, {}, userId);
+      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`, {}, userId, client);
 
       const headers = emailRes.payload?.headers ?? [];
       const getHeader = (name: string) => headers.find((h: { name?: string | null; value?: string | null }) => h.name === name)?.value ?? "";
@@ -376,13 +362,13 @@ const MarkAsReadSchema = z.object({
   messageId: z.string(),
 });
 
-export async function markEmailAsReadInternal(messageId: string, userId: string = "system") {
+export async function markEmailAsReadInternal(messageId: string, userId: string = "system", client?: EmailDbClient) {
   await gmailRequest(`/users/me/messages/${messageId}/modify`, {
     method: "POST",
     body: JSON.stringify({
       removeLabelIds: ["UNREAD"],
     }),
-  }, userId);
+  }, userId, client);
 
   return { ok: true };
 }
@@ -394,47 +380,38 @@ export const markEmailAsRead = createServerFn({ method: "POST" })
 
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
-async function getEmailConfig() {
+async function getEmailConfig(client?: EmailDbClient) {
   try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabase = await getEmailDbClient(client);
+    const { data, error } = await supabase
+      .from("email_settings")
+      .select("categories,priorities")
+      .eq("id", "00000000-0000-0000-0000-000000000000")
+      .maybeSingle() as {
+        data: {
+      categories?: Array<{ name: string; keywords: string[] }>;
+      priorities?: Array<{ id: string; keywords: string[]; priority: string }>;
+        } | null;
+        error: { message: string } | null;
+      };
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase credentials not configured");
-    }
-
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/email_settings?id=eq.00000000-0000-0000-0000-000000000000&select=*`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      console.warn("[getEmailConfig] Failed to fetch config from Supabase");
+    if (error) {
+      console.warn("[getEmailConfig] Failed to fetch config:", error.message);
       return null;
     }
 
-    const data = (await response.json()) as Array<{
-      categories?: Array<{ name: string; keywords: string[] }>;
-      priorities?: Array<{ id: string; keywords: string[]; priority: string }>;
-    }>;
-
-    return data[0] || null;
+    return data;
   } catch (err) {
     console.error("[getEmailConfig] Error:", err);
     return null;
   }
 }
 
-export async function interpretEmailWithClaude(email: GmailEmail) {
+export async function interpretEmailWithClaude(email: GmailEmail, client?: EmailDbClient) {
   const text = `${email.subject} ${email.body}`.toLowerCase();
 
   // Buscar configurações do Supabase
-  const config = await getEmailConfig();
+  const config = await getEmailConfig(client);
 
   // Categorias: usar config do Supabase ou defaults
   const categories: Record<string, string[]> = {};
@@ -554,11 +531,12 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
       // userId is always "system" — Gmail account is shared, not per-user.
       // Auth is required just to gate access to triggering the pipeline.
       const userId = "system";
+      const supabase = await getEmailDbClient();
       console.log("[email-pipeline] Starting email processing for user:", userId);
 
 
       // Fetch unread emails
-      const emailsResult = await fetchUnreadEmails(data.maxEmails, userId);
+      const emailsResult = await fetchUnreadEmails(data.maxEmails, userId, supabase);
 
       if (emailsResult.authorized === false) {
         console.log("[email-pipeline] Gmail not authorized");
@@ -583,28 +561,19 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           console.log("[email-pipeline] Processing:", { from: email.from, subject: email.subject });
 
           // Check if ticket already exists for this email (deduplication)
-          const supabaseUrl = process.env.SUPABASE_URL;
-          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-          if (supabaseUrl && supabaseKey) {
-            const checkResponse = await fetch(
-              `${supabaseUrl}/rest/v1/tickets?select=id&external_ref=eq.gmail-${email.id}`,
-              {
-                headers: {
-                  apikey: supabaseKey,
-                  Authorization: `Bearer ${supabaseKey}`,
-                },
-              }
-            );
-            const existingData = (await checkResponse.json()) as Array<{ id: string }>;
-            if (existingData && existingData.length > 0) {
-              console.log("[email-pipeline] Ticket already exists for", email.id);
-              await markEmailAsReadInternal(email.id, userId);
-              continue;
-            }
+          const { data: existingLog } = await supabase
+            .from("email_processing_log")
+            .select("id")
+            .eq("email_id", email.id)
+            .maybeSingle();
+          if (existingLog) {
+            console.log("[email-pipeline] Email already processed", email.id);
+            await markEmailAsReadInternal(email.id, userId, supabase);
+            continue;
           }
 
           // Interpret with Claude
-          const analysis = await interpretEmailWithClaude(email);
+          const analysis = await interpretEmailWithClaude(email, supabase);
           console.log("[email-pipeline] Analysis:", analysis);
 
           // If it's a request, send to Helpdesk
@@ -620,11 +589,17 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
                 summary: analysis.summary || email.subject,
               });
 
+              await supabase.from("email_processing_log").upsert({
+                email_id: email.id,
+                status: "processed",
+                error: null,
+              });
+
               console.log("[email-pipeline] Sent to Helpdesk:", email.subject);
               processedCount++;
 
               // Mark as read only after successful ticket creation
-              await markEmailAsReadInternal(email.id, userId);
+              await markEmailAsReadInternal(email.id, userId, supabase);
               console.log("[email-pipeline] Marked as read:", email.id);
             } catch (err) {
               console.error("[email-pipeline] Error sending to Helpdesk:", err);
