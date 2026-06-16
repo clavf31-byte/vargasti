@@ -142,7 +142,7 @@ function PermissionsPage() {
             user_id: userId,
             [permission]: newValue,
             updated_at: new Date().toISOString(),
-          },
+          } as any,
           { onConflict: "user_id" }
         );
 
