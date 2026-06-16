@@ -3,9 +3,11 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { enviarOrcamentoPorEmail } from "@/lib/crm/emailService";
-import { gerarNotaFiscal, obterNotaFiscal } from "@/lib/crm/nfService";
-import { ChevronLeft, Mail, FileText, DollarSign, Download } from "lucide-react";
+import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
+import { criarOrdenServicoDoOrcamento } from "@/hooks/useOrdenServico";
+import { criarNotaFiscal } from "@/hooks/useNotaFiscal";
+import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
+import { ChevronLeft, Mail, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Copy } from "lucide-react";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -16,13 +18,18 @@ export const Route = createFileRoute("/crm/orcamentos/$id")({
 
 type Orcamento = {
   id: string;
-  numero: string;
+  numero_formatado: string;
   cliente_id: string;
-  status: string;
+  status_enum: string;
   total: number;
+  desconto?: number;
+  impostos?: number;
   data_vencimento: string;
   notas: string;
   data_criacao: string;
+  approval_token?: string;
+  approval_status?: string;
+  approved_at?: string;
 };
 
 type Cliente = {
@@ -42,10 +49,10 @@ function OrcamentoDetalhePage() {
 
   const [orcamento, setOrcamento] = useState<Orcamento | null>(null);
   const [cliente, setCliente] = useState<Cliente | null>(null);
-  const [notaFiscal, setNotaFiscal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -73,9 +80,6 @@ function OrcamentoDetalhePage() {
 
       if (cliError) throw cliError;
       setCliente(cli as Cliente);
-
-      const nf = await obterNotaFiscal(orc.id);
-      setNotaFiscal(nf);
     } catch (e) {
       console.error("Erro ao carregar orçamento:", e);
       setMessage("Erro ao carregar orçamento");
@@ -84,95 +88,110 @@ function OrcamentoDetalhePage() {
     }
   }
 
-  async function handleEnviarOrcamento() {
-    if (!orcamento || !cliente) return;
+  async function handleEnviarComEmail() {
+    if (!orcamento || !cliente || !user) return;
 
     setActionLoading(true);
     setMessage("");
 
     try {
-      const envioEmail = await enviarOrcamentoPorEmail(
-        orcamento.id,
-        cliente.email || "cliente@exemplo.com",
-        cliente.nome,
-        orcamento.numero,
-        orcamento.total
-      );
+      // Gerar link de aprovação
+      const linkResult = await gerarLinkAprovacao(orcamento.id);
+      if (!linkResult.success) throw new Error("Erro ao gerar link");
 
-      if (!envioEmail.success) throw new Error("Erro ao enviar email");
+      setApprovalUrl(linkResult.approval_url);
 
+      // Enviar email
+      const emailResult = await enviarOrcamentoPorEmail({
+        cliente_email: cliente.email,
+        cliente_nome: cliente.nome,
+        orcamento_numero: orcamento.numero_formatado,
+        orcamento_total: orcamento.total,
+        approval_url: linkResult.approval_url,
+        user_name: user.user_metadata?.name || "VargasTI",
+        user_email: user.email,
+      });
+
+      if (!emailResult.success) throw new Error("Erro ao enviar email");
+
+      // Atualizar status
       const { error: updateError } = await supabase
         .from("orcamentos")
-        .update({ status: "enviado" })
+        .update({
+          status_enum: "enviado",
+          approval_token: linkResult.token,
+        })
         .eq("id", orcamento.id);
 
       if (updateError) throw updateError;
 
-      setOrcamento({ ...orcamento, status: "enviado" });
+      setOrcamento({
+        ...orcamento,
+        status_enum: "enviado",
+        approval_token: linkResult.token,
+      });
+
       setMessage("✅ Orçamento enviado com sucesso!");
-    } catch (e) {
-      setMessage("❌ Erro ao enviar orçamento");
-      console.error(e);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erro ao enviar";
+      setMessage(`❌ ${errorMsg}`);
+      console.error(err);
     } finally {
       setActionLoading(false);
     }
   }
 
-  async function handleRegistrarPagamento() {
-    if (!orcamento || !cliente) return;
+  async function handleConverterOS() {
+    if (!orcamento || !cliente || !user) return;
 
     setActionLoading(true);
     setMessage("");
 
     try {
-      const result = await gerarNotaFiscal(
-        orcamento.id,
-        cliente.id,
-        cliente.nome,
-        orcamento.total,
-        new Date().toISOString().split("T")[0]
-      );
+      const result = await criarOrdenServicoDoOrcamento({
+        orcamento_id: orcamento.id,
+        cliente_id: cliente.id,
+        user_id: user.id,
+        descricao: orcamento.notas,
+        prioridade: "normal",
+      });
 
-      if (!result.success) throw new Error("Erro ao gerar NF");
+      if (!result.success) throw new Error(result.error);
 
-      const { error: updateError } = await supabase
-        .from("orcamentos")
-        .update({ status: "pago" })
-        .eq("id", orcamento.id);
-
-      if (updateError) throw updateError;
-
-      setOrcamento({ ...orcamento, status: "pago" });
-      const nf = await obterNotaFiscal(orcamento.id);
-      setNotaFiscal(nf);
-      setMessage(`✅ Pagamento registrado! NF: ${result.numeroNF}`);
-    } catch (e) {
-      setMessage("❌ Erro ao registrar pagamento");
-      console.error(e);
+      setOrcamento({ ...orcamento, status_enum: "faturado" });
+      setMessage(`✅ Ordem de Serviço criada: ${result.os?.numero_formatado}`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erro ao criar OS";
+      setMessage(`❌ ${errorMsg}`);
     } finally {
       setActionLoading(false);
     }
   }
 
-  async function handleAprovado() {
-    if (!orcamento) return;
+  async function handleGerarNF() {
+    if (!orcamento || !cliente || !user) return;
 
     setActionLoading(true);
     setMessage("");
 
     try {
-      const { error } = await supabase
-        .from("orcamentos")
-        .update({ status: "aprovado" })
-        .eq("id", orcamento.id);
+      const result = await criarNotaFiscal({
+        orcamento_id: orcamento.id,
+        cliente_id: cliente.id,
+        user_id: user.id,
+        valor_subtotal: orcamento.total - (orcamento.desconto || 0),
+        valor_desconto: orcamento.desconto || 0,
+        valor_impostos: orcamento.impostos || 0,
+        valor_total: orcamento.total,
+      });
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
 
-      setOrcamento({ ...orcamento, status: "aprovado" });
-      setMessage("✅ Orçamento marcado como aprovado!");
-    } catch (e) {
-      setMessage("❌ Erro ao atualizar status");
-      console.error(e);
+      setOrcamento({ ...orcamento, status_enum: "faturado" });
+      setMessage(`✅ Nota Fiscal criada: ${result.nf?.numero_nfe}`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erro ao criar NF";
+      setMessage(`❌ ${errorMsg}`);
     } finally {
       setActionLoading(false);
     }
@@ -192,7 +211,7 @@ function OrcamentoDetalhePage() {
         .join(" - ");
 
       baixarPDFOrcamento({
-        numero: orcamento.numero,
+        numero: orcamento.numero_formatado,
         cliente_nome: cliente.nome,
         cliente_telefone: cliente.telefone,
         cliente_endereco: endereco || undefined,
@@ -200,7 +219,10 @@ function OrcamentoDetalhePage() {
         data_vencimento: orcamento.data_vencimento,
         itens: itens || [],
         total: orcamento.total,
-        status: orcamento.status,
+        status: orcamento.status_enum,
+        desconto: orcamento.desconto,
+        impostos: orcamento.impostos,
+        approval_url: approvalUrl || undefined,
       });
 
       setMessage("✅ PDF baixado com sucesso!");
@@ -209,6 +231,62 @@ function OrcamentoDetalhePage() {
       console.error(e);
     }
   }
+
+  const getStatusBadge = (status: string) => {
+    const badges: { [key: string]: { bg: string; color: string; icon: JSX.Element; label: string } } = {
+      rascunho: {
+        bg: "rgba(139, 92, 246, 0.1)",
+        color: "#8b5cf6",
+        icon: <Clock size={16} />,
+        label: "Rascunho",
+      },
+      enviado: {
+        bg: "rgba(59, 130, 246, 0.1)",
+        color: "#3b82f6",
+        icon: <Mail size={16} />,
+        label: "Enviado",
+      },
+      aprovado: {
+        bg: "rgba(34, 197, 94, 0.1)",
+        color: "#22c55e",
+        icon: <CheckCircle2 size={16} />,
+        label: "Aprovado",
+      },
+      rejeitado: {
+        bg: "rgba(239, 68, 68, 0.1)",
+        color: "#ef4444",
+        icon: <XCircle size={16} />,
+        label: "Rejeitado",
+      },
+      faturado: {
+        bg: "rgba(13, 208, 215, 0.1)",
+        color: "#0bd0d7",
+        icon: <CheckCircle2 size={16} />,
+        label: "Faturado",
+      },
+    };
+
+    const badge = badges[status] || badges.rascunho;
+
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "6px 12px",
+          background: badge.bg,
+          color: badge.color,
+          borderRadius: "6px",
+          fontSize: "13px",
+          fontWeight: 600,
+        }}
+      >
+        {badge.icon}
+        {badge.label}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -225,13 +303,6 @@ function OrcamentoDetalhePage() {
       </AppShell>
     );
   }
-
-  const statusColor: Record<string, string> = {
-    rascunho: "#6d879c",
-    enviado: "#2196f3",
-    aprovado: "#4caf50",
-    pago: "#4caf50",
-  };
 
   return (
     <AppShell>
@@ -254,7 +325,7 @@ function OrcamentoDetalhePage() {
         </button>
 
         <PageHeader
-          title={`Orçamento ${orcamento.numero}`}
+          title={`Orçamento ${orcamento.numero_formatado}`}
           subtitle={`Cliente: ${cliente.nome}`}
         />
 
@@ -296,28 +367,12 @@ function OrcamentoDetalhePage() {
             }}
           >
             <div>
-              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
-                Status
-              </p>
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  background: `${statusColor[orcamento.status]}33`,
-                  color: statusColor[orcamento.status],
-                }}
-              >
-                {orcamento.status.charAt(0).toUpperCase() + orcamento.status.slice(1)}
-              </div>
+              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Status</p>
+              {getStatusBadge(orcamento.status_enum)}
             </div>
 
             <div>
-              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
-                Valor Total
-              </p>
+              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Valor Total</p>
               <p style={{ fontSize: "18px", fontWeight: 600, color: "#66bb6a" }}>
                 R$ {orcamento.total.toFixed(2)}
               </p>
@@ -335,31 +390,67 @@ function OrcamentoDetalhePage() {
             </div>
 
             <div>
-              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
-                Email do Cliente
-              </p>
-              <p style={{ fontSize: "14px", color: "#eaf3f8" }}>
-                {cliente.email || "Não cadastrado"}
-              </p>
+              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Email do Cliente</p>
+              <p style={{ fontSize: "14px", color: "#eaf3f8" }}>{cliente.email || "Não cadastrado"}</p>
             </div>
           </div>
 
           {orcamento.notas && (
             <div style={{ borderTop: "1px solid rgba(19, 200, 211, 0.16)", paddingTop: "1.5rem" }}>
-              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
-                Notas
-              </p>
+              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Observações</p>
               <p style={{ fontSize: "14px", color: "#eaf3f8", whiteSpace: "pre-wrap" }}>
                 {orcamento.notas}
               </p>
             </div>
           )}
+
+          {orcamento.approval_status && (
+            <div
+              style={{
+                marginTop: "1.5rem",
+                paddingTop: "1.5rem",
+                borderTop: "1px solid rgba(19, 200, 211, 0.16)",
+              }}
+            >
+              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Status de Aprovação</p>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "14px",
+                }}
+              >
+                {orcamento.approval_status === "approved" && (
+                  <>
+                    <CheckCircle2 size={16} style={{ color: "#66bb6a" }} />
+                    <span style={{ color: "#66bb6a" }}>
+                      Aprovado em{" "}
+                      {orcamento.approved_at ? new Date(orcamento.approved_at).toLocaleDateString("pt-BR") : ""}
+                    </span>
+                  </>
+                )}
+                {orcamento.approval_status === "pending" && (
+                  <>
+                    <Clock size={16} style={{ color: "#0bd0d7" }} />
+                    <span style={{ color: "#0bd0d7" }}>Aguardando aprovação</span>
+                  </>
+                )}
+                {orcamento.approval_status === "rejected" && (
+                  <>
+                    <XCircle size={16} style={{ color: "#ef5350" }} />
+                    <span style={{ color: "#ef5350" }}>Rejeitado</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
-          {orcamento.status === "rascunho" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+          {orcamento.status_enum === "rascunho" && (
             <button
-              onClick={handleEnviarOrcamento}
+              onClick={handleEnviarComEmail}
               disabled={actionLoading || !cliente.email}
               style={{
                 display: "flex",
@@ -377,7 +468,7 @@ function OrcamentoDetalhePage() {
               }}
             >
               <Mail size={16} />
-              {actionLoading ? "Enviando..." : "Enviar Orçamento"}
+              {actionLoading ? "Enviando..." : "Enviar por Email"}
             </button>
           )}
 
@@ -401,28 +492,9 @@ function OrcamentoDetalhePage() {
             Gerar PDF
           </button>
 
-          {orcamento.status === "enviado" && (
+          {orcamento.status_enum === "aprovado" && (
             <button
-              onClick={handleAprovado}
-              disabled={actionLoading}
-              style={{
-                padding: "12px 16px",
-                background: "rgba(76, 175, 80, 0.2)",
-                border: "1px solid rgba(76, 175, 80, 0.4)",
-                borderRadius: "6px",
-                color: "#66bb6a",
-                cursor: actionLoading ? "not-allowed" : "pointer",
-                fontWeight: 600,
-                opacity: actionLoading ? 0.6 : 1,
-              }}
-            >
-              {actionLoading ? "Atualizando..." : "Marcar como Aprovado"}
-            </button>
-          )}
-
-          {orcamento.status === "aprovado" && (
-            <button
-              onClick={handleRegistrarPagamento}
+              onClick={handleConverterOS}
               disabled={actionLoading}
               style={{
                 display: "flex",
@@ -430,39 +502,94 @@ function OrcamentoDetalhePage() {
                 justifyContent: "center",
                 gap: "0.5rem",
                 padding: "12px 16px",
-                background: "rgba(102, 187, 106, 0.2)",
-                border: "1px solid rgba(102, 187, 106, 0.4)",
+                background: "rgba(34, 197, 94, 0.2)",
+                border: "1px solid rgba(34, 197, 94, 0.4)",
                 borderRadius: "6px",
-                color: "#66bb6a",
+                color: "#22c55e",
+                cursor: actionLoading ? "not-allowed" : "pointer",
+                fontWeight: 600,
+                opacity: actionLoading ? 0.6 : 1,
+              }}
+            >
+              <Zap size={16} />
+              {actionLoading ? "Criando..." : "Converter em OS"}
+            </button>
+          )}
+
+          {orcamento.status_enum === "aprovado" && (
+            <button
+              onClick={handleGerarNF}
+              disabled={actionLoading}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                padding: "12px 16px",
+                background: "rgba(139, 92, 246, 0.2)",
+                border: "1px solid rgba(139, 92, 246, 0.4)",
+                borderRadius: "6px",
+                color: "#a855f7",
                 cursor: actionLoading ? "not-allowed" : "pointer",
                 fontWeight: 600,
                 opacity: actionLoading ? 0.6 : 1,
               }}
             >
               <DollarSign size={16} />
-              {actionLoading ? "Processando..." : "Registrar Pagamento"}
+              {actionLoading ? "Gerando..." : "Gerar Nota Fiscal"}
             </button>
           )}
+        </div>
 
-          {notaFiscal && (
-            <div
+        {approvalUrl && (
+          <div
+            style={{
+              background: "rgba(13, 208, 215, 0.05)",
+              border: "1px solid rgba(13, 208, 215, 0.2)",
+              borderRadius: "12px",
+              padding: "1.5rem",
+              marginBottom: "2rem",
+            }}
+          >
+            <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Link de Aprovação</p>
+            <code
+              style={{
+                display: "block",
+                padding: "12px",
+                background: "rgba(0, 0, 0, 0.2)",
+                borderRadius: "6px",
+                color: "#0bd0d7",
+                fontSize: "12px",
+                wordBreak: "break-all",
+                marginBottom: "1rem",
+              }}
+            >
+              {approvalUrl}
+            </code>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(approvalUrl);
+                setMessage("✅ Link copiado!");
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem",
-                padding: "12px 16px",
-                background: "rgba(168, 85, 247, 0.1)",
-                border: "1px solid rgba(168, 85, 247, 0.3)",
+                gap: "8px",
+                padding: "8px 16px",
+                background: "#0bd0d7",
+                border: "none",
                 borderRadius: "6px",
-                color: "#ba68c8",
+                color: "#000",
+                cursor: "pointer",
                 fontWeight: 600,
+                fontSize: "13px",
               }}
             >
-              <FileText size={16} />
-              NF: {notaFiscal.numero}
-            </div>
-          )}
-        </div>
+              <Copy size={14} />
+              Copiar Link
+            </button>
+          </div>
+        )}
       </div>
     </AppShell>
   );
