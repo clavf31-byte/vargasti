@@ -100,15 +100,7 @@ function LoginPage() {
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "relative",
-          width: "min(100vw, calc(100vh * 1.5))",
-          height: "min(calc(100vw / 1.5), 100vh)",
-          maxWidth: "100vw",
-          maxHeight: "100vh",
-        }}
-      >
+      <form onSubmit={handleSubmit} style={{ position: "relative", width: "min(100vw, calc(100vh * 1.5))", height: "min(calc(100vw / 1.5), 100vh)", maxWidth: "100vw", maxHeight: "100vh" }}>
         <img
           src={loginBg.url}
           alt="VargasTI - Soluções que conectam, suporte que transforma"
@@ -131,6 +123,7 @@ function LoginPage() {
           disabled={googleLoading || submitting}
           aria-label="Entrar com Google"
           style={{
+            position: "absolute",
             ...btnReset,
             left: "52.6%",
             top: "26.8%",
@@ -139,6 +132,8 @@ function LoginPage() {
             cursor: googleLoading || submitting ? "not-allowed" : "pointer",
             opacity: googleLoading || submitting ? 0.6 : 1,
             transition: "opacity 0.2s",
+            zIndex: 100,
+            pointerEvents: "auto",
           }}
           title={googleLoading ? "Conectando ao Google..." : "Entrar com Google"}
         />
@@ -171,35 +166,40 @@ function LoginPage() {
           onClick={() => setShowPassword((s) => !s)}
           aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           style={{
+            position: "absolute",
             ...btnReset,
             left: "87.5%",
             top: "54.8%",
             width: "3%",
             height: "5.4%",
+            zIndex: 100,
+            pointerEvents: "auto",
           }}
         />
 
         {/* Submit button overlay */}
-        <form onSubmit={handleSubmit} style={{ position: "absolute", inset: 0 }}>
-          <button
-            type="submit"
-            disabled={submitting}
-            aria-label="Entrar"
-            style={{
-              ...btnReset,
-              left: "52.6%",
-              top: "66.8%",
-              width: "37.9%",
-              height: "7.2%",
-              cursor: submitting ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {submitting && <Loader2 size={20} color="#fff" style={{ animation: "spin 1s linear infinite" }} />}
-          </button>
-        </form>
+        <button
+          type="submit"
+          disabled={submitting}
+          aria-label="Entrar"
+          style={{
+            position: "absolute",
+            ...btnReset,
+            left: "52.6%",
+            top: "66.8%",
+            width: "37.9%",
+            height: "7.2%",
+            cursor: submitting ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+            pointerEvents: "auto",
+          }}
+        >
+          {submitting && <Loader2 size={20} color="#fff" style={{ animation: "spin 1s linear infinite" }} />}
+        </button>
+      </form>
 
         {error && (
           <p
@@ -213,12 +213,13 @@ function LoginPage() {
               fontSize: "clamp(11px, 0.9vw, 13px)",
               textAlign: "center",
               fontFamily: "Inter, sans-serif",
+              zIndex: 100,
             }}
           >
             {error}
           </p>
         )}
-      </div>
+      </form>
     </div>
   );
 }
