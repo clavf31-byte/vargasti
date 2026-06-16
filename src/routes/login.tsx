@@ -92,23 +92,29 @@ function LoginPage() {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        width: "100%",
+        height: "100vh",
+        width: "100vw",
         background: "#04060e",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
+        margin: 0,
+        padding: 0,
+        position: "fixed",
+        top: 0,
+        left: 0,
       }}
     >
       <form
         onSubmit={handleSubmit}
         style={{
           position: "relative",
-          width: "min(100vw, calc(100vh * 1.5))",
-          height: "min(calc(100vw / 1.5), 100vh)",
-          maxWidth: "100vw",
-          maxHeight: "100vh",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <img
