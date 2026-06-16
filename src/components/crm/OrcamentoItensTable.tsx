@@ -1,6 +1,10 @@
 import { Trash2, Plus } from "lucide-react";
+import { useState } from "react";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { Button } from "@/components/ui";
+import { useServicos } from "@/hooks/useServicos";
+import { usePecas } from "@/hooks/usePecas";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OrcamentoItem {
   id?: string;
@@ -9,6 +13,9 @@ interface OrcamentoItem {
   preco_unitario: number;
   subtotal: number;
   categoria?: string;
+  tipo?: "servico" | "peca";
+  servico_id?: string;
+  peca_id?: string;
 }
 
 interface OrcamentoItensTableProps {

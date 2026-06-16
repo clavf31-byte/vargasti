@@ -1,9 +1,10 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { OrcamentoItensTable } from "./OrcamentoItensTable";
 import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
+import { gerarNumeroOrcamento } from "@/hooks/useOrcamentoNumero";
 
 interface OrcamentoFormInlineProps {
   userId: string;
@@ -21,18 +22,38 @@ export function OrcamentoFormInline({
   onClose,
 }: OrcamentoFormInlineProps) {
   const [formData, setFormData] = useState({
-    numero: "",
+    numero_formatado: "",
     cliente_id: "",
     descricao: "",
-    total: "",
-    status: "rascunho",
+    desconto: 0,
+    impostos: 0,
+    status_enum: "rascunho",
     data_vencimento: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
 
+  useEffect(() => {
+    if (isOpen && !formData.numero_formatado) {
+      gerarNumeroOrcamento(userId)
+        .then((numero) => {
+          setFormData((prev) => ({ ...prev, numero_formatado: numero }));
+        })
+        .catch((err) => {
+          console.error("Erro ao gerar número:", err);
+          setError("Erro ao gerar número de orçamento");
+        });
+    }
+  }, [isOpen, userId]);
+
   if (!isOpen) return null;
+
+  const subtotal = total;
+  const totalComDescontoEImpostos = Math.max(
+    0,
+    subtotal - formData.desconto + formData.impostos
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,11 +65,14 @@ export function OrcamentoFormInline({
         .from("orcamentos")
         .insert([
           {
-            numero: formData.numero,
+            numero_formatado: formData.numero_formatado,
             cliente_id: formData.cliente_id,
             notas: formData.descricao,
-            total: total || parseFloat(formData.total) || 0,
-            status: formData.status,
+            total: totalComDescontoEImpostos,
+            desconto: formData.desconto,
+            impostos: formData.impostos,
+            status: "rascunho",
+            status_enum: formData.status_enum,
             data_vencimento: formData.data_vencimento || null,
             user_id: userId,
           },
@@ -65,11 +89,12 @@ export function OrcamentoFormInline({
       }
 
       setFormData({
-        numero: "",
+        numero_formatado: "",
         cliente_id: "",
         descricao: "",
-        total: "",
-        status: "rascunho",
+        desconto: 0,
+        impostos: 0,
+        status_enum: "rascunho",
         data_vencimento: "",
       });
       onSuccess();
@@ -149,30 +174,37 @@ export function OrcamentoFormInline({
       )}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Número *</label>
-          <input
-            type="text"
-            value={formData.numero}
-            onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-            style={inputStyle}
-          />
-        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
+          <div>
+            <label style={labelStyle}>Número (Auto) *</label>
+            <input
+              type="text"
+              value={formData.numero_formatado}
+              disabled
+              style={{
+                ...inputStyle,
+                opacity: 0.7,
+                cursor: "not-allowed",
+              }}
+            />
+          </div>
 
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Cliente *</label>
-          <select
-            value={formData.cliente_id}
-            onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
-            style={inputStyle}
-          >
-            <option value="">Selecione um cliente</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label style={labelStyle}>Cliente *</label>
+            <select
+              value={formData.cliente_id}
+              onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
+              style={inputStyle}
+              required
+            >
+              <option value="">Selecione um cliente</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div style={{ marginBottom: spacing.lg }}>
@@ -182,19 +214,9 @@ export function OrcamentoFormInline({
             onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
             style={{
               ...inputStyle,
-              minHeight: "100px",
+              minHeight: "80px",
               fontFamily: "inherit",
             }}
-          />
-        </div>
-
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Valor Total (R$)</label>
-          <input
-            type="number"
-            value={formData.total}
-            onChange={(e) => setFormData({ ...formData, total: e.target.value })}
-            style={inputStyle}
           />
         </div>
 
@@ -208,6 +230,32 @@ export function OrcamentoFormInline({
           />
         </div>
 
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
+          <div>
+            <label style={labelStyle}>Desconto (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.desconto}
+              onChange={(e) => setFormData({ ...formData, desconto: parseFloat(e.target.value) || 0 })}
+              placeholder="0.00"
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Impostos (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.impostos}
+              onChange={(e) => setFormData({ ...formData, impostos: parseFloat(e.target.value) || 0 })}
+              placeholder="0.00"
+              style={inputStyle}
+            />
+          </div>
+        </div>
+
         <OrcamentoItensTable
           itens={itens}
           onAddItem={addItem}
@@ -215,18 +263,60 @@ export function OrcamentoFormInline({
           onRemoveItem={removeItem}
         />
 
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Status</label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            style={inputStyle}
+        {/* Resumo de Totais */}
+        <div
+          style={{
+            background: "rgba(13, 208, 215, 0.05)",
+            border: `1px solid rgba(13, 208, 215, 0.2)`,
+            borderRadius: borderRadius.md,
+            padding: spacing.lg,
+            marginBottom: spacing.lg,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: spacing.lg,
+              marginBottom: spacing.lg,
+            }}
           >
-            <option value="rascunho">Rascunho</option>
-            <option value="enviado">Enviado</option>
-            <option value="aprovado">Aprovado</option>
-            <option value="rejeitado">Rejeitado</option>
-          </select>
+            <div>
+              <div style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.xs }}>
+                Subtotal
+              </div>
+              <div style={{ fontSize: "16px", fontWeight: 600, color: colors.text }}>
+                R$ {subtotal.toFixed(2)}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.xs }}>
+                Desconto
+              </div>
+              <div style={{ fontSize: "16px", fontWeight: 600, color: colors.error }}>
+                -R$ {formData.desconto.toFixed(2)}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.xs }}>
+                Impostos
+              </div>
+              <div style={{ fontSize: "16px", fontWeight: 600, color: colors.error }}>
+                +R$ {formData.impostos.toFixed(2)}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.xs }}>
+                Total Geral
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: colors.primary }}>
+                R$ {totalComDescontoEImpostos.toFixed(2)}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div
@@ -239,7 +329,11 @@ export function OrcamentoFormInline({
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button variant="primary" type="submit" disabled={loading || !formData.numero}>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={loading || !formData.numero_formatado || !formData.cliente_id}
+          >
             {loading ? "Criando..." : "Criar Orçamento"}
           </Button>
         </div>
