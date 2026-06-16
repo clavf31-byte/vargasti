@@ -22,6 +22,7 @@ import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
+import { Route as CrmTarefasRouteImport } from './routes/crm.tarefas'
 import { Route as CrmPagamentosRouteImport } from './routes/crm.pagamentos'
 import { Route as CrmOrcamentosRouteImport } from './routes/crm.orcamentos'
 import { Route as CrmClientesRouteImport } from './routes/crm.clientes'
@@ -103,6 +104,11 @@ const FerramentasEmailsRoute = FerramentasEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
   getParentRoute: () => FerramentasRoute,
+} as any)
+const CrmTarefasRoute = CrmTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => CrmRoute,
 } as any)
 const CrmPagamentosRoute = CrmPagamentosRouteImport.update({
   id: '/pagamentos',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/crm/clientes': typeof CrmClientesRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
+  '/crm/tarefas': typeof CrmTarefasRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/crm/clientes': typeof CrmClientesRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
+  '/crm/tarefas': typeof CrmTarefasRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/crm/clientes': typeof CrmClientesRoute
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
+  '/crm/tarefas': typeof CrmTarefasRoute
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/crm/clientes'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
+    | '/crm/tarefas'
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/crm/clientes'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
+    | '/crm/tarefas'
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/crm/clientes'
     | '/crm/orcamentos'
     | '/crm/pagamentos'
+    | '/crm/tarefas'
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
@@ -487,6 +499,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ferramentas/emails'
       preLoaderRoute: typeof FerramentasEmailsRouteImport
       parentRoute: typeof FerramentasRoute
+    }
+    '/crm/tarefas': {
+      id: '/crm/tarefas'
+      path: '/tarefas'
+      fullPath: '/crm/tarefas'
+      preLoaderRoute: typeof CrmTarefasRouteImport
+      parentRoute: typeof CrmRoute
     }
     '/crm/pagamentos': {
       id: '/crm/pagamentos'
@@ -640,12 +659,14 @@ interface CrmRouteChildren {
   CrmClientesRoute: typeof CrmClientesRoute
   CrmOrcamentosRoute: typeof CrmOrcamentosRouteWithChildren
   CrmPagamentosRoute: typeof CrmPagamentosRoute
+  CrmTarefasRoute: typeof CrmTarefasRoute
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
   CrmClientesRoute: CrmClientesRoute,
   CrmOrcamentosRoute: CrmOrcamentosRouteWithChildren,
   CrmPagamentosRoute: CrmPagamentosRoute,
+  CrmTarefasRoute: CrmTarefasRoute,
 }
 
 const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)

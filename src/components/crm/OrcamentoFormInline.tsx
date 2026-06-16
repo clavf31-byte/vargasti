@@ -2,6 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
+import { OrcamentoItensTable } from "./OrcamentoItensTable";
+import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
 
 interface OrcamentoFormInlineProps {
   userId: string;
@@ -28,6 +30,7 @@ export function OrcamentoFormInline({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
 
   if (!isOpen) return null;
 
@@ -37,19 +40,29 @@ export function OrcamentoFormInline({
     setError(null);
 
     try {
-      const { error: insertError } = await supabase.from("orcamentos").insert([
-        {
-          numero: formData.numero,
-          cliente_id: formData.cliente_id,
-          notas: formData.descricao,
-          total: parseFloat(formData.total) || 0,
-          status: formData.status,
-          data_vencimento: formData.data_vencimento || null,
-          user_id: userId,
-        },
-      ]);
+      const { data: insertedData, error: insertError } = await supabase
+        .from("orcamentos")
+        .insert([
+          {
+            numero: formData.numero,
+            cliente_id: formData.cliente_id,
+            notas: formData.descricao,
+            total: total || parseFloat(formData.total) || 0,
+            status: formData.status,
+            data_vencimento: formData.data_vencimento || null,
+            user_id: userId,
+          },
+        ])
+        .select();
 
       if (insertError) throw insertError;
+      if (!insertedData || insertedData.length === 0) throw new Error("Erro ao criar orçamento");
+
+      const orcamentoId = insertedData[0].id;
+
+      if (itens.length > 0) {
+        await saveItens(orcamentoId);
+      }
 
       setFormData({
         numero: "",
@@ -62,8 +75,9 @@ export function OrcamentoFormInline({
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar orçamento");
-      console.error(err);
+      const errorMsg = err instanceof Error ? err.message : "Erro ao criar orçamento";
+      setError(errorMsg);
+      console.error("Erro ao criar orçamento:", { error: err, formData });
     } finally {
       setLoading(false);
     }
@@ -193,6 +207,13 @@ export function OrcamentoFormInline({
             style={inputStyle}
           />
         </div>
+
+        <OrcamentoItensTable
+          itens={itens}
+          onAddItem={addItem}
+          onUpdateItem={updateItem}
+          onRemoveItem={removeItem}
+        />
 
         <div style={{ marginBottom: spacing.lg }}>
           <label style={labelStyle}>Status</label>
