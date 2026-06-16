@@ -26,11 +26,12 @@ function PipelinePage() {
   }, [user?.id]);
 
   async function loadClientes() {
+    if (!user?.id) return;
     try {
       const { data } = await supabase
         .from("clientes")
         .select("id, nome")
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .order("nome");
 
       setClientes(data || []);
@@ -73,7 +74,6 @@ function PipelinePage() {
           title="Pipeline de Vendas"
           subtitle={`${oportunidades.length} oportunidades em andamento`}
           icon={<TrendingUp size={32} />}
-          iconClass="text-brand"
         />
 
         {showNewForm && (
