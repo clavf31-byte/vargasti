@@ -40,33 +40,16 @@ export function ClienteFormInline({
     setError(null);
 
     try {
-      const { data: clienteData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("clientes")
         .insert([
           {
             ...formData,
             user_id: userId,
           },
-        ])
-        .select();
+        ]);
 
       if (insertError) throw insertError;
-      if (!clienteData || clienteData.length === 0) throw new Error("Erro ao criar cliente");
-
-      const clienteId = clienteData[0].id;
-
-      if (tags.length > 0) {
-        const tagsToInsert = tags.map((tag) => ({
-          cliente_id: clienteId,
-          tag,
-        }));
-
-        const { error: tagsError } = await supabase
-          .from("cliente_tags")
-          .insert(tagsToInsert);
-
-        if (tagsError) console.error("Erro ao salvar tags:", tagsError);
-      }
 
       setFormData({
         nome: "",
