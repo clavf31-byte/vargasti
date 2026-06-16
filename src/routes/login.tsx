@@ -139,7 +139,7 @@ function LoginPage() {
 
             <div className="flex items-center gap-3 my-7">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ou e-mail</span>
+              <span className="text-xs text-slate-500">ou</span>
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </div>
 
