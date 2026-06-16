@@ -27,8 +27,11 @@ function LoginPage() {
     setError("");
     setGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth("google", {
-        redirectTo: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
       if (error) {
         setError(error.message ?? "Falha ao entrar com Google");
