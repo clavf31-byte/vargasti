@@ -68,15 +68,17 @@ export function ClienteFormInline({
     }
   }
 
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const InputField = ({
     label,
-    value,
-    onChange,
+    field,
     type = "text",
   }: {
     label: string;
-    value: string;
-    onChange: (val: string) => void;
+    field: keyof typeof formData;
     type?: string;
   }) => (
     <div style={{ marginBottom: spacing.lg }}>
@@ -93,8 +95,8 @@ export function ClienteFormInline({
       </label>
       <input
         type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={formData[field]}
+        onChange={(e) => handleChange(field, e.target.value)}
         style={{
           width: "100%",
           padding: spacing.md,
@@ -156,37 +158,12 @@ export function ClienteFormInline({
       )}
 
       <form onSubmit={handleSubmit}>
-        <InputField
-          label="Nome *"
-          value={formData.nome}
-          onChange={(val) => setFormData({ ...formData, nome: val })}
-        />
-        <InputField
-          label="Email"
-          type="email"
-          value={formData.email}
-          onChange={(val) => setFormData({ ...formData, email: val })}
-        />
-        <InputField
-          label="Telefone"
-          value={formData.telefone}
-          onChange={(val) => setFormData({ ...formData, telefone: val })}
-        />
-        <InputField
-          label="Empresa"
-          value={formData.empresa}
-          onChange={(val) => setFormData({ ...formData, empresa: val })}
-        />
-        <InputField
-          label="CPF/CNPJ"
-          value={formData.cnpj_cpf}
-          onChange={(val) => setFormData({ ...formData, cnpj_cpf: val })}
-        />
-        <InputField
-          label="Endereço"
-          value={formData.endereco}
-          onChange={(val) => setFormData({ ...formData, endereco: val })}
-        />
+        <InputField label="Nome *" field="nome" />
+        <InputField label="Email" type="email" field="email" />
+        <InputField label="Telefone" field="telefone" />
+        <InputField label="Empresa" field="empresa" />
+        <InputField label="CPF/CNPJ" field="cnpj_cpf" />
+        <InputField label="Endereço" field="endereco" />
 
         <div
           style={{
@@ -196,23 +173,11 @@ export function ClienteFormInline({
             marginBottom: spacing.lg,
           }}
         >
-          <InputField
-            label="Cidade"
-            value={formData.cidade}
-            onChange={(val) => setFormData({ ...formData, cidade: val })}
-          />
-          <InputField
-            label="Estado"
-            value={formData.estado}
-            onChange={(val) => setFormData({ ...formData, estado: val })}
-          />
+          <InputField label="Cidade" field="cidade" />
+          <InputField label="Estado" field="estado" />
         </div>
 
-        <InputField
-          label="CEP"
-          value={formData.cep}
-          onChange={(val) => setFormData({ ...formData, cep: val })}
-        />
+        <InputField label="CEP" field="cep" />
 
         <div
           style={{

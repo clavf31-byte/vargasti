@@ -69,15 +69,17 @@ export function OrcamentoFormInline({
     }
   }
 
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const InputField = ({
     label,
-    value,
-    onChange,
+    field,
     type = "text",
   }: {
     label: string;
-    value: string;
-    onChange: (val: string) => void;
+    field: keyof typeof formData;
     type?: string;
   }) => (
     <div style={{ marginBottom: spacing.lg }}>
@@ -94,8 +96,8 @@ export function OrcamentoFormInline({
       </label>
       <input
         type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={formData[field]}
+        onChange={(e) => handleChange(field, e.target.value)}
         style={{
           width: "100%",
           padding: spacing.md,
@@ -157,12 +159,7 @@ export function OrcamentoFormInline({
       )}
 
       <form onSubmit={handleSubmit}>
-        <InputField
-          label="Número *"
-          value={formData.numero}
-          onChange={(val) => setFormData({ ...formData, numero: val })}
-          type="text"
-        />
+        <InputField label="Número *" field="numero" type="text" />
 
         <div style={{ marginBottom: spacing.lg }}>
           <label
@@ -178,7 +175,7 @@ export function OrcamentoFormInline({
           </label>
           <select
             value={formData.cliente_id}
-            onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
+            onChange={(e) => handleChange("cliente_id", e.target.value)}
             style={{
               width: "100%",
               padding: spacing.md,
@@ -212,7 +209,7 @@ export function OrcamentoFormInline({
           </label>
           <textarea
             value={formData.descricao}
-            onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+            onChange={(e) => handleChange("descricao", e.target.value)}
             style={{
               width: "100%",
               padding: spacing.md,
@@ -228,19 +225,9 @@ export function OrcamentoFormInline({
           />
         </div>
 
-        <InputField
-          label="Valor Total (R$)"
-          type="number"
-          value={formData.total}
-          onChange={(val) => setFormData({ ...formData, total: val })}
-        />
+        <InputField label="Valor Total (R$)" type="number" field="total" />
 
-        <InputField
-          label="Data de Vencimento"
-          type="date"
-          value={formData.data_vencimento}
-          onChange={(val) => setFormData({ ...formData, data_vencimento: val })}
-        />
+        <InputField label="Data de Vencimento" type="date" field="data_vencimento" />
 
         <div style={{ marginBottom: spacing.lg }}>
           <label
