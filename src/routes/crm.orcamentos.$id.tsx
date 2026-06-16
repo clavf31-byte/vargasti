@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { enviarOrcamentoPorEmail } from "@/lib/crm/emailService";
 import { gerarNotaFiscal, obterNotaFiscal } from "@/lib/crm/nfService";
-import { ChevronLeft, Mail, FileText, DollarSign } from "lucide-react";
+import { ChevronLeft, Mail, FileText, DollarSign, Download } from "lucide-react";
+import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/crm/orcamentos/$id")({
@@ -170,6 +171,32 @@ function OrcamentoDetalhePage() {
       console.error(e);
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function handleDownloadPDF() {
+    if (!orcamento || !cliente) return;
+
+    try {
+      const { data: itens } = await supabase
+        .from("orcamento_itens")
+        .select("*")
+        .eq("orcamento_id", orcamento.id);
+
+      baixarPDFOrcamento({
+        numero: orcamento.numero,
+        cliente_nome: cliente.nome,
+        data_criacao: orcamento.data_criacao,
+        data_vencimento: orcamento.data_vencimento,
+        itens: itens || [],
+        total: orcamento.total,
+        status: orcamento.status,
+      });
+
+      setMessage("✅ PDF baixado com sucesso!");
+    } catch (e) {
+      setMessage("❌ Erro ao gerar PDF");
+      console.error(e);
     }
   }
 
@@ -343,6 +370,26 @@ function OrcamentoDetalhePage() {
               {actionLoading ? "Enviando..." : "Enviar Orçamento"}
             </button>
           )}
+
+          <button
+            onClick={handleDownloadPDF}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              padding: "12px 16px",
+              background: "rgba(13, 208, 215, 0.2)",
+              border: "1px solid rgba(13, 208, 215, 0.4)",
+              borderRadius: "6px",
+              color: "#0bd0d7",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            <Download size={16} />
+            Gerar PDF
+          </button>
 
           {orcamento.status === "enviado" && (
             <button
