@@ -420,42 +420,75 @@ export type Database = {
       }
       notas_fiscais: {
         Row: {
+          chave_acesso: string | null
           cliente_id: string
           created_at: string
           data_emissao: string
+          data_saida: string | null
           id: string
           numero: string
+          numero_nfe: string | null
           orcamento_id: string
+          os_id: string | null
           pdf_url: string | null
+          protocolo_autorizacao: string | null
+          serie_nfe: number | null
           status: string
           updated_at: string
+          user_id: string | null
+          valor_desconto: number | null
+          valor_impostos: number | null
+          valor_subtotal: number | null
           valor_total: number
+          xml_nfe: string | null
           xml_url: string | null
         }
         Insert: {
+          chave_acesso?: string | null
           cliente_id: string
           created_at?: string
           data_emissao: string
+          data_saida?: string | null
           id?: string
           numero: string
+          numero_nfe?: string | null
           orcamento_id: string
+          os_id?: string | null
           pdf_url?: string | null
+          protocolo_autorizacao?: string | null
+          serie_nfe?: number | null
           status?: string
           updated_at?: string
+          user_id?: string | null
+          valor_desconto?: number | null
+          valor_impostos?: number | null
+          valor_subtotal?: number | null
           valor_total: number
+          xml_nfe?: string | null
           xml_url?: string | null
         }
         Update: {
+          chave_acesso?: string | null
           cliente_id?: string
           created_at?: string
           data_emissao?: string
+          data_saida?: string | null
           id?: string
           numero?: string
+          numero_nfe?: string | null
           orcamento_id?: string
+          os_id?: string | null
           pdf_url?: string | null
+          protocolo_autorizacao?: string | null
+          serie_nfe?: number | null
           status?: string
           updated_at?: string
+          user_id?: string | null
+          valor_desconto?: number | null
+          valor_impostos?: number | null
+          valor_subtotal?: number | null
           valor_total?: number
+          xml_nfe?: string | null
           xml_url?: string | null
         }
         Relationships: [
@@ -471,6 +504,13 @@ export type Database = {
             columns: ["orcamento_id"]
             isOneToOne: false
             referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
             referencedColumns: ["id"]
           },
         ]
@@ -567,6 +607,50 @@ export type Database = {
           },
         ]
       }
+      orcamento_approval_links: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          orcamento_id: string
+          rejected_at: string | null
+          rejection_reason: string | null
+          status: string
+          token: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          orcamento_id: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          token: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          orcamento_id?: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_approval_links_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_itens: {
         Row: {
           created_at: string
@@ -655,9 +739,50 @@ export type Database = {
         }
         Relationships: []
       }
+      orcamento_status_history: {
+        Row: {
+          alterado_por: string | null
+          data_alteracao: string
+          id: string
+          motivo: string | null
+          orcamento_id: string
+          status_anterior: string | null
+          status_novo: string
+        }
+        Insert: {
+          alterado_por?: string | null
+          data_alteracao?: string
+          id?: string
+          motivo?: string | null
+          orcamento_id: string
+          status_anterior?: string | null
+          status_novo: string
+        }
+        Update: {
+          alterado_por?: string | null
+          data_alteracao?: string
+          id?: string
+          motivo?: string | null
+          orcamento_id?: string
+          status_anterior?: string | null
+          status_novo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_status_history_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamentos: {
         Row: {
           alerta_enviado: boolean
+          approval_status: string | null
+          approval_token: string | null
+          approved_at: string | null
           cliente_id: string
           created_at: string
           data_aprovacao: string | null
@@ -672,6 +797,7 @@ export type Database = {
           notas: string | null
           numero: string
           numero_formatado: string | null
+          rejected_at: string | null
           status: string
           status_enum: string | null
           total: number
@@ -680,6 +806,9 @@ export type Database = {
         }
         Insert: {
           alerta_enviado?: boolean
+          approval_status?: string | null
+          approval_token?: string | null
+          approved_at?: string | null
           cliente_id: string
           created_at?: string
           data_aprovacao?: string | null
@@ -694,6 +823,7 @@ export type Database = {
           notas?: string | null
           numero: string
           numero_formatado?: string | null
+          rejected_at?: string | null
           status?: string
           status_enum?: string | null
           total?: number
@@ -702,6 +832,9 @@ export type Database = {
         }
         Update: {
           alerta_enviado?: boolean
+          approval_status?: string | null
+          approval_token?: string | null
+          approved_at?: string | null
           cliente_id?: string
           created_at?: string
           data_aprovacao?: string | null
@@ -716,6 +849,7 @@ export type Database = {
           notas?: string | null
           numero?: string
           numero_formatado?: string | null
+          rejected_at?: string | null
           status?: string
           status_enum?: string | null
           total?: number
@@ -728,6 +862,130 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordens_servico: {
+        Row: {
+          anotacoes: string | null
+          cliente_id: string
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          descricao: string | null
+          id: string
+          numero_formatado: string | null
+          orcamento_id: string | null
+          prioridade: string
+          responsavel_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anotacoes?: string | null
+          cliente_id: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          numero_formatado?: string | null
+          orcamento_id?: string | null
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anotacoes?: string | null
+          cliente_id?: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          numero_formatado?: string | null
+          orcamento_id?: string | null
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_itens: {
+        Row: {
+          created_at: string
+          id: string
+          os_id: string
+          peca_id: string | null
+          preco_unitario: number | null
+          quantidade: number | null
+          servico_id: string | null
+          subtotal: number | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          os_id: string
+          peca_id?: string | null
+          preco_unitario?: number | null
+          quantidade?: number | null
+          servico_id?: string | null
+          subtotal?: number | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          os_id?: string
+          peca_id?: string | null
+          preco_unitario?: number | null
+          quantidade?: number | null
+          servico_id?: string | null
+          subtotal?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_itens_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_itens_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "pecas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_itens_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
             referencedColumns: ["id"]
           },
         ]
@@ -1114,6 +1372,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gerar_approval_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
