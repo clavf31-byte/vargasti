@@ -66,18 +66,44 @@ export function useEmailConfig() {
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const { data, error } = await supabase
+        const SINGLETON_ID = "00000000-0000-0000-0000-000000000000";
+
+        // Primeiro, tentar carregar
+        let { data, error } = await supabase
           .from("email_settings")
           .select("*")
-          .eq("id", "00000000-0000-0000-0000-000000000000")
+          .eq("id", SINGLETON_ID)
           .single();
 
-        if (error) throw error;
+        // Se não encontrar, criar o singleton
+        if (error?.code === "PGRST116") {
+          console.warn("[useEmailConfig] Singleton not found, creating...");
+          const { data: created, error: createError } = await supabase
+            .from("email_settings")
+            .insert({
+              id: SINGLETON_ID,
+              categories: DEFAULT_CATEGORIES,
+              whitelist: [],
+              priorities: DEFAULT_PRIORITIES,
+              blacklist: []
+            })
+            .select()
+            .single();
+
+          if (createError) throw createError;
+          data = created;
+        } else if (error) {
+          throw error;
+        }
 
         if (data) {
           if (data.categories?.length > 0) setCategories(data.categories);
+          else setCategories(DEFAULT_CATEGORIES);
+
           if (data.whitelist?.length > 0) setWhitelist(data.whitelist);
           if (data.priorities?.length > 0) setPriorities(data.priorities);
+          else setPriorities(DEFAULT_PRIORITIES);
+
           if (data.blacklist?.length > 0) setBlacklist(data.blacklist);
         }
       } catch (err) {
