@@ -28,14 +28,11 @@ function LoginPage() {
     setError("");
     setGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: window.location.origin,
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
-      if (error) {
-        setError(error.message ?? "Falha ao entrar com Google");
+      if (result.error) {
+        setError(result.error.message ?? "Falha ao entrar com Google");
         setGoogleLoading(false);
       }
     } catch (err) {
