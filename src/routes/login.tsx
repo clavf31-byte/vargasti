@@ -63,14 +63,30 @@ function LoginPage() {
   return (
     <div className="fixed inset-0 flex bg-[#04060e] text-slate-100 overflow-hidden">
       {/* Brand panel (unchanged) */}
-      <div className="hidden md:flex relative flex-1 overflow-hidden items-center justify-center bg-gradient-to-br from-[#04060e] via-[#06121f] to-[#04060e]">
+      <div className="hidden md:flex relative flex-1 overflow-hidden flex-col items-center justify-center bg-gradient-to-br from-[#04060e] via-[#06121f] to-[#04060e] px-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.15),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(16,185,129,0.12),transparent_55%)]" />
         <img
           src={vargastiLogo.url}
           alt="VargasTI"
-          className="relative z-10 max-w-[70%] max-h-[60%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
+          className="relative z-10 max-w-[60%] max-h-[45%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
           draggable={false}
         />
+        <div className="relative z-10 mt-6 flex flex-col items-center text-center">
+          <h2 className="text-5xl font-extrabold tracking-tight leading-none">
+            <span className="text-white">Vargas</span>
+            <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent">TI</span>
+          </h2>
+          <div className="mt-4 h-px w-40 bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+          <p className="mt-4 text-xs sm:text-sm font-medium tracking-[0.25em] text-slate-300/90 uppercase">
+            Soluções que conectam.
+          </p>
+          <p className="mt-1 text-xs sm:text-sm font-medium tracking-[0.25em] text-slate-300/90 uppercase">
+            Suporte que{" "}
+            <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent">
+              transforma.
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Form panel — styled to match reference card */}
