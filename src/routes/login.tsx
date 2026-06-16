@@ -35,9 +35,18 @@ function LoginPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setSubmitting(false);
-    if (error) setError(error.message);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      setSubmitting(false);
+      if (error) {
+        setError(error.message);
+      } else if (data?.session) {
+        navigate({ to: "/" });
+      }
+    } catch (err) {
+      setSubmitting(false);
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
+    }
   }
 
   // Image is 1536 x 1024 (3:2)
