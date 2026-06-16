@@ -66,8 +66,8 @@ function LoginPage() {
     width: "37.9%",
     left: "52.6%",
     height: "5.4%",
-    background: "rgba(20,30,50,0.6)",
-    border: "1px solid rgba(19,200,211,0.3)",
+    background: "transparent",
+    border: 0,
     outline: 0,
     color: "#f4f8fb",
     fontSize: "clamp(11px, 1.05vw, 16px)",
@@ -76,7 +76,6 @@ function LoginPage() {
     fontFamily: "Inter, Segoe UI, Arial, sans-serif",
     zIndex: 100,
     borderRadius: "8px",
-    transition: "all 0.2s",
     pointerEvents: "auto",
     cursor: "text",
   } as React.CSSProperties;
@@ -156,7 +155,6 @@ function LoginPage() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Digite seu e-mail"
           aria-label="E-mail"
           autoComplete="email"
           style={{ ...inputBase, top: "43.4%" }}
@@ -167,7 +165,6 @@ function LoginPage() {
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Digite sua senha"
           aria-label="Senha"
           autoComplete="current-password"
           style={{ ...inputBase, top: "54.8%" }}
