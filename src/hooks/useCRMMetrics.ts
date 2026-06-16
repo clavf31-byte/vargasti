@@ -21,10 +21,11 @@ export function useCRMMetrics(): CRMMetrics {
 
     async function loadMetrics() {
       try {
+        const userId = user!.id;
         const [clientesRes, orcamentosRes, pagamentosRes] = await Promise.all([
-          supabase.from("clientes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("orcamentos").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("pagamentos").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+          supabase.from("clientes").select("*", { count: "exact", head: true }).eq("user_id", userId),
+          supabase.from("orcamentos").select("*", { count: "exact", head: true }).eq("user_id", userId),
+          supabase.from("pagamentos").select("*", { count: "exact", head: true }).eq("user_id", userId),
         ]);
 
         if (isMounted) {

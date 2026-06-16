@@ -562,6 +562,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_module_permissions: {
+        Row: {
+          can_access_crm: boolean
+          can_access_email: boolean
+          can_access_excel: boolean
+          can_access_files: boolean
+          can_access_notes: boolean
+          can_access_projects: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_access_crm?: boolean
+          can_access_email?: boolean
+          can_access_excel?: boolean
+          can_access_files?: boolean
+          can_access_notes?: boolean
+          can_access_projects?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_access_crm?: boolean
+          can_access_email?: boolean
+          can_access_excel?: boolean
+          can_access_files?: boolean
+          can_access_notes?: boolean
+          can_access_projects?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
