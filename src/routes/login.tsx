@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, Shield, Layers, ChevronRight } from "lucide-react";
-import loginBg from "@/assets/login-bg.png.asset.json";
+import vargastiLogo from "@/assets/vargasti-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
