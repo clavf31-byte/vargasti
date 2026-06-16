@@ -155,7 +155,6 @@ function LoginPage() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Digite seu e-mail"
           aria-label="E-mail"
           autoComplete="email"
           style={{ ...inputBase, top: "43.4%" }}
@@ -166,7 +165,6 @@ function LoginPage() {
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Digite sua senha"
           aria-label="Senha"
           autoComplete="current-password"
           style={{ ...inputBase, top: "54.8%" }}
