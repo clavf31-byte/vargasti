@@ -1,15 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { KpiCard } from "@/components/KpiCard";
-import { ActivityCard } from "@/components/ActivityCard";
-import { VisionOfToday } from "@/components/VisionOfToday";
-import { SystemInfo } from "@/components/SystemInfo";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useCRMMetrics } from "@/hooks/useCRMMetrics";
 import { useEffect, useState } from "react";
 import {
-  NotebookPen, Wrench, FolderKanban, Files,
-  FileSpreadsheet, Plus, TrendingUp, Clock,
+  Users, FileText, DollarSign,
+  Plus, TrendingUp,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -17,15 +14,10 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type ActivityItem = {
-  id: string;
-  type: "note" | "project";
-  label: string;
-  time: string;
-};
-
 function Dashboard() {
   const { user } = useAuth();
+  const { clientesCount, orcamentosCount, pagamentosCount } = useCRMMetrics();
+
   const firstName =
     user?.user_metadata?.full_name?.split(" ")[0] ??
     user?.email?.split("@")[0] ??
@@ -35,107 +27,60 @@ function Dashboard() {
   const hour = now.getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
-  const [notesCount, setNotesCount] = useState<number>(0);
-  const [projectsCount, setProjectsCount] = useState<number>(0);
-  const [filesCount, setFilesCount] = useState<number>(0);
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-    async function load() {
-      try {
-        const results = await Promise.allSettled([
-          supabase.from("notes").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
-          supabase.from("projects").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
-          (supabase as any).from("arquivos").select("*", { count: "exact", head: true }),
-          supabase.from("notes").select("id, title, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(4),
-          supabase.from("projects").select("id, name, updated_at").eq("user_id", user!.id).order("updated_at", { ascending: false }).limit(4),
-        ]);
-        const get = <T,>(i: number): T | undefined =>
-          results[i].status === "fulfilled" ? ((results[i] as PromiseFulfilledResult<any>).value as T) : undefined;
-        const nc = get<{ count: number | null }>(0)?.count ?? 0;
-        const pc = get<{ count: number | null }>(1)?.count ?? 0;
-        const fc = get<{ count: number | null }>(2)?.count ?? 0;
-        const notes = get<{ data: any[] | null }>(3)?.data ?? [];
-        const projects = get<{ data: any[] | null }>(4)?.data ?? [];
-        setNotesCount(nc);
-        setProjectsCount(pc);
-        setFilesCount(fc);
-        const combined: ActivityItem[] = [
-          ...notes.map((n: any) => ({ id: String(n.id), type: "note" as const, label: n.title || "Sem título", time: n.updated_at })),
-          ...projects.map((p: any) => ({ id: String(p.id), type: "project" as const, label: p.name || "Sem nome", time: p.updated_at })),
-        ];
-        combined.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-        setActivity(combined.slice(0, 6));
-      } catch (e) {
-        console.error("Dashboard load failed", e);
-      }
-    }
-    load();
-  }, [user]);
-
   const kpis = [
     {
-      label: "Anotações",
-      value: String(notesCount).padStart(2, "0"),
-      icon: NotebookPen,
-      to: "/anotacoes" as const,
-      gradient: "teal" as const,
-      progress: Math.min(notesCount * 20, 100),
-    },
-    {
-      label: "Projetos",
-      value: String(projectsCount).padStart(2, "0"),
-      icon: FolderKanban,
-      to: "/projetos" as const,
+      label: "Clientes",
+      value: String(clientesCount).padStart(2, "0"),
+      icon: Users,
+      to: "/crm/clientes" as const,
       gradient: "blue" as const,
-      progress: Math.min(projectsCount * 30, 100),
+      progress: Math.min(clientesCount * 25, 100),
     },
     {
-      label: "Tools",
-      value: "01",
-      icon: Wrench,
-      to: "/ferramentas" as const,
+      label: "Orçamentos",
+      value: String(orcamentosCount).padStart(2, "0"),
+      icon: FileText,
+      to: "/crm/orcamentos" as const,
       gradient: "purple" as const,
-      progress: 100,
+      progress: Math.min(orcamentosCount * 20, 100),
     },
     {
-      label: "Arquivos",
-      value: String(filesCount).padStart(2, "0"),
-      icon: Files,
-      to: "/arquivos" as const,
+      label: "Pagamentos",
+      value: String(pagamentosCount).padStart(2, "0"),
+      icon: DollarSign,
+      to: "/crm/pagamentos" as const,
       gradient: "amber" as const,
-      progress: 100,
+      progress: Math.min(pagamentosCount * 25, 100),
     },
   ];
 
   const actions = [
     {
-      to: "/anotacoes" as const,
-      icon: NotebookPen,
-      label: "Nova Anotação",
-      desc: "Criar nota ou rascunho",
+      to: "/crm/clientes" as const,
+      icon: Users,
+      label: "Novo Cliente",
+      desc: "Cadastrar cliente",
       iconClass: "bg-brand/10 border-brand/20 text-brand",
     },
     {
-      to: "/projetos" as const,
-      icon: FolderKanban,
-      label: "Novo Projeto",
-      desc: "Iniciar um projeto",
+      to: "/crm/orcamentos" as const,
+      icon: FileText,
+      label: "Novo Orçamento",
+      desc: "Criar orçamento",
       iconClass: "bg-info/10 border-info/20 text-info",
     },
     {
-      to: "/ferramentas/excel" as const,
-      icon: FileSpreadsheet,
-      label: "Editor Excel",
-      desc: "Importar planilha .xlsx",
+      to: "/crm/pagamentos" as const,
+      icon: DollarSign,
+      label: "Registrar Pagamento",
+      desc: "Adicionar pagamento",
       iconClass: "bg-warning/10 border-warning/20 text-warning",
     },
     {
-      to: "/arquivos" as const,
-      icon: Files,
-      label: "Arquivos",
-      desc: "Gerenciar arquivos",
+      to: "/crm" as const,
+      icon: TrendingUp,
+      label: "CRM Dashboard",
+      desc: "Ver dashboard CRM",
       iconClass: "bg-surface-2 border-border text-muted-foreground",
     },
   ];
@@ -190,18 +135,6 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* VISÃO DE HOJE + SYSTEM INFO */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2">
-            <VisionOfToday
-              notesCount={notesCount}
-              projectsCount={projectsCount}
-              filesCount={filesCount}
-              toolsCount={1}
-            />
-          </div>
-          <SystemInfo />
-        </div>
 
         {/* KPI CARDS */}
         <section className="space-y-4">
@@ -209,7 +142,7 @@ function Dashboard() {
             <TrendingUp className="size-4 text-select" />
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Métricas Principais</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {kpis.map(({ label, value, icon, to, gradient, progress }) => (
               <KpiCard
                 key={label}
@@ -224,31 +157,6 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* ATIVIDADE RECENTE */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Clock className="size-4 text-select" />
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Atividade Recente</p>
-          </div>
-          <div className="space-y-2.5">
-            {activity.length === 0 ? (
-              <div className="card-graphite border-dashed p-8 text-center">
-                <p className="text-sm text-muted-foreground">Nenhuma atividade ainda</p>
-              </div>
-            ) : (
-              activity.map((item) => (
-                <ActivityCard
-                  key={item.id}
-                  type={item.type}
-                  title={item.label}
-                  description={`Atualizado em ${new Date(item.time).toLocaleDateString("pt-BR")}`}
-                  date={new Date(item.time).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
-                  timeAgo="há pouco"
-                />
-              ))
-            )}
-          </div>
-        </div>
       </div>
     </AppShell>
   );
