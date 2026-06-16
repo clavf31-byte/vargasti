@@ -56,6 +56,7 @@ export function useOportunidades(userId?: string) {
   }
 
   async function addOportunidade(titulo: string, clienteId: string, status: string) {
+    if (!userId) throw new Error("Usuário não autenticado");
     try {
       const { data, error } = await supabase
         .from("oportunidades")
@@ -89,7 +90,7 @@ export function useOportunidades(userId?: string) {
             cliente_nome: cliente?.nome || "Cliente",
             valor: 0,
             probabilidade: 50,
-            status: newOp.status,
+            status: newOp.status as Oportunidade["status"],
           },
         ]);
       }
