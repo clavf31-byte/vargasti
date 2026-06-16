@@ -2,10 +2,26 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createAnthropicMessage } from "./anthropicRest";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 
 
 // ── Gmail REST helpers (server-only) ──────────────────────────────────────────
+type EmailDbClient = Pick<SupabaseClient<Database>, "from">;
+
+async function getEmailDbClient(client?: EmailDbClient): Promise<EmailDbClient> {
+  if (client) return client;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+function getServerSigningSecret() {
+  const secret = process.env.GMAIL_CLIENT_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) throw new Error("Server signing key not configured");
+  return secret;
+}
+
 function getGmailOAuthConfig() {
   const clientId = process.env.GMAIL_CLIENT_ID;
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
@@ -93,8 +109,7 @@ function isGmailAuthorizationError(err: unknown) {
 
 // ── Get Gmail OAuth URL (auth-required, signed state binds the user) ─────────
 function signGmailState(userId: string): string {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!secret) throw new Error("Server signing key not configured");
+  const secret = getServerSigningSecret();
   const payload = `${userId}.${Date.now()}`;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createHmac } = require("crypto") as typeof import("crypto");
@@ -139,22 +154,8 @@ export const saveGmailToken = createServerFn({ method: "POST" })
       throw new Error("Failed to get access token");
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase credentials not configured");
-    }
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/gmail_tokens`, {
-      method: "POST",
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
-      },
-      body: JSON.stringify({
+    const { error } = await context.supabase.from("gmail_tokens").upsert(
+      {
         user_id: userId,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? null,
@@ -162,11 +163,11 @@ export const saveGmailToken = createServerFn({ method: "POST" })
           ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
           : null,
         updated_at: new Date().toISOString(),
-      }),
-    });
+      },
+      { onConflict: "user_id" }
+    );
 
-    if (!response.ok) {
-      const error = await response.text();
+    if (error) {
       console.error("[saveGmailToken] Failed to save:", error);
       throw new Error("Failed to save Gmail token");
     }
