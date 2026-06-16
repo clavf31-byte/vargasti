@@ -129,10 +129,16 @@ export function useEmailConfig() {
   const saveCategories = async (newCategories: EmailCategory[]) => {
     setCategories(newCategories);
     try {
-      await supabase
+      const { error } = await supabase
         .from("email_settings")
-        .update({ categories: newCategories, updated_at: new Date().toISOString() })
-        .eq("id", "00000000-0000-0000-0000-000000000000");
+        .upsert({
+          id: "00000000-0000-0000-0000-000000000000",
+          categories: newCategories,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "id" });
+
+      if (error) throw error;
+      console.log("[useEmailConfig] Categories saved successfully");
     } catch (err) {
       console.error("[useEmailConfig] Error saving categories:", err);
       localStorage.setItem("email_categories", JSON.stringify(newCategories));
@@ -142,10 +148,16 @@ export function useEmailConfig() {
   const saveWhitelist = async (newWhitelist: EmailWhitelist[]) => {
     setWhitelist(newWhitelist);
     try {
-      await supabase
+      const { error } = await supabase
         .from("email_settings")
-        .update({ whitelist: newWhitelist, updated_at: new Date().toISOString() })
-        .eq("id", "00000000-0000-0000-0000-000000000000");
+        .upsert({
+          id: "00000000-0000-0000-0000-000000000000",
+          whitelist: newWhitelist,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "id" });
+
+      if (error) throw error;
+      console.log("[useEmailConfig] Whitelist saved successfully");
     } catch (err) {
       console.error("[useEmailConfig] Error saving whitelist:", err);
       localStorage.setItem("email_whitelist", JSON.stringify(newWhitelist));
@@ -155,10 +167,16 @@ export function useEmailConfig() {
   const savePriorities = async (newPriorities: EmailPriority[]) => {
     setPriorities(newPriorities);
     try {
-      await supabase
+      const { error } = await supabase
         .from("email_settings")
-        .update({ priorities: newPriorities, updated_at: new Date().toISOString() })
-        .eq("id", "00000000-0000-0000-0000-000000000000");
+        .upsert({
+          id: "00000000-0000-0000-0000-000000000000",
+          priorities: newPriorities,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "id" });
+
+      if (error) throw error;
+      console.log("[useEmailConfig] Priorities saved successfully");
     } catch (err) {
       console.error("[useEmailConfig] Error saving priorities:", err);
       localStorage.setItem("email_priorities", JSON.stringify(newPriorities));
@@ -168,10 +186,16 @@ export function useEmailConfig() {
   const saveBlacklist = async (newBlacklist: EmailBlacklist[]) => {
     setBlacklist(newBlacklist);
     try {
-      await supabase
+      const { error } = await supabase
         .from("email_settings")
-        .update({ blacklist: newBlacklist, updated_at: new Date().toISOString() })
-        .eq("id", "00000000-0000-0000-0000-000000000000");
+        .upsert({
+          id: "00000000-0000-0000-0000-000000000000",
+          blacklist: newBlacklist,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "id" });
+
+      if (error) throw error;
+      console.log("[useEmailConfig] Blacklist saved successfully");
     } catch (err) {
       console.error("[useEmailConfig] Error saving blacklist:", err);
       localStorage.setItem("email_blacklist", JSON.stringify(newBlacklist));
