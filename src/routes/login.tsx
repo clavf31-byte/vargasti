@@ -108,15 +108,15 @@ function LoginPage() {
                   </span>
                 </h1>
                 <p className="mt-1.5 text-sm text-slate-400 leading-snug">
-                  Acesse sua conta para continuar.
+                  Informe seu e-mail e senha<br />para acessar o sistema.
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400 shrink-0">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/[0.07] px-2.5 py-1 text-[11px] font-medium text-emerald-400 shrink-0">
+                <Shield size={12} />
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  Ambiente Seguro
                 </span>
-                Seguro
               </div>
             </div>
 
