@@ -89,30 +89,34 @@ function LoginPage() {
         </div>
       </div>
 
-      {/* Form panel — styled to match reference card */}
+      {/* Form panel — refined glass */}
       <div className="flex w-full md:w-[520px] lg:w-[600px] xl:w-[680px] items-center justify-center px-6 py-8 bg-[#04060e] relative overflow-y-auto">
-        <div className="w-full max-w-[480px]">
+        {/* Ambient glow */}
+        <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-cyan-500/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-emerald-500/10 blur-[120px]" />
+
+        <div className="w-full max-w-[460px] relative">
           {/* Card */}
-          <div className="relative rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/60 to-slate-950/80 backdrop-blur-sm shadow-[0_0_60px_-15px_rgba(34,211,238,0.25)] p-7">
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.025] backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] p-8">
             {/* Header */}
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <h1 className="text-2xl font-bold text-white leading-tight">
+            <div className="flex items-start justify-between gap-4 mb-7">
+              <div className="min-w-0">
+                <h1 className="text-[26px] font-bold text-white leading-tight tracking-tight">
                   Bem-vindo{" "}
                   <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
                     de volta!
                   </span>
                 </h1>
-                <p className="mt-2 text-sm text-slate-400 leading-snug">
-                  Informe seu e-mail e senha<br />para acessar o sistema.
+                <p className="mt-1.5 text-sm text-slate-400 leading-snug">
+                  Acesse sua conta para continuar.
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-medium text-emerald-400 shrink-0">
-                <Shield size={12} />
-                <span className="inline-flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Ambiente Seguro
+              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400 shrink-0">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 </span>
+                Seguro
               </div>
             </div>
 
@@ -121,7 +125,7 @@ function LoginPage() {
               type="button"
               onClick={handleGoogle}
               disabled={googleLoading || submitting}
-              className="w-full flex items-center justify-center gap-2.5 h-12 rounded-xl border border-slate-700/70 bg-slate-900/70 hover:bg-slate-800/80 transition text-sm font-medium text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="group w-full flex items-center justify-center gap-2.5 h-12 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20 transition-all text-sm font-medium text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {googleLoading ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -133,19 +137,19 @@ function LoginPage() {
               )}
             </button>
 
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-slate-700/50" />
-              <span className="text-xs text-slate-500">ou</span>
-              <div className="flex-1 h-px bg-slate-700/50" />
+            <div className="flex items-center gap-3 my-7">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ou e-mail</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
                   E-mail
                 </label>
-                <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <div className="relative group">
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
                   <input
                     id="email"
                     type="email"
@@ -154,17 +158,17 @@ function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Digite seu e-mail"
                     autoComplete="email"
-                    className="w-full h-12 pl-10 pr-3 rounded-xl bg-slate-900/70 border border-slate-700/70 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
+                    className="w-full h-12 pl-11 pr-3 rounded-xl bg-white/[0.03] border border-white/10 focus:border-cyan-500/60 focus:bg-white/[0.05] focus:ring-2 focus:ring-cyan-500/15 outline-none text-sm text-white placeholder:text-slate-600 transition-all"
                   />
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
+              <div className="space-y-1.5">
+                <label htmlFor="password" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
                   Senha
                 </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <div className="relative group">
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -173,40 +177,40 @@ function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Digite sua senha"
                     autoComplete="current-password"
-                    className="w-full h-12 pl-10 pr-10 rounded-xl bg-slate-900/70 border border-slate-700/70 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none text-sm text-white placeholder:text-slate-500 transition"
+                    className="w-full h-12 pl-11 pr-11 rounded-xl bg-white/[0.03] border border-white/10 focus:border-cyan-500/60 focus:bg-white/[0.05] focus:ring-2 focus:ring-cyan-500/15 outline-none text-sm text-white placeholder:text-slate-600 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
                     aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-300 transition-colors"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-slate-300 cursor-pointer select-none">
+              <div className="flex items-center justify-between text-sm pt-1">
+                <label className="flex items-center gap-2 text-slate-400 hover:text-slate-300 cursor-pointer select-none transition-colors">
                   <input
                     type="checkbox"
                     checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
                     className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-500/30"
                   />
-                  Lembrar-me
+                  <span className="text-xs">Lembrar-me</span>
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="inline-flex items-center gap-1 text-slate-400 hover:text-cyan-300 font-medium"
+                  className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
                 >
                   Esqueci minha senha
-                  <ChevronRight size={14} />
+                  <ChevronRight size={12} />
                 </Link>
               </div>
 
               {error && (
-                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2">
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
                   {error}
                 </p>
               )}
@@ -214,53 +218,53 @@ function LoginPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition text-sm font-semibold text-slate-950 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_8px_24px_-8px_rgba(16,185,129,0.5)]"
+                className="group w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition-all text-sm font-bold tracking-wide text-slate-950 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_10px_30px_-10px_rgba(16,185,129,0.6)] hover:shadow-[0_15px_35px_-10px_rgba(16,185,129,0.8)] hover:-translate-y-0.5 active:translate-y-0"
               >
                 {submitting ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
                   <>
-                    <LogIn size={18} />
-                    Entrar
+                    Entrar no Sistema
+                    <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
                   </>
                 )}
               </button>
             </form>
 
-            <p className="mt-5 text-center text-sm text-slate-400">
+            <p className="mt-6 text-center text-sm text-slate-400">
               Não tem conta?{" "}
-              <Link to="/signup" className="text-emerald-400 hover:text-emerald-300 font-medium">
+              <Link to="/signup" className="text-emerald-400 hover:text-emerald-300 font-semibold">
                 Criar conta
               </Link>
             </p>
 
             {/* Status bar */}
-            <div className="mt-6 pt-5 border-t border-slate-800/70 grid grid-cols-3 gap-3 text-[11px]">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                <div>
-                  <div className="text-slate-200 font-medium">Sistema Online</div>
-                  <div className="text-slate-500">Todos os serviços OK</div>
+            <div className="mt-7 pt-5 border-t border-white/5 grid grid-cols-3 gap-2 text-center">
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">Online</span>
                 </div>
+                <span className="text-[9px] text-slate-500">Serviços OK</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Layers size={14} className="text-cyan-400" />
-                <div>
-                  <div className="text-slate-200 font-medium">V2.5.0</div>
-                  <div className="text-slate-500">22/05/2026</div>
+              <div className="flex flex-col items-center gap-1 border-x border-white/5">
+                <div className="flex items-center gap-1.5">
+                  <Layers size={11} className="text-cyan-400" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">V2.5.0</span>
                 </div>
+                <span className="text-[9px] text-slate-500">22/05/2026</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Shield size={14} className="text-emerald-400" />
-                <div>
-                  <div className="text-slate-200 font-medium">Ambiente Seguro</div>
-                  <div className="text-slate-500">Seus dados protegidos</div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-1.5">
+                  <Shield size={11} className="text-emerald-400" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">AES-256</span>
                 </div>
+                <span className="text-[9px] text-slate-500">Criptografado</span>
               </div>
             </div>
           </div>
 
-          <p className="mt-4 text-center text-xs text-slate-600">
+          <p className="mt-5 text-center text-[10px] uppercase tracking-[0.2em] text-slate-600">
             © {new Date().getFullYear()} VargasTI · Soluções que conectam
           </p>
         </div>
