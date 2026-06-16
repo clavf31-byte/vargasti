@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { lovable } from "@/integrations/lovable";
 import { Loader2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.png.asset.json";
 
@@ -17,6 +16,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -25,10 +25,19 @@ function LoginPage() {
 
   async function handleGoogle() {
     setError("");
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) setError(result.error.message ?? "Falha ao entrar com Google");
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth("google", {
+        redirectTo: window.location.origin,
+      });
+      if (error) {
+        setError(error.message ?? "Falha ao entrar com Google");
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao conectar com Google");
+      setGoogleLoading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -114,7 +123,7 @@ function LoginPage() {
         <button
           type="button"
           onClick={handleGoogle}
-          disabled={submitting}
+          disabled={googleLoading || submitting}
           aria-label="Entrar com Google"
           style={{
             ...btnReset,
@@ -122,8 +131,11 @@ function LoginPage() {
             top: "26.8%",
             width: "37.9%",
             height: "6.8%",
-            cursor: submitting ? "not-allowed" : "pointer",
+            cursor: googleLoading || submitting ? "not-allowed" : "pointer",
+            opacity: googleLoading || submitting ? 0.6 : 1,
+            transition: "opacity 0.2s",
           }}
+          title={googleLoading ? "Conectando ao Google..." : "Entrar com Google"}
         />
 
         {/* Email input */}
