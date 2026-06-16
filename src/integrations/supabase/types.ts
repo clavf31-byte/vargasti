@@ -423,6 +423,47 @@ export type Database = {
         }
         Relationships: []
       }
+      orcamento_itens: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          orcamento_id: string
+          ordem: number
+          preco_unitario: number
+          quantidade: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          orcamento_id: string
+          ordem?: number
+          preco_unitario?: number
+          quantidade?: number
+          subtotal?: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          orcamento_id?: string
+          ordem?: number
+          preco_unitario?: number
+          quantidade?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_itens_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamentos: {
         Row: {
           alerta_enviado: boolean
@@ -561,6 +602,66 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      tarefas: {
+        Row: {
+          cliente_id: string | null
+          concluida_em: string | null
+          created_at: string
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          orcamento_id: string | null
+          prioridade: string
+          status: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          concluida_em?: string | null
+          created_at?: string
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          orcamento_id?: string | null
+          prioridade?: string
+          status?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          concluida_em?: string | null
+          created_at?: string
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          orcamento_id?: string | null
+          prioridade?: string
+          status?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_module_permissions: {
         Row: {
