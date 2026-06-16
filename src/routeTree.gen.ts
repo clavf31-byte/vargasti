@@ -41,6 +41,7 @@ import { Route as ApiDebugInterpretEmailRouteImport } from './routes/api/debug-i
 import { Route as ApiDebugGmailTokenRouteImport } from './routes/api/debug-gmail-token'
 import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetch-emails'
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
+import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.approve.$token'
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 
 const ProjetosRoute = ProjetosRouteImport.update({
@@ -203,6 +204,11 @@ const AdminSetupRoute = AdminSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AdminRoute,
 } as any)
+const OrcamentoApproveTokenRoute = OrcamentoApproveTokenRouteImport.update({
+  id: '/orcamento/approve/$token',
+  path: '/orcamento/approve/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
+  '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas': typeof FerramentasIndexRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
+  '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -313,6 +321,7 @@ export interface FileRoutesById {
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
+  '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
     | '/crm/orcamentos/$id'
+    | '/orcamento/approve/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/ferramentas/whatsapp'
     | '/ferramentas'
     | '/crm/orcamentos/$id'
+    | '/orcamento/approve/$token'
   id:
     | '__root__'
     | '/'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
     | '/crm/orcamentos/$id'
+    | '/orcamento/approve/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -441,6 +453,7 @@ export interface RootRouteChildren {
   ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
   ApiVersionRoute: typeof ApiVersionRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  OrcamentoApproveTokenRoute: typeof OrcamentoApproveTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -669,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSetupRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/orcamento/approve/$token': {
+      id: '/orcamento/approve/$token'
+      path: '/orcamento/approve/$token'
+      fullPath: '/orcamento/approve/$token'
+      preLoaderRoute: typeof OrcamentoApproveTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/orcamentos/$id': {
       id: '/crm/orcamentos/$id'
       path: '/$id'
@@ -772,6 +792,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGmailWebhookRoute: ApiGmailWebhookRoute,
   ApiVersionRoute: ApiVersionRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  OrcamentoApproveTokenRoute: OrcamentoApproveTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
