@@ -17,6 +17,9 @@ export function ConfigCategoriesInline({
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newKeyword, setNewKeyword] = useState("");
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryKeywords, setNewCategoryKeywords] = useState("");
 
   const addKeyword = (index: number) => {
     if (!newKeyword.trim()) return;
@@ -29,6 +32,30 @@ export function ConfigCategoriesInline({
   const removeKeyword = (catIndex: number, keyIndex: number) => {
     const updated = [...localCategories];
     updated[catIndex].keywords.splice(keyIndex, 1);
+    setLocalCategories(updated);
+  };
+
+  const addNewCategory = () => {
+    if (!newCategoryName.trim()) return;
+
+    const keywords = newCategoryKeywords
+      .split(",")
+      .map(k => k.trim().toLowerCase())
+      .filter(k => k.length > 0);
+
+    const newCategory: EmailCategory = {
+      name: newCategoryName.trim(),
+      keywords: keywords.length > 0 ? keywords : ["exemplo"],
+    };
+
+    setLocalCategories([...localCategories, newCategory]);
+    setNewCategoryName("");
+    setNewCategoryKeywords("");
+    setShowNewCategoryForm(false);
+  };
+
+  const deleteCategory = (index: number) => {
+    const updated = localCategories.filter((_, i) => i !== index);
     setLocalCategories(updated);
   };
 
@@ -52,12 +79,72 @@ export function ConfigCategoriesInline({
       </div>
 
       <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto">
+        {/* Formulário para nova categoria */}
+        {showNewCategoryForm && (
+          <div className="bg-surface-2 border border-brand/30 rounded-xl p-4 space-y-3">
+            <h4 className="font-semibold text-foreground">+ Criar Nova Categoria</h4>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">Nome da Categoria</label>
+              <input
+                type="text"
+                placeholder="ex: Telefonia"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 bg-surface"
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">Palavras-chave (separadas por vírgula)</label>
+              <textarea
+                placeholder="ex: telefone, ramal, VoIP, comunicação"
+                value={newCategoryKeywords}
+                onChange={(e) => setNewCategoryKeywords(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 bg-surface resize-none h-20"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={addNewCategory}
+                className="flex-1 py-2 bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Criar Categoria
+              </button>
+              <button
+                onClick={() => setShowNewCategoryForm(false)}
+                className="flex-1 py-2 bg-surface-2 border border-border rounded-lg hover:bg-surface-3 transition text-sm font-medium"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!showNewCategoryForm && (
+          <button
+            onClick={() => setShowNewCategoryForm(true)}
+            className="w-full py-2 border border-dashed border-brand/30 rounded-lg hover:bg-brand/5 transition text-sm font-medium text-brand flex items-center justify-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Criar Nova Categoria
+          </button>
+        )}
+
         {localCategories.map((cat, idx) => (
           <div key={idx} className="bg-surface border border-border rounded-xl p-4 hover:border-brand/50 transition">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-3 h-3 bg-brand rounded-full"></div>
               <h3 className="font-semibold text-foreground">{cat.name}</h3>
               <span className="ml-auto text-xs bg-brand/10 text-brand px-2 py-1 rounded">{cat.keywords.length} palavras</span>
+              <button
+                onClick={() => deleteCategory(idx)}
+                className="p-1 hover:opacity-70 transition text-destructive"
+                title="Deletar categoria"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
