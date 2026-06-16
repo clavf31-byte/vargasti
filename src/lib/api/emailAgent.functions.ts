@@ -380,47 +380,38 @@ export const markEmailAsRead = createServerFn({ method: "POST" })
 
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
-async function getEmailConfig() {
+async function getEmailConfig(client?: EmailDbClient) {
   try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabase = await getEmailDbClient(client);
+    const { data, error } = await supabase
+      .from("email_settings")
+      .select("categories,priorities")
+      .eq("id", "00000000-0000-0000-0000-000000000000")
+      .maybeSingle() as {
+        data: {
+      categories?: Array<{ name: string; keywords: string[] }>;
+      priorities?: Array<{ id: string; keywords: string[]; priority: string }>;
+        } | null;
+        error: { message: string } | null;
+      };
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase credentials not configured");
-    }
-
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/email_settings?id=eq.00000000-0000-0000-0000-000000000000&select=*`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      console.warn("[getEmailConfig] Failed to fetch config from Supabase");
+    if (error) {
+      console.warn("[getEmailConfig] Failed to fetch config:", error.message);
       return null;
     }
 
-    const data = (await response.json()) as Array<{
-      categories?: Array<{ name: string; keywords: string[] }>;
-      priorities?: Array<{ id: string; keywords: string[]; priority: string }>;
-    }>;
-
-    return data[0] || null;
+    return data;
   } catch (err) {
     console.error("[getEmailConfig] Error:", err);
     return null;
   }
 }
 
-export async function interpretEmailWithClaude(email: GmailEmail) {
+export async function interpretEmailWithClaude(email: GmailEmail, client?: EmailDbClient) {
   const text = `${email.subject} ${email.body}`.toLowerCase();
 
   // Buscar configurações do Supabase
-  const config = await getEmailConfig();
+  const config = await getEmailConfig(client);
 
   // Categorias: usar config do Supabase ou defaults
   const categories: Record<string, string[]> = {};
