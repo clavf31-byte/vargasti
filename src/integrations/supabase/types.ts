@@ -61,6 +61,62 @@ export type Database = {
           },
         ]
       }
+      cliente_financeiro: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          id: string
+          qtd_nf: number
+          qtd_orcamentos: number
+          qtd_os: number
+          total_aberto: number
+          total_nf: number
+          total_orcamentos: number
+          total_os: number
+          total_pago: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          id?: string
+          qtd_nf?: number
+          qtd_orcamentos?: number
+          qtd_os?: number
+          total_aberto?: number
+          total_nf?: number
+          total_orcamentos?: number
+          total_os?: number
+          total_pago?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          qtd_nf?: number
+          qtd_orcamentos?: number
+          qtd_os?: number
+          total_aberto?: number
+          total_nf?: number
+          total_orcamentos?: number
+          total_os?: number
+          total_pago?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_financeiro_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: true
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_tags: {
         Row: {
           cliente_id: string
@@ -518,9 +574,12 @@ export type Database = {
           id: string
           orcamento_id: string
           ordem: number
+          peca_id: string | null
           preco_unitario: number
           quantidade: number
+          servico_id: string | null
           subtotal: number
+          tipo: string | null
         }
         Insert: {
           created_at?: string
@@ -528,9 +587,12 @@ export type Database = {
           id?: string
           orcamento_id: string
           ordem?: number
+          peca_id?: string | null
           preco_unitario?: number
           quantidade?: number
+          servico_id?: string | null
           subtotal?: number
+          tipo?: string | null
         }
         Update: {
           created_at?: string
@@ -538,9 +600,12 @@ export type Database = {
           id?: string
           orcamento_id?: string
           ordem?: number
+          peca_id?: string | null
           preco_unitario?: number
           quantidade?: number
+          servico_id?: string | null
           subtotal?: number
+          tipo?: string | null
         }
         Relationships: [
           {
@@ -550,19 +615,65 @@ export type Database = {
             referencedRelation: "orcamentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orcamento_itens_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "pecas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_itens_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      orcamento_sequences: {
+        Row: {
+          created_at: string
+          id: string
+          next_number: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          next_number?: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          next_number?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
       }
       orcamentos: {
         Row: {
           alerta_enviado: boolean
           cliente_id: string
           created_at: string
+          data_aprovacao: string | null
           data_criacao: string
+          data_rejeicao: string | null
           data_vencimento: string | null
+          data_visualizacao: string | null
+          desconto: number | null
           id: string
+          impostos: number | null
+          motivo_rejeicao: string | null
           notas: string | null
           numero: string
+          numero_formatado: string | null
           status: string
+          status_enum: string | null
           total: number
           updated_at: string
           user_id: string
@@ -571,12 +682,20 @@ export type Database = {
           alerta_enviado?: boolean
           cliente_id: string
           created_at?: string
+          data_aprovacao?: string | null
           data_criacao?: string
+          data_rejeicao?: string | null
           data_vencimento?: string | null
+          data_visualizacao?: string | null
+          desconto?: number | null
           id?: string
+          impostos?: number | null
+          motivo_rejeicao?: string | null
           notas?: string | null
           numero: string
+          numero_formatado?: string | null
           status?: string
+          status_enum?: string | null
           total?: number
           updated_at?: string
           user_id: string
@@ -585,12 +704,20 @@ export type Database = {
           alerta_enviado?: boolean
           cliente_id?: string
           created_at?: string
+          data_aprovacao?: string | null
           data_criacao?: string
+          data_rejeicao?: string | null
           data_vencimento?: string | null
+          data_visualizacao?: string | null
+          desconto?: number | null
           id?: string
+          impostos?: number | null
+          motivo_rejeicao?: string | null
           notas?: string | null
           numero?: string
+          numero_formatado?: string | null
           status?: string
+          status_enum?: string | null
           total?: number
           updated_at?: string
           user_id?: string
@@ -649,6 +776,51 @@ export type Database = {
           },
         ]
       }
+      pecas: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          codigo: string
+          created_at: string
+          descricao: string
+          estoque: number
+          fabricante: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          valor_custo: number
+          valor_venda: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          codigo: string
+          created_at?: string
+          descricao: string
+          estoque?: number
+          fabricante?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          valor_custo?: number
+          valor_venda?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          codigo?: string
+          created_at?: string
+          descricao?: string
+          estoque?: number
+          fabricante?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          valor_custo?: number
+          valor_venda?: number
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           category: string | null
@@ -688,6 +860,45 @@ export type Database = {
           technologies?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          unidade: string
+          updated_at: string
+          user_id: string
+          valor_padrao: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          unidade?: string
+          updated_at?: string
+          user_id: string
+          valor_padrao?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          unidade?: string
+          updated_at?: string
+          user_id?: string
+          valor_padrao?: number
         }
         Relationships: []
       }
