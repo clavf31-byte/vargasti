@@ -10,7 +10,7 @@ interface CRMLayoutProps {
 
 export function CRMLayout({ children }: CRMLayoutProps) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { signOut: logout } = useAuth();
 
   const menuItems = [
     { label: "Dashboard", icon: LayoutGrid, path: "/crm/dashboard" },
