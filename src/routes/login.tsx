@@ -63,7 +63,7 @@ function LoginPage() {
   return (
     <div className="fixed inset-0 flex bg-[#04060e] text-slate-100 overflow-hidden">
       {/* Brand panel (unchanged) */}
-      <div className="hidden lg:block relative flex-1 overflow-hidden">
+      <div className="hidden md:block relative flex-1 overflow-hidden">
         <img
           src={loginBg.url}
           alt="VargasTI"
@@ -74,7 +74,7 @@ function LoginPage() {
       </div>
 
       {/* Form panel — styled to match reference card */}
-      <div className="flex w-full lg:w-[600px] xl:w-[680px] items-center justify-center px-6 py-8 bg-[#04060e] relative overflow-y-auto">
+      <div className="flex w-full md:w-[520px] lg:w-[600px] xl:w-[680px] items-center justify-center px-6 py-8 bg-[#04060e] relative overflow-y-auto">
         <div className="w-full max-w-[480px]">
           {/* Card */}
           <div className="relative rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/60 to-slate-950/80 backdrop-blur-sm shadow-[0_0_60px_-15px_rgba(34,211,238,0.25)] p-7">
