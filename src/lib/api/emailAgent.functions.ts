@@ -221,35 +221,18 @@ async function refreshGmailAccessTokenWithRetry(
   return null;
 }
 
-async function getGmailAccessToken(userId: string = "system") {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+async function getGmailAccessToken(userId: string = "system", client?: EmailDbClient) {
+  const supabase = await getEmailDbClient(client);
+  const { data: tokenData, error } = await supabase
+    .from("gmail_tokens")
+    .select("access_token,refresh_token,expires_at")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase credentials not configured");
+  if (error) {
+    throw new Error(`Failed to fetch Gmail token: ${error.message}`);
   }
 
-  const response = await fetch(
-    `${supabaseUrl}/rest/v1/gmail_tokens?select=access_token,refresh_token,expires_at&user_id=eq.${userId}`,
-    {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Gmail token: ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as Array<{
-    access_token: string;
-    refresh_token: string;
-    expires_at: string | null;
-  }>;
-
-  const tokenData = data[0];
   if (!tokenData?.access_token) {
     throw new Error("Gmail not authorized");
   }
@@ -267,27 +250,26 @@ async function getGmailAccessToken(userId: string = "system") {
     throw new Error("Failed to refresh Gmail token after multiple retries");
   }
 
-  await fetch(`${supabaseUrl}/rest/v1/gmail_tokens?user_id=eq.${userId}`, {
-    method: "PATCH",
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const { error: updateError } = await supabase
+    .from("gmail_tokens")
+    .update({
       access_token: refreshed.access_token,
       expires_at: refreshed.expires_in
         ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
         : null,
       updated_at: new Date().toISOString(),
-    }),
-  });
+    })
+    .eq("user_id", userId);
+
+  if (updateError) {
+    throw new Error(`Failed to update Gmail token: ${updateError.message}`);
+  }
 
   return refreshed.access_token;
 }
 
-async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: string = "system"): Promise<T> {
-  const accessToken = await getGmailAccessToken(userId);
+async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: string = "system", client?: EmailDbClient): Promise<T> {
+  const accessToken = await getGmailAccessToken(userId, client);
   const response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
     ...init,
     headers: {
@@ -306,9 +288,9 @@ async function gmailRequest<T>(path: string, init: RequestInit = {}, userId: str
   return response.json() as Promise<T>;
 }
 
-export async function fetchUnreadEmails(maxResults: number, userId: string = "system"): Promise<FetchEmailsResult> {
+export async function fetchUnreadEmails(maxResults: number, userId: string = "system", client?: EmailDbClient): Promise<FetchEmailsResult> {
     try {
-      await getGmailAccessToken(userId);
+      await getGmailAccessToken(userId, client);
     } catch (err) {
       if (isGmailAuthorizationError(err)) {
         return {
@@ -325,7 +307,7 @@ export async function fetchUnreadEmails(maxResults: number, userId: string = "sy
       q: "is:unread",
       maxResults: String(maxResults),
     });
-    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`, {}, userId);
+    const listRes = await gmailRequest<GmailListResponse>(`/users/me/messages?${searchParams.toString()}`, {}, userId, client);
 
     if (!listRes.messages?.length) {
       return { emails: [], authorized: true };
@@ -336,7 +318,7 @@ export async function fetchUnreadEmails(maxResults: number, userId: string = "sy
     for (const msg of listRes.messages) {
       if (!msg.id) continue;
 
-      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`, {}, userId);
+      const emailRes = await gmailRequest<GmailMessageResponse>(`/users/me/messages/${msg.id}?format=full`, {}, userId, client);
 
       const headers = emailRes.payload?.headers ?? [];
       const getHeader = (name: string) => headers.find((h: { name?: string | null; value?: string | null }) => h.name === name)?.value ?? "";
