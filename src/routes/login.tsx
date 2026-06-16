@@ -71,7 +71,7 @@ function LoginPage() {
           className="relative z-10 max-w-[60%] max-h-[45%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
           draggable={false}
         />
-        <div className="relative z-10 mt-6 flex flex-col items-center text-center">
+        <div className="relative z-10 -mt-4 flex flex-col items-center text-center">
           <h2 className="text-5xl font-extrabold tracking-tight leading-none">
             <span className="text-white">Vargas</span>
             <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent">TI</span>
