@@ -10,14 +10,14 @@ export function useAtendimentoNumero() {
     }
 
     try {
-      const { data, error } = await supabase.rpc("allocate_atendimento_numero", {
+      const { data, error } = await (supabase as any).rpc("allocate_atendimento_numero", {
         p_user_id: user.id,
       });
 
       if (error) throw error;
       if (!data) throw new Error("Failed to allocate number");
 
-      return data as number;
+      return Number(data);
     } catch (err) {
       console.error("[useAtendimentoNumero] Error allocating number:", err);
       throw err;
