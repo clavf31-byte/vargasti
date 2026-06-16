@@ -224,8 +224,8 @@ function LoginPage() {
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
                   <>
-                    Entrar no Sistema
-                    <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                    <LogIn size={18} />
+                    Entrar
                   </>
                 )}
               </button>
