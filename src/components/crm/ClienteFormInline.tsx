@@ -61,8 +61,9 @@ export function ClienteFormInline({
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar cliente");
-      console.error(err);
+      const errorMsg = err instanceof Error ? err.message : "Erro ao criar cliente";
+      setError(errorMsg);
+      console.error("Erro ao criar cliente:", { error: err, formData });
     } finally {
       setLoading(false);
     }
