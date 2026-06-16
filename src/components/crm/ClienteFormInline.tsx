@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
+import { ClienteTagsInput } from "./ClienteTagsInput";
 
 interface ClienteFormInlineProps {
   userId: string;
@@ -27,6 +28,7 @@ export function ClienteFormInline({
     estado: "",
     cep: "",
   });
+  const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,14 +40,33 @@ export function ClienteFormInline({
     setError(null);
 
     try {
-      const { error: insertError } = await supabase.from("clientes").insert([
-        {
-          ...formData,
-          user_id: userId,
-        },
-      ]);
+      const { data: clienteData, error: insertError } = await supabase
+        .from("clientes")
+        .insert([
+          {
+            ...formData,
+            user_id: userId,
+          },
+        ])
+        .select();
 
       if (insertError) throw insertError;
+      if (!clienteData || clienteData.length === 0) throw new Error("Erro ao criar cliente");
+
+      const clienteId = clienteData[0].id;
+
+      if (tags.length > 0) {
+        const tagsToInsert = tags.map((tag) => ({
+          cliente_id: clienteId,
+          tag,
+        }));
+
+        const { error: tagsError } = await supabase
+          .from("cliente_tags")
+          .insert(tagsToInsert);
+
+        if (tagsError) console.error("Erro ao salvar tags:", tagsError);
+      }
 
       setFormData({
         nome: "",
@@ -58,6 +79,7 @@ export function ClienteFormInline({
         estado: "",
         cep: "",
       });
+      setTags([]);
       onSuccess();
       onClose();
     } catch (err) {
@@ -232,6 +254,8 @@ export function ClienteFormInline({
             style={inputStyle}
           />
         </div>
+
+        <ClienteTagsInput tags={tags} onChange={setTags} />
 
         <div
           style={{

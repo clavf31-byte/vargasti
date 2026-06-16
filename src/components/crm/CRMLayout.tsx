@@ -1,7 +1,7 @@
 ﻿import { ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Users, FileText, DollarSign, LogOut, CheckCircle2 } from "lucide-react";
+import { Users, FileText, DollarSign, LogOut, CheckCircle2, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface CRMLayoutProps {
@@ -14,6 +14,7 @@ export function CRMLayout({ children }: CRMLayoutProps) {
 
   const menuItems = [
     { label: "Clientes", icon: Users, path: "/crm/clientes" },
+    { label: "Pipeline", icon: TrendingUp, path: "/crm/pipeline" },
     { label: "Orçamentos", icon: FileText, path: "/crm/orcamentos" },
     { label: "Pagamentos", icon: DollarSign, path: "/crm/pagamentos" },
     { label: "Tarefas", icon: CheckCircle2, path: "/crm/tarefas" },
