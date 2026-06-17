@@ -24,8 +24,8 @@ interface OrcamentoItemFormProps {
 
 export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const { user } = useAuth();
-  const { servicos, refetch: refetchServicos } = useServicos(user?.id);
-  const { pecas, refetch: refetchPecas } = usePecas(user?.id);
+  const { servicos, loadServicos: refetchServicos } = useServicos(user?.id);
+  const { pecas, loadPecas: refetchPecas } = usePecas(user?.id);
 
   const [tipo, setTipo] = useState<"servico" | "peca">("servico");
   const [selecionado, setSelecionado] = useState<any>(null);
@@ -60,12 +60,13 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       if (tipo === "servico") {
         const { data } = await supabase.from("servicos").insert([
           {
-            user_id: user?.id,
+            user_id: user!.id,
             nome: novoNome,
             valor_padrao: novoPreco,
             descricao: novoDescricao,
             ativo: true,
             unidade: "h",
+            categoria: "Geral",
           },
         ]).select();
 
@@ -78,7 +79,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       } else {
         const { data } = await supabase.from("pecas").insert([
           {
-            user_id: user?.id,
+            user_id: user!.id,
             codigo: `PEC-${Date.now()}`,
             descricao: novoNome,
             categoria: novoDescricao || "Geral",
@@ -370,7 +371,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
             <select
               value={selecionado?.id || ""}
               onChange={(e) => {
-                const item = listaItens.find((i) => i.id === e.target.value);
+                const item: any = (listaItens as any[]).find((i) => i.id === e.target.value);
                 setSelecionado(item);
                 if (item) {
                   setPreco(tipo === "servico" ? item.valor_padrao : item.valor_venda);
@@ -380,7 +381,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
               style={inputStyle}
             >
               <option value="">Selecione...</option>
-              {listaItens.map((item) => (
+              {(listaItens as any[]).map((item) => (
                 <option key={item.id} value={item.id}>
                   {tipo === "servico" ? item.nome : `[${item.codigo}] ${item.descricao}`}
                 </option>

@@ -18,7 +18,7 @@ interface Peca {
   codigo: string;
   descricao: string;
   categoria: string;
-  fabricante?: string;
+  fabricante?: string | null;
   valor_custo: number;
   valor_venda: number;
   estoque: number;
@@ -127,7 +127,6 @@ function PecasPage() {
           title="Catálogo de Peças"
           subtitle="Gestão de peças, materiais e estoque"
           icon={<Package size={32} />}
-          iconClass="text-brand"
         />
 
         {message && (
