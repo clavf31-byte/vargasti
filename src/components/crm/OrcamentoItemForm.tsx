@@ -24,8 +24,8 @@ interface OrcamentoItemFormProps {
 
 export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const { user } = useAuth();
-  const { servicos, refetch: refetchServicos } = useServicos(user?.id);
-  const { pecas, refetch: refetchPecas } = usePecas(user?.id);
+  const { servicos, loadServicos: refetchServicos } = useServicos(user?.id);
+  const { pecas, loadPecas: refetchPecas } = usePecas(user?.id);
 
   const [tipo, setTipo] = useState<"servico" | "peca">("servico");
   const [selecionado, setSelecionado] = useState<any>(null);

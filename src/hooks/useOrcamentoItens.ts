@@ -77,7 +77,6 @@ export function useOrcamentoItens(orcamentoId?: string) {
           quantidade: item.quantidade,
           preco_unitario: item.preco_unitario,
           subtotal: item.subtotal,
-          categoria: item.categoria || "Produtos, peças e materiais",
           ordem: idx,
         }));
 

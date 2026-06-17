@@ -69,7 +69,7 @@ export function useClienteFinanceiro(clienteId?: string) {
         // Criar novo registro
         const { data, error } = await supabase
           .from("cliente_financeiro")
-          .insert([{ cliente_id: clienteId, ...dados }])
+          .insert([{ cliente_id: clienteId, ...dados } as any])
           .select()
           .single();
 
