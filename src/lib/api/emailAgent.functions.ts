@@ -524,7 +524,6 @@ export const sendToHelpdeskApi = createServerFn({ method: "POST" })
 
 // ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
 export const processEmailPipeline = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ maxEmails: z.number().default(1) }))
   .handler(async ({ data }) => {
     try {
