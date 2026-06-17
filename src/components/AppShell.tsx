@@ -139,7 +139,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           <Link
             to="/"
             onClick={() => setSidebarOpen(false)}
-            className="flex items-end gap-2 flex-1"
+            className="flex items-end gap-1 flex-1"
           >
             <img
               src={vargasLogo}
