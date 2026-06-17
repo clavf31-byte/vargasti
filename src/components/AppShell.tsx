@@ -141,45 +141,32 @@ export function AppShell({ children }: { children?: ReactNode }) {
             onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3 flex-1"
           >
-            <svg viewBox="0 0 200 210" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: "drop-shadow(0 0 16px rgba(19,200,211,0.6))" }}>
-              <defs>
-                <linearGradient id="vGrad" x1="30" y1="80" x2="170" y2="195">
-                  <stop offset="0%" stopColor="#13c8d3" />
-                  <stop offset="55%" stopColor="#0088ff" />
-                  <stop offset="100%" stopColor="#13c8d3" />
-                </linearGradient>
-                <linearGradient id="traceGrad" x1="100" y1="10" x2="100" y2="80">
-                  <stop offset="0%" stopColor="#13c8d3" />
-                  <stop offset="100%" stopColor="#0066ff" />
-                </linearGradient>
-                <filter id="nodeGlow">
-                  <feGaussianBlur stdDeviation="2.5" result="blur" />
-                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-              </defs>
-              <path d="M28 78 L100 190 L172 78 H140 L100 140 L60 78 Z" stroke="url(#vGrad)" strokeWidth="11" strokeLinejoin="round" fill="none" strokeLinecap="round" />
-              <line x1="60" y1="76" x2="60" y2="40" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="60" y1="40" x2="72" y2="40" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="76" y1="90" x2="76" y2="55" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="76" y1="55" x2="84" y2="55" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="100" y1="76" x2="100" y2="18" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="124" y1="90" x2="124" y2="55" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="124" y1="55" x2="116" y2="55" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="140" y1="76" x2="140" y2="40" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="140" y1="40" x2="128" y2="40" stroke="url(#traceGrad)" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="76" y1="66" x2="124" y2="66" stroke="url(#traceGrad)" strokeWidth="2" strokeLinecap="round" />
-              <line x1="84" y1="44" x2="116" y2="44" stroke="url(#traceGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-              <circle cx="60" cy="32" r="5" fill="#13c8d3" filter="url(#nodeGlow)" />
-              <circle cx="76" cy="46" r="4.5" fill="#13c8d3" filter="url(#nodeGlow)" />
-              <circle cx="100" cy="10" r="6" fill="#13c8d3" filter="url(#nodeGlow)" />
-              <circle cx="124" cy="46" r="4.5" fill="#0088ff" filter="url(#nodeGlow)" />
-              <circle cx="140" cy="32" r="5" fill="#0088ff" filter="url(#nodeGlow)" />
-              <circle cx="84" cy="55" r="3" fill="#0088ff" opacity="0.9" />
-              <circle cx="116" cy="55" r="3" fill="#0088ff" opacity="0.9" />
-            </svg>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.96)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                boxShadow: "0 0 18px rgba(19,200,211,0.35), 0 2px 8px rgba(0,0,0,0.4)",
+              }}
+            >
+              <img
+                src={vargasLogo}
+                alt="VargasTI"
+                style={{ width: 34, height: 34, objectFit: "contain" }}
+              />
+            </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-bold text-[#eaf3f8] leading-tight">VargasTI</h1>
-              <span className="text-[10px] text-[#13c8d3] font-semibold tracking-wide">LAB v2.0</span>
+              <h1 className="text-sm font-bold leading-tight">
+                <span style={{ color: "#eaf3f8" }}>Vargas</span><span style={{ color: "#13c8d3" }}>TI</span>
+              </h1>
+              <span className="text-[10px] font-semibold tracking-wide" style={{ color: "rgba(19,200,211,0.7)" }}>
+                SOLUÇÕES QUE CONECTAM
+              </span>
             </div>
           </Link>
           <button
