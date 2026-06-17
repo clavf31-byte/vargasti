@@ -523,6 +523,39 @@ export const sendToHelpdeskApi = createServerFn({ method: "POST" })
   .inputValidator(SendToHelpdeskSchema)
   .handler(async ({ data }) => sendToHelpdeskInternal(data));
 
+// ── Blacklist Check ──────────────────────────────────────────────────────────
+async function isEmailBlacklisted(emailFrom: string, client?: EmailDbClient): Promise<boolean> {
+  try {
+    const supabase = await getEmailDbClient(client);
+    const { data: emailSettings } = await supabase.rpc("load_email_settings");
+
+    if (!emailSettings || emailSettings.length === 0) return false;
+
+    const blacklist = emailSettings[0].blacklist || [];
+    if (blacklist.length === 0) return false;
+
+    const emailLower = emailFrom.toLowerCase();
+    const [emailPart, domainPart] = emailLower.split("@");
+
+    for (const entry of blacklist) {
+      // Check exact email match
+      if (entry.email && entry.email.toLowerCase() === emailLower) {
+        console.log("[email-pipeline] Email blocked by blacklist:", emailFrom);
+        return true;
+      }
+      // Check domain match
+      if (entry.domain && domainPart && entry.domain.toLowerCase() === domainPart) {
+        console.log("[email-pipeline] Domain blocked by blacklist:", domainPart);
+        return true;
+      }
+    }
+    return false;
+  } catch (err) {
+    console.error("[email-pipeline] Error checking blacklist:", err);
+    return false;
+  }
+}
+
 // ── Process Email: Read → Interpret → Send to Helpdesk ────────────────────────
 export const processEmailPipeline = createServerFn({ method: "POST" })
   .inputValidator(z.object({ maxEmails: z.number().default(1) }))
@@ -568,6 +601,20 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
             .maybeSingle();
           if (existingLog) {
             console.log("[email-pipeline] Email already processed", email.id);
+            await markEmailAsReadInternal(email.id, userId, supabase);
+            continue;
+          }
+
+          // Check if email is blacklisted
+          const isBlacklisted = await isEmailBlacklisted(email.from, supabase);
+          if (isBlacklisted) {
+            console.log("[email-pipeline] Email is blacklisted, skipping");
+            // Mark as processed to prevent re-checking
+            await supabase.from("email_processing_log").upsert({
+              email_id: email.id,
+              status: "blocked",
+              error: "Email is blacklisted",
+            });
             await markEmailAsReadInternal(email.id, userId, supabase);
             continue;
           }
