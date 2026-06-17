@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { Resend } from "resend";
 
 const SendContractEmailSchema = z.object({
   contractId: z.string(),
@@ -16,53 +17,69 @@ export const POST = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const { contractId, clientEmail, clientName, contractTitle, message } = data;
+      const apiKey = process.env.RESEND_API_KEY;
 
-      console.log(`[contract-email] Preparing to send email to ${clientEmail}`);
+      if (!apiKey) {
+        throw new Error("RESEND_API_KEY não configurada");
+      }
 
-      // Aqui você pode integrar com:
-      // 1. SendGrid
-      // 2. Resend
-      // 3. AWS SES
-      // 4. Seu próprio servidor de email
-      // 5. Sistema de email existente do projeto
+      const resend = new Resend(apiKey);
 
-      // Por enquanto, apenas simula o envio
-      const emailContent = `
-${message}
+      console.log(`[contract-email] Enviando contrato para ${clientEmail}...`);
 
----
-ID do Contrato: ${contractId}
-Título: ${contractTitle}
+      const response = await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "contratos@vargasti.com.br",
+        to: clientEmail,
+        subject: `📜 Contrato para assinatura: ${contractTitle}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Olá ${clientName}!</h2>
 
-Para assinar digitalmente:
-1. Baixe o PDF do contrato
-2. Abra com seu leitor PDF
-3. Use seu certificado digital (e-CPF ou e-CNPJ) para assinar
-4. Devolva o PDF assinado
+            <p>${message.split("\n").join("<br />")}</p>
 
-Você pode usar:
-- Gov.br (https://www.gov.br/cidadania/pt-br/acesso-a-informacao/assinatura-digital)
-- Adobe Sign
-- Signer
-- Ou outro programa de assinatura digital que tenha seu certificado
-      `.trim();
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3>📋 Contrato: ${contractTitle}</h3>
+              <p><strong>ID:</strong> ${contractId}</p>
+            </div>
 
-      console.log(`[contract-email] Would send:\nTo: ${clientEmail}\nSubject: ${contractTitle}\nBody: ${emailContent}`);
+            <h3>🔐 Como assinar digitalmente:</h3>
+            <ol>
+              <li>Baixe o PDF do contrato</li>
+              <li>Abra com um programa que suporte assinatura digital</li>
+              <li>Use seu certificado digital (e-CPF ou e-CNPJ)</li>
+              <li>Devolva o PDF assinado respondendo este email</li>
+            </ol>
 
-      // TODO: Implementar envio real de email
-      // Por exemplo, com SendGrid:
-      // await sgMail.send({
-      //   to: clientEmail,
-      //   from: 'contratos@vargasti.com.br',
-      //   subject: `Contrato para assinatura: ${contractTitle}`,
-      //   text: emailContent,
-      //   replyTo: 'suporte@vargasti.com.br',
-      // });
+            <div style="background: #e8f4f8; padding: 15px; border-left: 4px solid #0284c7; margin: 20px 0;">
+              <p><strong>Programas recomendados:</strong></p>
+              <ul>
+                <li><a href="https://www.gov.br/cidadania">Gov.br - Assinador Digital Oficial</a></li>
+                <li><a href="https://www.signer.digital">Signer</a></li>
+                <li>Adobe Reader (versão premium)</li>
+                <li>DocuSign</li>
+              </ul>
+            </div>
+
+            <p style="color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+              Se tiver dúvidas, entre em contato conosco.<br />
+              <strong>VargasTI</strong>
+            </p>
+          </div>
+        `,
+        replyTo: process.env.RESEND_REPLY_TO || "contratos@vargasti.com.br",
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      console.log(`[contract-email] Email enviado com sucesso! ID: ${response.data?.id}`);
 
       return {
         ok: true,
-        message: `Email enviado para ${clientEmail}`,
+        message: `Email enviado com sucesso para ${clientEmail}`,
         contractId,
+        emailId: response.data?.id,
       };
     } catch (error) {
       console.error("[contract-email] Error:", error);
