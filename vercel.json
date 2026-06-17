@@ -1,4 +1,8 @@
 {
   "buildCommand": "npm run build",
-  "framework": null
+  "outputDirectory": ".output/public",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
