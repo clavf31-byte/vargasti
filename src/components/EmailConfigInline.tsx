@@ -201,6 +201,121 @@ export function ConfigCategoriesInline({
 
 
 // ============================================
+// INLINE WHITELIST
+// ============================================
+export function ConfigWhitelistInline({
+  whitelist,
+  onSave,
+  onClose,
+}: {
+  whitelist: EmailWhitelist[];
+  onSave: (whitelist: EmailWhitelist[]) => void;
+  onClose: () => void;
+}) {
+  const [localWhitelist, setLocalWhitelist] = useState(whitelist);
+  const [newEmail, setNewEmail] = useState("");
+  const [newDomain, setNewDomain] = useState("");
+
+  const addEntry = () => {
+    if (!newEmail && !newDomain) return;
+    const entry: EmailWhitelist = {
+      id: Date.now().toString(),
+      email: newEmail.toLowerCase(),
+      domain: newDomain.toLowerCase(),
+    };
+    setLocalWhitelist([...localWhitelist, entry]);
+    setNewEmail("");
+    setNewDomain("");
+  };
+
+  const removeEntry = (id: string) => {
+    setLocalWhitelist(localWhitelist.filter((w) => w.id !== id));
+  };
+
+  const handleSave = () => {
+    onSave(localWhitelist);
+    onClose();
+  };
+
+  return (
+    <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+      <div className="flex items-center justify-between p-6 border-b border-border bg-surface-2">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">✅ Gerenciar Whitelist</h2>
+          <p className="text-sm text-muted-foreground mt-1">Apenas domínios e e-mails liberados serão processados</p>
+        </div>
+        <button onClick={onClose} className="p-2 hover:bg-surface rounded-lg transition">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto">
+        {localWhitelist.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">Nenhuma entrada na whitelist (todos os emails serão aceitos)</p>
+        ) : (
+          localWhitelist.map((entry) => (
+            <div key={entry.id} className="border border-green-200 rounded-lg p-4 bg-green-500/10">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1">
+                  {entry.email && <p className="font-semibold text-sm text-green-700">{entry.email}</p>}
+                  {entry.domain && <p className="text-sm text-green-600 opacity-80">@{entry.domain}</p>}
+                </div>
+                <button onClick={() => removeEntry(entry.id)} className="p-1 hover:opacity-70 transition">
+                  <Trash2 className="w-4 h-4 text-green-600" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+
+        <div className="border-t border-border pt-4 mt-4">
+          <h3 className="font-semibold text-foreground mb-3">Adicionar à Whitelist</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">Email Específico (opcional)</label>
+              <input
+                type="email"
+                placeholder="cliente@example.com"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 bg-surface"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">Domínio (opcional)</label>
+              <input
+                type="text"
+                placeholder="example.com"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 bg-surface"
+              />
+            </div>
+
+            <button
+              onClick={addEntry}
+              className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Adicionar à Whitelist
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-3 p-6 border-t border-border bg-surface-2">
+        <button onClick={handleSave} className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold">
+          Salvar Whitelist
+        </button>
+        <button onClick={onClose} className="flex-1 py-3 bg-surface border border-border rounded-lg hover:bg-surface-2 transition font-semibold">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // INLINE BLACKLIST
 // ============================================
 export function ConfigBlacklistInline({

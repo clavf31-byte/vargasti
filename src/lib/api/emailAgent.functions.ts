@@ -523,6 +523,40 @@ export const sendToHelpdeskApi = createServerFn({ method: "POST" })
   .inputValidator(SendToHelpdeskSchema)
   .handler(async ({ data }) => sendToHelpdeskInternal(data));
 
+// ── Whitelist Check (inverse filter - only allowed domains) ───────────────────
+async function isEmailWhitelisted(emailFrom: string, client?: EmailDbClient): Promise<boolean> {
+  try {
+    const supabase = await getEmailDbClient(client);
+    const { data: emailSettings } = await supabase.rpc("load_email_settings");
+
+    if (!emailSettings || emailSettings.length === 0) return true; // No whitelist = accept all
+
+    const whitelist = emailSettings[0].whitelist || [];
+    if (whitelist.length === 0) return true; // Empty whitelist = accept all
+
+    const emailLower = emailFrom.toLowerCase();
+    const [emailPart, domainPart] = emailLower.split("@");
+
+    for (const entry of whitelist) {
+      // Check exact email match
+      if (entry.email && entry.email.toLowerCase() === emailLower) {
+        console.log("[email-pipeline] Email allowed by whitelist:", emailFrom);
+        return true;
+      }
+      // Check domain match
+      if (entry.domain && domainPart && entry.domain.toLowerCase() === domainPart) {
+        console.log("[email-pipeline] Domain allowed by whitelist:", domainPart);
+        return true;
+      }
+    }
+    console.log("[email-pipeline] Email rejected - not in whitelist:", emailFrom);
+    return false;
+  } catch (err) {
+    console.error("[email-pipeline] Error checking whitelist:", err);
+    return true; // On error, accept email (fail open)
+  }
+}
+
 // ── Blacklist Check ──────────────────────────────────────────────────────────
 async function isEmailBlacklisted(emailFrom: string, client?: EmailDbClient): Promise<boolean> {
   try {
@@ -601,6 +635,19 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
             .maybeSingle();
           if (existingLog) {
             console.log("[email-pipeline] Email already processed", email.id);
+            await markEmailAsReadInternal(email.id, userId, supabase);
+            continue;
+          }
+
+          // Check if email is whitelisted (if whitelist is configured, only accept whitelisted emails)
+          const isWhitelisted = await isEmailWhitelisted(email.from, supabase);
+          if (!isWhitelisted) {
+            console.log("[email-pipeline] Email is not in whitelist, skipping");
+            await supabase.from("email_processing_log").upsert({
+              email_id: email.id,
+              status: "blocked",
+              error: "Email is not in whitelist",
+            });
             await markEmailAsReadInternal(email.id, userId, supabase);
             continue;
           }

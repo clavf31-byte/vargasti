@@ -4,6 +4,7 @@ import { getGmailAuthUrl } from "@/lib/api/emailAgent.functions";
 import { useEmailConfig } from "@/hooks/useEmailConfig";
 import {
   ConfigCategoriesInline,
+  ConfigWhitelistInline,
   ConfigBlacklistInline,
   ConfigPrioritiesInline,
 } from "./EmailConfigInline";
@@ -14,6 +15,7 @@ export function EmailPollingWidget() {
   const [debugLoading, setDebugLoading] = useState(false);
   const [debugResult, setDebugResult] = useState<string>("");
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showWhitelistModal, setShowWhitelistModal] = useState(false);
   const [showBlacklistModal, setShowBlacklistModal] = useState(false);
   const [showPrioritiesModal, setShowPrioritiesModal] = useState(false);
   const [lastResult, setLastResult] = useState<{
@@ -252,6 +254,20 @@ export function EmailPollingWidget() {
             </button>
           </div>
 
+          {/* Whitelist */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2">✅ Whitelist</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              {loaded ? `${whitelist.length} entradas liberadas` : "Carregando..."}
+            </p>
+            <button
+              onClick={() => setShowWhitelistModal(true)}
+              className="w-full py-2 px-3 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Gerenciar Whitelist
+            </button>
+          </div>
+
           {/* Blacklist */}
           <div>
             <h4 className="font-semibold text-sm mb-2">🚫 Blacklist</h4>
@@ -325,6 +341,16 @@ export function EmailPollingWidget() {
             categories={categories}
             onSave={saveCategories}
             onClose={() => setShowCategoriesModal(false)}
+          />
+        </div>
+      )}
+
+      {showWhitelistModal && (
+        <div className="mt-6">
+          <ConfigWhitelistInline
+            whitelist={whitelist}
+            onSave={saveWhitelist}
+            onClose={() => setShowWhitelistModal(false)}
           />
         </div>
       )}
