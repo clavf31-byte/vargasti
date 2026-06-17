@@ -1373,6 +1373,20 @@ export type Database = {
     }
     Functions: {
       gerar_approval_token: { Args: never; Returns: string }
+      get_approval_link_by_token: {
+        Args: { _token: string }
+        Returns: {
+          approved_at: string
+          created_at: string
+          expires_at: string
+          id: string
+          orcamento_id: string
+          rejected_at: string
+          rejection_reason: string
+          status: string
+          token: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
