@@ -127,7 +127,6 @@ function PecasPage() {
           title="Catálogo de Peças"
           subtitle="Gestão de peças, materiais e estoque"
           icon={<Package size={32} />}
-          iconClass="text-brand"
         />
 
         {message && (

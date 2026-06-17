@@ -233,7 +233,7 @@ function OrcamentoDetalhePage() {
   }
 
   const getStatusBadge = (status: string) => {
-    const badges: { [key: string]: { bg: string; color: string; icon: JSX.Element; label: string } } = {
+    const badges: { [key: string]: { bg: string; color: string; icon: React.ReactElement; label: string } } = {
       rascunho: {
         bg: "rgba(139, 92, 246, 0.1)",
         color: "#8b5cf6",

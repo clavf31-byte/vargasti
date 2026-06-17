@@ -128,7 +128,6 @@ function ServicosPage() {
           title="Serviços"
           subtitle="Cadastro e gestão de serviços oferecidos"
           icon={<Wrench size={32} />}
-          iconClass="text-brand"
         />
 
         {message && (

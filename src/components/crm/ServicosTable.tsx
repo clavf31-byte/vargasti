@@ -8,7 +8,7 @@ interface Servico {
   categoria: string;
   valor_padrao: number;
   unidade: string;
-  descricao?: string;
+  descricao?: string | null;
   ativo: boolean;
 }
 
