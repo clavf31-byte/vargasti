@@ -143,9 +143,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
           >
             <div
               style={{
-                width: 60,
-                height: 60,
-                borderRadius: 14,
+                width: 72,
+                height: 72,
+                borderRadius: 16,
                 background: "rgba(255,255,255,0.96)",
                 display: "flex",
                 alignItems: "center",
@@ -157,11 +157,11 @@ export function AppShell({ children }: { children?: ReactNode }) {
               <img
                 src={vargasLogo}
                 alt="VargasTI"
-                style={{ width: 50, height: 50, objectFit: "contain" }}
+                style={{ width: 62, height: 62, objectFit: "contain" }}
               />
             </div>
             <div className="min-w-0">
-              <h1 className="font-bold leading-tight" style={{ fontSize: 17 }}>
+              <h1 className="font-bold leading-tight" style={{ fontSize: 22 }}>
                 <span style={{ color: "#eaf3f8" }}>Vargas</span><span style={{ color: "#13c8d3" }}>TI</span>
               </h1>
               <span className="text-[11px] font-semibold tracking-wide" style={{ color: "rgba(19,200,211,0.7)" }}>
