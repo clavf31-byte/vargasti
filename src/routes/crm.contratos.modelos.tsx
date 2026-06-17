@@ -219,6 +219,7 @@ function ModelosPage() {
                             gap: "4px",
                             alignItems: "center",
                           }}
+                          title="Clique para editar o modelo"
                         >
                           <Edit2 size={14} /> Editar
                         </button>
