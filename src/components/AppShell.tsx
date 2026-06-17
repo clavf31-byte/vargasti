@@ -12,7 +12,8 @@ import { CommandPalette } from "@/components/CommandPalette";
 
 const NAV_MODULES = [
   {
-    group: "🛠️ Ferramentas",
+    group: "Ferramentas",
+    groupIcon: Wrench,
     items: [
       { to: "/ferramentas/emails", label: "Email Agent", icon: Mail },
       { to: "/ferramentas/excel", label: "Excel Tool", icon: FileSpreadsheet },
@@ -20,14 +21,16 @@ const NAV_MODULES = [
     ],
   },
   {
-    group: "📝 Projetos & Notas",
+    group: "Projetos & Notas",
+    groupIcon: FolderKanban,
     items: [
       { to: "/projetos", label: "Projetos", icon: FolderKanban },
       { to: "/anotacoes", label: "Anotações", icon: NotebookPen },
     ],
   },
   {
-    group: "💼 CRM",
+    group: "CRM",
+    groupIcon: Users,
     items: [
       { to: "/crm/clientes", label: "Clientes", icon: Users },
       { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet },
@@ -36,7 +39,8 @@ const NAV_MODULES = [
     ],
   },
   {
-    group: "💾 Storage",
+    group: "Storage",
+    groupIcon: Files,
     items: [
       { to: "/arquivos", label: "Arquivos", icon: Files },
     ],
@@ -45,7 +49,8 @@ const NAV_MODULES = [
 
 const NAV_ADMIN = [
   {
-    group: "👨‍💻 Admin",
+    group: "Admin",
+    groupIcon: ShieldCheck,
     items: [
       { to: "/admin", label: "Usuários", icon: ShieldCheck },
     ],
@@ -62,10 +67,10 @@ export function AppShell({ children }: { children?: ReactNode }) {
       if (saved) return JSON.parse(saved);
     }
     return {
-      "🛠️ Ferramentas": false,
-      "📝 Projetos & Notas": false,
-      "💼 CRM": false,
-      "💾 Storage": false,
+      "Ferramentas": false,
+      "Projetos & Notas": false,
+      "CRM": false,
+      "Storage": false,
     };
   });
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
@@ -192,7 +197,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
               : "none",
           }}
         >
-          ▦ Dashboard
+          <LayoutDashboard className="size-4" />
+          Dashboard
         </Link>
 
         {/* Navigation */}
@@ -201,7 +207,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
             Módulos
           </p>
 
-          {ALL_MODULES.map(({ group, items }) => (
+          {ALL_MODULES.map(({ group, groupIcon: GroupIcon, items }) => (
             <div key={group} className="rounded-[13px] overflow-hidden">
               <button
                 onClick={() => toggleGroup(group)}
@@ -220,7 +226,10 @@ export function AppShell({ children }: { children?: ReactNode }) {
                   }
                 }}
               >
-                <span className="text-sm font-bold">{group}</span>
+                <span className="flex items-center gap-2 text-sm font-bold">
+                  <GroupIcon className="size-4 opacity-70" />
+                  {group}
+                </span>
                 <ChevronDown
                   className="size-3.5 transition-transform"
                   style={{
@@ -301,7 +310,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
                 e.currentTarget.style.borderColor = "rgba(255,255,255,.07)";
               }}
             >
-              <span>⌕ Busca rápida</span>
+              <span className="flex items-center gap-2"><Search className="size-3.5" /> Busca rápida</span>
               <span className="text-[9px] px-1.5 py-0.5 border rounded" style={{ borderColor: "rgba(255,255,255,.14)", background: "rgba(255,255,255,.06)" }}>
                 CTRL K
               </span>
