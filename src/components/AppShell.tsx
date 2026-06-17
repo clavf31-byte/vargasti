@@ -141,25 +141,18 @@ export function AppShell({ children }: { children?: ReactNode }) {
             onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3 flex-1"
           >
-            <div
+            <img
+              src={vargasLogo}
+              alt="VargasTI"
               style={{
                 width: 88,
                 height: 88,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.96)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                objectFit: "contain",
                 flexShrink: 0,
-                boxShadow: "0 0 22px rgba(19,200,211,0.4), 0 2px 10px rgba(0,0,0,0.5)",
+                filter: "invert(1) hue-rotate(180deg) drop-shadow(0 0 10px rgba(19,200,211,0.6))",
+                mixBlendMode: "screen",
               }}
-            >
-              <img
-                src={vargasLogo}
-                alt="VargasTI"
-                style={{ width: 76, height: 76, objectFit: "contain" }}
-              />
-            </div>
+            />
             <div className="min-w-0">
               <h1 className="font-bold leading-tight" style={{ fontSize: 26 }}>
                 <span style={{ color: "#eaf3f8" }}>Vargas</span><span style={{ color: "#13c8d3" }}>TI</span>
