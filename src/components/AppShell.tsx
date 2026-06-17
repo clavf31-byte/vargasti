@@ -1,7 +1,7 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Mail, FileSpreadsheet, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
@@ -31,6 +31,7 @@ const NAV_MODULES = [
     items: [
       { to: "/crm/clientes", label: "Clientes", icon: Users },
       { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet },
+      { to: "/crm/contratos", label: "Contratos", icon: ScrollText },
       { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail },
     ],
   },

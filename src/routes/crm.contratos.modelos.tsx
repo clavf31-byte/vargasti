@@ -145,7 +145,7 @@ function ModelosPage() {
                 Conteúdo do Contrato *
               </label>
               <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.sm }}>
-                Use {{`{{cliente_nome}}`}}, {{`{{data}}`}}, etc. para variáveis
+                Use variáveis como: {"{{cliente_nome}}"}, {"{{data}}"}, {"{{valor}}"}, etc.
               </p>
               <textarea
                 placeholder="Cole aqui o conteúdo do seu contrato..."
