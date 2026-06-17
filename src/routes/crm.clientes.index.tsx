@@ -43,13 +43,14 @@ function ClientesPage() {
       setClientes((data as Cliente[]) || []);
     } catch (e) {
       console.error("Erro:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     loadClientes();
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

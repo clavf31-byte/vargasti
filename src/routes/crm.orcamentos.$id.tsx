@@ -112,7 +112,7 @@ function OrcamentoDetalhePage() {
         user_email: user.email,
       });
 
-      if (!emailResult.success) throw new Error("Erro ao enviar email");
+      if (!emailResult.success) throw new Error(emailResult.error || "Erro ao enviar email");
 
       // Atualizar status
       const { error: updateError } = await supabase

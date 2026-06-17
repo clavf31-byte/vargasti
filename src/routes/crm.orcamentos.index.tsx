@@ -35,13 +35,14 @@ function OrcamentosPage() {
       setClientes(clientRes.data || []);
     } catch (e) {
       console.error("Erro:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     loadData();
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {
