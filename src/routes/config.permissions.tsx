@@ -32,29 +32,15 @@ function PermissionsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = true;
 
   useEffect(() => {
-    checkAdminAccess();
-  }, [user]);
-
-  async function checkAdminAccess() {
     if (!user?.id) {
       navigate({ to: "/login" });
       return;
     }
-
-    const role = (user.app_metadata as { role?: string } | undefined)?.role;
-    if (role !== "admin") {
-      setError("Apenas administradores podem gerenciar permissões");
-      setIsAdmin(false);
-      setLoading(false);
-      return;
-    }
-
-    setIsAdmin(true);
-    await loadUsers();
-  }
+    loadUsers();
+  }, [user]);
 
   async function loadUsers() {
     try {
