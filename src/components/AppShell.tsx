@@ -9,14 +9,16 @@ import vargasLogo from "@/assets/vargasti-icon.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { CommandPalette } from "@/components/CommandPalette";
+import { useModulePermissions } from "@/hooks/useModulePermissions";
+import type { ModulePermissions } from "@/hooks/useModulePermissions";
 
 const NAV_MODULES = [
   {
     group: "Ferramentas",
     groupIcon: Wrench,
     items: [
-      { to: "/ferramentas/emails", label: "Email Agent", icon: Mail },
-      { to: "/ferramentas/excel", label: "Excel Tool", icon: FileSpreadsheet },
+      { to: "/ferramentas/emails", label: "Email Agent", icon: Mail, permKey: "can_access_email" as keyof ModulePermissions },
+      { to: "/ferramentas/excel", label: "Excel Tool", icon: FileSpreadsheet, permKey: "can_access_excel" as keyof ModulePermissions },
       { to: "/ferramentas/whatsapp", label: "WhatsApp", icon: MessageCircle },
     ],
   },
@@ -24,25 +26,25 @@ const NAV_MODULES = [
     group: "Projetos & Notas",
     groupIcon: FolderKanban,
     items: [
-      { to: "/projetos", label: "Projetos", icon: FolderKanban },
-      { to: "/anotacoes", label: "Anotações", icon: NotebookPen },
+      { to: "/projetos", label: "Projetos", icon: FolderKanban, permKey: "can_access_projects" as keyof ModulePermissions },
+      { to: "/anotacoes", label: "Anotações", icon: NotebookPen, permKey: "can_access_notes" as keyof ModulePermissions },
     ],
   },
   {
     group: "CRM",
     groupIcon: Users,
     items: [
-      { to: "/crm/clientes", label: "Clientes", icon: Users },
-      { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet },
-      { to: "/crm/contratos", label: "Contratos", icon: ScrollText },
-      { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail },
+      { to: "/crm/clientes", label: "Clientes", icon: Users, permKey: "can_access_crm" as keyof ModulePermissions },
+      { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet, permKey: "can_access_crm" as keyof ModulePermissions },
+      { to: "/crm/contratos", label: "Contratos", icon: ScrollText, permKey: "can_access_crm" as keyof ModulePermissions },
+      { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail, permKey: "can_access_crm" as keyof ModulePermissions },
     ],
   },
   {
     group: "Storage",
     groupIcon: Files,
     items: [
-      { to: "/arquivos", label: "Arquivos", icon: Files },
+      { to: "/arquivos", label: "Arquivos", icon: Files, permKey: "can_access_files" as keyof ModulePermissions },
     ],
   },
 ];
@@ -74,6 +76,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     };
   });
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
+  const { perms, isAdmin, loaded: permsLoaded } = useModulePermissions();
 
   useEffect(() => {
     localStorage.setItem("sidebarExpandedGroups", JSON.stringify(expandedGroups));
@@ -84,12 +87,21 @@ export function AppShell({ children }: { children?: ReactNode }) {
     user?.email?.split("@")[0] ??
     "user";
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-  const isAdmin = (user?.app_metadata as { role?: string } | undefined)?.role === "admin";
 
   const ALL_MODULES = isAdmin ? [...NAV_MODULES, ...NAV_ADMIN] : NAV_MODULES;
 
+  const VISIBLE_MODULES = permsLoaded && !isAdmin
+    ? ALL_MODULES.map(group => ({
+        ...group,
+        items: group.items.filter(item =>
+          !(item as { permKey?: keyof ModulePermissions }).permKey ||
+          perms[(item as { permKey?: keyof ModulePermissions }).permKey!] !== false
+        ),
+      })).filter(group => group.items.length > 0)
+    : ALL_MODULES;
+
   const currentPage = (() => {
-    for (const mod of ALL_MODULES) {
+    for (const mod of VISIBLE_MODULES) {
       const item = mod.items.find(({ to }) =>
         to === "/" ? pathname === "/" : pathname.startsWith(to)
       );
@@ -207,7 +219,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
             Módulos
           </p>
 
-          {ALL_MODULES.map(({ group, groupIcon: GroupIcon, items }) => (
+          {VISIBLE_MODULES.map(({ group, groupIcon: GroupIcon, items }) => (
             <div key={group} className="rounded-[13px] overflow-hidden">
               <button
                 onClick={() => toggleGroup(group)}

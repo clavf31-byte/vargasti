@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
-import { Card, Button } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Check, X, Lock, AlertCircle } from "lucide-react";
+import { Check, X, Lock, AlertCircle, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/config/permissions")({
   head: () => ({ meta: [{ title: "Gerenciar Permissões · VargasTI" }] }),
@@ -25,6 +25,15 @@ interface UserAccess {
   can_access_files: boolean;
 }
 
+const MODULES = [
+  { key: "can_access_crm", label: "CRM" },
+  { key: "can_access_email", label: "Email Agent" },
+  { key: "can_access_excel", label: "Excel Tool" },
+  { key: "can_access_notes", label: "Anotações" },
+  { key: "can_access_projects", label: "Projetos" },
+  { key: "can_access_files", label: "Arquivos" },
+];
+
 function PermissionsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,52 +41,53 @@ function PermissionsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const isAdmin = true;
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
       navigate({ to: "/login" });
       return;
     }
-    loadUsers();
+    checkAdminAndLoad();
   }, [user]);
+
+  async function checkAdminAndLoad() {
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+
+    const admin = roleData?.role === "admin";
+    setIsAdmin(admin);
+
+    if (admin) {
+      await loadUsers();
+    } else {
+      setLoading(false);
+    }
+  }
 
   async function loadUsers() {
     try {
-      const { data, error: profileError } = await (supabase as any)
-        .from("profiles")
-        .select("id, email, full_name, role")
-        .order("created_at", { ascending: false });
+      const [profilesRes, rolesRes, permsRes] = await Promise.all([
+        supabase.from("profiles").select("id, email, full_name").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("user_module_permissions").select("*"),
+      ]);
 
-      if (profileError) throw profileError;
+      if (profilesRes.error) throw profilesRes.error;
 
-      const userIds = (data || []).map((u: any) => u.id);
-      if (userIds.length === 0) {
-        setUsers([]);
-        setLoading(false);
-        return;
-      }
+      const rolesByUser = new Map((rolesRes.data || []).map((r: any) => [r.user_id, r.role]));
+      const permsByUser = new Map((permsRes.data || []).map((p: any) => [p.user_id, p]));
 
-      const { data: permData, error: permError } = await supabase
-        .from("user_module_permissions")
-        .select("*")
-        .in("user_id", userIds);
-
-      if (permError && permError.code !== "PGRST116") {
-        throw permError;
-      }
-
-      const permsByUserId = new Map(
-        (permData || []).map((p: any) => [p.user_id, p])
-      );
-
-      const enrichedUsers = (data || []).map((u: any) => {
-        const perms = permsByUserId.get(u.id) || {};
+      const enriched = (profilesRes.data || []).map((p: any) => {
+        const perms = permsByUser.get(p.id) || {};
         return {
-          id: u.id,
-          email: u.email,
-          name: u.full_name || u.email,
-          role: u.role || "user",
+          id: p.id,
+          email: p.email || "",
+          name: p.full_name || p.email || "",
+          role: rolesByUser.get(p.id) || "user",
           can_access_crm: perms.can_access_crm !== false,
           can_access_email: perms.can_access_email !== false,
           can_access_excel: perms.can_access_excel !== false,
@@ -87,108 +97,99 @@ function PermissionsPage() {
         };
       });
 
-      setUsers(enrichedUsers);
+      setUsers(enriched);
     } catch (err) {
-      console.error("Erro ao carregar usuários:", err);
-      setError("Erro ao carregar dados de permissões");
+      console.error(err);
+      setError("Erro ao carregar usuários");
     } finally {
       setLoading(false);
     }
   }
 
   async function toggleAccess(userId: string, permission: string) {
-    const user = users.find((u) => u.id === userId);
-    if (!user) return;
+    const u = users.find((x) => x.id === userId);
+    if (!u) return;
 
-    const newValue = !user[permission as keyof UserAccess];
-
-    setUsers(
-      users.map((u) =>
-        u.id === userId ? { ...u, [permission]: newValue } : u
-      )
-    );
-
+    const newValue = !u[permission as keyof UserAccess];
+    setUsers(users.map((x) => x.id === userId ? { ...x, [permission]: newValue } : x));
     setSaving(userId);
 
     try {
       const { error } = await supabase
         .from("user_module_permissions")
         .upsert(
-          {
-            user_id: userId,
-            [permission]: newValue,
-            updated_at: new Date().toISOString(),
-          } as any,
+          { user_id: userId, [permission]: newValue, updated_at: new Date().toISOString() } as any,
           { onConflict: "user_id" }
         );
-
       if (error) throw error;
     } catch (err) {
-      console.error(`Erro ao atualizar permissão ${permission}:`, err);
-      setError(`Erro ao atualizar permissão`);
-
-      setUsers(
-        users.map((u) =>
-          u.id === userId ? { ...u, [permission]: !newValue } : u
-        )
-      );
+      console.error(err);
+      setUsers(users.map((x) => x.id === userId ? { ...x, [permission]: !newValue } : x));
+      setError("Erro ao salvar permissão");
     } finally {
       setSaving(null);
     }
   }
 
-  const modules = [
-    { key: "can_access_crm", label: "CRM", icon: "📊" },
-    { key: "can_access_email", label: "Email Agent", icon: "📧" },
-    { key: "can_access_excel", label: "Excel Tool", icon: "📊" },
-    { key: "can_access_notes", label: "Anotações", icon: "📝" },
-    { key: "can_access_projects", label: "Projetos", icon: "📁" },
-    { key: "can_access_files", label: "Arquivos", icon: "💾" },
-  ];
+  if (isAdmin === null || loading) {
+    return (
+      <AppShell>
+        <div style={{ padding: spacing.xl, color: colors.textSecondary }}>Carregando...</div>
+      </AppShell>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <AppShell>
+        <div style={{ padding: spacing.xl, maxWidth: 480 }}>
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: spacing.md,
+            padding: spacing.lg, background: "#7f1d1d",
+            borderRadius: borderRadius.md,
+          }}>
+            <AlertCircle size={20} color="#fca5a5" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <p style={{ color: "#fca5a5", fontWeight: 600, margin: 0 }}>Acesso Restrito</p>
+              <p style={{ color: "#fee2e2", fontSize: 14, margin: "6px 0 0" }}>
+                Apenas administradores podem gerenciar permissões.
+              </p>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
-      <div style={{ padding: spacing.xl, maxWidth: "1400px", margin: "0 auto" }}>
-        {/* HEADER */}
+      <div style={{ padding: spacing.xl, maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ marginBottom: spacing.xl }}>
-          <h1 style={{ margin: 0, color: colors.text, fontSize: "28px", fontWeight: 700 }}>
-            🔐 Gerenciar Permissões
-          </h1>
-          <p style={{ margin: "0.5rem 0 0 0", color: colors.textSecondary, fontSize: "14px" }}>
-            Controle o acesso de cada operador aos módulos do sistema
+          <div style={{ display: "flex", alignItems: "center", gap: spacing.sm, marginBottom: 6 }}>
+            <ShieldCheck size={20} color={colors.primary} />
+            <h1 style={{ margin: 0, color: colors.text, fontSize: 22, fontWeight: 700 }}>
+              Permissões de Usuários
+            </h1>
+          </div>
+          <p style={{ margin: 0, color: colors.textSecondary, fontSize: 13 }}>
+            Controle quais módulos cada usuário pode acessar
           </p>
         </div>
 
-        {/* ERROR MESSAGE */}
-        {error && !isAdmin && (
-          <Card>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: spacing.md, padding: spacing.lg, background: "#7f1d1d", borderRadius: borderRadius.md }}>
-              <AlertCircle size={20} color="#fca5a5" style={{ flexShrink: 0, marginTop: "2px" }} />
-              <div>
-                <p style={{ color: "#fca5a5", fontWeight: 600, margin: 0 }}>Acesso Restrito</p>
-                <p style={{ color: "#fee2e2", fontSize: "14px", margin: "0.5rem 0 0 0" }}>{error}</p>
-              </div>
-            </div>
-          </Card>
+        {error && (
+          <div style={{
+            padding: spacing.md, marginBottom: spacing.lg,
+            background: "rgba(239,68,68,.1)", border: `1px solid ${colors.error}`,
+            borderRadius: borderRadius.md, color: colors.error, fontSize: 13,
+          }}>
+            {error}
+          </div>
         )}
 
-        {/* CONTENT */}
-        {!isAdmin && error ? (
+        {users.length === 0 ? (
           <Card>
             <div style={{ textAlign: "center", padding: spacing.xl, color: colors.textSecondary }}>
-              Você não tem permissão para acessar esta página
-            </div>
-          </Card>
-        ) : loading ? (
-          <Card>
-            <div style={{ textAlign: "center", padding: spacing.xl, color: colors.textSecondary }}>
-              Carregando usuários...
-            </div>
-          </Card>
-        ) : users.length === 0 ? (
-          <Card>
-            <div style={{ textAlign: "center", padding: spacing.xl, color: colors.textSecondary }}>
-              Nenhum usuário encontrado
+              Nenhum usuário encontrado. Usuários aparecem aqui após o primeiro login.
             </div>
           </Card>
         ) : (
@@ -196,73 +197,63 @@ function PermissionsPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>
+                  <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
                     USUÁRIO
                   </th>
-                  <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>
+                  <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
                     ROLE
                   </th>
-                  {modules.map(({ key, label, icon }) => (
-                    <th key={key} style={{ padding: spacing.md, textAlign: "center", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                        <span>{icon}</span>
-                        <span>{label}</span>
-                      </div>
+                  {MODULES.map(({ key, label }) => (
+                    <th key={key} style={{ padding: spacing.md, textAlign: "center", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
+                      {label}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {users.map((userAccess) => (
-                  <tr key={userAccess.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                {users.map((u) => (
+                  <tr key={u.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
                     <td style={{ padding: spacing.md }}>
-                      <div>
-                        <div style={{ color: colors.text, fontWeight: 600 }}>{userAccess.name}</div>
-                        <div style={{ color: colors.textSecondary, fontSize: "12px" }}>{userAccess.email}</div>
-                      </div>
+                      <div style={{ color: colors.text, fontWeight: 600, fontSize: 13 }}>{u.name}</div>
+                      <div style={{ color: colors.textSecondary, fontSize: 11 }}>{u.email}</div>
                     </td>
-                    <td style={{ padding: spacing.md, color: colors.text }}>
+                    <td style={{ padding: spacing.md }}>
                       <span style={{
-                        display: "inline-block",
-                        padding: "4px 8px",
-                        background: colors.backgroundTertiary,
-                        borderRadius: borderRadius.sm,
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
+                        display: "inline-block", padding: "3px 8px",
+                        background: u.role === "admin" ? "rgba(19,200,211,.15)" : colors.backgroundTertiary,
+                        color: u.role === "admin" ? colors.primary : colors.textSecondary,
+                        borderRadius: borderRadius.sm, fontSize: 11, fontWeight: 700,
+                        textTransform: "uppercase" as const,
                       }}>
-                        {userAccess.role}
+                        {u.role}
                       </span>
                     </td>
-                    {modules.map(({ key }) => (
-                      <td key={key} style={{ padding: spacing.md, textAlign: "center" }}>
-                        <button
-                          onClick={() => toggleAccess(userAccess.id, key)}
-                          disabled={saving === userAccess.id}
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            border: "none",
-                            borderRadius: borderRadius.sm,
-                            background: userAccess[key as keyof UserAccess] ? colors.success : colors.backgroundTertiary,
-                            color: "#fff",
-                            cursor: saving === userAccess.id ? "wait" : "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transition: "all 0.2s",
-                            opacity: saving === userAccess.id ? 0.6 : 1,
-                          }}
-                          title={userAccess[key as keyof UserAccess] ? "Revogar acesso" : "Conceder acesso"}
-                        >
-                          {userAccess[key as keyof UserAccess] ? (
-                            <Check size={16} />
-                          ) : (
-                            <X size={16} />
-                          )}
-                        </button>
-                      </td>
-                    ))}
+                    {MODULES.map(({ key }) => {
+                      const enabled = u[key as keyof UserAccess] as boolean;
+                      return (
+                        <td key={key} style={{ padding: spacing.md, textAlign: "center" }}>
+                          <button
+                            onClick={() => toggleAccess(u.id, key)}
+                            disabled={saving === u.id || u.role === "admin"}
+                            title={u.role === "admin" ? "Admin tem acesso total" : enabled ? "Revogar acesso" : "Conceder acesso"}
+                            style={{
+                              width: 32, height: 32,
+                              border: "none",
+                              borderRadius: borderRadius.sm,
+                              background: u.role === "admin" || enabled ? colors.success : colors.backgroundTertiary,
+                              color: "#fff",
+                              cursor: u.role === "admin" || saving === u.id ? "default" : "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              margin: "0 auto",
+                              opacity: saving === u.id ? 0.6 : u.role === "admin" ? 0.5 : 1,
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            {u.role === "admin" || enabled ? <Check size={15} /> : <X size={15} />}
+                          </button>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -270,10 +261,9 @@ function PermissionsPage() {
           </div>
         )}
 
-        {/* FOOTER */}
-        <div style={{ marginTop: spacing.xl, textAlign: "center", color: colors.textSecondary, fontSize: "12px" }}>
-          <p>💡 Clique nos ícones para conceder ou revogar acesso aos módulos</p>
-        </div>
+        <p style={{ marginTop: spacing.lg, color: colors.textSecondary, fontSize: 11 }}>
+          Alteracoes tem efeito no proximo login do usuario.
+        </p>
       </div>
     </AppShell>
   );
