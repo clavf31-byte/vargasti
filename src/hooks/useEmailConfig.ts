@@ -62,7 +62,7 @@ export function useEmailConfig() {
   const [blacklist, setBlacklist] = useState<EmailBlacklist[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Carregar do Supabase via RPC
+  // Carregar do Supabase via RPC (com fallback robusto)
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -80,6 +80,10 @@ export function useEmailConfig() {
           else setPriorities(DEFAULT_PRIORITIES);
 
           if (result.blacklist?.length > 0) setBlacklist(result.blacklist);
+        } else {
+          // RPC returned empty, check localStorage
+          const savedBL = localStorage.getItem("email_blacklist");
+          if (savedBL) setBlacklist(JSON.parse(savedBL));
         }
       } catch (err) {
         console.error("[useEmailConfig] Error loading from Supabase:", err);

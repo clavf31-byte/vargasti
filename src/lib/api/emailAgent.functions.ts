@@ -500,6 +500,7 @@ export async function sendToHelpdeskInternal(data: HelpdeskPayload) {
       "Authorization": `Bearer ${helpdeskApiKey}`,
     },
     body: JSON.stringify({
+      emailId: data.emailId,
       subject: data.subject,
       from: data.from,
       body: data.body,
@@ -578,6 +579,13 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
           // If it's a request, send to Helpdesk
           if (analysis.isRequest) {
             try {
+              // Mark as processing FIRST to prevent race conditions with duplicate polling
+              await supabase.from("email_processing_log").upsert({
+                email_id: email.id,
+                status: "processing",
+                error: null,
+              });
+
               await sendToHelpdeskInternal({
                 emailId: email.id,
                 from: email.from,
@@ -588,6 +596,7 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
                 summary: analysis.summary || email.subject,
               });
 
+              // Update to processed after successful send
               await supabase.from("email_processing_log").upsert({
                 email_id: email.id,
                 status: "processed",
@@ -602,6 +611,12 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
               console.log("[email-pipeline] Marked as read:", email.id);
             } catch (err) {
               console.error("[email-pipeline] Error sending to Helpdesk:", err);
+              // Mark as error so we can retry later
+              await supabase.from("email_processing_log").upsert({
+                email_id: email.id,
+                status: "error",
+                error: err instanceof Error ? err.message : "Unknown error",
+              });
             }
           } else {
             console.log("[email-pipeline] Email is not a request, skipping");
