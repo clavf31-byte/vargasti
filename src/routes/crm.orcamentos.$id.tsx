@@ -7,7 +7,7 @@ import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { criarOrdenServicoDoOrcamento } from "@/hooks/useOrdenServico";
 import { criarNotaFiscal } from "@/hooks/useNotaFiscal";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
-import { ChevronLeft, Mail, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Copy } from "lucide-react";
+import { ChevronLeft, Mail, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Copy, Edit } from "lucide-react";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -447,7 +447,27 @@ function OrcamentoDetalhePage() {
           )}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+          <button
+            onClick={() => navigate({ to: `/crm/orcamentos/editar/${id}` })}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              padding: "12px 16px",
+              background: "rgba(168, 85, 247, 0.2)",
+              border: "1px solid rgba(168, 85, 247, 0.4)",
+              borderRadius: "6px",
+              color: "#a855f7",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            <Edit size={16} />
+            Editar
+          </button>
+
           {orcamento.status_enum === "rascunho" && (
             <button
               onClick={handleEnviarComEmail}

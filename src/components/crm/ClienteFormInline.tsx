@@ -21,7 +21,6 @@ export function ClienteFormInline({
     nome: "",
     email: "",
     telefone: "",
-    empresa: "",
     cnpj_cpf: "",
     endereco: "",
     cidade: "",
@@ -55,7 +54,6 @@ export function ClienteFormInline({
         nome: "",
         email: "",
         telefone: "",
-        empresa: "",
         cnpj_cpf: "",
         endereco: "",
         cidade: "",
@@ -166,16 +164,6 @@ export function ClienteFormInline({
             type="text"
             value={formData.telefone}
             onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-            style={inputStyle}
-          />
-        </div>
-
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Empresa</label>
-          <input
-            type="text"
-            value={formData.empresa}
-            onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
             style={inputStyle}
           />
         </div>

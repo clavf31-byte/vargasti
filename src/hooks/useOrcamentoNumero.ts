@@ -5,7 +5,7 @@ export async function gerarNumeroOrcamento(userId: string): Promise<string> {
 
   try {
     // Buscar ou criar sequence para o ano atual
-    const { data: existing } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from("orcamento_sequences")
       .select("next_number")
       .eq("user_id", userId)
@@ -14,21 +14,19 @@ export async function gerarNumeroOrcamento(userId: string): Promise<string> {
 
     let nextNumber = 1;
 
-    if (existing) {
+    if (existing && !selectError) {
       // Incrementar sequence existente
-      const { data: updated, error } = await supabase
+      const { error } = await supabase
         .from("orcamento_sequences")
         .update({ next_number: existing.next_number + 1 })
         .eq("user_id", userId)
-        .eq("year", currentYear)
-        .select("next_number")
-        .single();
+        .eq("year", currentYear);
 
       if (error) throw error;
-      nextNumber = updated.next_number;
+      nextNumber = existing.next_number + 1;
     } else {
-      // Criar nova sequence
-      const { data: created, error } = await supabase
+      // Criar nova sequence (não existe ainda)
+      const { error } = await supabase
         .from("orcamento_sequences")
         .insert([
           {
@@ -36,12 +34,32 @@ export async function gerarNumeroOrcamento(userId: string): Promise<string> {
             year: currentYear,
             next_number: 2,
           },
-        ])
-        .select("next_number")
-        .single();
+        ]);
 
-      if (error) throw error;
-      nextNumber = created.next_number || 1;
+      if (error) {
+        // Se falhar por duplicate key, tenta atualizar
+        if (error.code === "23505") {
+          const { data: freshData } = await supabase
+            .from("orcamento_sequences")
+            .select("next_number")
+            .eq("user_id", userId)
+            .eq("year", currentYear)
+            .single();
+
+          if (freshData) {
+            nextNumber = freshData.next_number + 1;
+            await supabase
+              .from("orcamento_sequences")
+              .update({ next_number: nextNumber })
+              .eq("user_id", userId)
+              .eq("year", currentYear);
+          }
+        } else {
+          throw error;
+        }
+      } else {
+        nextNumber = 2;
+      }
     }
 
     // Formatar: ORC-2026-000001

@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,7 @@ type Cliente = {
 
 function ClientesPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [filtrados, setFiltrados] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -288,6 +289,7 @@ function ClientesPage() {
                         }}
                       >
                         <button
+                          onClick={() => navigate({ to: `/crm/clientes/${cliente.id}` })}
                           style={{
                             background: colors.background,
                             border: `1px solid ${colors.border}`,
@@ -302,7 +304,7 @@ function ClientesPage() {
                           }}
                         >
                           <Eye size={14} />
-                          Ver
+                          Editar
                         </button>
                         <button
                           onClick={() => handleDelete(cliente.id)}

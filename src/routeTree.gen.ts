@@ -43,6 +43,8 @@ import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetc
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
 import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.approve.$token'
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
+import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
+import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
 
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
@@ -214,6 +216,16 @@ const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => CrmOrcamentosRoute,
 } as any)
+const CrmClientesIdRoute = CrmClientesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmClientesRoute,
+} as any)
+const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
+  id: '/editar/$id',
+  path: '/editar/$id',
+  getParentRoute: () => CrmOrcamentosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -237,7 +249,7 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/config/permissions': typeof ConfigPermissionsRoute
-  '/crm/clientes': typeof CrmClientesRoute
+  '/crm/clientes': typeof CrmClientesRouteWithChildren
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
   '/crm/pecas': typeof CrmPecasRoute
@@ -248,8 +260,10 @@ export interface FileRoutesByFullPath {
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
+  '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
   '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
+  '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -272,7 +286,7 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/config/permissions': typeof ConfigPermissionsRoute
-  '/crm/clientes': typeof CrmClientesRoute
+  '/crm/clientes': typeof CrmClientesRouteWithChildren
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
   '/crm/pecas': typeof CrmPecasRoute
@@ -283,8 +297,10 @@ export interface FileRoutesByTo {
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas': typeof FerramentasIndexRoute
+  '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
   '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
+  '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -309,7 +325,7 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/config/permissions': typeof ConfigPermissionsRoute
-  '/crm/clientes': typeof CrmClientesRoute
+  '/crm/clientes': typeof CrmClientesRouteWithChildren
   '/crm/orcamentos': typeof CrmOrcamentosRouteWithChildren
   '/crm/pagamentos': typeof CrmPagamentosRoute
   '/crm/pecas': typeof CrmPecasRoute
@@ -320,8 +336,10 @@ export interface FileRoutesById {
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/ferramentas/': typeof FerramentasIndexRoute
+  '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
   '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
+  '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -358,8 +376,10 @@ export interface FileRouteTypes {
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
+    | '/crm/clientes/$id'
     | '/crm/orcamentos/$id'
     | '/orcamento/approve/$token'
+    | '/crm/orcamentos/editar/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -393,8 +413,10 @@ export interface FileRouteTypes {
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas'
+    | '/crm/clientes/$id'
     | '/crm/orcamentos/$id'
     | '/orcamento/approve/$token'
+    | '/crm/orcamentos/editar/$id'
   id:
     | '__root__'
     | '/'
@@ -429,8 +451,10 @@ export interface FileRouteTypes {
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/ferramentas/'
+    | '/crm/clientes/$id'
     | '/crm/orcamentos/$id'
     | '/orcamento/approve/$token'
+    | '/crm/orcamentos/editar/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -696,6 +720,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmOrcamentosIdRouteImport
       parentRoute: typeof CrmOrcamentosRoute
     }
+    '/crm/clientes/$id': {
+      id: '/crm/clientes/$id'
+      path: '/$id'
+      fullPath: '/crm/clientes/$id'
+      preLoaderRoute: typeof CrmClientesIdRouteImport
+      parentRoute: typeof CrmClientesRoute
+    }
+    '/crm/orcamentos/editar/$id': {
+      id: '/crm/orcamentos/editar/$id'
+      path: '/editar/$id'
+      fullPath: '/crm/orcamentos/editar/$id'
+      preLoaderRoute: typeof CrmOrcamentosEditarIdRouteImport
+      parentRoute: typeof CrmOrcamentosRoute
+    }
   }
 }
 
@@ -720,12 +758,26 @@ const ConfigRouteChildren: ConfigRouteChildren = {
 const ConfigRouteWithChildren =
   ConfigRoute._addFileChildren(ConfigRouteChildren)
 
+interface CrmClientesRouteChildren {
+  CrmClientesIdRoute: typeof CrmClientesIdRoute
+}
+
+const CrmClientesRouteChildren: CrmClientesRouteChildren = {
+  CrmClientesIdRoute: CrmClientesIdRoute,
+}
+
+const CrmClientesRouteWithChildren = CrmClientesRoute._addFileChildren(
+  CrmClientesRouteChildren,
+)
+
 interface CrmOrcamentosRouteChildren {
   CrmOrcamentosIdRoute: typeof CrmOrcamentosIdRoute
+  CrmOrcamentosEditarIdRoute: typeof CrmOrcamentosEditarIdRoute
 }
 
 const CrmOrcamentosRouteChildren: CrmOrcamentosRouteChildren = {
   CrmOrcamentosIdRoute: CrmOrcamentosIdRoute,
+  CrmOrcamentosEditarIdRoute: CrmOrcamentosEditarIdRoute,
 }
 
 const CrmOrcamentosRouteWithChildren = CrmOrcamentosRoute._addFileChildren(
@@ -733,7 +785,7 @@ const CrmOrcamentosRouteWithChildren = CrmOrcamentosRoute._addFileChildren(
 )
 
 interface CrmRouteChildren {
-  CrmClientesRoute: typeof CrmClientesRoute
+  CrmClientesRoute: typeof CrmClientesRouteWithChildren
   CrmOrcamentosRoute: typeof CrmOrcamentosRouteWithChildren
   CrmPagamentosRoute: typeof CrmPagamentosRoute
   CrmPecasRoute: typeof CrmPecasRoute
@@ -743,7 +795,7 @@ interface CrmRouteChildren {
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
-  CrmClientesRoute: CrmClientesRoute,
+  CrmClientesRoute: CrmClientesRouteWithChildren,
   CrmOrcamentosRoute: CrmOrcamentosRouteWithChildren,
   CrmPagamentosRoute: CrmPagamentosRoute,
   CrmPecasRoute: CrmPecasRoute,
@@ -797,3 +849,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { OrcamentoItensTable } from "./OrcamentoItensTable";
 import { OrcamentoItemForm } from "./OrcamentoItemForm";
@@ -36,18 +36,6 @@ export function OrcamentoFormInline({
   const [showItemForm, setShowItemForm] = useState(false);
   const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
 
-  useEffect(() => {
-    if (isOpen && !formData.numero_formatado) {
-      gerarNumeroOrcamento(userId)
-        .then((numero) => {
-          setFormData((prev) => ({ ...prev, numero_formatado: numero }));
-        })
-        .catch((err) => {
-          console.error("Erro ao gerar número:", err);
-          setError("Erro ao gerar número de orçamento");
-        });
-    }
-  }, [isOpen, userId]);
 
   if (!isOpen) return null;
 
@@ -63,11 +51,15 @@ export function OrcamentoFormInline({
     setError(null);
 
     try {
-      const { data: insertedData, error: insertError } = await supabase
+      // Gerar número apenas ao salvar
+      const numero = await gerarNumeroOrcamento(userId);
+
+      const { error: insertError } = await supabase
         .from("orcamentos")
         .insert([
           {
-            numero_formatado: formData.numero_formatado,
+            numero: numero,
+            numero_formatado: numero,
             cliente_id: formData.cliente_id,
             notas: formData.descricao,
             total: totalComDescontoEImpostos,
@@ -78,13 +70,20 @@ export function OrcamentoFormInline({
             data_vencimento: formData.data_vencimento || null,
             user_id: userId,
           },
-        ])
-        .select();
+        ]);
 
       if (insertError) throw insertError;
-      if (!insertedData || insertedData.length === 0) throw new Error("Erro ao criar orçamento");
 
-      const orcamentoId = insertedData[0].id;
+      // Get the created id from numero_formatado (ou fetch the latest)
+      const { data: createdOrc, error: fetchError } = await supabase
+        .from("orcamentos")
+        .select("id")
+        .eq("numero_formatado", numero)
+        .eq("user_id", userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      const orcamentoId = createdOrc.id;
 
       if (itens.length > 0) {
         await saveItens(orcamentoId);
@@ -346,7 +345,7 @@ export function OrcamentoFormInline({
           <Button
             variant="primary"
             type="submit"
-            disabled={loading || !formData.numero_formatado || !formData.cliente_id}
+            disabled={loading || !formData.cliente_id}
           >
             {loading ? "Criando..." : "Criar Orçamento"}
           </Button>
