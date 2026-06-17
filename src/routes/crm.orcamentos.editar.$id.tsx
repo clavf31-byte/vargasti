@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { AppShell, PageHeader, Card, Button } from "@/components/ui";
+import { AppShell } from "@/components/AppShell";
+import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 import { ChevronLeft } from "lucide-react";
 
