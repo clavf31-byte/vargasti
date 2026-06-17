@@ -220,8 +220,8 @@ export function ConfigWhitelistInline({
     if (!newEmail && !newDomain) return;
     const entry: EmailWhitelist = {
       id: Date.now().toString(),
-      email: newEmail.toLowerCase(),
-      domain: newDomain.toLowerCase(),
+      email: newEmail.toLowerCase().trim(),
+      domain: newDomain.toLowerCase().trim().replace(/^@/, ""),
     };
     setLocalWhitelist([...localWhitelist, entry]);
     setNewEmail("");
@@ -336,8 +336,8 @@ export function ConfigBlacklistInline({
     if (!newEmail && !newDomain) return;
     const entry: EmailBlacklist = {
       id: Date.now().toString(),
-      email: newEmail.toLowerCase(),
-      domain: newDomain.toLowerCase(),
+      email: newEmail.toLowerCase().trim(),
+      domain: newDomain.toLowerCase().trim().replace(/^@/, ""),
       reason: newReason,
     };
     setLocalBlacklist([...localBlacklist, entry]);
