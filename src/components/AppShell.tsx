@@ -143,28 +143,28 @@ export function AppShell({ children }: { children?: ReactNode }) {
           >
             <div
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: 10,
+                width: 60,
+                height: 60,
+                borderRadius: 14,
                 background: "rgba(255,255,255,0.96)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                boxShadow: "0 0 18px rgba(19,200,211,0.35), 0 2px 8px rgba(0,0,0,0.4)",
+                boxShadow: "0 0 22px rgba(19,200,211,0.4), 0 2px 10px rgba(0,0,0,0.5)",
               }}
             >
               <img
                 src={vargasLogo}
                 alt="VargasTI"
-                style={{ width: 34, height: 34, objectFit: "contain" }}
+                style={{ width: 50, height: 50, objectFit: "contain" }}
               />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-bold leading-tight">
+              <h1 className="font-bold leading-tight" style={{ fontSize: 17 }}>
                 <span style={{ color: "#eaf3f8" }}>Vargas</span><span style={{ color: "#13c8d3" }}>TI</span>
               </h1>
-              <span className="text-[10px] font-semibold tracking-wide" style={{ color: "rgba(19,200,211,0.7)" }}>
+              <span className="text-[11px] font-semibold tracking-wide" style={{ color: "rgba(19,200,211,0.7)" }}>
                 SOLUÇÕES QUE CONECTAM
               </span>
             </div>
