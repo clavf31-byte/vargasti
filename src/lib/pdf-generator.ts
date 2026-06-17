@@ -1,3 +1,5 @@
+import { jsPDF } from "jspdf";
+
 interface OrcamentoItem {
   descricao: string;
   quantidade: number;
@@ -60,7 +62,7 @@ function categorizarItens(itens: OrcamentoItem[]) {
 }
 
 export function gerarPDFOrcamento(orcamento: OrcamentoPDF) {
-  const doc = new (window as any).jspdf.jsPDF();
+  const doc = new jsPDF();
   const pageHeight = doc.internal.pageSize.getHeight();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 12;
