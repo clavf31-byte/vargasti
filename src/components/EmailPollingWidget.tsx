@@ -26,10 +26,22 @@ export function EmailPollingWidget() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [autoMode, setAutoMode] = useState(true);
+  const [autoMode, setAutoMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("email_polling_mode");
+      return saved ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
 
   const { categories, whitelist, priorities, blacklist, loaded, saveCategories, saveWhitelist, savePriorities, saveBlacklist } =
     useEmailConfig();
+
+  // Persist autoMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("email_polling_mode", JSON.stringify(autoMode));
+  }, [autoMode]);
 
   useEffect(() => {
     if (!autoMode) {
