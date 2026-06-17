@@ -561,7 +561,7 @@ async function isEmailWhitelisted(emailFrom: string, client?: EmailDbClient): Pr
 async function isEmailBlacklisted(emailFrom: string, client?: EmailDbClient): Promise<boolean> {
   try {
     const supabase = await getEmailDbClient(client);
-    const { data: emailSettings } = await supabase.rpc("load_email_settings");
+    const { data: emailSettings } = await (supabase as any).rpc("load_email_settings");
 
     if (!emailSettings || emailSettings.length === 0) return false;
 
