@@ -46,6 +46,7 @@ export async function criarNotaFiscal(
           cliente_id: input.cliente_id,
           orcamento_id: input.orcamento_id,
           os_id: input.os_id,
+          numero: numeroNF,
           numero_nfe: numeroNF,
           serie_nfe: 1,
           data_emissao: dataEmissao,
@@ -55,7 +56,7 @@ export async function criarNotaFiscal(
           valor_impostos: input.valor_impostos || 0,
           valor_total: input.valor_total,
           status: "rascunho",
-        },
+        } as any,
       ])
       .select()
       .single();
@@ -137,7 +138,7 @@ async function atualizarFinanceiroAposNF(
           total_nf: valorNF,
           qtd_nf: 1,
           total_aberto: valorNF,
-        },
+        } as any,
       ]);
     }
   } catch (err) {
