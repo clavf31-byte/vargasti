@@ -139,7 +139,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           <Link
             to="/"
             onClick={() => setSidebarOpen(false)}
-            className="flex items-end flex-1" style={{ gap: 0, marginLeft: -20 }}
+            className="flex items-center flex-1" style={{ gap: 0 }}
           >
             <img
               src={vargasLogo}
@@ -149,6 +149,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
                 height: 120,
                 objectFit: "contain",
                 flexShrink: 0,
+                marginRight: -14,
                 filter: "invert(1) hue-rotate(180deg) drop-shadow(0 0 10px rgba(19,200,211,0.6))",
                 mixBlendMode: "screen",
               }}
