@@ -18,7 +18,7 @@ interface Peca {
   codigo: string;
   descricao: string;
   categoria: string;
-  fabricante?: string;
+  fabricante?: string | null;
   valor_custo: number;
   valor_venda: number;
   estoque: number;
