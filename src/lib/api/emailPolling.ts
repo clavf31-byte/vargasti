@@ -78,7 +78,7 @@ async function runEmailPollingCycle(maxEmails: number) {
   try {
     console.log(`[email-polling] Running cycle at ${new Date().toISOString()}`);
 
-    const result = await (processEmailPipeline as any)({ data: { maxEmails } });
+    const result = await processEmailPipeline({ maxEmails });
 
     console.log("[email-polling] Cycle result:", result);
 
