@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, ScrollText } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/novo")({
   head: () => ({ meta: [{ title: "Novo Contrato · CRM VargasTI" }] }),
@@ -189,7 +189,7 @@ function NovoContratoPage() {
   return (
     <AppShell>
       <div style={{ padding: spacing.xl, maxWidth: "800px", margin: "0 auto" }}>
-        <PageHeader title="Novo Contrato" subtitle={step === 1 ? "Passo 1 de 2 — Dados básicos" : "Passo 2 de 2 — Preencher variáveis"} icon="📜" />
+        <PageHeader title="Novo Contrato" subtitle={step === 1 ? "Passo 1 de 2 — Dados básicos" : "Passo 2 de 2 — Preencher variáveis"} icon={<ScrollText size={32} color={colors.primary} />} />
 
         {step === 1 && (
           <Card>

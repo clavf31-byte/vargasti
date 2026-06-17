@@ -19,6 +19,7 @@ import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
+import { Route as ConfigIndexRouteImport } from './routes/config.index'
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
@@ -105,6 +106,11 @@ const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => FerramentasRoute,
+} as any)
+const ConfigIndexRoute = ConfigIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConfigRoute,
 } as any)
 const FerramentasWhatsappRoute = FerramentasWhatsappRouteImport.update({
   id: '/whatsapp',
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
+  '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/contratos/$id': typeof CrmContratosIdRouteWithChildren
@@ -340,7 +347,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
-  '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -364,6 +370,7 @@ export interface FileRoutesByTo {
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
+  '/config': typeof ConfigIndexRoute
   '/ferramentas': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/contratos/$id': typeof CrmContratosIdRouteWithChildren
@@ -413,6 +420,7 @@ export interface FileRoutesById {
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
+  '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/contratos/$id': typeof CrmContratosIdRouteWithChildren
@@ -463,6 +471,7 @@ export interface FileRouteTypes {
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
+    | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
     | '/crm/contratos/$id'
@@ -483,7 +492,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
-    | '/config'
     | '/crm'
     | '/login'
     | '/projetos'
@@ -507,6 +515,7 @@ export interface FileRouteTypes {
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
+    | '/config'
     | '/ferramentas'
     | '/crm/clientes/$id'
     | '/crm/contratos/$id'
@@ -555,6 +564,7 @@ export interface FileRouteTypes {
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
+    | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
     | '/crm/contratos/$id'
@@ -665,6 +675,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ferramentas/'
       preLoaderRoute: typeof FerramentasIndexRouteImport
       parentRoute: typeof FerramentasRoute
+    }
+    '/config/': {
+      id: '/config/'
+      path: '/'
+      fullPath: '/config/'
+      preLoaderRoute: typeof ConfigIndexRouteImport
+      parentRoute: typeof ConfigRoute
     }
     '/ferramentas/whatsapp': {
       id: '/ferramentas/whatsapp'
@@ -933,10 +950,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ConfigRouteChildren {
   ConfigPermissionsRoute: typeof ConfigPermissionsRoute
+  ConfigIndexRoute: typeof ConfigIndexRoute
 }
 
 const ConfigRouteChildren: ConfigRouteChildren = {
   ConfigPermissionsRoute: ConfigPermissionsRoute,
+  ConfigIndexRoute: ConfigIndexRoute,
 }
 
 const ConfigRouteWithChildren =

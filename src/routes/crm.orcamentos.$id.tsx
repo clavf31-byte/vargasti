@@ -52,6 +52,7 @@ function OrcamentoDetalhePage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageOk, setMessageOk] = useState(true);
   const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -131,10 +132,10 @@ function OrcamentoDetalhePage() {
         approval_token: linkResult.token,
       });
 
-      setMessage("✅ Orçamento enviado com sucesso!");
+      setMessage("Orçamento enviado com sucesso!"); setMessageOk(true);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Erro ao enviar";
-      setMessage(`❌ ${errorMsg}`);
+      setMessage(errorMsg); setMessageOk(false);
       console.error(err);
     } finally {
       setActionLoading(false);
@@ -159,10 +160,10 @@ function OrcamentoDetalhePage() {
       if (!result.success) throw new Error(result.error);
 
       setOrcamento({ ...orcamento, status_enum: "faturado" });
-      setMessage(`✅ Ordem de Serviço criada: ${result.os?.numero_formatado}`);
+      setMessage(`Ordem de Serviço criada: ${result.os?.numero_formatado}`); setMessageOk(true);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Erro ao criar OS";
-      setMessage(`❌ ${errorMsg}`);
+      setMessage(errorMsg); setMessageOk(false);
     } finally {
       setActionLoading(false);
     }
@@ -188,10 +189,10 @@ function OrcamentoDetalhePage() {
       if (!result.success) throw new Error(result.error);
 
       setOrcamento({ ...orcamento, status_enum: "faturado" });
-      setMessage(`✅ Nota Fiscal criada: ${result.nf?.numero_nfe}`);
+      setMessage(`Nota Fiscal criada: ${result.nf?.numero_nfe}`); setMessageOk(true);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Erro ao criar NF";
-      setMessage(`❌ ${errorMsg}`);
+      setMessage(errorMsg); setMessageOk(false);
     } finally {
       setActionLoading(false);
     }
@@ -225,9 +226,9 @@ function OrcamentoDetalhePage() {
         approval_url: approvalUrl || undefined,
       });
 
-      setMessage("✅ PDF baixado com sucesso!");
+      setMessage("PDF baixado com sucesso!"); setMessageOk(true);
     } catch (e) {
-      setMessage("❌ Erro ao gerar PDF");
+      setMessage("Erro ao gerar PDF"); setMessageOk(false);
       console.error(e);
     }
   }
@@ -332,16 +333,12 @@ function OrcamentoDetalhePage() {
         {message && (
           <div
             style={{
-              background: message.startsWith("✅")
-                ? "rgba(76, 175, 80, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-              border: message.startsWith("✅")
-                ? "1px solid rgba(76, 175, 80, 0.3)"
-                : "1px solid rgba(239, 68, 68, 0.3)",
+              background: messageOk ? "rgba(76, 175, 80, 0.1)" : "rgba(239, 68, 68, 0.1)",
+              border: messageOk ? "1px solid rgba(76, 175, 80, 0.3)" : "1px solid rgba(239, 68, 68, 0.3)",
               borderRadius: "6px",
               padding: "12px",
               marginBottom: "1.5rem",
-              color: message.startsWith("✅") ? "#66bb6a" : "#ef5350",
+              color: messageOk ? "#66bb6a" : "#ef5350",
               fontSize: "14px",
             }}
           >
@@ -589,7 +586,7 @@ function OrcamentoDetalhePage() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(approvalUrl);
-                setMessage("✅ Link copiado!");
+                setMessage("Link copiado!"); setMessageOk(true);
               }}
               style={{
                 display: "flex",

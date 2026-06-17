@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Plus, Eye, Send, FileUp, Trash2 } from "lucide-react";
+import { Plus, Eye, Send, FileUp, Trash2, ScrollText, FileEdit, CheckCircle2, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/")({
   head: () => ({ meta: [{ title: "Contratos · CRM VargasTI" }] }),
@@ -82,7 +82,7 @@ function ContratosPage() {
               <Plus size={18} /> Novo Contrato
             </Button>
           }
-          icon="📜"
+          icon={<ScrollText size={32} color={colors.primary} />}
         />
 
         {loading ? (
@@ -124,9 +124,9 @@ function ContratosPage() {
                         {(c.clientes as any)?.nome || "-"}
                       </td>
                       <td style={{ padding: spacing.md, color: getStatusColor(c.status), fontWeight: 600 }}>
-                        {c.status === "rascunho" && "📝 Rascunho"}
-                        {c.status === "enviado" && "📧 Enviado"}
-                        {c.status === "assinado" && "✅ Assinado"}
+                        {c.status === "rascunho" && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><FileEdit size={12} /> Rascunho</span>}
+                        {c.status === "enviado" && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Mail size={12} /> Enviado</span>}
+                        {c.status === "assinado" && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={12} /> Assinado</span>}
                       </td>
                       <td style={{ padding: spacing.md, color: colors.textSecondary }}>
                         {new Date(c.created_at).toLocaleDateString("pt-BR")}

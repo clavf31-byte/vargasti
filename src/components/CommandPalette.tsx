@@ -1,20 +1,23 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Mail, FileSpreadsheet, MessageCircle, FolderKanban, NotebookPen, Files, Settings } from "lucide-react";
+import {
+  Search, Mail, FileSpreadsheet, MessageCircle, FolderKanban, NotebookPen,
+  Files, Settings, LayoutDashboard, Users, Banknote, ScrollText, type LucideIcon,
+} from "lucide-react";
 
-const COMMANDS = [
-  { id: "dashboard", label: "Dashboard", icon: "🏠", path: "/" },
-  { id: "emails", label: "Email Agent", icon: "✉️", path: "/ferramentas/emails" },
-  { id: "excel", label: "Excel Tool", icon: "📊", path: "/ferramentas/excel" },
-  { id: "whatsapp", label: "WhatsApp", icon: "💬", path: "/ferramentas/whatsapp" },
-  { id: "projetos", label: "Projetos", icon: "📁", path: "/projetos" },
-  { id: "anotacoes", label: "Anotações", icon: "📝", path: "/anotacoes" },
-  { id: "crm", label: "CRM Dashboard", icon: "💼", path: "/crm" },
-  { id: "clientes", label: "Clientes", icon: "👥", path: "/crm/clientes" },
-  { id: "orcamentos", label: "Orçamentos", icon: "📄", path: "/crm/orcamentos" },
-  { id: "pagamentos", label: "Pagamentos", icon: "💳", path: "/crm/pagamentos" },
-  { id: "arquivos", label: "Arquivos", icon: "📦", path: "/arquivos" },
-  { id: "config", label: "Configurações", icon: "⚙️", path: "/config" },
+const COMMANDS: { id: string; label: string; icon: LucideIcon; path: string }[] = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { id: "emails", label: "Email Agent", icon: Mail, path: "/ferramentas/emails" },
+  { id: "excel", label: "Excel Tool", icon: FileSpreadsheet, path: "/ferramentas/excel" },
+  { id: "whatsapp", label: "WhatsApp", icon: MessageCircle, path: "/ferramentas/whatsapp" },
+  { id: "projetos", label: "Projetos", icon: FolderKanban, path: "/projetos" },
+  { id: "anotacoes", label: "Anotações", icon: NotebookPen, path: "/anotacoes" },
+  { id: "crm", label: "CRM Dashboard", icon: Users, path: "/crm" },
+  { id: "clientes", label: "Clientes", icon: Users, path: "/crm/clientes" },
+  { id: "orcamentos", label: "Orçamentos", icon: ScrollText, path: "/crm/orcamentos" },
+  { id: "pagamentos", label: "Pagamentos", icon: Banknote, path: "/crm/pagamentos" },
+  { id: "arquivos", label: "Arquivos", icon: Files, path: "/arquivos" },
+  { id: "config", label: "Configurações", icon: Settings, path: "/config" },
 ];
 
 interface CommandPaletteProps {
@@ -77,7 +80,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                   onClick={() => handleSelect(cmd.path)}
                   className="w-full text-left px-4 py-3 hover:bg-surface-2 transition-colors flex items-center gap-3 group"
                 >
-                  <span className="text-lg">{cmd.icon}</span>
+                  <cmd.icon className="size-4 text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground group-hover:text-brand">
                       {cmd.label}

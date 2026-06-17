@@ -8,7 +8,7 @@ import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
 import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FileEdit } from "lucide-react";
 
 export const Route = createFileRoute("/crm/orcamentos/editar/$id")({
   head: () => ({ meta: [{ title: "Editar Orçamento · CRM VargasTI" }] }),
@@ -186,7 +186,7 @@ function EditarOrcamentoPage() {
           Voltar
         </button>
 
-        <PageHeader title="Editar Orçamento" subtitle={orcamento.numero_formatado} icon="📋" />
+        <PageHeader title="Editar Orçamento" subtitle={orcamento.numero_formatado} icon={<FileEdit size={32} color={colors.primary} />} />
 
         <form onSubmit={handleSave}>
           <Card style={{ marginBottom: spacing.lg }}>

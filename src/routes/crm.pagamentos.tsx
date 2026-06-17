@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, StatCard } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Banknote } from "lucide-react";
 
 export const Route = createFileRoute("/crm/pagamentos")({
   head: () => ({ meta: [{ title: "Pagamentos · CRM VargasTI" }] }),
@@ -89,7 +89,7 @@ function PagamentosPage() {
         <PageHeader
           title="Pagamentos"
           subtitle={`${pagamentos.length} total • ${filtrados.length} exibindo`}
-          icon="💰"
+          icon={<Banknote size={32} color={colors.primary} />}
         />
 
         {/* KPIs */}

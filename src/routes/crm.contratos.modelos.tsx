@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/modelos")({
   head: () => ({ meta: [{ title: "Modelos de Contratos · CRM VargasTI" }] }),
@@ -96,7 +96,7 @@ function ModelosPage() {
               {isFormOpen ? "Cancelar" : <><Plus size={18} /> Novo Modelo</>}
             </Button>
           }
-          icon="📋"
+          icon={<ClipboardList size={32} color={colors.primary} />}
         />
 
         {isFormOpen && (

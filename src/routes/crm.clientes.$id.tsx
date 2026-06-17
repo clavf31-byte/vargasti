@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, User } from "lucide-react";
 
 export const Route = createFileRoute("/crm/clientes/$id")({
   head: () => ({ meta: [{ title: "Editar Cliente · CRM VargasTI" }] }),
@@ -171,7 +171,7 @@ function EditarClientePage() {
         <PageHeader
           title="Editar Cliente"
           subtitle={cliente.nome}
-          icon="👤"
+          icon={<User size={32} color={colors.primary} />}
         />
 
         <Card>

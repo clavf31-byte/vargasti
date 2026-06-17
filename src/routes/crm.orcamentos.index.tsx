@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
 import { PageHeader, Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Search, Filter, Trash2, Eye } from "lucide-react";
+import { Search, Filter, Trash2, Eye, FileSpreadsheet } from "lucide-react";
 
 export const Route = createFileRoute("/crm/orcamentos/")({
   head: () => ({ meta: [{ title: "Orçamentos · CRM VargasTI" }] }),
@@ -68,7 +68,7 @@ function OrcamentosPage() {
   return (
     <AppShell>
       <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
-        <PageHeader title="Orçamentos" subtitle={`${orcamentos.length} total • ${filtrados.length} exibindo`} action={<Button variant="primary" onClick={() => setIsFormOpen(!isFormOpen)}>{isFormOpen ? "Cancelar" : "+ Novo Orçamento"}</Button>} icon="📋" />
+        <PageHeader title="Orçamentos" subtitle={`${orcamentos.length} total • ${filtrados.length} exibindo`} action={<Button variant="primary" onClick={() => setIsFormOpen(!isFormOpen)}>{isFormOpen ? "Cancelar" : "+ Novo Orçamento"}</Button>} icon={<FileSpreadsheet size={32} color={colors.primary} />} />
 
         {isFormOpen && <><OrcamentoFormInline isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} userId={user!.id} clientes={clientes} /><div style={{ marginBottom: spacing.xl }} /></>}
 
