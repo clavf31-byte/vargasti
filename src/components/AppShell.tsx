@@ -145,8 +145,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
               src={vargasLogo}
               alt="VargasTI"
               style={{
-                width: 88,
-                height: 88,
+                width: 120,
+                height: 120,
                 objectFit: "contain",
                 flexShrink: 0,
                 filter: "invert(1) hue-rotate(180deg) drop-shadow(0 0 10px rgba(19,200,211,0.6))",
