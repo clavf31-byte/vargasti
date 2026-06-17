@@ -44,26 +44,16 @@ function PermissionsPage() {
       return;
     }
 
-    try {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      const userRole = roleData?.role;
-      if (userRole !== "admin") {
-        setError("Apenas administradores podem gerenciar permissões");
-        setIsAdmin(false);
-        return;
-      }
-
-      setIsAdmin(true);
-      await loadUsers();
-    } catch (err) {
-      console.error("Erro ao verificar permissões:", err);
-      setError("Erro ao verificar permissões");
+    const role = (user.app_metadata as { role?: string } | undefined)?.role;
+    if (role !== "admin") {
+      setError("Apenas administradores podem gerenciar permissões");
+      setIsAdmin(false);
+      setLoading(false);
+      return;
     }
+
+    setIsAdmin(true);
+    await loadUsers();
   }
 
   async function loadUsers() {
