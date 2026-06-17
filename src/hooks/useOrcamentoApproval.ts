@@ -11,13 +11,8 @@ export async function gerarLinkAprovacao(
   orcamentoId: string
 ): Promise<ApprovalResult> {
   try {
-    // Gerar token
-    const { data: tokenData, error: tokenError } = await supabase.rpc(
-      "gerar_approval_token"
-    );
-
-    if (tokenError) throw tokenError;
-    const token = tokenData as string;
+    // Gerar token localmente
+    const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
     // Salvar no banco
     const { error: updateError } = await supabase
