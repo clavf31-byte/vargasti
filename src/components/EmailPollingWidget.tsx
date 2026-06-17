@@ -24,11 +24,18 @@ export function EmailPollingWidget() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [autoMode, setAutoMode] = useState(true);
 
   const { categories, whitelist, priorities, blacklist, loaded, saveCategories, saveWhitelist, savePriorities, saveBlacklist } =
     useEmailConfig();
 
   useEffect(() => {
+    if (!autoMode) {
+      console.log("[EmailPollingWidget] Manual mode - stopping auto-polling");
+      stopEmailPolling();
+      setIsRunning(false);
+      return;
+    }
     console.log("[EmailPollingWidget] Starting auto-polling");
     startEmailPolling({
       intervalMs: 5 * 60 * 1000,
@@ -40,7 +47,7 @@ export function EmailPollingWidget() {
       stopEmailPolling();
       setIsRunning(false);
     };
-  }, []);
+  }, [autoMode]);
 
   const handleManualCheck = async () => {
     setLoading(true);
@@ -145,6 +152,30 @@ export function EmailPollingWidget() {
           <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
+
+      {/* Mode Toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setAutoMode(true)}
+          className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+            autoMode
+              ? "bg-brand text-brand-foreground"
+              : "bg-surface-2 text-foreground border border-border hover:bg-surface-3"
+          }`}
+        >
+          Automático
+        </button>
+        <button
+          onClick={() => setAutoMode(false)}
+          className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+            !autoMode
+              ? "bg-brand text-brand-foreground"
+              : "bg-surface-2 text-foreground border border-border hover:bg-surface-3"
+          }`}
+        >
+          Manual
+        </button>
+      </div>
 
       {/* Buttons */}
       <div className="grid grid-cols-2 gap-2">
