@@ -158,7 +158,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
               <h1 className="font-bold leading-tight" style={{ fontSize: 26 }}>
                 <span style={{ color: "#eaf3f8" }}>Vargas</span><span style={{ color: "#13c8d3" }}>TI</span>
               </h1>
-              <span className="text-[9px] font-medium tracking-wide" style={{ color: "rgba(19,200,211,0.7)" }}>
+              <span className="text-[10px] font-medium tracking-wide" style={{ color: "rgba(19,200,211,0.7)" }}>
                 Soluções que conectam
               </span>
             </div>
