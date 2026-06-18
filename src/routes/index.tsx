@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import vargastiLogo from "@/assets/vargasti-logo-clean.png.asset.json";
 
-const SYSTEM_URL = "https://app.vargasti.com.br";
+const SYSTEM_URL = "https://www.vargasti.com.br/login";
 const WHATSAPP_URL = "https://wa.me/5500000000000";
 
 export const Route = createFileRoute("/")({
