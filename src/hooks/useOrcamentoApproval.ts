@@ -26,7 +26,7 @@ export async function gerarLinkAprovacao(
     if (updateError) throw updateError;
 
     // Gerar URL
-    const baseUrl = window.location.origin;
+    const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/$/, "") || window.location.origin;
     const approvalUrl = `${baseUrl}/orcamento/approve/${token}`;
 
     return {
