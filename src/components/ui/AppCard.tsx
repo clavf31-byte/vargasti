@@ -1,4 +1,4 @@
-﻿import { ReactNode } from "react";
+﻿import { CSSProperties, ReactNode } from "react";
 import { colors, shadows, borderRadius } from "@/lib/colors";
 
 interface CardProps {
@@ -6,9 +6,10 @@ interface CardProps {
   hover?: boolean;
   clickable?: boolean;
   onClick?: () => void;
+  style?: CSSProperties;
 }
 
-export function Card({ children, hover = false, clickable = false, onClick }: CardProps) {
+export function Card({ children, hover = false, clickable = false, onClick, style }: CardProps) {
   return (
     <div
       onClick={onClick}
@@ -25,6 +26,7 @@ export function Card({ children, hover = false, clickable = false, onClick }: Ca
           boxShadow: shadows.glow,
           transform: "translateY(-4px)",
         }),
+        ...style,
       }}
       onMouseEnter={(e) =>
         hover &&
