@@ -1414,6 +1414,54 @@ export type Database = {
           token: string
         }[]
       }
+      get_orcamento_by_approval_token: {
+        Args: { _token: string }
+        Returns: {
+          approval_status: string
+          approved_at: string
+          cliente_id: string
+          created_at: string
+          data_aprovacao: string
+          data_criacao: string
+          data_rejeicao: string
+          data_vencimento: string
+          data_visualizacao: string
+          desconto: number
+          id: string
+          impostos: number
+          motivo_rejeicao: string
+          notas: string
+          numero: string
+          numero_formatado: string
+          rejected_at: string
+          status: string
+          status_enum: string
+          total: number
+          updated_at: string
+        }[]
+      }
+      get_orcamento_itens_by_approval_token: {
+        Args: { _token: string }
+        Returns: {
+          created_at: string
+          descricao: string
+          id: string
+          orcamento_id: string
+          ordem: number
+          peca_id: string | null
+          preco_unitario: number
+          quantidade: number
+          servico_id: string | null
+          subtotal: number
+          tipo: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orcamento_itens"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
