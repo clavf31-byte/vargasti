@@ -440,7 +440,7 @@ function LandingPage() {
           <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.025] to-white/[0.01] p-6 backdrop-blur-sm">
             <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr_2.2fr] gap-6 items-start">
               <div className="flex items-center gap-3">
-                <img src={vargastiLogo.url} alt="" className="h-14 w-14 object-contain drop-shadow-[0_0_14px_rgba(34,211,238,0.45)]" />
+                <img src={vargastiLogo.url} alt="" width={56} height={56} className="h-14 w-14 object-contain drop-shadow-[0_0_14px_rgba(34,211,238,0.45)]" />
                 <div className="leading-tight">
                   <div className="text-2xl font-extrabold">
                     <span className="text-white">Vargas</span>
