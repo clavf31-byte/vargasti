@@ -31,7 +31,7 @@ function ModelosPage() {
   const loadTemplates = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("contract_templates")
         .select("id, nome, descricao, ativo, created_at")
         .eq("user_id", user.id)
