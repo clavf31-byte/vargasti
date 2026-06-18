@@ -49,30 +49,11 @@ export async function aprovarOrcamento(
   token: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const agora = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("orcamentos")
-      .update({
-        approval_status: "approved",
-        status_enum: "aprovado",
-        approved_at: agora,
-      })
-      .eq("approval_token", token)
-      .eq("approval_status", "pending");
+    const { data: ok, error } = await supabase
+      .rpc("approve_orcamento_by_token", { _token: token });
 
     if (error) throw error;
-
-    // Registrar no histórico
-    await supabase.from("orcamento_status_history").insert([
-      {
-        orcamento_id: token,
-        status_anterior: "enviado",
-        status_novo: "aprovado",
-        motivo: "Aprovado via link público",
-        data_alteracao: agora,
-      },
-    ]);
+    if (!ok) throw new Error("Orçamento não encontrado ou já processado");
 
     // Buscar dados para notificação
     const orc = await obterOrcamentoPorToken(token);
@@ -103,29 +84,11 @@ export async function rejeitarOrcamento(
   try {
     const agora = new Date().toISOString();
 
-    const { error } = await supabase
-      .from("orcamentos")
-      .update({
-        approval_status: "rejected",
-        status_enum: "rejeitado",
-        rejected_at: agora,
-        motivo_rejeicao: motivo,
-      })
-      .eq("approval_token", token)
-      .eq("approval_status", "pending");
+    const { data: ok, error } = await supabase
+      .rpc("reject_orcamento_by_token", { _token: token, _motivo: motivo });
 
     if (error) throw error;
-
-    // Registrar no histórico
-    await supabase.from("orcamento_status_history").insert([
-      {
-        orcamento_id: token,
-        status_anterior: "enviado",
-        status_novo: "rejeitado",
-        motivo: `Rejeitado: ${motivo}`,
-        data_alteracao: agora,
-      },
-    ]);
+    if (!ok) throw new Error("Orçamento não encontrado ou já processado");
 
     // Notificação
     const orc = await obterOrcamentoPorToken(token);
