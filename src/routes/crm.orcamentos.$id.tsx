@@ -465,7 +465,7 @@ function OrcamentoDetalhePage() {
             Editar
           </button>
 
-          {orcamento.status_enum === "rascunho" && (
+          {["rascunho", "enviado", "rejeitado"].includes(orcamento.status_enum) && (
             <button
               onClick={handleEnviarComEmail}
               disabled={actionLoading || !cliente.email}
@@ -485,7 +485,7 @@ function OrcamentoDetalhePage() {
               }}
             >
               <Mail size={16} />
-              {actionLoading ? "Enviando..." : "Enviar por Email"}
+              {actionLoading ? "Enviando..." : orcamento.status_enum === "rascunho" ? "Enviar por Email" : "Reenviar por Email"}
             </button>
           )}
 
