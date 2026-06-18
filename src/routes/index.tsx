@@ -26,9 +26,9 @@ export const Route = createFileRoute("/")({
           "Plataforma completa para gestão de TI: suporte, ativos, chamados, orçamentos e agenda em um só lugar.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://app.vargasti.com.br/" },
+      { property: "og:url", content: "https://www.vargasti.com.br/" },
     ],
-    links: [{ rel: "canonical", href: "https://app.vargasti.com.br/" }],
+    links: [{ rel: "canonical", href: "https://www.vargasti.com.br/" }],
   }),
   component: LandingPage,
 });
