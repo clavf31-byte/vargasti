@@ -1421,6 +1421,7 @@ export type Database = {
           approval_status: string
           approved_at: string
           cliente_id: string
+          cliente_nome: string
           created_at: string
           data_aprovacao: string
           data_criacao: string
