@@ -52,21 +52,21 @@ export async function aprovarOrcamento(
     const { data: ok, error } = await supabase
       .rpc("approve_orcamento_by_token", { _token: token });
 
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     if (!ok) throw new Error("Orçamento não encontrado ou já processado");
 
-    // Buscar dados para notificação
-    const orc = await obterOrcamentoPorToken(token);
-    if (orc) {
-      await sendApprovalNotification({
+    // Notificação fire-and-forget — não bloqueia nem falha a aprovação
+    obterOrcamentoPorToken(token).then((orc) => {
+      if (!orc) return;
+      sendApprovalNotification({
         data: {
           orcamentoNumero: orc.numero_formatado,
           orcamentoTotal: orc.total,
           clienteNome: orc.cliente?.nome || "Cliente",
           aprovado: true,
         },
-      }).catch(() => null);
-    }
+      }).catch(() => {});
+    }).catch(() => {});
 
     return { success: true };
   } catch (err) {
@@ -87,13 +87,13 @@ export async function rejeitarOrcamento(
     const { data: ok, error } = await supabase
       .rpc("reject_orcamento_by_token", { _token: token, _motivo: motivo });
 
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     if (!ok) throw new Error("Orçamento não encontrado ou já processado");
 
-    // Notificação
-    const orc = await obterOrcamentoPorToken(token);
-    if (orc) {
-      await sendApprovalNotification({
+    // Notificação fire-and-forget
+    obterOrcamentoPorToken(token).then((orc) => {
+      if (!orc) return;
+      sendApprovalNotification({
         data: {
           orcamentoNumero: orc.numero_formatado,
           orcamentoTotal: orc.total,
@@ -101,8 +101,8 @@ export async function rejeitarOrcamento(
           aprovado: false,
           motivo,
         },
-      }).catch(() => null);
-    }
+      }).catch(() => {});
+    }).catch(() => {});
 
     return { success: true };
   } catch (err) {
