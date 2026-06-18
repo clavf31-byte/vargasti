@@ -118,7 +118,7 @@ function AuthGuard() {
 
   useEffect(() => {
     if (loading) return;
-    if (!session && pathname !== "/login") {
+    if (!session && pathname !== "/login" && !pathname.startsWith("/orcamento/approve/")) {
       navigate({ to: "/login" });
     } else if (session && pathname === "/login") {
       navigate({ to: "/" });
