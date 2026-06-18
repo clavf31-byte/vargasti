@@ -50,6 +50,7 @@ import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.ap
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 import { Route as CrmContratosNovoRouteImport } from './routes/crm.contratos.novo'
 import { Route as CrmContratosModelosRouteImport } from './routes/crm.contratos.modelos'
+import { Route as CrmContratosIdRouteImport } from './routes/crm.contratos.$id'
 import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
 import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
 
@@ -258,6 +259,11 @@ const CrmContratosModelosRoute = CrmContratosModelosRouteImport.update({
   path: '/modelos',
   getParentRoute: () => CrmContratosRoute,
 } as any)
+const CrmContratosIdRoute = CrmContratosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmContratosRoute,
+} as any)
 const CrmClientesIdRoute = CrmClientesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRoute
   '/crm/contratos/modelos': typeof CrmContratosModelosRoute
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/config': typeof ConfigIndexRoute
   '/ferramentas': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRoute
   '/crm/contratos/modelos': typeof CrmContratosModelosRoute
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRoute
   '/crm/contratos/modelos': typeof CrmContratosModelosRoute
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -478,6 +488,7 @@ export interface FileRouteTypes {
     | '/config'
     | '/ferramentas'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -845,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContratosModelosRouteImport
       parentRoute: typeof CrmContratosRoute
     }
+    '/crm/contratos/$id': {
+      id: '/crm/contratos/$id'
+      path: '/$id'
+      fullPath: '/crm/contratos/$id'
+      preLoaderRoute: typeof CrmContratosIdRouteImport
+      parentRoute: typeof CrmContratosRoute
+    }
     '/crm/clientes/$id': {
       id: '/crm/clientes/$id'
       path: '/$id'
@@ -900,12 +919,14 @@ const CrmClientesRouteWithChildren = CrmClientesRoute._addFileChildren(
 )
 
 interface CrmContratosRouteChildren {
+  CrmContratosIdRoute: typeof CrmContratosIdRoute
   CrmContratosModelosRoute: typeof CrmContratosModelosRoute
   CrmContratosNovoRoute: typeof CrmContratosNovoRoute
   CrmContratosIndexRoute: typeof CrmContratosIndexRoute
 }
 
 const CrmContratosRouteChildren: CrmContratosRouteChildren = {
+  CrmContratosIdRoute: CrmContratosIdRoute,
   CrmContratosModelosRoute: CrmContratosModelosRoute,
   CrmContratosNovoRoute: CrmContratosNovoRoute,
   CrmContratosIndexRoute: CrmContratosIndexRoute,
@@ -998,3 +1019,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
