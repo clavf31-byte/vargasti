@@ -118,10 +118,19 @@ function AuthGuard() {
 
   useEffect(() => {
     if (loading) return;
+    const isAppHost = typeof window !== "undefined" && window.location.hostname === "app.vargasti.com.br";
+    const isLandingRoute = pathname === "/";
     const isPublic =
-      pathname === "/" ||
+      (!isAppHost && isLandingRoute) ||
       pathname === "/login" ||
       pathname.startsWith("/orcamento/approve/");
+
+    // No domínio app.*, redireciona / para login ou dashboard
+    if (isAppHost && isLandingRoute) {
+      navigate({ to: session ? "/dashboard" : "/login" });
+      return;
+    }
+
     if (!session && !isPublic) {
       navigate({ to: "/login" });
     } else if (session && pathname === "/login") {
