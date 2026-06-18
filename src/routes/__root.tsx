@@ -21,7 +21,7 @@ function NotFoundComponent() {
         </p>
         <div className="mt-6">
           <Link
-            to="/"
+            to="/dashboard"
             className="inline-flex items-center justify-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
           >
             Voltar ao Dashboard
@@ -118,10 +118,14 @@ function AuthGuard() {
 
   useEffect(() => {
     if (loading) return;
-    if (!session && pathname !== "/login" && !pathname.startsWith("/orcamento/approve/")) {
+    const isPublic =
+      pathname === "/" ||
+      pathname === "/login" ||
+      pathname.startsWith("/orcamento/approve/");
+    if (!session && !isPublic) {
       navigate({ to: "/login" });
     } else if (session && pathname === "/login") {
-      navigate({ to: "/" });
+      navigate({ to: "/dashboard" });
     }
   }, [session, loading, pathname, navigate]);
 

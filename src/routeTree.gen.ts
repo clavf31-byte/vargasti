@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
@@ -50,6 +51,7 @@ import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.ap
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 import { Route as CrmContratosNovoRouteImport } from './routes/crm.contratos.novo'
 import { Route as CrmContratosModelosRouteImport } from './routes/crm.contratos.modelos'
+import { Route as CrmContratosIdRouteImport } from './routes/crm.contratos.$id'
 import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
 import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
 
@@ -66,6 +68,11 @@ const LoginRoute = LoginRouteImport.update({
 const FerramentasRoute = FerramentasRouteImport.update({
   id: '/ferramentas',
   path: '/ferramentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmRoute = CrmRouteImport.update({
@@ -258,6 +265,11 @@ const CrmContratosModelosRoute = CrmContratosModelosRouteImport.update({
   path: '/modelos',
   getParentRoute: () => CrmContratosRoute,
 } as any)
+const CrmContratosIdRoute = CrmContratosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmContratosRoute,
+} as any)
 const CrmClientesIdRoute = CrmClientesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -276,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -305,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRoute
   '/crm/contratos/modelos': typeof CrmContratosModelosRoute
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
@@ -320,6 +334,7 @@ export interface FileRoutesByTo {
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/crm': typeof CrmRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/admin/setup': typeof AdminSetupRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByTo {
   '/config': typeof ConfigIndexRoute
   '/ferramentas': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRoute
   '/crm/contratos/modelos': typeof CrmContratosModelosRoute
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
@@ -362,6 +378,7 @@ export interface FileRoutesById {
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -391,6 +408,7 @@ export interface FileRoutesById {
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRoute
   '/crm/contratos/modelos': typeof CrmContratosModelosRoute
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
@@ -409,6 +427,7 @@ export interface FileRouteTypes {
     | '/arquivos'
     | '/config'
     | '/crm'
+    | '/dashboard'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -438,6 +457,7 @@ export interface FileRouteTypes {
     | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -453,6 +473,7 @@ export interface FileRouteTypes {
     | '/anotacoes'
     | '/arquivos'
     | '/crm'
+    | '/dashboard'
     | '/login'
     | '/projetos'
     | '/admin/setup'
@@ -478,6 +499,7 @@ export interface FileRouteTypes {
     | '/config'
     | '/ferramentas'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -494,6 +516,7 @@ export interface FileRouteTypes {
     | '/arquivos'
     | '/config'
     | '/crm'
+    | '/dashboard'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -523,6 +546,7 @@ export interface FileRouteTypes {
     | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -540,6 +564,7 @@ export interface RootRouteChildren {
   ArquivosRoute: typeof ArquivosRoute
   ConfigRoute: typeof ConfigRouteWithChildren
   CrmRoute: typeof CrmRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
@@ -577,6 +602,13 @@ declare module '@tanstack/react-router' {
       path: '/ferramentas'
       fullPath: '/ferramentas'
       preLoaderRoute: typeof FerramentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm': {
@@ -845,6 +877,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContratosModelosRouteImport
       parentRoute: typeof CrmContratosRoute
     }
+    '/crm/contratos/$id': {
+      id: '/crm/contratos/$id'
+      path: '/$id'
+      fullPath: '/crm/contratos/$id'
+      preLoaderRoute: typeof CrmContratosIdRouteImport
+      parentRoute: typeof CrmContratosRoute
+    }
     '/crm/clientes/$id': {
       id: '/crm/clientes/$id'
       path: '/$id'
@@ -900,12 +939,14 @@ const CrmClientesRouteWithChildren = CrmClientesRoute._addFileChildren(
 )
 
 interface CrmContratosRouteChildren {
+  CrmContratosIdRoute: typeof CrmContratosIdRoute
   CrmContratosModelosRoute: typeof CrmContratosModelosRoute
   CrmContratosNovoRoute: typeof CrmContratosNovoRoute
   CrmContratosIndexRoute: typeof CrmContratosIndexRoute
 }
 
 const CrmContratosRouteChildren: CrmContratosRouteChildren = {
+  CrmContratosIdRoute: CrmContratosIdRoute,
   CrmContratosModelosRoute: CrmContratosModelosRoute,
   CrmContratosNovoRoute: CrmContratosNovoRoute,
   CrmContratosIndexRoute: CrmContratosIndexRoute,
@@ -980,6 +1021,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArquivosRoute: ArquivosRoute,
   ConfigRoute: ConfigRouteWithChildren,
   CrmRoute: CrmRouteWithChildren,
+  DashboardRoute: DashboardRoute,
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,

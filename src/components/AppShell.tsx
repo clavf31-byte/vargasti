@@ -104,7 +104,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const currentPage = (() => {
     for (const mod of VISIBLE_MODULES) {
       const item = mod.items.find(({ to }) =>
-        to === "/" ? pathname === "/" : pathname.startsWith(to)
+        to === "/" ? pathname === "/dashboard" : pathname.startsWith(to)
       );
       if (item) return item.label;
     }
@@ -118,7 +118,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     }));
   };
 
-  const isItemActive = (to: string) => to === "/" ? pathname === "/" : pathname.startsWith(to);
+  const isItemActive = (to: string) => to === "/" ? pathname === "/dashboard" : pathname.startsWith(to);
 
   return (
     <div className="min-h-screen flex" style={{
@@ -155,7 +155,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
         {/* Brand */}
         <div className="flex items-center gap-3 px-3.5 py-3 border-b" style={{ borderColor: "rgba(255,255,255,.07)" }}>
           <Link
-            to="/"
+            to="/dashboard"
             onClick={() => setSidebarOpen(false)}
             className="flex items-center flex-1" style={{ gap: 0 }}
           >
@@ -191,21 +191,21 @@ export function AppShell({ children }: { children?: ReactNode }) {
 
         {/* Dashboard link */}
         <Link
-          to="/"
+          to="/dashboard"
           onClick={() => setSidebarOpen(false)}
           className={`mx-3.5 mt-3 px-3 py-3 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${
-            pathname === "/"
+            pathname === "/dashboard"
               ? "text-[#eaf3f8]"
               : "text-[#d7e4ec] hover:text-[#eaf3f8]"
           }`}
           style={{
-            background: pathname === "/"
+            background: pathname === "/dashboard"
               ? "linear-gradient(135deg, #087f97, #0fb7c7)"
               : "rgba(255,255,255,.035)",
-            border: pathname === "/"
+            border: pathname === "/dashboard"
               ? "none"
               : "1px solid rgba(255,255,255,.055)",
-            boxShadow: pathname === "/"
+            boxShadow: pathname === "/dashboard"
               ? "0 10px 24px rgba(0,0,0,.22)"
               : "none",
           }}
