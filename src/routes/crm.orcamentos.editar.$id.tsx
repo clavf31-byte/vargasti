@@ -241,16 +241,7 @@ function EditarOrcamentoPage() {
               />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: spacing.lg }}>
-              <div>
-                <label style={labelStyle}>Data de Vencimento</label>
-                <input
-                  type="date"
-                  value={formData.data_vencimento}
-                  onChange={(e) => setFormData({ ...formData, data_vencimento: e.target.value })}
-                  style={inputStyle}
-                />
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg }}>
               <div>
                 <label style={labelStyle}>Desconto (R$)</label>
                 <input
