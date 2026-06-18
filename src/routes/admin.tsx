@@ -74,7 +74,7 @@ function AdminPage() {
   const isAdmin = (user?.app_metadata as { role?: string } | undefined)?.role === "admin";
 
   useEffect(() => {
-    if (!isAdmin) navigate({ to: "/" });
+    if (!isAdmin) navigate({ to: "/dashboard" });
   }, [isAdmin, navigate]);
 
   const load = useCallback(async () => {

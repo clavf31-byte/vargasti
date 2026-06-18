@@ -22,7 +22,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) navigate({ to: "/" });
+    if (!loading && session) navigate({ to: "/dashboard" });
   }, [session, loading, navigate]);
 
   async function handleGoogle() {
@@ -52,7 +52,7 @@ function LoginPage() {
       if (error) {
         setError(error.message);
       } else if (data?.session) {
-        navigate({ to: "/" });
+        navigate({ to: "/dashboard" });
       }
     } catch (err) {
       setSubmitting(false);

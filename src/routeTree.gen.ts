@@ -12,12 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
 import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
 import { Route as ConfigIndexRouteImport } from './routes/config.index'
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
@@ -69,6 +69,11 @@ const FerramentasRoute = FerramentasRouteImport.update({
   path: '/ferramentas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmRoute = CrmRouteImport.update({
   id: '/crm',
   path: '/crm',
@@ -92,11 +97,6 @@ const AnotacoesRoute = AnotacoesRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
@@ -276,12 +276,12 @@ const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -322,11 +322,11 @@ export interface FileRoutesByFullPath {
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/crm': typeof CrmRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/admin/setup': typeof AdminSetupRoute
@@ -364,12 +364,12 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -412,12 +412,12 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
     | '/config'
     | '/crm'
+    | '/dashboard'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -458,11 +458,11 @@ export interface FileRouteTypes {
     | '/crm/orcamentos/editar/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
     | '/crm'
+    | '/dashboard'
     | '/login'
     | '/projetos'
     | '/admin/setup'
@@ -499,12 +499,12 @@ export interface FileRouteTypes {
     | '/crm/orcamentos/editar/$id'
   id:
     | '__root__'
-    | '/'
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
     | '/config'
     | '/crm'
+    | '/dashboard'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -546,12 +546,12 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
   ConfigRoute: typeof ConfigRouteWithChildren
   CrmRoute: typeof CrmRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
@@ -591,6 +591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FerramentasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm': {
       id: '/crm'
       path: '/crm'
@@ -624,13 +631,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ferramentas/': {
@@ -995,12 +995,12 @@ const FerramentasRouteWithChildren = FerramentasRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
   ConfigRoute: ConfigRouteWithChildren,
   CrmRoute: CrmRouteWithChildren,
+  DashboardRoute: DashboardRoute,
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
@@ -1019,13 +1019,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

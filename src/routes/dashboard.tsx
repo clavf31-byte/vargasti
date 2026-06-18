@@ -9,7 +9,7 @@ import {
   Clock, CheckCircle2, Mail, FileEdit, ChevronRight,
 } from "lucide-react";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard · VargasTI Lab" }] }),
   component: Dashboard,
 });
