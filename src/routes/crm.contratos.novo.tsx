@@ -133,9 +133,8 @@ function NovoContratoPage() {
           cliente_id: form.cliente_id,
           template_id: form.template_id,
           titulo: form.titulo,
-          conteudo_preenchido: conteudoFinal,
+          conteudo: conteudoFinal,
           status: "rascunho",
-          token_assinatura: token,
         }])
         .select()
         .single();
