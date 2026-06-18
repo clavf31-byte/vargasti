@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sendApprovalNotification } from "@/lib/api/sendApprovalNotification";
 
 interface ApprovalResult {
   token: string;
@@ -73,6 +74,19 @@ export async function aprovarOrcamento(
       },
     ]);
 
+    // Buscar dados para notificação
+    const orc = await obterOrcamentoPorToken(token);
+    if (orc) {
+      await sendApprovalNotification({
+        data: {
+          orcamentoNumero: orc.numero_formatado,
+          orcamentoTotal: orc.total,
+          clienteNome: orc.cliente?.nome || "Cliente",
+          aprovado: true,
+        },
+      }).catch(() => null);
+    }
+
     return { success: true };
   } catch (err) {
     return {
@@ -112,6 +126,20 @@ export async function rejeitarOrcamento(
         data_alteracao: agora,
       },
     ]);
+
+    // Notificação
+    const orc = await obterOrcamentoPorToken(token);
+    if (orc) {
+      await sendApprovalNotification({
+        data: {
+          orcamentoNumero: orc.numero_formatado,
+          orcamentoTotal: orc.total,
+          clienteNome: orc.cliente?.nome || "Cliente",
+          aprovado: false,
+          motivo,
+        },
+      }).catch(() => null);
+    }
 
     return { success: true };
   } catch (err) {
