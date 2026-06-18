@@ -243,7 +243,7 @@ function LandingPage() {
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#04060e]/80 border-b border-white/[0.06]">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-10 h-[78px] flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src={vargastiLogo.url} alt="VargasTI" className="h-12 w-12 object-contain drop-shadow-[0_0_14px_rgba(34,211,238,0.45)]" />
+            <img src={vargastiLogo.url} alt="VargasTI" className="h-16 w-16 object-contain drop-shadow-[0_0_14px_rgba(34,211,238,0.45)]" />
             <div className="leading-tight">
               <div className="text-xl font-extrabold tracking-tight">
                 <span className="text-white">Vargas</span>
