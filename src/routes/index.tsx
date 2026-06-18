@@ -354,14 +354,14 @@ function LandingPage() {
               </div>
             </div>
 
-            {/* RIGHT: holo + dashboard */}
+            {/* RIGHT: browser-window dashboard */}
             <div className="relative">
-              <div className="absolute -top-6 -left-6 sm:left-0">
-                <HoloLogo />
+              {/* ambient glow */}
+              <div className="pointer-events-none absolute -inset-10 -z-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.22),transparent_60%)] blur-3xl" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(16,185,129,0.18),transparent_60%)] blur-3xl" />
               </div>
-              <div className="relative lg:translate-x-12 lg:translate-y-8">
-                <DashboardMock />
-              </div>
+              <DashboardMock />
             </div>
           </div>
         </div>
