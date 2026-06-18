@@ -197,6 +197,96 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_templates: {
+        Row: {
+          ativo: boolean
+          conteudo: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          user_id: string
+          variaveis: Json
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          user_id: string
+          variaveis?: Json
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          user_id?: string
+          variaveis?: Json
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          assinado_em: string | null
+          cliente_id: string | null
+          conteudo: string | null
+          created_at: string
+          email_enviado_em: string | null
+          id: string
+          status: string
+          template_id: string | null
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assinado_em?: string | null
+          cliente_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          email_enviado_em?: string | null
+          id?: string
+          status?: string
+          template_id?: string | null
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assinado_em?: string | null
+          cliente_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          email_enviado_em?: string | null
+          id?: string
+          status?: string
+          template_id?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_pauses: {
         Row: {
           created_at: string
