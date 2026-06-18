@@ -32,7 +32,7 @@ function ContratosPage() {
   const loadContratos = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("contracts")
         .select("id, titulo, cliente_id, clientes(nome), status, email_enviado_em, assinado_em, created_at")
         .eq("user_id", user.id)

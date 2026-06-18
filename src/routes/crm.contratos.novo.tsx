@@ -126,7 +126,7 @@ function NovoContratoPage() {
       const conteudoFinal = substituteVariables(template.conteudo, valores);
       const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
-      const { data: contrato, error } = await supabase
+      const { data: contrato, error } = await (supabase as any)
         .from("contracts")
         .insert([{
           user_id: user.id,
