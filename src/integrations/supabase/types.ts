@@ -1399,6 +1399,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_orcamento_by_token: { Args: { _token: string }; Returns: boolean }
       gerar_approval_token: { Args: never; Returns: string }
       get_approval_link_by_token: {
         Args: { _token: string }
@@ -1467,6 +1468,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      reject_orcamento_by_token: {
+        Args: { _motivo: string; _token: string }
         Returns: boolean
       }
     }
