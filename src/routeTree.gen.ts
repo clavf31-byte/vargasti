@@ -18,6 +18,7 @@ import { Route as ConfigRouteImport } from './routes/config'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
 import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
 import { Route as ConfigIndexRouteImport } from './routes/config.index'
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
@@ -97,6 +98,11 @@ const AnotacoesRoute = AnotacoesRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
@@ -276,6 +282,7 @@ const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
@@ -364,6 +372,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
@@ -412,6 +421,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/crm/orcamentos/editar/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/crm/orcamentos/editar/$id'
   id:
     | '__root__'
+    | '/'
     | '/admin'
     | '/anotacoes'
     | '/arquivos'
@@ -546,6 +558,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
@@ -631,6 +644,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ferramentas/': {
@@ -995,6 +1015,7 @@ const FerramentasRouteWithChildren = FerramentasRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
