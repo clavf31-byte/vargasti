@@ -124,12 +124,14 @@ export async function obterOrcamentoPorToken(
     if (error) throw error;
     if (!orcamento) return null;
 
-    const [{ data: itens }, { data: cliente }] = await Promise.all([
-      supabase.rpc("get_orcamento_itens_by_approval_token", { _token: token }),
-      supabase.from("clientes").select("id, nome, email, telefone").eq("id", orcamento.cliente_id).single(),
-    ]);
+    const { data: itens } = await supabase
+      .rpc("get_orcamento_itens_by_approval_token", { _token: token });
 
-    return { ...orcamento, itens: itens || [], cliente: cliente || null };
+    return {
+      ...orcamento,
+      itens: itens || [],
+      cliente: { nome: orcamento.cliente_nome },
+    };
   } catch (err) {
     return null;
   }
