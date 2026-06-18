@@ -26,6 +26,7 @@ export function Card({ children, hover = false, clickable = false, onClick, styl
           boxShadow: shadows.glow,
           transform: "translateY(-4px)",
         }),
+        ...style,
       }}
       onMouseEnter={(e) =>
         hover &&

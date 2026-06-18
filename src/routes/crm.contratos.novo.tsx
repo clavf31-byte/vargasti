@@ -79,7 +79,7 @@ function NovoContratoPage() {
     if (!user) return;
     try {
       const [tempRes, clientRes] = await Promise.all([
-        supabase.from("contract_templates").select("id, nome, descricao, conteudo").eq("user_id", user.id).eq("ativo", true),
+        (supabase as any).from("contract_templates").select("id, nome, descricao, conteudo").eq("user_id", user.id).eq("ativo", true),
         supabase.from("clientes").select("id, nome, email, telefone, cnpj_cpf, endereco").eq("user_id", user.id).order("nome"),
       ]);
       setTemplates(tempRes.data || []);
@@ -142,7 +142,7 @@ function NovoContratoPage() {
 
       if (error) throw error;
 
-      await supabase.from("contract_history").insert([{
+      await (supabase as any).from("contract_history").insert([{
         contract_id: contrato.id,
         acao: "criado",
         detalhes: { criado_em: new Date().toISOString() },

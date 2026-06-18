@@ -55,7 +55,7 @@ function ContratosPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Deletar este contrato?")) return;
     try {
-      await supabase.from("contracts").delete().eq("id", id);
+      await (supabase as any).from("contracts").delete().eq("id", id);
       loadContratos();
     } catch (e) {
       alert("Erro ao deletar");

@@ -53,7 +53,7 @@ function ModelosPage() {
   const handleCreate = async () => {
     if (!user || !newTemplate.nome.trim()) return;
     try {
-      const { error } = await supabase.from("contract_templates").insert([
+      const { error } = await (supabase as any).from("contract_templates").insert([
         {
           user_id: user.id,
           nome: newTemplate.nome,
@@ -75,7 +75,7 @@ function ModelosPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza?")) return;
     try {
-      await supabase.from("contract_templates").delete().eq("id", id);
+      await (supabase as any).from("contract_templates").delete().eq("id", id);
       loadTemplates();
     } catch (e) {
       alert("Erro ao deletar");

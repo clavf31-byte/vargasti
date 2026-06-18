@@ -12,7 +12,7 @@ const SendContractEmailSchema = z.object({
 });
 
 export const sendContractEmail = createServerFn({ method: "POST" })
-  .validator(SendContractEmailSchema)
+  .inputValidator(SendContractEmailSchema)
   .handler(async ({ data }) => {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) throw new Error("RESEND_API_KEY não configurada");
