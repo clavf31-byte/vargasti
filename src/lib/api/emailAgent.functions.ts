@@ -108,11 +108,10 @@ function isGmailAuthorizationError(err: unknown) {
 }
 
 // ── Get Gmail OAuth URL (auth-required, signed state binds the user) ─────────
-function signGmailState(userId: string): string {
+async function signGmailState(userId: string): Promise<string> {
   const secret = getServerSigningSecret();
   const payload = `${userId}.${Date.now()}`;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createHmac } = require("crypto") as typeof import("crypto");
+  const { createHmac } = await import("crypto");
   const sig = createHmac("sha256", secret).update(payload).digest("hex");
   return Buffer.from(`${payload}.${sig}`).toString("base64url");
 }
@@ -124,6 +123,7 @@ export const getGmailAuthUrl = createServerFn({ method: "GET" })
     if (!userId) throw new Error("Unauthorized: No user context");
     const { clientId, redirectUri } = getGmailOAuthConfig();
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    const state = await signGmailState(userId);
     url.search = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -131,7 +131,7 @@ export const getGmailAuthUrl = createServerFn({ method: "GET" })
       access_type: "offline",
       scope: "https://www.googleapis.com/auth/gmail.modify",
       prompt: "consent",
-      state: signGmailState(userId),
+      state,
     }).toString();
     return { url: url.toString() };
   });
