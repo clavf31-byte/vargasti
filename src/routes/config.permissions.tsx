@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Check, X, Lock, AlertCircle, ShieldCheck } from "lucide-react";
+import { Check, X, AlertCircle, ShieldCheck, Clock, UserCheck, UserX } from "lucide-react";
 
 export const Route = createFileRoute("/config/permissions")({
   head: () => ({ meta: [{ title: "Gerenciar Permissões · VargasTI" }] }),
@@ -17,6 +17,8 @@ interface UserAccess {
   email: string;
   name: string;
   role: string;
+  status: "pending" | "approved" | "rejected";
+  requested_at: string | null;
   can_access_crm: boolean;
   can_access_email: boolean;
   can_access_excel: boolean;
@@ -42,6 +44,7 @@ function PermissionsPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -72,22 +75,25 @@ function PermissionsPage() {
     try {
       const [profilesRes, rolesRes, permsRes] = await Promise.all([
         supabase.from("profiles").select("id, email, full_name").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("user_roles").select("user_id, role, status, requested_at"),
         supabase.from("user_module_permissions").select("*"),
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
 
-      const rolesByUser = new Map((rolesRes.data || []).map((r: any) => [r.user_id, r.role]));
+      const rolesByUser = new Map((rolesRes.data || []).map((r: any) => [r.user_id, r]));
       const permsByUser = new Map((permsRes.data || []).map((p: any) => [p.user_id, p]));
 
       const enriched = (profilesRes.data || []).map((p: any) => {
+        const roleData = rolesByUser.get(p.id) || {};
         const perms = permsByUser.get(p.id) || {};
         return {
           id: p.id,
           email: p.email || "",
           name: p.full_name || p.email || "",
-          role: rolesByUser.get(p.id) || "user",
+          role: roleData.role || "user",
+          status: (roleData.status || "approved") as UserAccess["status"],
+          requested_at: roleData.requested_at || null,
           can_access_crm: perms.can_access_crm !== false,
           can_access_email: perms.can_access_email !== false,
           can_access_excel: perms.can_access_excel !== false,
@@ -103,6 +109,22 @@ function PermissionsPage() {
       setError("Erro ao carregar usuários");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function setUserStatus(userId: string, status: "approved" | "rejected") {
+    setApprovingId(userId);
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ status } as any)
+        .eq("user_id", userId);
+      if (error) throw error;
+      setUsers(users.map((u) => u.id === userId ? { ...u, status } : u));
+    } catch (err) {
+      setError(`Erro ao ${status === "approved" ? "aprovar" : "rejeitar"} usuário`);
+    } finally {
+      setApprovingId(null);
     }
   }
 
@@ -186,10 +208,69 @@ function PermissionsPage() {
           </div>
         )}
 
-        {users.length === 0 ? (
+        {/* Seção de pendentes */}
+        {users.filter(u => u.status === "pending").length > 0 && (
+          <div style={{ marginBottom: spacing.xl }}>
+            <div style={{ display: "flex", alignItems: "center", gap: spacing.sm, marginBottom: spacing.md }}>
+              <Clock size={16} color="#f59e0b" />
+              <span style={{ color: "#f59e0b", fontWeight: 600, fontSize: 13 }}>
+                Aguardando aprovação ({users.filter(u => u.status === "pending").length})
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing.sm }}>
+              {users.filter(u => u.status === "pending").map(u => (
+                <div key={u.id} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: spacing.md, background: "rgba(245,158,11,.06)",
+                  border: "1px solid rgba(245,158,11,.2)", borderRadius: borderRadius.md,
+                }}>
+                  <div>
+                    <div style={{ color: colors.text, fontWeight: 600, fontSize: 13 }}>{u.name}</div>
+                    <div style={{ color: colors.textSecondary, fontSize: 11 }}>{u.email}</div>
+                    {u.requested_at && (
+                      <div style={{ color: colors.textSecondary, fontSize: 10, marginTop: 2 }}>
+                        Solicitado em {new Date(u.requested_at).toLocaleDateString("pt-BR")}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: spacing.sm }}>
+                    <button
+                      onClick={() => setUserStatus(u.id, "approved")}
+                      disabled={approvingId === u.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        padding: "6px 14px", border: "none", borderRadius: borderRadius.sm,
+                        background: colors.success, color: "#fff", fontSize: 12, fontWeight: 600,
+                        cursor: approvingId === u.id ? "default" : "pointer",
+                        opacity: approvingId === u.id ? 0.6 : 1,
+                      }}
+                    >
+                      <UserCheck size={14} /> Aprovar
+                    </button>
+                    <button
+                      onClick={() => setUserStatus(u.id, "rejected")}
+                      disabled={approvingId === u.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        padding: "6px 14px", border: "none", borderRadius: borderRadius.sm,
+                        background: colors.error, color: "#fff", fontSize: 12, fontWeight: 600,
+                        cursor: approvingId === u.id ? "default" : "pointer",
+                        opacity: approvingId === u.id ? 0.6 : 1,
+                      }}
+                    >
+                      <UserX size={14} /> Rejeitar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {users.filter(u => u.status !== "pending").length === 0 ? (
           <Card>
             <div style={{ textAlign: "center", padding: spacing.xl, color: colors.textSecondary }}>
-              Nenhum usuário encontrado. Usuários aparecem aqui após o primeiro login.
+              Nenhum usuário aprovado ainda.
             </div>
           </Card>
         ) : (
@@ -203,16 +284,22 @@ function PermissionsPage() {
                   <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
                     ROLE
                   </th>
+                  <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
+                    STATUS
+                  </th>
                   {MODULES.map(({ key, label }) => (
                     <th key={key} style={{ padding: spacing.md, textAlign: "center", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
                       {label}
                     </th>
                   ))}
+                  <th style={{ padding: spacing.md, textAlign: "center", color: colors.textSecondary, fontWeight: 600, fontSize: 11 }}>
+                    AÇÕES
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                {users.filter(u => u.status !== "pending").map((u) => (
+                  <tr key={u.id} style={{ borderBottom: `1px solid ${colors.border}`, opacity: u.status === "rejected" ? 0.5 : 1 }}>
                     <td style={{ padding: spacing.md }}>
                       <div style={{ color: colors.text, fontWeight: 600, fontSize: 13 }}>{u.name}</div>
                       <div style={{ color: colors.textSecondary, fontSize: 11 }}>{u.email}</div>
@@ -228,13 +315,23 @@ function PermissionsPage() {
                         {u.role}
                       </span>
                     </td>
+                    <td style={{ padding: spacing.md }}>
+                      <span style={{
+                        display: "inline-block", padding: "3px 8px",
+                        background: u.status === "approved" ? "rgba(34,197,94,.12)" : "rgba(239,68,68,.12)",
+                        color: u.status === "approved" ? "#4ade80" : "#f87171",
+                        borderRadius: borderRadius.sm, fontSize: 11, fontWeight: 600,
+                      }}>
+                        {u.status === "approved" ? "Aprovado" : "Rejeitado"}
+                      </span>
+                    </td>
                     {MODULES.map(({ key }) => {
                       const enabled = u[key as keyof UserAccess] as boolean;
                       return (
                         <td key={key} style={{ padding: spacing.md, textAlign: "center" }}>
                           <button
                             onClick={() => toggleAccess(u.id, key)}
-                            disabled={saving === u.id || u.role === "admin"}
+                            disabled={saving === u.id || u.role === "admin" || u.status === "rejected"}
                             title={u.role === "admin" ? "Admin tem acesso total" : enabled ? "Revogar acesso" : "Conceder acesso"}
                             style={{
                               width: 32, height: 32,
@@ -254,6 +351,25 @@ function PermissionsPage() {
                         </td>
                       );
                     })}
+                    <td style={{ padding: spacing.md, textAlign: "center" }}>
+                      {u.role !== "admin" && (
+                        <button
+                          onClick={() => setUserStatus(u.id, u.status === "approved" ? "rejected" : "approved")}
+                          disabled={approvingId === u.id}
+                          title={u.status === "approved" ? "Revogar acesso" : "Restaurar acesso"}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "4px 10px", border: "none", borderRadius: borderRadius.sm,
+                            background: u.status === "approved" ? "rgba(239,68,68,.15)" : "rgba(34,197,94,.15)",
+                            color: u.status === "approved" ? "#f87171" : "#4ade80",
+                            fontSize: 11, fontWeight: 600, cursor: "pointer",
+                            opacity: approvingId === u.id ? 0.6 : 1,
+                          }}
+                        >
+                          {u.status === "approved" ? <><UserX size={12} /> Revogar</> : <><UserCheck size={12} /> Restaurar</>}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

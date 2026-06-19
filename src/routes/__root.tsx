@@ -111,8 +111,53 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function PendingScreen({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#04060e] flex items-center justify-center px-4">
+      <div className="max-w-md w-full text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-6">
+          <svg className="w-8 h-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+          </svg>
+        </div>
+        <h1 className="text-xl font-bold text-white mb-2">Aguardando aprovação</h1>
+        <p className="text-sm text-slate-400 mb-1">Sua conta <span className="text-slate-300">{email}</span> foi criada.</p>
+        <p className="text-sm text-slate-400 mb-8">Um administrador precisa aprovar seu acesso antes de você entrar no sistema.</p>
+        <button
+          onClick={onSignOut}
+          className="text-xs text-slate-500 hover:text-slate-300 transition-colors underline"
+        >
+          Sair e usar outra conta
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RejectedScreen({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#04060e] flex items-center justify-center px-4">
+      <div className="max-w-md w-full text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 mb-6">
+          <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+        </div>
+        <h1 className="text-xl font-bold text-white mb-2">Acesso negado</h1>
+        <p className="text-sm text-slate-400 mb-8">Sua solicitação de acesso foi recusada. Entre em contato com o administrador.</p>
+        <button
+          onClick={onSignOut}
+          className="text-xs text-slate-500 hover:text-slate-300 transition-colors underline"
+        >
+          Sair
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AuthGuard() {
-  const { session, loading } = useAuth();
+  const { session, loading, userStatus, statusLoading, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
@@ -125,7 +170,6 @@ function AuthGuard() {
       pathname === "/login" ||
       pathname.startsWith("/orcamento/approve/");
 
-    // No domínio app.*, redireciona / para login ou dashboard
     if (isAppHost && isLandingRoute) {
       navigate({ to: session ? "/dashboard" : "/login" });
       return;
@@ -138,12 +182,20 @@ function AuthGuard() {
     }
   }, [session, loading, pathname, navigate]);
 
-  if (loading) {
+  if (loading || (session && statusLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="size-5 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (session && userStatus === "pending") {
+    return <PendingScreen email={session.user.email} onSignOut={signOut} />;
+  }
+
+  if (session && userStatus === "rejected") {
+    return <RejectedScreen onSignOut={signOut} />;
   }
 
   return <Outlet />;
