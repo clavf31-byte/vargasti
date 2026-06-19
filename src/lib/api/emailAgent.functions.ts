@@ -355,7 +355,10 @@ export async function fetchUnreadEmails(maxResults: number, userId: string = "sy
 export const fetchNewEmails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ maxResults: z.number().default(10) }))
-  .handler(async ({ data }) => fetchUnreadEmails(data.maxResults));
+  .handler(async ({ data, context }) => {
+    const supabase = await getEmailDbClient();
+    return fetchUnreadEmails(data.maxResults, context.userId, supabase);
+  });
 
 // ── Mark Email as Read ────────────────────────────────────────────────────────
 const MarkAsReadSchema = z.object({
@@ -376,7 +379,10 @@ export async function markEmailAsReadInternal(messageId: string, userId: string 
 export const markEmailAsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(MarkAsReadSchema)
-  .handler(async ({ data }) => markEmailAsReadInternal(data.messageId));
+  .handler(async ({ data, context }) => {
+    const supabase = await getEmailDbClient();
+    return markEmailAsReadInternal(data.messageId, context.userId, supabase);
+  });
 
 
 // ── Interpret Email with Claude ───────────────────────────────────────────────
@@ -599,7 +605,7 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
       const supabase = await getEmailDbClient();
 
       // Gmail account is shared, use authenticated user's ID to fetch tokens
-      let userId = context?.user?.id;
+      let userId = context?.userId;
 
       // Fallback: if no auth context, find first available Gmail token
       if (!userId) {
