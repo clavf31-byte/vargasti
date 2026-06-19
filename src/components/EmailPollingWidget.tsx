@@ -147,7 +147,6 @@ export function EmailPollingWidget() {
               onClick={async () => {
                 try {
                   const { url } = await getGmailAuthUrl();
-                  console.log("[Gmail OAuth URL]", url);
                   window.location.href = url;
                 } catch (e) {
                   setError(e instanceof Error ? e.message : "Não foi possível iniciar autorização");
