@@ -101,15 +101,39 @@ export function AppShell({ children }: { children?: ReactNode }) {
       })).filter(group => group.items.length > 0)
     : ALL_MODULES;
 
-  const currentPage = (() => {
-    for (const mod of VISIBLE_MODULES) {
-      const item = mod.items.find(({ to }) =>
-        to === "/" ? pathname === "/dashboard" : pathname.startsWith(to)
-      );
-      if (item) return item.label;
-    }
-    return "VargasTI Lab";
-  })();
+  const ROUTE_LABELS: Record<string, string> = {
+    dashboard: "Dashboard",
+    ferramentas: "Ferramentas",
+    emails: "Email Agent",
+    excel: "Excel Tool",
+    whatsapp: "WhatsApp",
+    projetos: "Projetos",
+    anotacoes: "Anotações",
+    arquivos: "Arquivos",
+    crm: "CRM",
+    clientes: "Clientes",
+    orcamentos: "Orçamentos",
+    contratos: "Contratos",
+    modelos: "Modelos",
+    pagamentos: "Pagamentos",
+    pipeline: "Pipeline",
+    pecas: "Peças",
+    servicos: "Serviços",
+    tarefas: "Tarefas",
+    config: "Config",
+    permissions: "Permissões",
+    index: "",
+    admin: "Admin",
+    setup: "Setup",
+    novo: "Novo",
+    editar: "Editar",
+  };
+
+  const breadcrumbs = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((seg) => ROUTE_LABELS[seg] ?? seg)
+    .filter(Boolean);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups((prev) => ({
@@ -385,11 +409,17 @@ export function AppShell({ children }: { children?: ReactNode }) {
             <Menu className="size-4" />
           </button>
 
-          {/* Page title (desktop) */}
+          {/* Breadcrumb (desktop) */}
           <div className="hidden lg:flex items-center gap-2">
             <span className="text-[10px] text-[#8da2b4] uppercase tracking-widest">VargasTI</span>
-            <span className="text-[#8da2b4]/30">/</span>
-            <span className="text-[10px] text-[#eaf3f8] font-medium">{currentPage}</span>
+            {breadcrumbs.map((crumb, i) => (
+              <span key={i} className="flex items-center gap-2">
+                <span className="text-[#8da2b4]/30">/</span>
+                <span className={`text-[10px] font-medium ${i === breadcrumbs.length - 1 ? "text-[#eaf3f8]" : "text-[#8da2b4]"}`}>
+                  {crumb}
+                </span>
+              </span>
+            ))}
           </div>
 
           <div className="flex-1" />
