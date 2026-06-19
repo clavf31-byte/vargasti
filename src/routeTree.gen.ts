@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
+import { Route as DebugUserIdRouteImport } from './routes/debug-user-id'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConfigRouteImport } from './routes/config'
@@ -68,6 +69,11 @@ const LoginRoute = LoginRouteImport.update({
 const FerramentasRoute = FerramentasRouteImport.update({
   id: '/ferramentas',
   path: '/ferramentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebugUserIdRoute = DebugUserIdRouteImport.update({
+  id: '/debug-user-id',
+  path: '/debug-user-id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -289,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/debug-user-id': typeof DebugUserIdRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/arquivos': typeof ArquivosRoute
   '/crm': typeof CrmRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/debug-user-id': typeof DebugUserIdRoute
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
   '/admin/setup': typeof AdminSetupRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/config': typeof ConfigRouteWithChildren
   '/crm': typeof CrmRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/debug-user-id': typeof DebugUserIdRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/config'
     | '/crm'
     | '/dashboard'
+    | '/debug-user-id'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -474,6 +484,7 @@ export interface FileRouteTypes {
     | '/arquivos'
     | '/crm'
     | '/dashboard'
+    | '/debug-user-id'
     | '/login'
     | '/projetos'
     | '/admin/setup'
@@ -517,6 +528,7 @@ export interface FileRouteTypes {
     | '/config'
     | '/crm'
     | '/dashboard'
+    | '/debug-user-id'
     | '/ferramentas'
     | '/login'
     | '/projetos'
@@ -565,6 +577,7 @@ export interface RootRouteChildren {
   ConfigRoute: typeof ConfigRouteWithChildren
   CrmRoute: typeof CrmRouteWithChildren
   DashboardRoute: typeof DashboardRoute
+  DebugUserIdRoute: typeof DebugUserIdRoute
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjetosRoute: typeof ProjetosRoute
@@ -602,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/ferramentas'
       fullPath: '/ferramentas'
       preLoaderRoute: typeof FerramentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug-user-id': {
+      id: '/debug-user-id'
+      path: '/debug-user-id'
+      fullPath: '/debug-user-id'
+      preLoaderRoute: typeof DebugUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -1022,6 +1042,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfigRoute: ConfigRouteWithChildren,
   CrmRoute: CrmRouteWithChildren,
   DashboardRoute: DashboardRoute,
+  DebugUserIdRoute: DebugUserIdRoute,
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjetosRoute: ProjetosRoute,
@@ -1040,3 +1061,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
