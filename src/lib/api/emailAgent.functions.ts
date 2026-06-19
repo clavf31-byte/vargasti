@@ -116,15 +116,14 @@ async function signGmailState(userId: string): Promise<string> {
   return Buffer.from(`${payload}.${sig}`).toString("base64url");
 }
 
-export const getGmailAuthUrl = createServerFn({ method: "GET" })
+export const getGmailAuthUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const userId = context.userId;
     if (!userId) throw new Error("Unauthorized: No user context");
     const { clientId, redirectUri } = getGmailOAuthConfig();
-    const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     const state = await signGmailState(userId);
-    url.search = new URLSearchParams({
+    const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: "code",
@@ -132,8 +131,9 @@ export const getGmailAuthUrl = createServerFn({ method: "GET" })
       scope: "https://www.googleapis.com/auth/gmail.modify",
       prompt: "consent",
       state,
-    }).toString();
-    return { url: url.toString() };
+    });
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    return { url };
   });
 
 // ── Save Gmail Token ──────────────────────────────────────────────────────────
