@@ -596,9 +596,27 @@ export const processEmailPipeline = createServerFn({ method: "POST" })
   .inputValidator(z.object({ maxEmails: z.number().default(1) }))
   .handler(async ({ data, context }) => {
     try {
-      // Gmail account is shared, use authenticated user's ID to fetch tokens
-      const userId = context.user.id;
       const supabase = await getEmailDbClient();
+
+      // Gmail account is shared, use authenticated user's ID to fetch tokens
+      let userId = context?.user?.id;
+
+      // Fallback: if no auth context, find first available Gmail token
+      if (!userId) {
+        const { data: tokens } = await supabase
+          .from("gmail_tokens")
+          .select("user_id")
+          .limit(1)
+          .maybeSingle();
+
+        if (!tokens?.user_id) {
+          console.log("[email-pipeline] No Gmail token available");
+          return { ok: false, authorized: false, processed: 0, total: 0, message: "No Gmail token found" };
+        }
+        userId = tokens.user_id;
+        console.log("[email-pipeline] Using fallback user_id from gmail_tokens:", userId);
+      }
+
       console.log("[email-pipeline] Starting email processing for user:", userId);
 
 
