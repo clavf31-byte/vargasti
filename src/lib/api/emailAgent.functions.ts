@@ -120,8 +120,8 @@ function signGmailState(userId: string): string {
 export const getGmailAuthUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const userId = context.userId;
-    if (!userId) throw new Error("Unauthorized");
+    const userId = context.user?.id;
+    if (!userId) throw new Error("Unauthorized: No user context");
     const { clientId, redirectUri } = getGmailOAuthConfig();
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     url.search = new URLSearchParams({
