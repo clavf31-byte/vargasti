@@ -175,6 +175,13 @@ function AuthGuard() {
       return;
     }
 
+    // Após OAuth do Google, o Supabase redireciona para a raiz (/) com tokens na URL.
+    // Se houver sessão na homepage, manda direto para o dashboard.
+    if (session && isLandingRoute) {
+      navigate({ to: "/dashboard" });
+      return;
+    }
+
     if (!session && !isPublic) {
       navigate({ to: "/login" });
     } else if (session && pathname === "/login") {
