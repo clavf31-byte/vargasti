@@ -23,6 +23,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
 import { Route as ConfigIndexRouteImport } from './routes/config.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
 import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
@@ -46,6 +47,7 @@ import { Route as ApiDebugInterpretEmailRouteImport } from './routes/api/debug-i
 import { Route as ApiDebugGmailTokenRouteImport } from './routes/api/debug-gmail-token'
 import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetch-emails'
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
+import { Route as AdminOperatorIdRouteImport } from './routes/admin.$operatorId'
 import { Route as CrmOrcamentosIndexRouteImport } from './routes/crm.orcamentos.index'
 import { Route as CrmContratosIndexRouteImport } from './routes/crm.contratos.index'
 import { Route as CrmClientesIndexRouteImport } from './routes/crm.clientes.index'
@@ -126,6 +128,11 @@ const ConfigIndexRoute = ConfigIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ConfigRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const FerramentasWhatsappRoute = FerramentasWhatsappRouteImport.update({
   id: '/whatsapp',
@@ -242,6 +249,11 @@ const AdminSetupRoute = AdminSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOperatorIdRoute = AdminOperatorIdRouteImport.update({
+  id: '/$operatorId',
+  path: '/$operatorId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CrmOrcamentosIndexRoute = CrmOrcamentosIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -306,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
+  '/admin/$operatorId': typeof AdminOperatorIdRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
@@ -329,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
+  '/admin/': typeof AdminIndexRoute
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
@@ -344,7 +358,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
@@ -353,6 +366,7 @@ export interface FileRoutesByTo {
   '/debug-user-id': typeof DebugUserIdRoute
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
+  '/admin/$operatorId': typeof AdminOperatorIdRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
@@ -373,6 +387,7 @@ export interface FileRoutesByTo {
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
+  '/admin': typeof AdminIndexRoute
   '/config': typeof ConfigIndexRoute
   '/ferramentas': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
@@ -400,6 +415,7 @@ export interface FileRoutesById {
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
   '/projetos': typeof ProjetosRoute
+  '/admin/$operatorId': typeof AdminOperatorIdRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
   '/api/debug-gmail-token': typeof ApiDebugGmailTokenRoute
@@ -423,6 +439,7 @@ export interface FileRoutesById {
   '/ferramentas/emails': typeof FerramentasEmailsRoute
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
+  '/admin/': typeof AdminIndexRoute
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
@@ -451,6 +468,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/login'
     | '/projetos'
+    | '/admin/$operatorId'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
@@ -474,6 +492,7 @@ export interface FileRouteTypes {
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
+    | '/admin/'
     | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
@@ -489,7 +508,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/agenda'
     | '/anotacoes'
     | '/arquivos'
@@ -498,6 +516,7 @@ export interface FileRouteTypes {
     | '/debug-user-id'
     | '/login'
     | '/projetos'
+    | '/admin/$operatorId'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
@@ -518,6 +537,7 @@ export interface FileRouteTypes {
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
+    | '/admin'
     | '/config'
     | '/ferramentas'
     | '/crm/clientes/$id'
@@ -544,6 +564,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/login'
     | '/projetos'
+    | '/admin/$operatorId'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
     | '/api/debug-gmail-token'
@@ -567,6 +588,7 @@ export interface FileRouteTypes {
     | '/ferramentas/emails'
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
+    | '/admin/'
     | '/config/'
     | '/ferramentas/'
     | '/crm/clientes/$id'
@@ -706,6 +728,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/config/'
       preLoaderRoute: typeof ConfigIndexRouteImport
       parentRoute: typeof ConfigRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/ferramentas/whatsapp': {
       id: '/ferramentas/whatsapp'
@@ -868,6 +897,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSetupRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/$operatorId': {
+      id: '/admin/$operatorId'
+      path: '/$operatorId'
+      fullPath: '/admin/$operatorId'
+      preLoaderRoute: typeof AdminOperatorIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/crm/orcamentos/': {
       id: '/crm/orcamentos/'
       path: '/'
@@ -942,11 +978,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminOperatorIdRoute: typeof AdminOperatorIdRoute
   AdminSetupRoute: typeof AdminSetupRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminOperatorIdRoute: AdminOperatorIdRoute,
   AdminSetupRoute: AdminSetupRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
