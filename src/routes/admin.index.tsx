@@ -270,7 +270,7 @@ function OperatorListPage() {
                       </td>
 
                       {/* Ações */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5 w-[120px]">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => navigate({ to: "/admin/$operatorId", params: { operatorId: u.id } })}
@@ -278,26 +278,29 @@ function OperatorListPage() {
                           >
                             <Pencil className="size-3" /> Editar
                           </button>
-                          {!isSelf && u.status === "approved" && (
-                            <button
-                              onClick={() => handleStatus(u.id, "rejected")}
-                              disabled={isBusy}
-                              title="Revogar acesso"
-                              className="p-1.5 rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-colors disabled:opacity-30"
-                            >
-                              <X className="size-3.5" />
-                            </button>
-                          )}
-                          {!isSelf && u.status === "rejected" && (
-                            <button
-                              onClick={() => handleStatus(u.id, "approved")}
-                              disabled={isBusy}
-                              title="Reativar acesso"
-                              className="p-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors disabled:opacity-50"
-                            >
-                              <Check className="size-3.5" />
-                            </button>
-                          )}
+                          {/* Reserva espaço fixo para botão secundário */}
+                          <div className="w-7 shrink-0 flex items-center justify-center">
+                            {!isSelf && u.status === "approved" && (
+                              <button
+                                onClick={() => handleStatus(u.id, "rejected")}
+                                disabled={isBusy}
+                                title="Revogar acesso"
+                                className="p-1.5 rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-colors disabled:opacity-30"
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            )}
+                            {!isSelf && u.status === "rejected" && (
+                              <button
+                                onClick={() => handleStatus(u.id, "approved")}
+                                disabled={isBusy}
+                                title="Reativar acesso"
+                                className="p-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors disabled:opacity-50"
+                              >
+                                <Check className="size-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
