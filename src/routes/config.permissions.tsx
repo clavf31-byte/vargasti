@@ -61,7 +61,7 @@ function PermissionsPage() {
       .eq("user_id", user!.id)
       .maybeSingle();
 
-    console.log("[permissions] user:", user?.id, "roleData:", roleData, "error:", roleError);
+    console.log("[permissions] user:", user?.id, "roleData:", roleData, "error:", roleError?.message, roleError?.code, roleError?.details);
 
     const admin = roleData?.role === "admin";
     setIsAdmin(admin);
