@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, Shield, Layers, ChevronRight } from "lucide-react";
 import vargastiLogo from "@/assets/vargasti-logo-clean.png.asset.json";
@@ -29,11 +28,12 @@ function LoginPage() {
     setError("");
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
       });
-      if (result.error) {
-        setError(result.error.message ?? "Falha ao entrar com Google");
+      if (error) {
+        setError(error.message ?? "Falha ao entrar com Google");
         setGoogleLoading(false);
       }
     } catch (err) {
