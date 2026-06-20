@@ -39,3 +39,5 @@ create-admin.mjs
 *.sln
 *.sw?
 .env
+dashboard-preview.html
+orcamento-preview.html
