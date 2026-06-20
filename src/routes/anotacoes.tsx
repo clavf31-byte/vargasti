@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Plus, Trash2, FileText, Search, Tag,
   Lock, Eye, EyeOff, ShieldAlert, ShieldCheck,
-  LayoutList, LayoutGrid, AlignLeft, Table2,
+  LayoutList, LayoutGrid, Table2, ChevronDown,
 } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
@@ -148,6 +148,14 @@ function NotesPage() {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterCategory, setFilterCategory] = useState("todas");
 
+  const [showNewMenu, setShowNewMenu] = useState(false);
+  useEffect(() => {
+    if (!showNewMenu) return;
+    const close = () => setShowNewMenu(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [showNewMenu]);
+
   // proteção por nota (apenas frontend — sessão atual)
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
@@ -165,6 +173,28 @@ function NotesPage() {
   const [protError, setProtError] = useState("");
 
   useEffect(() => { if (user) loadNotes(); }, [user]);
+
+  async function createNote(type: NoteType) {
+    setShowNewMenu(false);
+    const initialContent = type === "planilha"
+      ? JSON.stringify(Array.from({ length: 10 }, () => Array(6).fill("")))
+      : "";
+    const initialTags = type === "planilha" ? "__type:planilha" : "";
+    const { data, error } = await supabase.from("notes")
+      .insert({
+        user_id: user!.id,
+        title: type === "planilha" ? "Nova planilha" : "Nova anotação",
+        content: initialContent,
+        category: "Geral",
+        tags: initialTags,
+        status: "rascunho",
+      })
+      .select().single();
+    if (!error && data) {
+      setNotes((prev) => [data as Note, ...prev]);
+      openNote(data as Note);
+    }
+  }
 
   async function loadNotes() {
     setLoading(true);
@@ -399,18 +429,41 @@ function NotesPage() {
                 </div>
               </>
             )}
-            <button
-                onClick={async () => {
-                  const { data, error } = await supabase.from("notes")
-                    .insert({ user_id: user!.id, title: "Nova anotação", content: "", category: "Geral", tags: "", status: "rascunho" })
-                    .select().single();
-                  if (!error && data) { setNotes((prev) => [data as Note, ...prev]); openNote(data as Note); }
-                }}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-3 border border-border text-foreground text-[10px] font-medium hover:bg-surface-3/80 transition-colors"
-              >
-                <Plus className="size-3" />
-                Nova
-              </button>
+            <div className="relative">
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                <button
+                  onClick={() => createNote("texto")}
+                  className="flex items-center gap-1 px-2 py-1 bg-surface-3 text-foreground text-[10px] font-medium hover:bg-surface-3/80 transition-colors"
+                >
+                  <Plus className="size-3" />
+                  Nova
+                </button>
+                <button
+                  onClick={() => setShowNewMenu((v) => !v)}
+                  className="px-1.5 py-1 bg-surface-3 border-l border-border text-muted-foreground hover:text-foreground hover:bg-surface-3/80 transition-colors"
+                >
+                  <ChevronDown className="size-3" />
+                </button>
+              </div>
+              {showNewMenu && (
+                <div className="absolute left-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-xl overflow-hidden min-w-[130px]">
+                  <button
+                    onClick={() => createNote("texto")}
+                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-surface-2 transition-colors"
+                  >
+                    <FileText className="size-3.5 text-muted-foreground" />
+                    Texto
+                  </button>
+                  <button
+                    onClick={() => createNote("planilha")}
+                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-surface-2 transition-colors"
+                  >
+                    <Table2 className="size-3.5 text-muted-foreground" />
+                    Planilha
+                  </button>
+                </div>
+              )}
+            </div>
             </div>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
@@ -584,21 +637,6 @@ function NotesPage() {
 
               {/* Metadados */}
               <div className="flex items-center gap-2 px-5 py-2 border-b border-border/60 flex-wrap">
-                {/* Toggle tipo */}
-                <div className="flex items-center rounded-lg border border-border overflow-hidden shrink-0">
-                  <button
-                    onClick={() => noteType !== "texto" && handleFieldChange("type", "texto")}
-                    className={`flex items-center gap-1 px-2 py-1 text-[10px] transition-colors ${noteType === "texto" ? "bg-brand/20 text-brand" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <AlignLeft className="size-3" /> Texto
-                  </button>
-                  <button
-                    onClick={() => noteType !== "planilha" && handleFieldChange("type", "planilha")}
-                    className={`flex items-center gap-1 px-2 py-1 text-[10px] transition-colors ${noteType === "planilha" ? "bg-brand/20 text-brand" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <Table2 className="size-3" /> Planilha
-                  </button>
-                </div>
                 <select value={noteStatus} onChange={(e) => handleFieldChange("status", e.target.value)}
                   className={`bg-transparent border rounded-lg px-2 py-1 text-[10px] font-medium focus:outline-none appearance-none cursor-pointer transition-colors ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
