@@ -1347,6 +1347,7 @@ export type Database = {
           can_access_projects: boolean
           created_at: string
           id: string
+          permissions: Json | null
           updated_at: string
           user_id: string
         }
@@ -1359,6 +1360,7 @@ export type Database = {
           can_access_projects?: boolean
           created_at?: string
           id?: string
+          permissions?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -1371,6 +1373,7 @@ export type Database = {
           can_access_projects?: boolean
           created_at?: string
           id?: string
+          permissions?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -1573,7 +1576,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "gestor"
+        | "administrativo"
+        | "tecnico"
+        | "operador"
+        | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1701,7 +1712,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "gestor",
+        "administrativo",
+        "tecnico",
+        "operador",
+        "cliente",
+      ],
     },
   },
 } as const
