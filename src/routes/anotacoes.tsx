@@ -256,10 +256,22 @@ function NotesPage() {
       const currentNote = notes.find((n) => n.id === selected.id);
       const newTags = setNoteTypeInTags(currentNote?.tags ?? "", newType);
       updates.tags = newTags;
-      if (newType === "planilha" && getNoteType(currentNote?.tags ?? "") !== "planilha") {
-        const emptyGrid: GridData = Array.from({ length: 10 }, () => Array(6).fill(""));
-        updates.content = JSON.stringify(emptyGrid);
-        setContent(updates.content);
+      if (newType === "planilha") {
+        // só inicializa grid se ainda não é planilha
+        if (getNoteType(currentNote?.tags ?? "") !== "planilha") {
+          const emptyGrid: GridData = Array.from({ length: 10 }, () => Array(6).fill(""));
+          updates.content = JSON.stringify(emptyGrid);
+          setContent(updates.content);
+        }
+      } else {
+        // voltando para texto: limpa o JSON do grid
+        try {
+          const p = JSON.parse(content);
+          if (Array.isArray(p) && Array.isArray(p[0])) {
+            updates.content = "";
+            setContent("");
+          }
+        } catch {}
       }
     }
     if (field === "status") { setNoteStatus(val); updates.status = val; }
