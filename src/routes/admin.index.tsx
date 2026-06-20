@@ -2,14 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
-import { listUsers, updateUser } from "@/lib/api/adminUsers.functions";
+import { listUsers, updateUser, createOperator } from "@/lib/api/adminUsers.functions";
 import type { UserRow } from "@/lib/api/adminUsers.functions";
 import { StatCard, Btn, EmptyState, LoadingState } from "@/components/shared";
 import { roleConfig, OPERATOR_ROLES } from "@/lib/operatorPermissions";
 import type { OperatorRole } from "@/lib/operatorPermissions";
 import {
   Shield, RefreshCw, User, Clock, UserCheck, UserX,
-  Search, Pencil, X, Check,
+  Search, Pencil, X, Check, UserPlus, Eye, EyeOff,
+  Copy, RefreshCcw, Mail,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
@@ -25,6 +26,251 @@ const STATUS_CLS = {
 
 const STATUS_LABEL = { pending: "Pendente", approved: "Ativo", rejected: "Rejeitado" };
 
+function generatePassword() {
+  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$";
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+type NewOpForm = {
+  full_name: string;
+  email: string;
+  role: OperatorRole;
+  password: string;
+  send_email: boolean;
+};
+
+type Created = { email: string; password: string };
+
+function NewOperatorDialog({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState<NewOpForm>({
+    full_name: "",
+    email: "",
+    role: "operador",
+    password: generatePassword(),
+    send_email: true,
+  });
+  const [showPwd, setShowPwd] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [created, setCreated] = useState<Created | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const set = (k: keyof NewOpForm, v: string | boolean) =>
+    setForm((p) => ({ ...p, [k]: v }));
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      await createOperator({ data: form });
+      setCreated({ email: form.email, password: form.password });
+      onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao criar operador.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function copyCredentials() {
+    if (!created) return;
+    navigator.clipboard.writeText(`Email: ${created.email}\nSenha: ${created.password}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (created) {
+    return (
+      <Overlay onClose={onClose}>
+        <div className="space-y-5">
+          <div className="flex items-center gap-2.5">
+            <div className="size-9 rounded-full bg-brand/10 border border-brand/20 grid place-items-center">
+              <UserCheck className="size-4 text-brand" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">Operador criado</h2>
+              <p className="text-[11px] text-muted-foreground">Conta ativa com acesso imediato</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-secondary/40 border border-border p-4 space-y-3 font-mono text-sm">
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground text-xs">Email</span>
+              <span className="text-foreground truncate">{created.email}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground text-xs">Senha</span>
+              <span className="text-foreground">{created.password}</span>
+            </div>
+          </div>
+
+          {form.send_email && (
+            <p className="flex items-center gap-2 text-xs text-brand">
+              <Mail className="size-3.5 shrink-0" />
+              Email de acesso enviado para {created.email}
+            </p>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              onClick={copyCredentials}
+              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-secondary border border-border text-sm text-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <Copy className="size-3.5" />
+              {copied ? "Copiado!" : "Copiar credenciais"}
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 h-9 rounded-lg bg-brand text-sm font-medium text-brand-foreground hover:bg-brand/90 transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </Overlay>
+    );
+  }
+
+  return (
+    <Overlay onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center gap-2.5 mb-1">
+          <UserPlus className="size-4 text-brand" />
+          <h2 className="text-base font-bold text-foreground">Novo Operador</h2>
+        </div>
+
+        <Field label="Nome completo">
+          <input
+            required
+            value={form.full_name}
+            onChange={(e) => set("full_name", e.target.value)}
+            placeholder="Ex: João Silva"
+            className="input-base"
+          />
+        </Field>
+
+        <Field label="E-mail">
+          <input
+            required
+            type="email"
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+            placeholder="joao@empresa.com"
+            className="input-base"
+          />
+        </Field>
+
+        <Field label="Função">
+          <select
+            value={form.role}
+            onChange={(e) => set("role", e.target.value)}
+            className="input-base cursor-pointer"
+          >
+            {OPERATOR_ROLES.filter((r) => r.value !== "admin").map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Senha temporária">
+          <div className="relative">
+            <input
+              required
+              minLength={8}
+              type={showPwd ? "text" : "password"}
+              value={form.password}
+              onChange={(e) => set("password", e.target.value)}
+              className="input-base pr-20"
+            />
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
+              <button
+                type="button"
+                onClick={() => set("password", generatePassword())}
+                title="Gerar nova senha"
+                className="p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <RefreshCcw className="size-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPwd((s) => !s)}
+                className="p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPwd ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </button>
+            </div>
+          </div>
+        </Field>
+
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={form.send_email}
+            onChange={(e) => set("send_email", e.target.checked)}
+            className="h-4 w-4 rounded border-border bg-secondary text-brand"
+          />
+          <span className="text-sm text-foreground">Enviar email de acesso ao operador</span>
+        </label>
+
+        {error && (
+          <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <div className="flex gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-9 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="flex-1 h-9 rounded-lg bg-brand text-sm font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-60 transition-colors"
+          >
+            {busy ? "Criando..." : "Criar Operador"}
+          </button>
+        </div>
+      </form>
+    </Overlay>
+  );
+}
+
+function Overlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60" />
+      <div
+        className="relative w-full max-w-md bg-surface border border-border rounded-2xl shadow-2xl p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 function OperatorListPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +281,7 @@ function OperatorListPage() {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState<OperatorRole | "">("");
   const [filterStatus, setFilterStatus] = useState<"" | "pending" | "approved" | "rejected">("");
+  const [showNew, setShowNew] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,10 +341,16 @@ function OperatorListPage() {
               <p className="text-[11px] text-muted-foreground">Funções, permissões e acessos ao sistema</p>
             </div>
           </div>
-          <Btn variant="secondary" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-            Atualizar
-          </Btn>
+          <div className="flex gap-2">
+            <Btn variant="secondary" size="sm" onClick={load} disabled={loading}>
+              <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Btn>
+            <Btn size="sm" onClick={() => setShowNew(true)}>
+              <UserPlus className="size-3.5" />
+              Novo Operador
+            </Btn>
+          </div>
         </div>
 
         {/* Stats */}
@@ -198,7 +451,7 @@ function OperatorListPage() {
           {loading ? (
             <LoadingState label="Carregando operadores..." />
           ) : filtered.length === 0 ? (
-            <EmptyState icon={User} title="Nenhum operador encontrado" subtitle="Ajuste os filtros ou aprove operadores pendentes." />
+            <EmptyState icon={User} title="Nenhum operador encontrado" subtitle="Ajuste os filtros ou crie um novo operador." />
           ) : (
             <table className="w-full">
               <thead>
@@ -222,7 +475,6 @@ function OperatorListPage() {
                       className="hover:bg-white/[0.02] transition-colors"
                       style={{ opacity: u.status === "rejected" ? 0.55 : 1 }}
                     >
-                      {/* Operador */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="size-8 rounded-full bg-secondary border border-border grid place-items-center shrink-0 text-[11px] font-semibold text-muted-foreground">
@@ -245,7 +497,6 @@ function OperatorListPage() {
                         </div>
                       </td>
 
-                      {/* Função — só badge, sem dropdown */}
                       <td className="px-4 py-3.5 hidden md:table-cell">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${rc.cls}`}>
                           <Shield className="size-3 shrink-0" />
@@ -253,14 +504,12 @@ function OperatorListPage() {
                         </span>
                       </td>
 
-                      {/* Status */}
                       <td className="px-4 py-3.5 hidden md:table-cell">
                         <span className={`inline-block px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${STATUS_CLS[u.status]}`}>
                           {STATUS_LABEL[u.status]}
                         </span>
                       </td>
 
-                      {/* Último acesso */}
                       <td className="px-4 py-3.5 hidden lg:table-cell">
                         <span className="text-[11px] text-muted-foreground">
                           {u.last_sign_in_at
@@ -269,7 +518,6 @@ function OperatorListPage() {
                         </span>
                       </td>
 
-                      {/* Ações */}
                       <td className="px-5 py-3.5 w-[120px]">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
@@ -278,7 +526,6 @@ function OperatorListPage() {
                           >
                             <Pencil className="size-3" /> Editar
                           </button>
-                          {/* Reserva espaço fixo para botão secundário */}
                           <div className="w-7 shrink-0 flex items-center justify-center">
                             {!isSelf && u.status === "approved" && (
                               <button
@@ -317,6 +564,13 @@ function OperatorListPage() {
           </p>
         )}
       </div>
+
+      {showNew && (
+        <NewOperatorDialog
+          onClose={() => setShowNew(false)}
+          onCreated={() => { load(); }}
+        />
+      )}
     </AppShell>
   );
 }

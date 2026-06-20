@@ -53,14 +53,17 @@ export const listUsers = createServerFn({ method: "GET" })
 
     const [authRes, rolesRes, profilesRes, permsRes] = await Promise.all([
       supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
-      supabaseAdmin.from("user_roles").select("user_id, role, status"),
+      supabaseAdmin.from("user_roles").select("user_id, role, status").order("role", { ascending: true }),
       supabaseAdmin.from("profiles").select("id, full_name"),
       supabaseAdmin.from("user_module_permissions").select("user_id, permissions"),
     ]);
 
     if (authRes.error) throw new Error(authRes.error.message);
 
-    const rolesByUser = new Map((rolesRes.data ?? []).map((r: any) => [r.user_id, r]));
+    const rolesByUser = new Map<string, any>();
+    for (const r of (rolesRes.data ?? [])) {
+      if (!rolesByUser.has(r.user_id)) rolesByUser.set(r.user_id, r);
+    }
     const profilesByUser = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
     const permsByUser = new Map((permsRes.data ?? []).map((p: any) => [p.user_id, p]));
 
@@ -131,6 +134,49 @@ export const updatePermissions = createServerFn({ method: "POST" })
       );
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const createOperator = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      email: z.string().email(),
+      full_name: z.string().min(2),
+      role: z.enum(["admin", "gestor", "administrativo", "tecnico", "operador", "cliente"]),
+      password: z.string().min(8),
+      send_email: z.boolean(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.full_name },
+    });
+    if (createError) throw new Error(createError.message);
+
+    const userId = authData.user.id;
+
+    const { error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: userId, role: data.role, status: "approved" });
+    if (roleError) {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      throw new Error(roleError.message);
+    }
+
+    if (data.send_email) {
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "invite",
+        email: data.email,
+        options: { data: { full_name: data.full_name } },
+      });
+    }
+
+    return { ok: true, userId };
   });
 
 export const deleteUser = createServerFn({ method: "POST" })
