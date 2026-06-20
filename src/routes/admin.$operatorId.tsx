@@ -443,7 +443,7 @@ function OperatorDetailPage() {
         {tab === "seguranca" && (
           <div className="space-y-4">
             {/* Alterar senha */}
-            {operator.provider === "email" && !isSelf && (
+            {operator.provider === "email" && (
               <div className="card-graphite p-5 space-y-4">
                 <div className="flex items-center gap-2">
                   <KeyRound className="size-4 text-brand" />
