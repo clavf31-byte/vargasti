@@ -55,14 +55,13 @@ function PermissionsPage() {
   }, [user]);
 
   async function checkAdminAndLoad() {
-    const { data: roleData, error: roleError } = await supabase
+    const { data: rows } = await supabase
       .from("user_roles")
       .select("role, status")
       .eq("user_id", user!.id)
-      .maybeSingle();
+      .limit(1);
 
-    console.log("[permissions] user:", user?.id, "roleData:", roleData, "error:", roleError?.message, roleError?.code, roleError?.details);
-
+    const roleData = rows?.[0] ?? null;
     const admin = roleData?.role === "admin";
     setIsAdmin(admin);
 

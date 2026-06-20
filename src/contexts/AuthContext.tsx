@@ -48,9 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from("user_roles")
       .select("status")
       .eq("user_id", session.user.id)
-      .maybeSingle()
+      .limit(1)
       .then(({ data }) => {
-        setUserStatus((data?.status as UserStatus) ?? null);
+        setUserStatus((data?.[0]?.status as UserStatus) ?? null);
         setStatusLoading(false);
       });
   }, [session?.user?.id]);

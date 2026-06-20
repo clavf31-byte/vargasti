@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
+import { useModulePermissions } from "@/hooks/useModulePermissions";
 import { listUsers, updateUser, deleteUser, updateUserPassword } from "@/lib/api/adminUsers.functions";
 import type { UserRow } from "@/lib/api/adminUsers.functions";
 import { PageHeader, StatCard, Toolbar, Btn, EmptyState, LoadingState } from "@/components/shared";
@@ -71,7 +72,7 @@ function AdminPage() {
   const [pwdSuccess, setPwdSuccess] = useState(false);
   const [pwdBusy, setPwdBusy] = useState(false);
 
-  const isAdmin = (user?.app_metadata as { role?: string } | undefined)?.role === "admin";
+  const { isAdmin } = useModulePermissions();
 
   useEffect(() => {
     if (!isAdmin) navigate({ to: "/dashboard" });

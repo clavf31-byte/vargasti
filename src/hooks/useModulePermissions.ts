@@ -34,13 +34,15 @@ export function useModulePermissions() {
         .from("user_module_permissions")
         .select("can_access_crm,can_access_email,can_access_excel,can_access_notes,can_access_projects,can_access_files")
         .eq("user_id", user.id)
-        .maybeSingle(),
+        .limit(1),
       supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .maybeSingle(),
-    ]).then(([{ data: permData }, { data: roleData }]) => {
+        .limit(1),
+    ]).then(([{ data: permRows }, { data: roleRows }]) => {
+      const permData = permRows?.[0] ?? null;
+      const roleData = roleRows?.[0] ?? null;
       if (permData) {
         setPerms({
           can_access_crm: permData.can_access_crm,
