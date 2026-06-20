@@ -430,21 +430,14 @@ function NotesPage() {
               </>
             )}
             <div className="relative">
-              <div className="flex rounded-lg border border-border overflow-hidden">
-                <button
-                  onClick={() => createNote("texto")}
-                  className="flex items-center gap-1 px-2 py-1 bg-surface-3 text-foreground text-[10px] font-medium hover:bg-surface-3/80 transition-colors"
-                >
-                  <Plus className="size-3" />
-                  Nova
-                </button>
-                <button
-                  onClick={() => setShowNewMenu((v) => !v)}
-                  className="px-1.5 py-1 bg-surface-3 border-l border-border text-muted-foreground hover:text-foreground hover:bg-surface-3/80 transition-colors"
-                >
-                  <ChevronDown className="size-3" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowNewMenu((v) => !v)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-3 border border-border text-foreground text-[10px] font-medium hover:bg-surface-3/80 transition-colors"
+              >
+                <Plus className="size-3" />
+                Nova
+                <ChevronDown className="size-3 ml-0.5" />
+              </button>
               {showNewMenu && (
                 <div className="absolute left-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-xl overflow-hidden min-w-[130px]">
                   <button
