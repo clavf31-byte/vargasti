@@ -18,6 +18,7 @@ import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
 import { Route as AnotacoesRouteImport } from './routes/anotacoes'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
@@ -103,6 +104,11 @@ const ArquivosRoute = ArquivosRouteImport.update({
 const AnotacoesRoute = AnotacoesRouteImport.update({
   id: '/anotacoes',
   path: '/anotacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -314,6 +320,7 @@ const CrmContratosIdEnviarRoute = CrmContratosIdEnviarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRouteWithChildren
@@ -365,6 +372,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/crm': typeof CrmRouteWithChildren
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
   '/config': typeof ConfigRouteWithChildren
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/agenda'
     | '/anotacoes'
     | '/arquivos'
     | '/config'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/agenda'
     | '/anotacoes'
     | '/arquivos'
     | '/crm'
@@ -562,6 +573,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/agenda'
     | '/anotacoes'
     | '/arquivos'
     | '/config'
@@ -614,6 +626,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AgendaRoute: typeof AgendaRoute
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
   ConfigRoute: typeof ConfigRouteWithChildren
@@ -699,6 +712,13 @@ declare module '@tanstack/react-router' {
       path: '/anotacoes'
       fullPath: '/anotacoes'
       preLoaderRoute: typeof AnotacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1134,6 +1154,7 @@ const FerramentasRouteWithChildren = FerramentasRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AgendaRoute: AgendaRoute,
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
   ConfigRoute: ConfigRouteWithChildren,

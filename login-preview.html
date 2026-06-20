@@ -1,593 +1,403 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VargasTI CRM - Login</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VargasTI - Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0a1e2e 0%, #16213e 50%, #0f3460 100%);
-            position: relative;
-            overflow: hidden;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-        /* Animated Background Elements */
-        .blob-1 {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(19, 200, 211, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            top: -200px;
-            left: -200px;
-            animation: float 20s ease-in-out infinite;
-        }
+    .login-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #04060e;
+      display: flex;
+      overflow: hidden;
+    }
 
-        .blob-2 {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(102, 187, 106, 0.05) 0%, transparent 70%);
-            border-radius: 50%;
-            bottom: -150px;
-            right: -150px;
-            animation: float 25s ease-in-out infinite reverse;
-        }
+    .left-side {
+      flex: 1;
+      background: linear-gradient(135deg, #04060e 0%, #0f192d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-        .grid-overlay {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(0deg, transparent 24%, rgba(19, 200, 211, 0.05) 25%, rgba(19, 200, 211, 0.05) 26%, transparent 27%, transparent 74%, rgba(19, 200, 211, 0.05) 75%, rgba(19, 200, 211, 0.05) 76%, transparent 77%, transparent),
-                linear-gradient(90deg, transparent 24%, rgba(19, 200, 211, 0.05) 25%, rgba(19, 200, 211, 0.05) 26%, transparent 27%, transparent 74%, rgba(19, 200, 211, 0.05) 75%, rgba(19, 200, 211, 0.05) 76%, transparent 77%, transparent);
-            background-size: 50px 50px;
-            opacity: 0.3;
-            pointer-events: none;
-        }
+    .left-content {
+      text-align: center;
+      color: white;
+      max-width: 400px;
+      padding: 2rem;
+    }
 
-        .container {
-            position: relative;
-            z-index: 1;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+    .logo-svg {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 2rem;
+    }
 
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-            max-width: 1200px;
-            width: 100%;
-        }
+    .left-content h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #13c8d3 0%, #0088ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-        /* Left Side */
-        .left-side {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-        }
+    .left-content p {
+      font-size: 1.1rem;
+      color: #b0c4de;
+      line-height: 1.6;
+    }
 
-        .logo-box {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #13c8d3 0%, #0bd0d7 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 20px 40px rgba(19, 200, 211, 0.3);
-            animation: pulse 3s ease-in-out infinite;
-            font-size: 40px;
-        }
+    .right-side {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
 
-        h1 {
-            font-size: 48px;
-            font-weight: 800;
-            color: #eaf3f8;
-            margin: 0;
-            line-height: 1.2;
-        }
+    .form-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 2.5rem;
+      background: rgba(15, 25, 45, 0.95);
+      border: 1px solid rgba(19, 200, 211, 0.4);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      color: white;
+    }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #13c8d3, #0bd0d7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    .form-card h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #f4f8fb;
+      margin: 0 0 0.5rem 0;
+    }
 
-        .subtitle {
-            font-size: 16px;
-            color: #8da2b4;
-            margin-top: 10px;
-        }
+    .form-card > p {
+      font-size: 0.9rem;
+      color: #b0c4de;
+      margin: 0 0 1.5rem 0;
+    }
 
-        .features {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+    .btn {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: inherit;
+    }
 
-        .feature {
-            display: flex;
-            gap: 15px;
-            align-items: flex-start;
-        }
+    .btn-google {
+      background: transparent;
+      border: 1px solid rgba(19, 200, 211, 0.3);
+      color: #f4f8fb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
 
-        .feature-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(19, 200, 211, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            border: 1px solid rgba(19, 200, 211, 0.2);
-            font-size: 24px;
-        }
+    .btn-google:hover {
+      border-color: rgba(19, 200, 211, 0.6);
+      background: rgba(19, 200, 211, 0.05);
+    }
 
-        .feature-title {
-            margin: 0;
-            font-weight: 600;
-            color: #eaf3f8;
-        }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      opacity: 0.5;
+      margin-bottom: 1.5rem;
+    }
 
-        .feature-desc {
-            margin: 5px 0 0 0;
-            font-size: 13px;
-            color: #8da2b4;
-        }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(19, 200, 211, 0.2);
+    }
 
-        .quote {
-            background: rgba(19, 200, 211, 0.05);
-            border: 1px solid rgba(19, 200, 211, 0.2);
-            border-radius: 16px;
-            padding: 20px;
-            border-left: 4px solid #13c8d3;
-        }
+    .divider-text {
+      font-size: 0.85rem;
+      color: #b0c4de;
+    }
 
-        .quote p {
-            margin: 0;
-            font-size: 14px;
-            color: #13c8d3;
-            font-style: italic;
-        }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
 
-        /* Right Side - Login Form */
-        .form-container {
-            background: rgba(6, 34, 53, 0.4);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(19, 200, 211, 0.2);
-            border-radius: 24px;
-            padding: 50px 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #b0c4de;
+      margin-bottom: 0.5rem;
+    }
 
-        .form-header {
-            margin-bottom: 40px;
-        }
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(20, 30, 50, 0.6);
+      border: 1px solid rgba(19, 200, 211, 0.3);
+      border-radius: 8px;
+      color: #f4f8fb;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
 
-        .form-header h2 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #eaf3f8;
-            margin: 0 0 10px 0;
-        }
+    .form-group input[type="email"]:focus,
+    .form-group input[type="password"]:focus {
+      outline: none;
+      border-color: rgba(19, 200, 211, 0.6);
+      background: rgba(20, 30, 50, 0.8);
+    }
 
-        .form-header p {
-            font-size: 14px;
-            color: #8da2b4;
-            margin: 0;
-        }
+    .password-wrapper {
+      position: relative;
+    }
 
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+    .password-wrapper input[type="password"],
+    .password-wrapper input[type="text"] {
+      padding-right: 2.5rem;
+    }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
+    .password-toggle {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #b0c4de;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+    }
 
-        label {
-            display: block;
-            font-size: 12px;
-            color: #8da2b4;
-            margin-bottom: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #b0c4de;
+      margin-bottom: 1.5rem;
+    }
 
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(6, 34, 53, 0.8);
-            border: 1px solid rgba(19, 200, 211, 0.3);
-            border-radius: 12px;
-            color: #eaf3f8;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
+    .remember-me input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+      accent-color: #13c8d3;
+    }
 
-        input[type="email"]:focus,
-        input[type="password"]:focus {
-            outline: none;
-            border-color: rgba(19, 200, 211, 0.8);
-            background: rgba(6, 34, 53, 1);
-        }
+    .btn-submit {
+      background: linear-gradient(90deg, #13c8d3 0%, #0088ff 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
 
-        input::placeholder {
-            color: rgba(141, 162, 180, 0.5);
-        }
+    .btn-submit:hover {
+      opacity: 0.9;
+    }
 
-        .password-wrapper {
-            position: relative;
-        }
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
 
-        input[type="password"] {
-            padding-right: 45px;
-        }
+    .footer-text {
+      margin: 0;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #b0c4de;
+    }
 
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #8da2b4;
-            cursor: pointer;
-            padding: 8px;
-            font-size: 18px;
-            transition: color 0.2s;
-        }
+    .footer-text a {
+      color: #13c8d3;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
 
-        .toggle-password:hover {
-            color: #13c8d3;
-        }
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
 
-        .form-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            margin-top: 10px;
-        }
+    @media (max-width: 900px) {
+      .login-container {
+        flex-direction: column;
+      }
 
-        .remember {
-            color: #8da2b4;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+      .left-side {
+        padding: 2rem;
+        min-height: 40vh;
+      }
 
-        .forgot {
-            color: #13c8d3;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
+      .right-side {
+        min-height: 60vh;
+      }
+    }
 
-        .forgot:hover {
-            color: #0bd0d7;
-        }
+    @media (max-width: 600px) {
+      .form-card {
+        padding: 1.5rem;
+      }
 
-        button[type="submit"] {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #13c8d3 0%, #0bd0d7 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 10px 30px rgba(19, 200, 211, 0.3);
-        }
-
-        button[type="submit"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(19, 200, 211, 0.4);
-        }
-
-        button[type="submit"]:active {
-            transform: translateY(0);
-        }
-
-        .divider {
-            position: relative;
-            margin: 20px 0;
-        }
-
-        .divider::before {
-            content: '';
-            display: block;
-            border-top: 1px solid rgba(19, 200, 211, 0.2);
-        }
-
-        .divider-text {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(6, 34, 53, 0.4);
-            padding: 0 10px;
-            color: #8da2b4;
-            font-size: 12px;
-        }
-
-        .google-btn {
-            width: 100%;
-            padding: 14px;
-            background: rgba(19, 200, 211, 0.1);
-            border: 1px solid rgba(19, 200, 211, 0.3);
-            border-radius: 12px;
-            color: #13c8d3;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .google-btn:hover {
-            background: rgba(19, 200, 211, 0.2);
-            border-color: rgba(19, 200, 211, 0.5);
-        }
-
-        .signup {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(19, 200, 211, 0.1);
-        }
-
-        .signup p {
-            color: #8da2b4;
-            font-size: 13px;
-            margin: 0;
-        }
-
-        .signup a {
-            color: #13c8d3;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-
-        .signup a:hover {
-            color: #0bd0d7;
-        }
-
-        /* Version Info */
-        .version-info {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 12px;
-            color: #8da2b4;
-            text-align: right;
-            z-index: 10;
-        }
-
-        .version-number {
-            margin-bottom: 4px;
-        }
-
-        .version-number span {
-            color: #13c8d3;
-            font-weight: 600;
-        }
-
-        .build-info {
-            margin-bottom: 4px;
-        }
-
-        .system-status {
-            margin-top: 4px;
-            font-size: 11px;
-            color: #4a6b7e;
-        }
-
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-30px); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 20px 40px rgba(19, 200, 211, 0.3); }
-            50% { box-shadow: 0 20px 60px rgba(19, 200, 211, 0.5); }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-
-            .left-side {
-                display: none;
-            }
-
-            .form-container {
-                padding: 40px 30px;
-            }
-
-            h1 {
-                font-size: 32px;
-            }
-
-            .form-header h2 {
-                font-size: 24px;
-            }
-        }
-    </style>
+      .form-card h1 {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="blob-1"></div>
-    <div class="blob-2"></div>
-    <div class="grid-overlay"></div>
+  <div class="login-container">
+    <!-- Left side -->
+    <div class="left-side">
+      <div class="left-content">
+        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="vGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#13c8d3;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#0088ff;stop-opacity:1" />
+            </linearGradient>
+            <linearGradient id="traceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#13c8d3;stop-opacity:0.8" />
+              <stop offset="100%" style="stop-color:#0088ff;stop-opacity:0.6" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
 
-    <div class="container">
-        <div class="content">
-            <!-- Left Side -->
-            <div class="left-side">
-                <div>
-                    <div class="logo-box">⚡</div>
-                    <h1>
-                        VargasTI<br>
-                        <span class="gradient-text">CRM Hub</span>
-                    </h1>
-                    <p class="subtitle">
-                        Gerencie orçamentos, clientes e automações em um único lugar
-                    </p>
-                </div>
+          <!-- V shape -->
+          <path d="M 25 20 L 50 70 L 75 20" stroke="url(#vGrad)" stroke-width="3" fill="none" stroke-linecap="round"/>
 
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">🛡️</div>
-                        <div>
-                            <p class="feature-title">Seguro</p>
-                            <p class="feature-desc">Dados protegidos com RLS por usuário</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">🚀</div>
-                        <div>
-                            <p class="feature-title">Rápido</p>
-                            <p class="feature-desc">Automações em tempo real</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">⚡</div>
-                        <div>
-                            <p class="feature-title">Poderoso</p>
-                            <p class="feature-desc">Tudo que você precisa no CRM</p>
-                        </div>
-                    </div>
-                </div>
+          <!-- Traces -->
+          <line x1="20" y1="20" x2="20" y2="45" stroke="url(#traceGrad)" stroke-width="2" filter="url(#glow)"/>
+          <line x1="20" y1="45" x2="35" y2="45" stroke="url(#traceGrad)" stroke-width="2"/>
 
-                <div class="quote">
-                    <p>"A automação não é sobre fazer menos. É sobre fazer melhor."</p>
-                </div>
-            </div>
+          <line x1="35" y1="20" x2="35" y2="50" stroke="url(#traceGrad)" stroke-width="2" filter="url(#glow)"/>
+          <line x1="35" y1="50" x2="45" y2="50" stroke="url(#traceGrad)" stroke-width="2"/>
 
-            <!-- Right Side -->
-            <div class="form-container">
-                <div class="form-header">
-                    <h2>Bem-vindo</h2>
-                    <p>Digite seu email e senha para continuar</p>
-                </div>
+          <line x1="50" y1="20" x2="50" y2="70" stroke="url(#traceGrad)" stroke-width="2" filter="url(#glow)"/>
 
-                <form onsubmit="handleSubmit(event)">
-                    <!-- Email -->
-                    <div class="form-group">
-                        <label for="email">E-mail</label>
-                        <input
-                            type="email"
-                            id="email"
-                            placeholder="seu@email.com"
-                            required
-                        >
-                    </div>
+          <line x1="65" y1="20" x2="65" y2="50" stroke="url(#traceGrad)" stroke-width="2" filter="url(#glow)"/>
+          <line x1="55" y1="50" x2="65" y2="50" stroke="url(#traceGrad)" stroke-width="2"/>
 
-                    <!-- Password -->
-                    <div class="form-group">
-                        <label for="password">Senha</label>
-                        <div class="password-wrapper">
-                            <input
-                                type="password"
-                                id="password"
-                                placeholder="••••••••"
-                                required
-                            >
-                            <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
-                        </div>
-                    </div>
+          <line x1="80" y1="20" x2="80" y2="45" stroke="url(#traceGrad)" stroke-width="2" filter="url(#glow)"/>
+          <line x1="65" y1="45" x2="80" y2="45" stroke="url(#traceGrad)" stroke-width="2"/>
 
-                    <!-- Footer -->
-                    <div class="form-footer">
-                        <label class="remember">
-                            <input type="checkbox"> Lembrar-me
-                        </label>
-                        <a href="#" class="forgot">Esqueceu a senha?</a>
-                    </div>
+          <!-- Nodes -->
+          <circle cx="20" cy="20" r="2" fill="#13c8d3" filter="url(#glow)"/>
+          <circle cx="35" cy="20" r="2" fill="#0088ff"/>
+          <circle cx="50" cy="20" r="2.5" fill="#13c8d3" filter="url(#glow)"/>
+          <circle cx="65" cy="20" r="2" fill="#0088ff"/>
+          <circle cx="80" cy="20" r="2" fill="#13c8d3" filter="url(#glow)"/>
+          <circle cx="20" cy="45" r="1.5" fill="#0088ff"/>
+          <circle cx="50" cy="70" r="2" fill="#13c8d3" filter="url(#glow)"/>
+          <circle cx="80" cy="45" r="1.5" fill="#0088ff"/>
+        </svg>
+        <h2>VargasTI</h2>
+        <p>Soluções que conectam, suporte que transforma</p>
+      </div>
+    </div>
 
-                    <!-- Submit -->
-                    <button type="submit">Entrar</button>
+    <!-- Right side -->
+    <div class="right-side">
+      <form class="form-card">
+        <h1>Bem-vindo de volta!</h1>
+        <p>Informe seu e-mail e senha para acessar o sistema.</p>
 
-                    <!-- Divider -->
-                    <div class="divider">
-                        <div class="divider-text">OU</div>
-                    </div>
+        <button type="button" class="btn btn-google">
+          <span>G</span>
+          Entrar com Google
+        </button>
 
-                    <!-- Google Login -->
-                    <button type="button" class="google-btn" onclick="alert('Login com Google')">
-                        🔵 Entrar com Google
-                    </button>
-                </form>
-
-                <!-- Sign Up -->
-                <div class="signup">
-                    <p>Não tem conta? <a href="#">Criar conta</a></p>
-                </div>
-            </div>
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">ou</span>
+          <div class="divider-line"></div>
         </div>
+
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" placeholder="Digite seu e-mail" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Digite sua senha" />
+            <button type="button" class="password-toggle" onclick="togglePassword()">👁️</button>
+          </div>
+        </div>
+
+        <label class="remember-me">
+          <input type="checkbox" />
+          Lembrar-me
+        </label>
+
+        <button type="submit" class="btn btn-submit">
+          <span>→</span>
+          Entrar
+        </button>
+
+        <p class="footer-text">
+          Não tem conta? <a href="#">Criar conta</a>
+        </p>
+      </form>
     </div>
+  </div>
 
-    <!-- Version Info -->
-    <div class="version-info">
-        <div class="version-number"><span>v2.0.1</span></div>
-        <div class="build-info">Build #376 • 2026-06-14</div>
-        <div class="system-status">✓ Sistema Online</div>
-    </div>
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const btn = document.querySelector('.password-toggle');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '👁️';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
 
-    <script>
-        function togglePassword() {
-            const input = document.getElementById('password');
-            const button = document.querySelector('.toggle-password');
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.textContent = '👁️‍🗨️';
-            } else {
-                input.type = 'password';
-                button.textContent = '👁️';
-            }
-        }
-
-        function handleSubmit(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            alert(`Login com: ${email}`);
-        }
-    </script>
+    document.querySelector('.btn-submit').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Demo: Login enviado!');
+    });
+  </script>
 </body>
 </html>
