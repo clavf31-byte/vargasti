@@ -683,20 +683,17 @@ function NotesPage() {
                     </button>
                   </div>
                 </div>
-              ) : (() => {
-                const isGrid = (() => { try { const p = JSON.parse(content); return Array.isArray(p) && Array.isArray(p[0]); } catch { return false; } })();
-                return (isGrid || noteType === "planilha") ? (
-                  <SpreadsheetEditor
-                    key={selected.id}
-                    content={content}
-                    onChange={(val) => handleFieldChange("content", val)}
-                  />
-                ) : (
-                  <textarea value={content} onChange={(e) => handleFieldChange("content", e.target.value)}
-                    placeholder="Comece a escrever..."
-                    className="flex-1 bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed" />
-                );
-              })()}
+              ) : noteType === "planilha" ? (
+                <SpreadsheetEditor
+                  key={selected.id}
+                  content={content}
+                  onChange={(val) => handleFieldChange("content", val)}
+                />
+              ) : (
+                <textarea value={content} onChange={(e) => handleFieldChange("content", e.target.value)}
+                  placeholder="Comece a escrever..."
+                  className="flex-1 bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed" />
+              )}
             </div>
           );
         })()}
