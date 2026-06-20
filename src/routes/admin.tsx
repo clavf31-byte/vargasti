@@ -3,18 +3,29 @@ import { useEffect, useState, useCallback } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useModulePermissions } from "@/hooks/useModulePermissions";
-import { listUsers, updateUser, deleteUser, updateUserPassword } from "@/lib/api/adminUsers.functions";
+import {
+  listUsers, updateUser, updateModulePermission, deleteUser, updateUserPassword,
+} from "@/lib/api/adminUsers.functions";
 import type { UserRow } from "@/lib/api/adminUsers.functions";
 import { PageHeader, StatCard, Toolbar, Btn, EmptyState, LoadingState } from "@/components/shared";
 import {
-  Shield, Search, Check, X, Trash2,
-  RefreshCw, User, ChevronDown, KeyRound, Eye, EyeOff,
+  Shield, Search, Check, X, Trash2, RefreshCw, User, ChevronDown,
+  KeyRound, Eye, EyeOff, Clock, UserCheck, UserX, ChevronRight,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: "Admin · VargasTI" }] }),
   component: AdminPage,
 });
+
+const MODULES = [
+  { key: "can_access_crm", label: "CRM" },
+  { key: "can_access_email", label: "Email" },
+  { key: "can_access_excel", label: "Excel" },
+  { key: "can_access_notes", label: "Notas" },
+  { key: "can_access_projects", label: "Projetos" },
+  { key: "can_access_files", label: "Arquivos" },
+] as const;
 
 const ROLE_LABELS: Record<UserRow["role"], string> = {
   admin: "Admin",
@@ -30,13 +41,13 @@ const ROLE_CLASSES: Record<UserRow["role"], string> = {
 
 const STATUS_CLASSES: Record<UserRow["status"], string> = {
   pending: "bg-warning/10 border-warning/20 text-warning",
-  active: "bg-brand/10 border-brand/20 text-brand",
+  approved: "bg-brand/10 border-brand/20 text-brand",
   rejected: "bg-destructive/10 border-destructive/20 text-destructive",
 };
 
 const STATUS_LABELS: Record<UserRow["status"], string> = {
   pending: "Pendente",
-  active: "Ativo",
+  approved: "Ativo",
   rejected: "Rejeitado",
 };
 
@@ -54,6 +65,7 @@ function validatePassword(pwd: string): string | null {
 
 function AdminPage() {
   const { user } = useAuth();
+  const { isAdmin, loaded: permLoaded } = useModulePermissions();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +73,8 @@ function AdminPage() {
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [openRole, setOpenRole] = useState<string | null>(null);
+  const [expandedModules, setExpandedModules] = useState<string | null>(null);
 
-  // modal alterar senha
   const [pwdTarget, setPwdTarget] = useState<UserRow | null>(null);
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
@@ -72,11 +84,10 @@ function AdminPage() {
   const [pwdSuccess, setPwdSuccess] = useState(false);
   const [pwdBusy, setPwdBusy] = useState(false);
 
-  const { isAdmin } = useModulePermissions();
-
   useEffect(() => {
+    if (!permLoaded) return;
     if (!isAdmin) navigate({ to: "/dashboard" });
-  }, [isAdmin, navigate]);
+  }, [isAdmin, permLoaded, navigate]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,8 +103,8 @@ function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) load();
-  }, [isAdmin, load]);
+    if (isAdmin && permLoaded) load();
+  }, [isAdmin, permLoaded, load]);
 
   async function handleStatus(id: string, status: UserRow["status"]) {
     setBusy(id + status);
@@ -117,6 +128,21 @@ function AdminPage() {
       setError(e instanceof Error ? e.message : "Erro ao atualizar.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function handleModuleToggle(userId: string, permission: string, current: boolean) {
+    const newValue = !current;
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, [permission]: newValue } : u)),
+    );
+    try {
+      await updateModulePermission({ data: { userId, permission, value: newValue } });
+    } catch (e) {
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, [permission]: current } : u)),
+      );
+      setError("Erro ao salvar permissão.");
     }
   }
 
@@ -161,20 +187,23 @@ function AdminPage() {
     }
   }
 
-  const filtered = users.filter(
-    (u) =>
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      (u.full_name ?? "").toLowerCase().includes(search.toLowerCase()),
-  );
+  const pending = users.filter((u) => u.status === "pending");
+  const filtered = users
+    .filter((u) => u.status !== "pending")
+    .filter(
+      (u) =>
+        u.email.toLowerCase().includes(search.toLowerCase()) ||
+        (u.full_name ?? "").toLowerCase().includes(search.toLowerCase()),
+    );
 
   const counts = {
     total: users.length,
-    active: users.filter((u) => u.status === "active").length,
-    pending: users.filter((u) => u.status === "pending").length,
+    approved: users.filter((u) => u.status === "approved").length,
+    pending: pending.length,
     rejected: users.filter((u) => u.status === "rejected").length,
   };
 
-  if (!isAdmin) return null;
+  if (!permLoaded || !isAdmin) return null;
 
   return (
     <AppShell>
@@ -183,7 +212,7 @@ function AdminPage() {
           category="Administração"
           title="Gestão de Usuários"
           icon={Shield}
-          subtitle="Aprove contas, gerencie funções e acessos."
+          subtitle="Aprove contas, gerencie funções e permissões de módulos."
           actions={
             <Btn variant="secondary" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -195,13 +224,10 @@ function AdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard label="Total" value={String(counts.total).padStart(2, "0")} />
-          <StatCard label="Ativos" value={String(counts.active).padStart(2, "0")} colorClass="text-brand" />
+          <StatCard label="Ativos" value={String(counts.approved).padStart(2, "0")} colorClass="text-brand" />
           <StatCard label="Pendentes" value={String(counts.pending).padStart(2, "0")} colorClass="text-warning" />
           <StatCard label="Rejeitados" value={String(counts.rejected).padStart(2, "0")} colorClass="text-destructive" />
         </div>
-
-        {/* Search */}
-        <Toolbar searchValue={search} onSearchChange={setSearch} placeholder="Buscar por nome ou e-mail..." />
 
         {error && (
           <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
@@ -209,20 +235,69 @@ function AdminPage() {
           </p>
         )}
 
-        {/* List */}
+        {/* Pending approvals */}
+        {pending.length > 0 && (
+          <div className="card-graphite p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Clock className="size-4 text-warning" />
+              <span className="text-sm font-semibold text-warning">
+                Aguardando aprovação ({pending.length})
+              </span>
+            </div>
+            <div className="space-y-2">
+              {pending.map((u) => {
+                const isBusy = busy?.startsWith(u.id);
+                return (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg bg-warning/5 border border-warning/15"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {u.full_name ?? u.email.split("@")[0]}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleStatus(u.id, "approved")}
+                        disabled={isBusy}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand text-xs font-medium hover:bg-brand/20 disabled:opacity-50 transition-colors"
+                      >
+                        <UserCheck className="size-3.5" /> Aprovar
+                      </button>
+                      <button
+                        onClick={() => handleStatus(u.id, "rejected")}
+                        disabled={isBusy}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium hover:bg-destructive/20 disabled:opacity-50 transition-colors"
+                      >
+                        <UserX className="size-3.5" /> Rejeitar
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Search */}
+        <Toolbar searchValue={search} onSearchChange={setSearch} placeholder="Buscar por nome ou e-mail..." />
+
+        {/* User list */}
         <div className="card-graphite overflow-hidden">
           {loading ? (
             <LoadingState label="Carregando usuários..." />
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={User}
-              title={search ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
-              subtitle={search ? "Ajuste sua busca e tente novamente." : "Convide pessoas para começar."}
+              title={search ? "Nenhum usuário encontrado" : "Nenhum usuário ativo"}
+              subtitle={search ? "Ajuste sua busca e tente novamente." : "Aprove usuários pendentes acima."}
             />
           ) : (
             <div className="divide-y divide-border/50">
-              {/* Table header */}
-              <div className="hidden md:grid grid-cols-[1fr_140px_140px_120px] gap-4 px-5 py-3 bg-surface-2/40">
+              {/* Header */}
+              <div className="hidden md:grid grid-cols-[1fr_140px_130px_auto] gap-4 px-5 py-3 bg-surface-2/40">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Usuário</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Função</span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Status</span>
@@ -233,139 +308,153 @@ function AdminPage() {
                 const isBusy = busy?.startsWith(u.id);
                 const isSelf = u.id === user?.id;
                 const isGoogle = u.provider === "google";
-
+                const modulesOpen = expandedModules === u.id;
 
                 return (
-                  <div
-                    key={u.id}
-                    className="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_120px] gap-3 md:gap-4 px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
-                  >
-                    {/* User info */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="size-8 rounded-full bg-secondary border border-border grid place-items-center shrink-0 text-[11px] font-semibold text-muted-foreground">
-                        {initials(u.full_name, u.email)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate leading-tight flex items-center gap-1.5 flex-wrap">
-                          {u.full_name ?? u.email.split("@")[0]}
-                          {isSelf && (
-                            <span className="text-[9px] text-brand bg-brand/10 border border-brand/20 rounded px-1 py-0.5 uppercase tracking-wide">você</span>
-                          )}
-                          {isGoogle && (
-                            <span className="text-[9px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded px-1 py-0.5">Login Google</span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
-                        {u.last_sign_in_at && (
-                          <p className="text-[9px] text-muted-foreground/50 mt-0.5">
-                            Último acesso: {new Date(u.last_sign_in_at).toLocaleDateString("pt-BR")}
+                  <div key={u.id} className="border-b border-border/50 last:border-0">
+                    {/* Main row */}
+                    <div
+                      className="grid grid-cols-1 md:grid-cols-[1fr_140px_130px_auto] gap-3 md:gap-4 px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
+                      style={{ opacity: u.status === "rejected" ? 0.6 : 1 }}
+                    >
+                      {/* User info */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="size-8 rounded-full bg-secondary border border-border grid place-items-center shrink-0 text-[11px] font-semibold text-muted-foreground">
+                          {initials(u.full_name, u.email)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate leading-tight flex items-center gap-1.5 flex-wrap">
+                            {u.full_name ?? u.email.split("@")[0]}
+                            {isSelf && (
+                              <span className="text-[9px] text-brand bg-brand/10 border border-brand/20 rounded px-1 py-0.5 uppercase tracking-wide">você</span>
+                            )}
+                            {isGoogle && (
+                              <span className="text-[9px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded px-1 py-0.5">Google</span>
+                            )}
                           </p>
-                        )}
+                          <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Role */}
-                    <div className="flex items-center md:justify-start">
-                      <div className="relative">
-                        <button
-                          onClick={() => setOpenRole(openRole === u.id ? null : u.id)}
-                          disabled={isBusy || isSelf}
-                          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${ROLE_CLASSES[u.role]}`}
-                        >
-                          <Shield className="size-3 shrink-0" />
-                          {ROLE_LABELS[u.role]}
-                          {!isSelf && <ChevronDown className="size-3 opacity-60" />}
-                        </button>
-
-                        {openRole === u.id && (
-                          <>
-                            <div className="fixed inset-0 z-10" onClick={() => setOpenRole(null)} />
-                            <div className="absolute left-0 top-full mt-1 z-20 card-graphite shadow-xl overflow-hidden min-w-[130px]">
-                              {(["admin", "operator", "viewer"] as UserRow["role"][]).map((r) => (
-                                <button
-                                  key={r}
-                                  onClick={() => handleRole(u.id, r)}
-                                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${u.role === r ? "bg-brand/10 text-brand" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
-                                >
-                                  {u.role === r && <Check className="size-3" />}
-                                  {u.role !== r && <span className="size-3" />}
-                                  {ROLE_LABELS[r]}
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Status */}
-                    <div className="flex items-center gap-2 md:justify-start">
-                      <span className={`px-2 py-1 rounded-lg border text-[11px] font-medium ${STATUS_CLASSES[u.status]}`}>
-                        {STATUS_LABELS[u.status]}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1.5">
-                      {u.status === "pending" && (
-                        <>
+                      {/* Role */}
+                      <div className="flex items-center md:justify-start">
+                        <div className="relative">
                           <button
-                            onClick={() => handleStatus(u.id, "active")}
+                            onClick={() => setOpenRole(openRole === u.id ? null : u.id)}
+                            disabled={isBusy || isSelf}
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${ROLE_CLASSES[u.role]}`}
+                          >
+                            <Shield className="size-3 shrink-0" />
+                            {ROLE_LABELS[u.role]}
+                            {!isSelf && <ChevronDown className="size-3 opacity-60" />}
+                          </button>
+
+                          {openRole === u.id && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setOpenRole(null)} />
+                              <div className="absolute left-0 top-full mt-1 z-20 card-graphite shadow-xl overflow-hidden min-w-[130px]">
+                                {(["admin", "operator", "viewer"] as UserRow["role"][]).map((r) => (
+                                  <button
+                                    key={r}
+                                    onClick={() => handleRole(u.id, r)}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${u.role === r ? "bg-brand/10 text-brand" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
+                                  >
+                                    {u.role === r ? <Check className="size-3" /> : <span className="size-3" />}
+                                    {ROLE_LABELS[r]}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div className="flex items-center gap-2 md:justify-start">
+                        <span className={`px-2 py-1 rounded-lg border text-[11px] font-medium ${STATUS_CLASSES[u.status]}`}>
+                          {STATUS_LABELS[u.status]}
+                        </span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1">
+                        {u.status === "approved" && !isSelf && (
+                          <button
+                            onClick={() => handleStatus(u.id, "rejected")}
                             disabled={isBusy}
-                            title="Aprovar"
+                            title="Revogar acesso"
+                            className="p-1.5 rounded-lg text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 border border-transparent transition-colors disabled:opacity-30"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        )}
+                        {u.status === "rejected" && (
+                          <button
+                            onClick={() => handleStatus(u.id, "approved")}
+                            disabled={isBusy}
+                            title="Reativar"
                             className="p-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors disabled:opacity-50"
                           >
                             <Check className="size-3.5" />
                           </button>
+                        )}
+                        {!isGoogle && !isSelf && (
                           <button
-                            onClick={() => handleStatus(u.id, "rejected")}
+                            onClick={() => openPwdModal(u)}
                             disabled={isBusy}
-                            title="Rejeitar"
-                            className="p-1.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-50"
+                            title="Alterar senha"
+                            className="p-1.5 rounded-lg text-muted-foreground/50 hover:bg-brand/10 hover:text-brand border border-transparent hover:border-brand/20 transition-colors disabled:opacity-30"
                           >
-                            <X className="size-3.5" />
+                            <KeyRound className="size-3.5" />
                           </button>
-                        </>
-                      )}
-                      {u.status === "active" && (
-                        <button
-                          onClick={() => handleStatus(u.id, "rejected")}
-                          disabled={isBusy || isSelf}
-                          title="Revogar acesso"
-                          className="p-1.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <X className="size-3.5" />
-                        </button>
-                      )}
-                      {u.status === "rejected" && (
-                        <button
-                          onClick={() => handleStatus(u.id, "active")}
-                          disabled={isBusy}
-                          title="Reativar"
-                          className="p-1.5 rounded-lg bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors disabled:opacity-50"
-                        >
-                          <Check className="size-3.5" />
-                        </button>
-                      )}
-                      {!isGoogle && !isSelf && (
-                        <button
-                          onClick={() => openPwdModal(u)}
-                          disabled={isBusy}
-                          title="Alterar senha"
-                          className="p-1.5 rounded-lg text-muted-foreground/50 hover:bg-brand/10 hover:text-brand border border-transparent hover:border-brand/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                          <KeyRound className="size-3.5" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(u.id)}
-                        disabled={isBusy || isSelf}
-                        title="Remover usuário"
-                        className="p-1.5 rounded-lg text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 border border-transparent transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                        )}
+                        {u.role !== "admin" && (
+                          <button
+                            onClick={() => setExpandedModules(modulesOpen ? null : u.id)}
+                            title="Permissões de módulos"
+                            className={`p-1.5 rounded-lg border transition-colors ${modulesOpen ? "bg-brand/10 border-brand/20 text-brand" : "text-muted-foreground/50 border-transparent hover:bg-white/5 hover:text-foreground"}`}
+                          >
+                            <ChevronRight className={`size-3.5 transition-transform ${modulesOpen ? "rotate-90" : ""}`} />
+                          </button>
+                        )}
+                        {!isSelf && (
+                          <button
+                            onClick={() => handleDelete(u.id)}
+                            disabled={isBusy}
+                            title="Remover usuário"
+                            className="p-1.5 rounded-lg text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 border border-transparent transition-colors disabled:opacity-30"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Module permissions expandable */}
+                    {modulesOpen && u.role !== "admin" && (
+                      <div className="px-5 pb-3 pt-0">
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest mr-2">Módulos:</span>
+                          {MODULES.map(({ key, label }) => {
+                            const enabled = u[key as keyof UserRow] as boolean;
+                            return (
+                              <button
+                                key={key}
+                                onClick={() => handleModuleToggle(u.id, key, enabled)}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all ${
+                                  enabled
+                                    ? "bg-brand/10 border-brand/20 text-brand"
+                                    : "bg-surface-2 border-border text-muted-foreground hover:border-border/80"
+                                }`}
+                              >
+                                {enabled ? <Check className="size-3" /> : <X className="size-3" />}
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -375,7 +464,7 @@ function AdminPage() {
 
         {!loading && filtered.length > 0 && (
           <p className="text-[10px] text-muted-foreground text-right">
-            {filtered.length} de {users.length} usuários
+            {filtered.length} de {users.filter((u) => u.status !== "pending").length} usuários
           </p>
         )}
       </div>
@@ -438,9 +527,7 @@ function AdminPage() {
                   </div>
                 </div>
 
-                {pwdError && (
-                  <p className="text-xs text-destructive">{pwdError}</p>
-                )}
+                {pwdError && <p className="text-xs text-destructive">{pwdError}</p>}
 
                 <div className="text-[10px] text-muted-foreground/60 space-y-0.5 pt-1">
                   <p>• Mínimo 8 caracteres</p>

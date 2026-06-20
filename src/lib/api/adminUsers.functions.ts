@@ -8,38 +8,74 @@ export type UserRow = {
   email: string;
   full_name: string | null;
   role: "admin" | "operator" | "viewer";
-  status: "pending" | "active" | "rejected";
+  status: "pending" | "approved" | "rejected";
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed: boolean;
   provider: string;
+  can_access_crm: boolean;
+  can_access_email: boolean;
+  can_access_excel: boolean;
+  can_access_notes: boolean;
+  can_access_projects: boolean;
+  can_access_files: boolean;
 };
 
 async function assertAdmin(userId: string) {
-  const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
-  if (error || !data.user) throw new Error("Unauthorized");
-  // SECURITY: read role from app_metadata only (service-role writable), NOT user_metadata
-  const role = data.user.app_metadata?.role as string | undefined;
-  if (role !== "admin") throw new Error("Acesso negado: somente administradores.");
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .limit(1);
+  if (error || !data?.length) throw new Error("Unauthorized");
+  if (data[0].role !== "admin") throw new Error("Acesso negado: somente administradores.");
 }
 
 export const listUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    if (error) throw new Error(error.message);
-    return data.users.map((u): UserRow => ({
-      id: u.id,
-      email: u.email ?? "",
-      full_name: (u.user_metadata?.full_name as string | undefined) ?? null,
-      role: ((u.app_metadata?.role as string | undefined) ?? "operator") as UserRow["role"],
-      status: ((u.app_metadata?.status as string | undefined) ?? "pending") as UserRow["status"],
-      created_at: u.created_at,
-      last_sign_in_at: u.last_sign_in_at ?? null,
-      email_confirmed: !!u.email_confirmed_at,
-      provider: (u.app_metadata?.provider as string | undefined) ?? "email",
-    }));
+
+    const [authRes, rolesRes, profilesRes, permsRes] = await Promise.all([
+      supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
+      supabaseAdmin.from("user_roles").select("user_id, role, status"),
+      supabaseAdmin.from("profiles").select("id, full_name"),
+      supabaseAdmin.from("user_module_permissions").select("*"),
+    ]);
+
+    if (authRes.error) throw new Error(authRes.error.message);
+
+    const rolesByUser = new Map((rolesRes.data ?? []).map((r: any) => [r.user_id, r]));
+    const profilesByUser = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
+    const permsByUser = new Map((permsRes.data ?? []).map((p: any) => [p.user_id, p]));
+
+    return authRes.data.users.map((u): UserRow => {
+      const roleRow = rolesByUser.get(u.id) as any;
+      const profile = profilesByUser.get(u.id) as any;
+      const perms = permsByUser.get(u.id) as any;
+      const rawRole = roleRow?.role ?? "viewer";
+      const normalizedRole = rawRole === "user" ? "viewer" : rawRole;
+      const rawStatus = roleRow?.status ?? "pending";
+      const normalizedStatus = rawStatus === "active" ? "approved" : rawStatus;
+
+      return {
+        id: u.id,
+        email: u.email ?? "",
+        full_name: profile?.full_name ?? (u.user_metadata?.full_name as string | undefined) ?? null,
+        role: normalizedRole as UserRow["role"],
+        status: normalizedStatus as UserRow["status"],
+        created_at: u.created_at,
+        last_sign_in_at: u.last_sign_in_at ?? null,
+        email_confirmed: !!u.email_confirmed_at,
+        provider: (u.app_metadata?.provider as string | undefined) ?? "email",
+        can_access_crm: perms?.can_access_crm !== false,
+        can_access_email: perms?.can_access_email !== false,
+        can_access_excel: perms?.can_access_excel !== false,
+        can_access_notes: perms?.can_access_notes !== false,
+        can_access_projects: perms?.can_access_projects !== false,
+        can_access_files: perms?.can_access_files !== false,
+      };
+    });
   });
 
 export const updateUser = createServerFn({ method: "POST" })
@@ -48,17 +84,38 @@ export const updateUser = createServerFn({ method: "POST" })
     z.object({
       id: z.string(),
       role: z.enum(["admin", "operator", "viewer"]).optional(),
-      status: z.enum(["pending", "active", "rejected"]).optional(),
+      status: z.enum(["pending", "approved", "rejected"]).optional(),
     }),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const { id, ...meta } = data;
-    // SECURITY: write role/status to app_metadata (service-role only) to prevent
-    // privilege escalation via client-side supabase.auth.updateUser({ data: { role } })
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
-      app_metadata: meta,
-    });
+    const { id, ...updates } = data;
+    if (!Object.keys(updates).length) return { ok: true };
+
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: id, ...updates }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateModulePermission = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      userId: z.string(),
+      permission: z.string(),
+      value: z.boolean(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("user_module_permissions")
+      .upsert(
+        { user_id: data.userId, [data.permission]: data.value, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -97,6 +154,5 @@ export const updateUserPassword = createServerFn({ method: "POST" })
       password: data.password,
     });
     if (error) throw new Error(error.message);
-
     return { ok: true };
   });
