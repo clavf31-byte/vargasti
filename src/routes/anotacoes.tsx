@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Plus, Trash2, FileText, Search, Tag,
   Lock, Eye, EyeOff, ShieldAlert, ShieldCheck,
-  LayoutList, LayoutGrid,
+  LayoutList, LayoutGrid, AlignLeft, Table2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
@@ -76,9 +76,34 @@ function displayTags(tags: string): string {
   return (tags ?? "")
     .replace(/__pwd:[a-f0-9]+/, "")
     .replace(/__conf/, "")
+    .replace(/__type:[a-z]+/, "")
     .replace(/,\s*,/g, ",")
     .replace(/^,|,$/g, "")
     .trim();
+}
+
+type NoteType = "texto" | "planilha";
+
+function getNoteType(tags: string): NoteType {
+  return (tags ?? "").includes("__type:planilha") ? "planilha" : "texto";
+}
+
+function setNoteTypeInTags(tags: string, type: NoteType): string {
+  let t = (tags ?? "").replace(/,?\s*__type:[a-z]+/, "").trim();
+  if (type === "planilha") t = t ? `${t},__type:planilha` : "__type:planilha";
+  return t;
+}
+
+type GridData = string[][];
+
+function parseGrid(content: string, cols = 6, rows = 10): GridData {
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+      return parsed as GridData;
+    }
+  } catch {}
+  return Array.from({ length: rows }, () => Array(cols).fill(""));
 }
 
 // ── component ─────────────────────────────────────────────────────────────────
@@ -114,6 +139,7 @@ function NotesPage() {
   const [category, setCategory] = useState("Geral");
   const [tags, setTags] = useState("");
   const [noteStatus, setNoteStatus] = useState("rascunho");
+  const [noteType, setNoteType] = useState<NoteType>("texto");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,6 +188,7 @@ function NotesPage() {
     setCategory(note.category || "Geral");
     setTags(displayTags(note.tags ?? ""));
     setNoteStatus(note.status || "rascunho");
+    setNoteType(getNoteType(note.tags ?? ""));
     setSaveStatus("idle");
     setUnlockPwd("");
     setUnlockPwdShow(false);
@@ -220,7 +247,20 @@ function NotesPage() {
       const currentNote = notes.find((n) => n.id === selected.id);
       const pwdHash = getPwdHash(currentNote?.tags ?? "");
       const confMark = (currentNote?.tags ?? "").includes("__conf") ? ",__conf" : "";
-      updates.tags = pwdHash ? `${val},__pwd:${pwdHash}${confMark}` : val;
+      const typeMark = (currentNote?.tags ?? "").includes("__type:planilha") ? ",__type:planilha" : "";
+      updates.tags = pwdHash ? `${val},__pwd:${pwdHash}${confMark}${typeMark}` : `${val}${typeMark}`;
+    }
+    if (field === "type") {
+      const newType = val as NoteType;
+      setNoteType(newType);
+      const currentNote = notes.find((n) => n.id === selected.id);
+      const newTags = setNoteTypeInTags(currentNote?.tags ?? "", newType);
+      updates.tags = newTags;
+      if (newType === "planilha" && getNoteType(currentNote?.tags ?? "") !== "planilha") {
+        const emptyGrid: GridData = Array.from({ length: 10 }, () => Array(6).fill(""));
+        updates.content = JSON.stringify(emptyGrid);
+        setContent(updates.content);
+      }
     }
     if (field === "status") { setNoteStatus(val); updates.status = val; }
     scheduleAutoSave(selected.id, updates);
@@ -532,6 +572,21 @@ function NotesPage() {
 
               {/* Metadados */}
               <div className="flex items-center gap-2 px-5 py-2 border-b border-border/60 flex-wrap">
+                {/* Toggle tipo */}
+                <div className="flex items-center rounded-lg border border-border overflow-hidden shrink-0">
+                  <button
+                    onClick={() => noteType !== "texto" && handleFieldChange("type", "texto")}
+                    className={`flex items-center gap-1 px-2 py-1 text-[10px] transition-colors ${noteType === "texto" ? "bg-brand/20 text-brand" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <AlignLeft className="size-3" /> Texto
+                  </button>
+                  <button
+                    onClick={() => noteType !== "planilha" && handleFieldChange("type", "planilha")}
+                    className={`flex items-center gap-1 px-2 py-1 text-[10px] transition-colors ${noteType === "planilha" ? "bg-brand/20 text-brand" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <Table2 className="size-3" /> Planilha
+                  </button>
+                </div>
                 <select value={noteStatus} onChange={(e) => handleFieldChange("status", e.target.value)}
                   className={`bg-transparent border rounded-lg px-2 py-1 text-[10px] font-medium focus:outline-none appearance-none cursor-pointer transition-colors ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -578,6 +633,12 @@ function NotesPage() {
                     </button>
                   </div>
                 </div>
+              ) : noteType === "planilha" ? (
+                <SpreadsheetEditor
+                  key={selected.id}
+                  content={content}
+                  onChange={(val) => handleFieldChange("content", val)}
+                />
               ) : (
                 <textarea value={content} onChange={(e) => handleFieldChange("content", e.target.value)}
                   placeholder="Comece a escrever..."
@@ -648,5 +709,119 @@ function NotesPage() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+function SpreadsheetEditor({
+  content,
+  onChange,
+}: {
+  content: string;
+  onChange: (val: string) => void;
+}) {
+  const [grid, setGrid] = useState<GridData>(() => parseGrid(content));
+  const inputRefs = useRef<(HTMLInputElement | null)[][]>([]);
+
+  function setCell(r: number, c: number, val: string) {
+    setGrid((prev) => {
+      const next = prev.map((row) => [...row]);
+      next[r][c] = val;
+      onChange(JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function addRow() {
+    setGrid((prev) => {
+      const cols = prev[0]?.length ?? 6;
+      const next = [...prev, Array(cols).fill("")];
+      onChange(JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function addCol() {
+    setGrid((prev) => {
+      const next = prev.map((row) => [...row, ""]);
+      onChange(JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent, r: number, c: number) {
+    const cols = grid[0]?.length ?? 6;
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (c + 1 < cols) {
+        inputRefs.current[r]?.[c + 1]?.focus();
+      } else if (r + 1 < grid.length) {
+        inputRefs.current[r + 1]?.[0]?.focus();
+      }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (r + 1 < grid.length) inputRefs.current[r + 1]?.[c]?.focus();
+    } else if (e.key === "ArrowUp" && r > 0) {
+      e.preventDefault();
+      inputRefs.current[r - 1]?.[c]?.focus();
+    } else if (e.key === "ArrowDown" && r + 1 < grid.length) {
+      e.preventDefault();
+      inputRefs.current[r + 1]?.[c]?.focus();
+    }
+  }
+
+  const colLetters = (grid[0]?.length ?? 0);
+
+  return (
+    <div className="flex-1 overflow-auto p-2">
+      <table className="border-collapse text-xs">
+        <thead>
+          <tr>
+            <th className="w-8 min-w-[2rem] bg-secondary/40 border border-border/60" />
+            {Array.from({ length: colLetters }, (_, c) => (
+              <th key={c} className="min-w-[100px] bg-secondary/40 border border-border/60 px-2 py-1 text-[9px] font-semibold text-muted-foreground text-center">
+                {String.fromCharCode(65 + c)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {grid.map((row, r) => (
+            <tr key={r}>
+              <td className="bg-secondary/20 border border-border/60 text-[9px] text-muted-foreground text-center w-8 select-none">
+                {r + 1}
+              </td>
+              {row.map((cell, c) => (
+                <td key={c} className="border border-border/60 p-0">
+                  <input
+                    ref={(el) => {
+                      if (!inputRefs.current[r]) inputRefs.current[r] = [];
+                      inputRefs.current[r][c] = el;
+                    }}
+                    value={cell}
+                    onChange={(e) => setCell(r, c, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, r, c)}
+                    className="w-full px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none focus:bg-brand/5 min-w-[100px]"
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="flex gap-2 mt-3 pl-8">
+        <button
+          onClick={addRow}
+          className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2.5 py-1 transition-colors hover:bg-surface-2"
+        >
+          + Linha
+        </button>
+        <button
+          onClick={addCol}
+          className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2.5 py-1 transition-colors hover:bg-surface-2"
+        >
+          + Coluna
+        </button>
+      </div>
+    </div>
   );
 }
