@@ -355,43 +355,6 @@ export function AppShell({ children }: { children?: ReactNode }) {
           </div>
         </div>
 
-        {/* User Profile */}
-        <div className="p-3.5 border-t" style={{ borderColor: "rgba(255,255,255,.08)" }}>
-          <div
-            className="flex items-center gap-2.5 p-3 rounded-xl transition-all cursor-pointer group"
-            style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.07)" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,.06)";
-              e.currentTarget.style.borderColor = "rgba(19,200,211,.24)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,.045)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,.07)";
-            }}
-          >
-            <div
-              className="w-9 h-9 rounded-full grid place-items-center shrink-0 overflow-hidden font-bold text-xs"
-              style={{ background: "linear-gradient(135deg, #0bd0d7, #087f97)" }}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                displayName.substring(0, 2).toUpperCase()
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold text-[#eaf3f8] truncate">{displayName}</p>
-              <p className="text-[9px] text-[#8da2b4] truncate">{user?.email}</p>
-            </div>
-            <button
-              onClick={signOut}
-              title="Sair"
-              className="shrink-0 p-1.5 rounded-md text-[#8da2b4] hover:text-[#ef4444] transition-colors opacity-0 group-hover:opacity-100"
-            >
-              <LogOut className="size-3.5" />
-            </button>
-          </div>
-        </div>
       </aside>
 
       {/* Main content */}
@@ -439,6 +402,25 @@ export function AppShell({ children }: { children?: ReactNode }) {
             <div className="flex items-center gap-1.5">
               <span className="size-1.5 bg-[#13c8d3] rounded-full" style={{ animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" }} />
               <span className="text-[10px] text-[#8da2b4] hidden sm:block">online</span>
+            </div>
+
+            <div className="h-4 w-px" style={{ background: "rgba(0, 213, 230, .16)" }} />
+
+            <div className="flex items-center gap-2 group cursor-pointer" onClick={signOut} title="Sair">
+              <div
+                className="w-7 h-7 rounded-full grid place-items-center shrink-0 overflow-hidden font-bold text-[10px]"
+                style={{ background: "linear-gradient(135deg, #0bd0d7, #087f97)" }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  displayName.substring(0, 2).toUpperCase()
+                )}
+              </div>
+              <span className="text-[11px] font-medium text-[#d7e4ec] hidden sm:block group-hover:text-[#eaf3f8] transition-colors">
+                {displayName}
+              </span>
+              <LogOut className="size-3.5 text-[#8da2b4] opacity-0 group-hover:opacity-100 group-hover:text-[#ef4444] transition-all hidden sm:block" />
             </div>
           </div>
         </header>
