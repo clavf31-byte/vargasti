@@ -92,9 +92,10 @@ export const updateUser = createServerFn({ method: "POST" })
     const { id, ...updates } = data;
     if (!Object.keys(updates).length) return { ok: true };
 
+    const payload: any = { user_id: id, ...updates };
     const { error } = await supabaseAdmin
       .from("user_roles")
-      .upsert({ user_id: id, ...updates }, { onConflict: "user_id" });
+      .upsert(payload, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
