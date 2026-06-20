@@ -149,6 +149,7 @@ function NotesPage() {
   const [filterCategory, setFilterCategory] = useState("todas");
 
   const [showNewMenu, setShowNewMenu] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   useEffect(() => {
     if (!showNewMenu) return;
     const close = () => setShowNewMenu(false);
@@ -212,6 +213,7 @@ function NotesPage() {
 
   function openNote(note: Note) {
     if (saveTimer.current) clearTimeout(saveTimer.current);
+    setDeleteConfirm(false);
     setSelected(note);
     setTitle(note.title);
     setContent(note.content);
@@ -621,10 +623,30 @@ function NotesPage() {
                       <EyeOff className="size-3.5" />
                     </button>
                   )}
-                  <button onClick={() => deleteNote(selected.id)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                    <Trash2 className="size-3.5" />
-                  </button>
+                  {deleteConfirm ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-destructive">Excluir?</span>
+                      <button
+                        onClick={() => { deleteNote(selected.id); setDeleteConfirm(false); }}
+                        className="px-2 py-1 rounded text-[10px] bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors"
+                      >
+                        Sim
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(false)}
+                        className="px-2 py-1 rounded text-[10px] border border-border text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Não
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteConfirm(true)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
