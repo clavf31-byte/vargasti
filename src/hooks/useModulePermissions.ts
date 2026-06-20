@@ -39,6 +39,7 @@ export function useModulePermissions() {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
+        .order("role", { ascending: true })
         .limit(1),
     ]).then(([{ data: permRows }, { data: roleRows }]) => {
       const permData = permRows?.[0] ?? null;

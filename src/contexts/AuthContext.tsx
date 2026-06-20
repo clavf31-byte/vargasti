@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from("user_roles")
       .select("status")
       .eq("user_id", session.user.id)
+      .order("status", { ascending: true })
       .limit(1)
       .then(({ data }) => {
         setUserStatus((data?.[0]?.status as UserStatus) ?? null);
