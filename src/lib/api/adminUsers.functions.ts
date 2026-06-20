@@ -111,12 +111,10 @@ export const updateModulePermission = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
+    const permPayload: any = { user_id: data.userId, [data.permission]: data.value, updated_at: new Date().toISOString() };
     const { error } = await supabaseAdmin
       .from("user_module_permissions")
-      .upsert(
-        { user_id: data.userId, [data.permission]: data.value, updated_at: new Date().toISOString() },
-        { onConflict: "user_id" },
-      );
+      .upsert(permPayload, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
