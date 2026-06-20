@@ -92,11 +92,21 @@ export const updateUser = createServerFn({ method: "POST" })
     const { id, ...updates } = data;
     if (!Object.keys(updates).length) return { ok: true };
 
-    const payload: any = { user_id: id, ...updates };
-    const { error } = await supabaseAdmin
+    const { data: updated, error: updateError } = await supabaseAdmin
       .from("user_roles")
-      .upsert(payload, { onConflict: "user_id" });
-    if (error) throw new Error(error.message);
+      .update(updates)
+      .eq("user_id", id)
+      .select("user_id");
+
+    if (updateError) throw new Error(updateError.message);
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: id, role: "viewer", ...updates });
+      if (insertError) throw new Error(insertError.message);
+    }
+
     return { ok: true };
   });
 
