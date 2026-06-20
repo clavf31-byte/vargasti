@@ -92,9 +92,10 @@ export const updateUser = createServerFn({ method: "POST" })
     const { id, ...updates } = data;
     if (!Object.keys(updates).length) return { ok: true };
 
+    const payload: any = { user_id: id, ...updates };
     const { error } = await supabaseAdmin
       .from("user_roles")
-      .upsert({ user_id: id, ...updates }, { onConflict: "user_id" });
+      .upsert(payload, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -110,12 +111,10 @@ export const updateModulePermission = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
+    const permPayload: any = { user_id: data.userId, [data.permission]: data.value, updated_at: new Date().toISOString() };
     const { error } = await supabaseAdmin
       .from("user_module_permissions")
-      .upsert(
-        { user_id: data.userId, [data.permission]: data.value, updated_at: new Date().toISOString() },
-        { onConflict: "user_id" },
-      );
+      .upsert(permPayload, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
