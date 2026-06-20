@@ -4,7 +4,7 @@ import {
   Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText, ClipboardList,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
@@ -55,7 +55,8 @@ const NAV_ADMIN = [
     group: "Admin",
     groupIcon: ShieldCheck,
     items: [
-      { to: "/admin", label: "Usuários", icon: ShieldCheck },
+      { to: "/admin", label: "Operadores", icon: ShieldCheck },
+      { to: "/config", label: "Configurações", icon: Settings },
     ],
   },
 ];
@@ -64,24 +65,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("sidebarExpandedGroups");
-      if (saved) return JSON.parse(saved);
-    }
-    return {
-      "Ferramentas": false,
-      "Projetos & Notas": false,
-      "CRM": false,
-      "Storage": false,
-    };
-  });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
   const { perms, isAdmin, loaded: permsLoaded } = useModulePermissions();
-
-  useEffect(() => {
-    localStorage.setItem("sidebarExpandedGroups", JSON.stringify(expandedGroups));
-  }, [expandedGroups]);
 
   const displayName =
     user?.user_metadata?.full_name?.split(" ")[0] ??
@@ -314,20 +300,6 @@ export function AppShell({ children }: { children?: ReactNode }) {
             </div>
           ))}
         </nav>
-
-        {/* Config */}
-        <Link
-          to="/config"
-          onClick={() => setSidebarOpen(false)}
-          className="mx-3.5 mb-3 px-3 py-3 rounded-lg text-[#d7e4ec] font-bold text-sm flex items-center gap-2 transition-all hover:text-[#eaf3f8]"
-          style={{
-            background: "rgba(255,255,255,.035)",
-            border: "1px solid rgba(255,255,255,.055)",
-          }}
-        >
-          <Settings className="size-4" />
-          Configurações
-        </Link>
 
         {/* Shortcuts */}
         <div className="border-t" style={{ borderColor: "rgba(255,255,255,.08)" }}>
