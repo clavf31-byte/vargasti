@@ -152,8 +152,8 @@ function NotesPage() {
   useEffect(() => {
     if (!showNewMenu) return;
     const close = () => setShowNewMenu(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
+    const t = setTimeout(() => window.addEventListener("click", close), 0);
+    return () => { clearTimeout(t); window.removeEventListener("click", close); };
   }, [showNewMenu]);
 
   // proteção por nota (apenas frontend — sessão atual)
