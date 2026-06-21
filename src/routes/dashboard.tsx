@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import {
   Users, FileText, Banknote, Plus, TrendingUp, ScrollText,
   Clock, CheckCircle2, Mail, FileEdit, ChevronRight,
+  FileSignature, AlertTriangle, CalendarClock, ListTodo,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -14,11 +15,21 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string; pill: string }> = {
+const ORC_STATUS: Record<string, { label: string; icon: typeof CheckCircle2; color: string; pill: string }> = {
   aprovado:  { label: "Aprovado",  icon: CheckCircle2, color: "#4ade80", pill: "bg-success/15 text-success" },
   enviado:   { label: "Enviado",   icon: Mail,         color: "#60a5fa", pill: "bg-select/15 text-select" },
   rascunho:  { label: "Rascunho",  icon: FileEdit,     color: "#94a3b8", pill: "bg-surface-2 text-muted-foreground" },
   rejeitado: { label: "Rejeitado", icon: FileEdit,     color: "#f87171", pill: "bg-destructive/15 text-destructive" },
+};
+
+const PRIORIDADE_CLS: Record<string, string> = {
+  alta:   "text-destructive bg-destructive/10 border-destructive/20",
+  media:  "text-warning bg-warning/10 border-warning/20",
+  baixa:  "text-muted-foreground bg-surface-2 border-border",
+};
+
+const PRIORIDADE_LABEL: Record<string, string> = {
+  alta: "Alta", media: "Média", baixa: "Baixa",
 };
 
 function fmtBRL(val: number) {
@@ -31,6 +42,16 @@ function fmtDate(iso: string) {
   const diff = Math.floor((today.getTime() - d.getTime()) / 86400000);
   if (diff === 0) return `hoje ${d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
   if (diff === 1) return "ontem";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+function fmtVencimento(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.floor((d.getTime() - today.getTime()) / 86400000);
+  if (diff < 0) return `${Math.abs(diff)}d atrasada`;
+  if (diff === 0) return "hoje";
+  if (diff === 1) return "amanhã";
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
@@ -52,22 +73,29 @@ function Dashboard() {
   const hour = time.getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
-  const { orcamentosCount, orcamentosStatus, orcamentosTotalAberto, clientesCount, clientesComOrcamento,
-          pagamentosCount, pagamentosTotal, recentes } = metrics;
+  const {
+    orcamentosCount, orcamentosStatus, orcamentosTotalAberto,
+    clientesCount, clientesComOrcamento,
+    pagamentosCount, pagamentosTotal,
+    contratosCount, contratosStatus,
+    tarefasPendentes, tarefasAtrasadas, tarefasHoje,
+    recentes,
+  } = metrics;
 
   const orcAprovadosPct = orcamentosCount > 0
-    ? Math.round((orcamentosStatus.aprovado / orcamentosCount) * 100)
-    : 0;
+    ? Math.round((orcamentosStatus.aprovado / orcamentosCount) * 100) : 0;
   const clientesConvPct = clientesCount > 0
-    ? Math.round((clientesComOrcamento / clientesCount) * 100)
-    : 0;
+    ? Math.round((clientesComOrcamento / clientesCount) * 100) : 0;
+  const contratosAssPct = contratosCount > 0
+    ? Math.round((contratosStatus.assinado / contratosCount) * 100) : 0;
 
   const actions = [
-    { to: "/crm/clientes",   icon: Users,       label: "Novo Cliente",       desc: "Cadastrar cliente",     cls: "bg-brand/10 border-brand/20 text-brand" },
-    { to: "/crm/orcamentos", icon: FileText,     label: "Novo Orçamento",     desc: "Criar orçamento",       cls: "bg-info/10 border-info/20 text-info" },
-    { to: "/crm/contratos",  icon: ScrollText,   label: "Novo Contrato",      desc: "Criar contrato",        cls: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
-    { to: "/crm/pagamentos", icon: Banknote,     label: "Reg. Pagamento",     desc: "Adicionar pagamento",   cls: "bg-warning/10 border-warning/20 text-warning" },
-    { to: "/crm",            icon: TrendingUp,   label: "CRM Dashboard",      desc: "Ver métricas",          cls: "bg-surface-2 border-border text-muted-foreground" },
+    { to: "/crm/clientes",   icon: Users,          label: "Novo Cliente",   desc: "Cadastrar cliente",   cls: "bg-brand/10 border-brand/20 text-brand" },
+    { to: "/crm/orcamentos", icon: FileText,        label: "Novo Orçamento", desc: "Criar orçamento",     cls: "bg-info/10 border-info/20 text-info" },
+    { to: "/crm/contratos",  icon: ScrollText,      label: "Novo Contrato",  desc: "Criar contrato",      cls: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
+    { to: "/crm/pagamentos", icon: Banknote,        label: "Reg. Pagamento", desc: "Adicionar pagamento", cls: "bg-warning/10 border-warning/20 text-warning" },
+    { to: "/crm/tarefas",    icon: ListTodo,        label: "Nova Tarefa",    desc: "Criar tarefa",        cls: "bg-teal-500/10 border-teal-500/20 text-teal-400" },
+    { to: "/crm",            icon: TrendingUp,      label: "CRM Dashboard",  desc: "Ver métricas",        cls: "bg-surface-2 border-border text-muted-foreground" },
   ];
 
   return (
@@ -95,13 +123,13 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* KPI CARDS */}
+        {/* KPI CARDS — 4 cards */}
         <section className="space-y-3.5">
           <div className="flex items-center gap-2">
             <TrendingUp className="size-4 text-select" />
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Métricas Principais</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard
               label="Clientes"
               value={String(clientesCount).padStart(2, "0")}
@@ -135,11 +163,28 @@ function Dashboard() {
               progress={orcAprovadosPct}
             />
             <KpiCard
+              label="Contratos"
+              value={String(contratosCount).padStart(2, "0")}
+              icon={FileSignature}
+              to="/crm/contratos"
+              gradient="amber"
+              badge={contratosStatus.enviado > 0
+                ? { text: `${contratosStatus.enviado} ag. assinatura`, variant: "warn" }
+                : undefined}
+              breakdown={[
+                { val: String(contratosStatus.assinado), lbl: "Assinados",  color: "#4ade80" },
+                { val: String(contratosStatus.enviado),  lbl: "Enviados",   color: "#60a5fa" },
+                { val: String(contratosStatus.rascunho), lbl: "Rascunho",   color: "#94a3b8" },
+              ]}
+              footer={{ label: "Taxa de assinatura", value: `${contratosAssPct}%` }}
+              progress={contratosAssPct}
+            />
+            <KpiCard
               label="Pagamentos"
               value={String(pagamentosCount).padStart(2, "0")}
               icon={Banknote}
               to="/crm/pagamentos"
-              gradient="amber"
+              gradient="blue"
               breakdown={[
                 { val: fmtBRL(pagamentosTotal), lbl: "Total recebido", color: "#4ade80" },
                 { val: String(pagamentosCount), lbl: "Registros" },
@@ -150,6 +195,52 @@ function Dashboard() {
             />
           </div>
         </section>
+
+        {/* TAREFAS PENDENTES */}
+        {(tarefasPendentes.length > 0 || tarefasAtrasadas > 0) && (
+          <section className="space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="size-4 text-select" />
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Tarefas Pendentes</p>
+                {tarefasAtrasadas > 0 && (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-destructive bg-destructive/10 border border-destructive/20 rounded-full px-2 py-0.5">
+                    <AlertTriangle className="size-2.5" />
+                    {tarefasAtrasadas} atrasada{tarefasAtrasadas > 1 ? "s" : ""}
+                  </span>
+                )}
+                {tarefasHoje > 0 && (
+                  <span className="text-[10px] font-semibold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
+                    {tarefasHoje} para hoje
+                  </span>
+                )}
+              </div>
+              <Link to="/crm/tarefas" className="text-[10px] text-brand hover:underline font-medium">
+                Ver todas
+              </Link>
+            </div>
+            <div className="card-selectable divide-y divide-white/[0.04] overflow-hidden">
+              {tarefasPendentes.map((t) => (
+                <Link
+                  key={t.id}
+                  to="/crm/tarefas"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+                >
+                  <div className={`size-1.5 rounded-full shrink-0 ${t.atrasada ? "bg-destructive" : t.data_vencimento === new Date().toISOString().split("T")[0] ? "bg-warning" : "bg-muted-foreground/40"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{t.titulo}</p>
+                    <p className={`text-[10px] font-medium ${t.atrasada ? "text-destructive" : "text-muted-foreground"}`}>
+                      {fmtVencimento(t.data_vencimento)}
+                    </p>
+                  </div>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${PRIORIDADE_CLS[t.prioridade] ?? PRIORIDADE_CLS.baixa}`}>
+                    {PRIORIDADE_LABEL[t.prioridade] ?? t.prioridade}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* BOTTOM: AÇÕES + RECENTES */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-6">
@@ -163,7 +254,7 @@ function Dashboard() {
             <div className="grid grid-cols-1 gap-2">
               {actions.map(({ to, icon: Icon, label, desc, cls }) => (
                 <Link
-                  key={to}
+                  key={to + label}
                   to={to}
                   className="card-selectable hover:card-selectable-hover p-3.5 flex items-center gap-3"
                 >
@@ -199,7 +290,7 @@ function Dashboard() {
                 </div>
               ) : (
                 recentes.map((o) => {
-                  const cfg = STATUS_CONFIG[o.status_enum] ?? STATUS_CONFIG.rascunho;
+                  const cfg = ORC_STATUS[o.status_enum] ?? ORC_STATUS.rascunho;
                   return (
                     <Link
                       key={o.id}
