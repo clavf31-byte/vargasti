@@ -1335,6 +1335,24 @@ export type Database = {
         }
         Relationships: []
       }
+      role_default_permissions: {
+        Row: {
+          permissions: Json
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          permissions?: Json
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          permissions?: Json
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       servicos: {
         Row: {
           ativo: boolean
