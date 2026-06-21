@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -9,7 +10,7 @@ import { PageHeader } from "@/components/ui";
 import { useOportunidades } from "@/hooks/useOportunidades";
 
 export const Route = createFileRoute("/crm/pipeline")({
-  head: () => ({ meta: [{ title: "Pipeline de Vendas · CRM VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Pipeline de Vendas · CRM ${client.name}` }] }),
   component: PipelinePage,
 });
 

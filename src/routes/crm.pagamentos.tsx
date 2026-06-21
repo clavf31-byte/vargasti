@@ -1,4 +1,5 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+﻿import client from "@/config/client";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,7 @@ import { colors, spacing, borderRadius } from "@/lib/colors";
 import { Search, Trash2, Banknote } from "lucide-react";
 
 export const Route = createFileRoute("/crm/pagamentos")({
-  head: () => ({ meta: [{ title: "Pagamentos · CRM VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Pagamentos · CRM ${client.name}` }] }),
   component: PagamentosPage,
 });
 

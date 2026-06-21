@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, StatCard, EmptyState, Toolbar, FormModal, Btn } from "@/components/shared";
@@ -7,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Plus, Pencil, Trash2, Check, FolderKanban, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/projetos")({
-  head: () => ({ meta: [{ title: "Projetos · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `Projetos · ${client.name}` }] }),
   component: ProjetosPage,
 });
 

@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/shared";
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/config/")({
-  head: () => ({ meta: [{ title: "Configurações · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `Configurações · ${client.name}` }] }),
   component: ConfigPage,
 });
 

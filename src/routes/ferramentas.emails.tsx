@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/shared";
@@ -5,7 +6,7 @@ import { EmailPollingWidget } from "@/components/EmailPollingWidget";
 import { Mail } from "lucide-react";
 
 export const Route = createFileRoute("/ferramentas/emails")({
-  head: () => ({ meta: [{ title: "E-mails · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `E-mails · ${client.name}` }] }),
   component: EmailsPage,
 });
 

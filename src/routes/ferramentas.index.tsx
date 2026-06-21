@@ -1,10 +1,11 @@
+﻿import client from "@/config/client";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/shared";
 import { FileSpreadsheet, ChevronRight, Bot, Sparkles, Wrench, MessageCircle, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/ferramentas/")({
-  head: () => ({ meta: [{ title: "Tools · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `Tools · ${client.name}` }] }),
   component: ToolsPage,
 });
 

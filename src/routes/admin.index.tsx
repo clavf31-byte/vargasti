@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "Operadores · VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Operadores · ${client.name}` }] }),
   component: OperatorListPage,
 });
 

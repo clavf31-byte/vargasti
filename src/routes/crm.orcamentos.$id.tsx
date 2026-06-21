@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useState, useEffect } from "react";
@@ -12,7 +13,7 @@ import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/crm/orcamentos/$id")({
-  head: () => ({ meta: [{ title: "Orçamento · CRM VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Orçamento · CRM ${client.name}` }] }),
   component: OrcamentoDetalhePage,
 });
 
@@ -109,7 +110,7 @@ function OrcamentoDetalhePage() {
         orcamento_numero: orcamento.numero_formatado,
         orcamento_total: orcamento.total,
         approval_url: linkResult.approval_url,
-        user_name: user.user_metadata?.name || "VargasTI",
+        user_name: user.user_metadata?.name || client.name,
         user_email: user.email,
       });
 

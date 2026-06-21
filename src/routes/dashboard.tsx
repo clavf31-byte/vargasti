@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { KpiCard } from "@/components/KpiCard";
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `Dashboard · ${client.name}` }] }),
   component: Dashboard,
 });
 

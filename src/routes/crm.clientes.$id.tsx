@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,7 @@ import { colors, spacing, borderRadius } from "@/lib/colors";
 import { ChevronLeft, User } from "lucide-react";
 
 export const Route = createFileRoute("/crm/clientes/$id")({
-  head: () => ({ meta: [{ title: "Editar Cliente · CRM VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Editar Cliente · CRM ${client.name}` }] }),
   component: EditarClientePage,
 });
 

@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import client from "@/config/client";
 
 function NotFoundComponent() {
   return (
@@ -72,15 +73,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VargasTI — Knowledge Hub" },
-      { name: "description", content: "Central de conhecimento, laboratório de testes, soluções, scripts e documentação técnica." },
-      { name: "author", content: "VargasTI" },
-      { property: "og:title", content: "VargasTI — Knowledge Hub" },
-      { property: "og:description", content: "Central de conhecimento, laboratório de testes, soluções, scripts e documentação técnica." },
+      { title: `${client.name} — ${client.sloganShort}` },
+      { name: "description", content: client.slogan },
+      { name: "author", content: client.name },
+      { property: "og:title", content: `${client.name} — ${client.sloganShort}` },
+      { property: "og:description", content: client.slogan },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "VargasTI — Knowledge Hub" },
-      { name: "twitter:description", content: "Central de conhecimento, laboratório de testes, soluções, scripts e documentação técnica." },
+      { name: "twitter:title", content: `${client.name} — ${client.sloganShort}` },
+      { name: "twitter:description", content: client.slogan },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/907a6cd1-2920-45bb-920b-ce91e86e32a2/id-preview-d9c14fc2--7986ff08-8133-4212-8727-07856cd99021.lovable.app-1780923585782.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/907a6cd1-2920-45bb-920b-ce91e86e32a2/id-preview-d9c14fc2--7986ff08-8133-4212-8727-07856cd99021.lovable.app-1780923585782.png" },
     ],

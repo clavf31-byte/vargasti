@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/crm/chamados/")({
-  head: () => ({ meta: [{ title: "Chamados · VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Chamados · ${client.name}` }] }),
   component: ChamadosPage,
 });
 

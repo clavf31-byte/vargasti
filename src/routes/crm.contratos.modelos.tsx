@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,7 +87,7 @@ Data: ____ / ____ / ________`,
 };
 
 export const Route = createFileRoute("/crm/contratos/modelos")({
-  head: () => ({ meta: [{ title: "Modelos de Contratos · CRM VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Modelos de Contratos · CRM ${client.name}` }] }),
   component: ModelosPage,
 });
 

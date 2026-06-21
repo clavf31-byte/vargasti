@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { obterOrcamentoPorToken, aprovarOrcamento, rejeitarOrcamento } from "@/hooks/useOrcamentoApproval";
@@ -5,7 +6,7 @@ import vargasLogo from "@/assets/vargasti-icon.png";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/orcamento/approve/$token")({
-  head: () => ({ meta: [{ title: "Aprovar Orçamento · VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Aprovar Orçamento · ${client.name}` }] }),
   component: ApproveOrcamentoPage,
 });
 
@@ -87,7 +88,7 @@ function ApproveOrcamentoPage() {
         <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a2332", marginBottom: 8 }}>Orçamento Aprovado!</h2>
         <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 24 }}>
           Obrigado por aprovar o orçamento <strong>#{orcamento?.numero_formatado}</strong>.<br />
-          A equipe VargasTI entrará em contato em breve.
+          A equipe ${client.name} entrará em contato em breve.
         </p>
         <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: 16, textAlign: "left", fontSize: 13, color: "#166534" }}>
           <strong>Resumo:</strong><br />
@@ -110,7 +111,7 @@ function ApproveOrcamentoPage() {
         <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a2332", marginBottom: 8 }}>Orçamento Recusado</h2>
         <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 24 }}>
           O orçamento <strong>#{orcamento?.numero_formatado}</strong> foi recusado.<br />
-          A equipe VargasTI receberá sua mensagem e entrará em contato.
+          A equipe ${client.name} receberá sua mensagem e entrará em contato.
         </p>
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: 16, textAlign: "left", fontSize: 13, color: "#991b1b" }}>
           <strong>Motivo:</strong><br />
@@ -271,7 +272,7 @@ function Logo() {
   return (
     <div style={{ textAlign: "center", marginBottom: 28 }}>
       <div style={{ display: "inline-flex", alignItems: "center", gap: 0 }}>
-        <img src={vargasLogo} alt="VargasTI" style={{ width: 80, height: 80, objectFit: "contain", marginRight: -8 }} />
+        <img src={vargasLogo} alt={client.name} style={{ width: 80, height: 80, objectFit: "contain", marginRight: -8 }} />
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.1, margin: 0 }}>
             <span style={{ color: "#1a2332" }}>Vargas</span><span style={{ color: "#13c8d3" }}>TI</span>

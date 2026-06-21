@@ -6,6 +6,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
+import client from "@/config/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -172,7 +173,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           >
             <img
               src={vargasLogo}
-              alt="VargasTI"
+              alt={client.name}
               style={{
                 width: 120,
                 height: 120,
@@ -348,7 +349,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
 
           {/* Breadcrumb (desktop) */}
           <div className="hidden lg:flex items-center gap-2">
-            <span className="text-[10px] text-[#8da2b4] uppercase tracking-widest">VargasTI</span>
+            <span className="text-[10px] text-[#8da2b4] uppercase tracking-widest">{client.shortName}</span>
             {breadcrumbs.map((crumb, i) => (
               <span key={i} className="flex items-center gap-2">
                 <span className="text-[#8da2b4]/30">/</span>

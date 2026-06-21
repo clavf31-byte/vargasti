@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect, useRef } from "react";
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
-  head: () => ({ meta: [{ title: "Anotações · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `Anotações · ${client.name}` }] }),
   component: NotesPage,
 });
 

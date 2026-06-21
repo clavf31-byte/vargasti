@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +10,7 @@ import { Wrench } from "lucide-react";
 import { colors, spacing, borderRadius } from "@/lib/colors";
 
 export const Route = createFileRoute("/crm/servicos")({
-  head: () => ({ meta: [{ title: "Serviços · CRM VargasTI" }] }),
+  head: () => ({ meta: [{ title: `Serviços · CRM ${client.name}` }] }),
   component: ServicosPage,
 });
 

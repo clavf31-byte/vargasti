@@ -1,3 +1,4 @@
+﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, StatCard, EmptyState, DataCard, Toolbar } from "@/components/shared";
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/arquivos")({
-  head: () => ({ meta: [{ title: "Arquivos · VargasTI Lab" }] }),
+  head: () => ({ meta: [{ title: `Arquivos · ${client.name}` }] }),
   component: ArquivosPage,
 });
 

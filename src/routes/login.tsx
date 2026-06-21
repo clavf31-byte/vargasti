@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, Shield, Layers, ChevronRight } from "lucide-react";
 import vargastiLogo from "@/assets/vargasti-logo-clean.png.asset.json";
+import client from "@/config/client";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -67,7 +68,7 @@ function LoginPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.15),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(16,185,129,0.12),transparent_55%)]" />
         <img
           src={vargastiLogo.url}
-          alt="VargasTI"
+          alt={client.name}
           className="relative z-10 w-[45%] max-h-[35%] object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.35)]"
           draggable={false}
         />
@@ -265,7 +266,7 @@ function LoginPage() {
           </div>
 
           <p className="mt-5 text-center text-[10px] uppercase tracking-[0.2em] text-slate-600">
-            © {new Date().getFullYear()} VargasTI · Soluções que conectam
+            © {new Date().getFullYear()} {client.name} · {client.sloganShort}
           </p>
         </div>
       </div>
