@@ -308,6 +308,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           </p>
           <div className="px-3.5 pb-3 space-y-2">
             <div
+              onClick={() => setCommandPaletteOpen(true)}
               className="flex items-center justify-between px-3 py-2.5 rounded-lg text-[#8da2b4] text-sm cursor-pointer transition-all"
               style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.07)" }}
               onMouseEnter={(e) => {
