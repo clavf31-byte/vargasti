@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import {
   Headphones, Boxes, MessagesSquare, FileText, CalendarDays, ShieldCheck,
   ArrowRight, ArrowUpRight, User, Building2, Monitor, Phone, Menu, X,
-  Sparkles, Leaf, HeartHandshake,
+  Sparkles, Leaf, HeartHandshake, MessageCircle, Search, Wrench, CheckCircle2,
 } from "lucide-react";
 import vargastiLogo from "@/assets/vargasti-logo-clean.png.asset.json";
 
 const SYSTEM_URL = "https://www.vargasti.com.br/login";
-const WHATSAPP_URL = "https://wa.me/5500000000000";
+const WHATSAPP_URL = "https://wa.me/5551998808343";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -62,6 +62,41 @@ const STATS = [
 
 const CLIENTS = [
   "INTERATIVE TECNOLOGIA", "FERRARI ADVOCACIA",
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: "01",
+    icon: MessageCircle,
+    title: "Abertura do Chamado",
+    desc: "Cliente abre um chamado pelo portal web, WhatsApp ou telefone. O sistema registra e prioriza automaticamente.",
+    color: "from-cyan-500 to-blue-500",
+    glow: "rgba(34,211,238,0.35)",
+  },
+  {
+    step: "02",
+    icon: Search,
+    title: "Diagnóstico & Triagem",
+    desc: "Nossa equipe analisa o chamado, identifica a causa raiz e define o plano de ação — remoto ou presencial.",
+    color: "from-emerald-500 to-cyan-500",
+    glow: "rgba(16,185,129,0.35)",
+  },
+  {
+    step: "03",
+    icon: Wrench,
+    title: "Atendimento Técnico",
+    desc: "Técnico especializado resolve o problema com agilidade, registrando cada etapa no sistema em tempo real.",
+    color: "from-blue-500 to-cyan-500",
+    glow: "rgba(59,130,246,0.35)",
+  },
+  {
+    step: "04",
+    icon: CheckCircle2,
+    title: "Resolução & Relatório",
+    desc: "Problema solucionado, relatório gerado automaticamente e ativos atualizados. Cliente aprova o fechamento.",
+    color: "from-emerald-500 to-teal-500",
+    glow: "rgba(16,185,129,0.35)",
+  },
 ];
 
 const FOOTER_PILLARS = [
@@ -390,8 +425,52 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* STATS + CLIENTS */}
+      {/* HOW IT WORKS */}
       <section id="plataforma" className="relative">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-10 py-10">
+          <div className="text-center mb-10">
+            <p className="text-[11px] font-bold tracking-[0.28em] text-cyan-300 uppercase mb-3">
+              Processo simplificado
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Como funciona?
+            </h2>
+            <p className="mt-3 text-slate-400 text-sm max-w-lg mx-auto">
+              Do chamado à resolução, tudo rastreado e documentado em uma única plataforma.
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* connector line (desktop) */}
+            <div className="hidden lg:block absolute top-[52px] left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] h-px bg-gradient-to-r from-cyan-500/20 via-cyan-400/50 to-cyan-500/20" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {HOW_IT_WORKS.map(({ step, icon: Icon, title, desc, color, glow }) => (
+                <div key={step} className="relative flex flex-col items-center text-center group">
+                  {/* step circle */}
+                  <div
+                    className={`relative z-10 grid place-items-center size-14 rounded-full bg-gradient-to-br ${color} mb-5 group-hover:scale-110 transition-transform`}
+                    style={{ boxShadow: `0 0 30px ${glow}` }}
+                  >
+                    <Icon size={24} strokeWidth={1.8} className="text-white" />
+                  </div>
+
+                  {/* step number */}
+                  <span className={`text-[10px] font-black tracking-[0.2em] bg-gradient-to-r ${color} bg-clip-text text-transparent mb-2`}>
+                    ETAPA {step}
+                  </span>
+
+                  <h3 className="text-base font-bold text-white mb-2">{title}</h3>
+                  <p className="text-[12px] text-slate-400 leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS + CLIENTS */}
+      <section id="clientes" className="relative">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-10 py-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Stats */}
           <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.025] to-white/[0.01] p-6 backdrop-blur-sm">
@@ -416,7 +495,7 @@ function LandingPage() {
           </div>
 
           {/* Clients */}
-          <div id="clientes" className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.025] to-white/[0.01] p-6 backdrop-blur-sm">
+          <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.025] to-white/[0.01] p-6 backdrop-blur-sm">
             <p className="text-[11px] font-bold tracking-[0.22em] text-slate-400 uppercase mb-5">
               Empresas que confiam na VargasTI
             </p>
