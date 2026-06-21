@@ -61,6 +61,103 @@ export type Database = {
           },
         ]
       }
+      chamado_comentarios: {
+        Row: {
+          chamado_id: string
+          conteudo: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          chamado_id: string
+          conteudo: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          tipo?: string
+          user_id: string
+        }
+        Update: {
+          chamado_id?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chamado_comentarios_chamado_id_fkey"
+            columns: ["chamado_id"]
+            isOneToOne: false
+            referencedRelation: "chamados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chamados: {
+        Row: {
+          anotacoes: string | null
+          cliente_id: string | null
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          descricao: string | null
+          id: string
+          numero_formatado: string | null
+          prioridade: string
+          responsavel_id: string | null
+          status: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anotacoes?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          numero_formatado?: string | null
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anotacoes?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          numero_formatado?: string | null
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chamados_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_financeiro: {
         Row: {
           cliente_id: string
