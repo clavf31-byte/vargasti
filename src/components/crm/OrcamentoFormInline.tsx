@@ -228,36 +228,6 @@ export function OrcamentoFormInline({
           />
         </div>
 
-        <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.lg, marginTop: 0 }}>
-          Este orçamento terá validade de <strong style={{ color: colors.text }}>7 dias</strong> a partir da criação.
-        </p>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
-          <div>
-            <label style={labelStyle}>Desconto (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.desconto}
-              onChange={(e) => setFormData({ ...formData, desconto: parseFloat(e.target.value) || 0 })}
-              placeholder="0.00"
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Impostos (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.impostos}
-              onChange={(e) => setFormData({ ...formData, impostos: parseFloat(e.target.value) || 0 })}
-              placeholder="0.00"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-
         <OrcamentoItensTable
           itens={itens}
           onAddItem={() => setShowItemForm(true)}
@@ -276,6 +246,35 @@ export function OrcamentoFormInline({
             onClose={() => setShowItemForm(false)}
           />
         )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, margin: `${spacing.lg} 0` }}>
+          <div>
+            <label style={labelStyle}>Desconto (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.desconto}
+              onChange={(e) => setFormData({ ...formData, desconto: parseFloat(e.target.value) || 0 })}
+              placeholder="0.00"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Impostos (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.impostos}
+              onChange={(e) => setFormData({ ...formData, impostos: parseFloat(e.target.value) || 0 })}
+              placeholder="0.00"
+              style={inputStyle}
+            />
+          </div>
+        </div>
+
+        <p style={{ fontSize: "12px", color: colors.textSecondary, margin: `0 0 ${spacing.lg}` }}>
+          Este orçamento terá validade de <strong style={{ color: colors.text }}>7 dias</strong> a partir da criação.
+        </p>
 
         {/* Resumo de Totais */}
         <div
