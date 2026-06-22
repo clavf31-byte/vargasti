@@ -96,7 +96,20 @@ function setNoteTypeInTags(tags: string, type: NoteType): string {
   return t;
 }
 
-type CellFmt = { b?: boolean; i?: boolean; a?: "l" | "c" | "r" };
+type CellFmt = { b?: boolean; i?: boolean; a?: "l" | "c" | "r"; s?: number };
+
+const TEXT_FONT_SIZES = [10, 11, 12, 13, 14, 16, 18, 20, 24, 28];
+const SHEET_FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36];
+
+function getTextFontSize(tags: string): number {
+  const m = (tags ?? "").match(/__fs:(\d+)/);
+  return m ? parseInt(m[1]) : 13;
+}
+
+function setTextFontSizeInTags(tags: string, size: number): string {
+  const t = (tags ?? "").replace(/,?\s*__fs:\d+/, "").trim();
+  return size === 13 ? t : (t ? `${t},__fs:${size}` : `__fs:${size}`);
+}
 
 type SheetData = {
   v: 2;
@@ -671,9 +684,19 @@ function NotesPage() {
                   className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer transition-colors">
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
+                {noteType !== "planilha" && (
+                  <select
+                    value={getTextFontSize(tags)}
+                    onChange={(e) => handleFieldChange("tags", setTextFontSizeInTags(tags, parseInt(e.target.value)))}
+                    title="Tamanho da fonte"
+                    className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none appearance-none cursor-pointer"
+                  >
+                    {TEXT_FONT_SIZES.map((s) => <option key={s} value={s}>{s}px</option>)}
+                  </select>
+                )}
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <Tag className="size-3 text-muted-foreground/40 shrink-0" />
-                  <input value={tags} onChange={(e) => handleFieldChange("tags", e.target.value)}
+                  <input value={displayTags(tags)} onChange={(e) => handleFieldChange("tags", e.target.value)}
                     placeholder="tags separadas por vírgula..."
                     className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/40 min-w-0" />
                 </div>
@@ -718,7 +741,8 @@ function NotesPage() {
               ) : (
                 <textarea value={content} onChange={(e) => handleFieldChange("content", e.target.value)}
                   placeholder="Comece a escrever..."
-                  className="flex-1 bg-transparent p-4 text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed" />
+                  style={{ fontSize: `${getTextFontSize(tags)}px` }}
+                  className="flex-1 bg-transparent p-4 text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed" />
               )}
             </div>
           );
@@ -902,6 +926,17 @@ function SpreadsheetEditor({
     commit({ ...sheet, fmt: newFmt });
   }
 
+  function applySize(s: number) {
+    if (!selRange) return;
+    const newFmt = { ...sheet.fmt };
+    for (let r = selRange.minR; r <= selRange.maxR; r++)
+      for (let c = selRange.minC; c <= selRange.maxC; c++) {
+        const k = `${r},${c}`;
+        newFmt[k] = { ...(newFmt[k] ?? {}), s };
+      }
+    commit({ ...sheet, fmt: newFmt });
+  }
+
   function applyAlign(a: "l" | "c" | "r") {
     if (!selRange) return;
     const single = selRange.minR === selRange.maxR && selRange.minC === selRange.maxC;
@@ -975,6 +1010,7 @@ function SpreadsheetEditor({
 
   const numCols = sheet.rows[0]?.length ?? 6;
   const hasSelection = selRange !== null;
+  const activeFontSize = selRange ? (sheet.fmt[`${selRange.minR},${selRange.minC}`]?.s ?? 12) : 12;
 
   const btnCls = (active: boolean) =>
     `px-2 py-1 rounded text-[11px] font-bold border transition-colors flex items-center justify-center ${
@@ -1003,6 +1039,16 @@ function SpreadsheetEditor({
         <button onClick={() => applyAlign("r")} disabled={!hasSelection} className={btnCls(activeFmt.a === "r")} title="Alinhar à direita">
           <AlignRight className="size-3.5" />
         </button>
+        <div className="w-px h-4 bg-border mx-0.5" />
+        <select
+          value={activeFontSize}
+          onChange={(e) => applySize(parseInt(e.target.value))}
+          disabled={!hasSelection}
+          title="Tamanho da fonte"
+          className="text-[11px] text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 focus:outline-none cursor-pointer disabled:opacity-30"
+        >
+          {SHEET_FONT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
         <div className="ml-auto flex gap-1.5">
           <button onClick={addRow} className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2 py-1 transition-colors hover:bg-surface-2">
             + Linha
@@ -1090,10 +1136,11 @@ function SpreadsheetEditor({
                           fontWeight: fmt.b ? "bold" : "normal",
                           fontStyle: fmt.i ? "italic" : "normal",
                           textAlign: fmt.a === "c" ? "center" : fmt.a === "r" ? "right" : "left",
+                          fontSize: `${fmt.s ?? 12}px`,
                           width: "100%",
                           userSelect: "text",
                         }}
-                        className="px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none"
+                        className="px-2 py-1 text-foreground bg-transparent focus:outline-none"
                       />
                     </td>
                   );
