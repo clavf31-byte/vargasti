@@ -814,6 +814,41 @@ function SpreadsheetEditor({
     });
   }
 
+  function handlePaste(e: React.ClipboardEvent, startR: number, startC: number) {
+    const text = e.clipboardData.getData("text/plain");
+    const pastedRows = text
+      .split(/\r?\n/)
+      .filter((line, i, arr) => !(i === arr.length - 1 && line === ""))
+      .map((line) => line.split("\t"));
+
+    if (pastedRows.length === 1 && pastedRows[0].length === 1) return; // colar texto simples normalmente
+
+    e.preventDefault();
+    setGrid((prev) => {
+      const next = prev.map((row) => [...row]);
+      const neededRows = startR + pastedRows.length;
+      const neededCols = startC + Math.max(...pastedRows.map((row) => row.length));
+
+      while (next.length < neededRows) {
+        next.push(Array(next[0]?.length ?? 6).fill(""));
+      }
+      if (neededCols > (next[0]?.length ?? 0)) {
+        for (let i = 0; i < next.length; i++) {
+          while (next[i].length < neededCols) next[i].push("");
+        }
+      }
+
+      for (let pr = 0; pr < pastedRows.length; pr++) {
+        for (let pc = 0; pc < pastedRows[pr].length; pc++) {
+          next[startR + pr][startC + pc] = pastedRows[pr][pc];
+        }
+      }
+
+      onChange(JSON.stringify(next));
+      return next;
+    });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent, r: number, c: number) {
     const cols = grid[0]?.length ?? 6;
     if (e.key === "Tab") {
@@ -866,6 +901,7 @@ function SpreadsheetEditor({
                     value={cell}
                     onChange={(e) => setCell(r, c, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, r, c)}
+                    onPaste={(e) => handlePaste(e, r, c)}
                     className="w-full px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none focus:bg-brand/5 min-w-[100px]"
                   />
                 </td>

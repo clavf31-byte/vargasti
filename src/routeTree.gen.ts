@@ -57,9 +57,13 @@ import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.ap
 import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
 import { Route as CrmContratosNovoRouteImport } from './routes/crm.contratos.novo'
 import { Route as CrmContratosModelosRouteImport } from './routes/crm.contratos.modelos'
+import { Route as CrmContratosIdRouteImport } from './routes/crm.contratos./$id'
 import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
 import { Route as CrmChamadosIdRouteImport } from './routes/crm.chamados.$id'
 import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
+import { Route as CrmContratosModelosIdRouteImport } from './routes/crm.contratos.modelos./$id'
+import { Route as CrmContratosIdReceberRouteImport } from './routes/crm.contratos./$id.receber'
+import { Route as CrmContratosIdEnviarRouteImport } from './routes/crm.contratos./$id.enviar'
 
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
@@ -301,6 +305,11 @@ const CrmContratosModelosRoute = CrmContratosModelosRouteImport.update({
   path: '/modelos',
   getParentRoute: () => CrmContratosRoute,
 } as any)
+const CrmContratosIdRoute = CrmContratosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmContratosRoute,
+} as any)
 const CrmClientesIdRoute = CrmClientesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -315,6 +324,21 @@ const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
   id: '/editar/$id',
   path: '/editar/$id',
   getParentRoute: () => CrmOrcamentosRoute,
+} as any)
+const CrmContratosModelosIdRoute = CrmContratosModelosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmContratosModelosRoute,
+} as any)
+const CrmContratosIdReceberRoute = CrmContratosIdReceberRouteImport.update({
+  id: '/receber',
+  path: '/receber',
+  getParentRoute: () => CrmContratosIdRoute,
+} as any)
+const CrmContratosIdEnviarRoute = CrmContratosIdEnviarRouteImport.update({
+  id: '/enviar',
+  path: '/enviar',
+  getParentRoute: () => CrmContratosIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -360,7 +384,8 @@ export interface FileRoutesByFullPath {
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/chamados/$id': typeof CrmChamadosIdRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
-  '/crm/contratos/modelos': typeof CrmContratosModelosRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRouteWithChildren
+  '/crm/contratos/modelos': typeof CrmContratosModelosRouteWithChildren
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
   '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
@@ -368,6 +393,9 @@ export interface FileRoutesByFullPath {
   '/crm/clientes/': typeof CrmClientesIndexRoute
   '/crm/contratos/': typeof CrmContratosIndexRoute
   '/crm/orcamentos/': typeof CrmOrcamentosIndexRoute
+  '/crm/contratos/$id/enviar': typeof CrmContratosIdEnviarRoute
+  '/crm/contratos/$id/receber': typeof CrmContratosIdReceberRoute
+  '/crm/contratos/modelos/$id': typeof CrmContratosModelosIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRoutesByTo {
@@ -406,7 +434,8 @@ export interface FileRoutesByTo {
   '/ferramentas': typeof FerramentasIndexRoute
   '/crm/chamados/$id': typeof CrmChamadosIdRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
-  '/crm/contratos/modelos': typeof CrmContratosModelosRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRouteWithChildren
+  '/crm/contratos/modelos': typeof CrmContratosModelosRouteWithChildren
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
   '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
@@ -414,6 +443,9 @@ export interface FileRoutesByTo {
   '/crm/clientes': typeof CrmClientesIndexRoute
   '/crm/contratos': typeof CrmContratosIndexRoute
   '/crm/orcamentos': typeof CrmOrcamentosIndexRoute
+  '/crm/contratos/$id/enviar': typeof CrmContratosIdEnviarRoute
+  '/crm/contratos/$id/receber': typeof CrmContratosIdReceberRoute
+  '/crm/contratos/modelos/$id': typeof CrmContratosModelosIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRoutesById {
@@ -460,7 +492,8 @@ export interface FileRoutesById {
   '/ferramentas/': typeof FerramentasIndexRoute
   '/crm/chamados/$id': typeof CrmChamadosIdRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
-  '/crm/contratos/modelos': typeof CrmContratosModelosRoute
+  '/crm/contratos/$id': typeof CrmContratosIdRouteWithChildren
+  '/crm/contratos/modelos': typeof CrmContratosModelosRouteWithChildren
   '/crm/contratos/novo': typeof CrmContratosNovoRoute
   '/crm/orcamentos/$id': typeof CrmOrcamentosIdRoute
   '/orcamento/approve/$token': typeof OrcamentoApproveTokenRoute
@@ -468,6 +501,9 @@ export interface FileRoutesById {
   '/crm/clientes/': typeof CrmClientesIndexRoute
   '/crm/contratos/': typeof CrmContratosIndexRoute
   '/crm/orcamentos/': typeof CrmOrcamentosIndexRoute
+  '/crm/contratos/$id/enviar': typeof CrmContratosIdEnviarRoute
+  '/crm/contratos/$id/receber': typeof CrmContratosIdReceberRoute
+  '/crm/contratos/modelos/$id': typeof CrmContratosModelosIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
 }
 export interface FileRouteTypes {
@@ -515,6 +551,7 @@ export interface FileRouteTypes {
     | '/ferramentas/'
     | '/crm/chamados/$id'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -523,6 +560,9 @@ export interface FileRouteTypes {
     | '/crm/clientes/'
     | '/crm/contratos/'
     | '/crm/orcamentos/'
+    | '/crm/contratos/$id/enviar'
+    | '/crm/contratos/$id/receber'
+    | '/crm/contratos/modelos/$id'
     | '/crm/orcamentos/editar/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -561,6 +601,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/crm/chamados/$id'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -569,6 +610,9 @@ export interface FileRouteTypes {
     | '/crm/clientes'
     | '/crm/contratos'
     | '/crm/orcamentos'
+    | '/crm/contratos/$id/enviar'
+    | '/crm/contratos/$id/receber'
+    | '/crm/contratos/modelos/$id'
     | '/crm/orcamentos/editar/$id'
   id:
     | '__root__'
@@ -614,6 +658,7 @@ export interface FileRouteTypes {
     | '/ferramentas/'
     | '/crm/chamados/$id'
     | '/crm/clientes/$id'
+    | '/crm/contratos/$id'
     | '/crm/contratos/modelos'
     | '/crm/contratos/novo'
     | '/crm/orcamentos/$id'
@@ -622,6 +667,9 @@ export interface FileRouteTypes {
     | '/crm/clientes/'
     | '/crm/contratos/'
     | '/crm/orcamentos/'
+    | '/crm/contratos/$id/enviar'
+    | '/crm/contratos/$id/receber'
+    | '/crm/contratos/modelos/$id'
     | '/crm/orcamentos/editar/$id'
   fileRoutesById: FileRoutesById
 }
@@ -989,6 +1037,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContratosModelosRouteImport
       parentRoute: typeof CrmContratosRoute
     }
+    '/crm/contratos/$id': {
+      id: '/crm/contratos/$id'
+      path: '/$id'
+      fullPath: '/crm/contratos/$id'
+      preLoaderRoute: typeof CrmContratosIdRouteImport
+      parentRoute: typeof CrmContratosRoute
+    }
     '/crm/clientes/$id': {
       id: '/crm/clientes/$id'
       path: '/$id'
@@ -1009,6 +1064,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/crm/orcamentos/editar/$id'
       preLoaderRoute: typeof CrmOrcamentosEditarIdRouteImport
       parentRoute: typeof CrmOrcamentosRoute
+    }
+    '/crm/contratos/modelos/$id': {
+      id: '/crm/contratos/modelos/$id'
+      path: '/$id'
+      fullPath: '/crm/contratos/modelos/$id'
+      preLoaderRoute: typeof CrmContratosModelosIdRouteImport
+      parentRoute: typeof CrmContratosModelosRoute
+    }
+    '/crm/contratos/$id/receber': {
+      id: '/crm/contratos/$id/receber'
+      path: '/receber'
+      fullPath: '/crm/contratos/$id/receber'
+      preLoaderRoute: typeof CrmContratosIdReceberRouteImport
+      parentRoute: typeof CrmContratosIdRoute
+    }
+    '/crm/contratos/$id/enviar': {
+      id: '/crm/contratos/$id/enviar'
+      path: '/enviar'
+      fullPath: '/crm/contratos/$id/enviar'
+      preLoaderRoute: typeof CrmContratosIdEnviarRouteImport
+      parentRoute: typeof CrmContratosIdRoute
     }
   }
 }
@@ -1068,14 +1144,41 @@ const CrmClientesRouteWithChildren = CrmClientesRoute._addFileChildren(
   CrmClientesRouteChildren,
 )
 
+interface CrmContratosIdRouteChildren {
+  CrmContratosIdEnviarRoute: typeof CrmContratosIdEnviarRoute
+  CrmContratosIdReceberRoute: typeof CrmContratosIdReceberRoute
+}
+
+const CrmContratosIdRouteChildren: CrmContratosIdRouteChildren = {
+  CrmContratosIdEnviarRoute: CrmContratosIdEnviarRoute,
+  CrmContratosIdReceberRoute: CrmContratosIdReceberRoute,
+}
+
+const CrmContratosIdRouteWithChildren = CrmContratosIdRoute._addFileChildren(
+  CrmContratosIdRouteChildren,
+)
+
+interface CrmContratosModelosRouteChildren {
+  CrmContratosModelosIdRoute: typeof CrmContratosModelosIdRoute
+}
+
+const CrmContratosModelosRouteChildren: CrmContratosModelosRouteChildren = {
+  CrmContratosModelosIdRoute: CrmContratosModelosIdRoute,
+}
+
+const CrmContratosModelosRouteWithChildren =
+  CrmContratosModelosRoute._addFileChildren(CrmContratosModelosRouteChildren)
+
 interface CrmContratosRouteChildren {
-  CrmContratosModelosRoute: typeof CrmContratosModelosRoute
+  CrmContratosIdRoute: typeof CrmContratosIdRouteWithChildren
+  CrmContratosModelosRoute: typeof CrmContratosModelosRouteWithChildren
   CrmContratosNovoRoute: typeof CrmContratosNovoRoute
   CrmContratosIndexRoute: typeof CrmContratosIndexRoute
 }
 
 const CrmContratosRouteChildren: CrmContratosRouteChildren = {
-  CrmContratosModelosRoute: CrmContratosModelosRoute,
+  CrmContratosIdRoute: CrmContratosIdRouteWithChildren,
+  CrmContratosModelosRoute: CrmContratosModelosRouteWithChildren,
   CrmContratosNovoRoute: CrmContratosNovoRoute,
   CrmContratosIndexRoute: CrmContratosIndexRoute,
 }
