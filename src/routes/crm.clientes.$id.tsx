@@ -1,4 +1,4 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,14 +16,30 @@ export const Route = createFileRoute("/crm/clientes/$id")({
 type Cliente = {
   id: string;
   nome: string;
+  contato?: string;
   email?: string;
   telefone?: string;
+  celular?: string;
   cnpj_cpf?: string;
   endereco?: string;
   cidade?: string;
   estado?: string;
   cep?: string;
 };
+
+function fmtPhone(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 10);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+}
+
+function fmtCelular(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
 
 function EditarClientePage() {
   const { user } = useAuth();
@@ -38,8 +54,10 @@ function EditarClientePage() {
 
   const [formData, setFormData] = useState({
     nome: "",
+    contato: "",
     email: "",
     telefone: "",
+    celular: "",
     cnpj_cpf: "",
     endereco: "",
     cidade: "",
@@ -67,8 +85,10 @@ function EditarClientePage() {
       setCliente(data as Cliente);
       setFormData({
         nome: data.nome || "",
+        contato: data.contato || "",
         email: data.email || "",
         telefone: data.telefone || "",
+        celular: data.celular || "",
         cnpj_cpf: data.cnpj_cpf || "",
         endereco: data.endereco || "",
         cidade: data.cidade || "",
@@ -214,10 +234,19 @@ function EditarClientePage() {
               <input
                 type="text"
                 value={formData.nome}
-                onChange={(e) =>
-                  setFormData({ ...formData, nome: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 required
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ marginBottom: spacing.lg }}>
+              <label style={labelStyle}>Contato</label>
+              <input
+                type="text"
+                placeholder="Nome da pessoa de contato"
+                value={formData.contato}
+                onChange={(e) => setFormData({ ...formData, contato: e.target.value })}
                 style={inputStyle}
               />
             </div>
@@ -227,23 +256,39 @@ function EditarClientePage() {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                 style={inputStyle}
               />
             </div>
 
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Telefone</label>
-              <input
-                type="text"
-                value={formData.telefone}
-                onChange={(e) =>
-                  setFormData({ ...formData, telefone: e.target.value })
-                }
-                style={inputStyle}
-              />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: spacing.md,
+                marginBottom: spacing.lg,
+              }}
+            >
+              <div>
+                <label style={labelStyle}>Telefone</label>
+                <input
+                  type="text"
+                  placeholder="(XX) XXXX-XXXX"
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: fmtPhone(e.target.value) })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Celular</label>
+                <input
+                  type="text"
+                  placeholder="(XX) XXXXX-XXXX"
+                  value={formData.celular}
+                  onChange={(e) => setFormData({ ...formData, celular: fmtCelular(e.target.value) })}
+                  style={inputStyle}
+                />
+              </div>
             </div>
 
             <div style={{ marginBottom: spacing.lg }}>
@@ -251,9 +296,7 @@ function EditarClientePage() {
               <input
                 type="text"
                 value={formData.cnpj_cpf}
-                onChange={(e) =>
-                  setFormData({ ...formData, cnpj_cpf: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, cnpj_cpf: e.target.value })}
                 style={inputStyle}
               />
             </div>
@@ -263,9 +306,7 @@ function EditarClientePage() {
               <input
                 type="text"
                 value={formData.endereco}
-                onChange={(e) =>
-                  setFormData({ ...formData, endereco: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
                 style={inputStyle}
               />
             </div>
@@ -283,9 +324,7 @@ function EditarClientePage() {
                 <input
                   type="text"
                   value={formData.cidade}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cidade: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
                   style={inputStyle}
                 />
               </div>
@@ -294,9 +333,7 @@ function EditarClientePage() {
                 <input
                   type="text"
                   value={formData.estado}
-                  onChange={(e) =>
-                    setFormData({ ...formData, estado: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                   style={inputStyle}
                 />
               </div>
@@ -307,9 +344,7 @@ function EditarClientePage() {
               <input
                 type="text"
                 value={formData.cep}
-                onChange={(e) =>
-                  setFormData({ ...formData, cep: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
                 style={inputStyle}
               />
             </div>

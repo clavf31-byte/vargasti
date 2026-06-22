@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, Button } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
@@ -11,6 +11,20 @@ interface ClienteFormInlineProps {
   onClose: () => void;
 }
 
+function fmtPhone(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 10);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+}
+
+function fmtCelular(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
 export function ClienteFormInline({
   userId,
   onSuccess,
@@ -19,8 +33,10 @@ export function ClienteFormInline({
 }: ClienteFormInlineProps) {
   const [formData, setFormData] = useState({
     nome: "",
+    contato: "",
     email: "",
     telefone: "",
+    celular: "",
     cnpj_cpf: "",
     endereco: "",
     cidade: "",
@@ -41,24 +57,13 @@ export function ClienteFormInline({
     try {
       const { error: insertError } = await supabase
         .from("clientes")
-        .insert([
-          {
-            ...formData,
-            user_id: userId,
-          },
-        ]);
+        .insert([{ ...formData, user_id: userId }]);
 
       if (insertError) throw insertError;
 
       setFormData({
-        nome: "",
-        email: "",
-        telefone: "",
-        cnpj_cpf: "",
-        endereco: "",
-        cidade: "",
-        estado: "",
-        cep: "",
+        nome: "", contato: "", email: "", telefone: "", celular: "",
+        cnpj_cpf: "", endereco: "", cidade: "", estado: "", cep: "",
       });
       setTags([]);
       onSuccess();
@@ -149,23 +154,54 @@ export function ClienteFormInline({
         </div>
 
         <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Email</label>
+          <label style={labelStyle}>Contato</label>
           <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            type="text"
+            placeholder="Nome da pessoa de contato"
+            value={formData.contato}
+            onChange={(e) => setFormData({ ...formData, contato: e.target.value })}
             style={inputStyle}
           />
         </div>
 
         <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Telefone</label>
+          <label style={labelStyle}>Email</label>
           <input
-            type="text"
-            value={formData.telefone}
-            onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
             style={inputStyle}
           />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: spacing.md,
+            marginBottom: spacing.lg,
+          }}
+        >
+          <div>
+            <label style={labelStyle}>Telefone</label>
+            <input
+              type="text"
+              placeholder="(XX) XXXX-XXXX"
+              value={formData.telefone}
+              onChange={(e) => setFormData({ ...formData, telefone: fmtPhone(e.target.value) })}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Celular</label>
+            <input
+              type="text"
+              placeholder="(XX) XXXXX-XXXX"
+              value={formData.celular}
+              onChange={(e) => setFormData({ ...formData, celular: fmtCelular(e.target.value) })}
+              style={inputStyle}
+            />
+          </div>
         </div>
 
         <div style={{ marginBottom: spacing.lg }}>
@@ -228,13 +264,7 @@ export function ClienteFormInline({
 
         <ClienteTagsInput tags={tags} onChange={setTags} />
 
-        <div
-          style={{
-            display: "flex",
-            gap: spacing.md,
-            marginTop: spacing.xl,
-          }}
-        >
+        <div style={{ display: "flex", gap: spacing.md, marginTop: spacing.xl }}>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
