@@ -36,6 +36,13 @@ export function OrcamentoFormInline({
   const [showItemForm, setShowItemForm] = useState(false);
   const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
 
+  useEffect(() => {
+    if (!isOpen) return;
+    setFormData((f) => ({ ...f, numero_formatado: "" }));
+    gerarNumeroOrcamento(userId).then((num) =>
+      setFormData((f) => ({ ...f, numero_formatado: num }))
+    );
+  }, [isOpen, userId]);
 
   if (!isOpen) return null;
 
@@ -177,14 +184,14 @@ export function OrcamentoFormInline({
       <form onSubmit={handleSubmit}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
           <div>
-            <label style={labelStyle}>Número (Auto) *</label>
+            <label style={labelStyle}>Número</label>
             <input
               type="text"
-              value={formData.numero_formatado}
+              value={formData.numero_formatado || "Gerando..."}
               disabled
               style={{
                 ...inputStyle,
-                opacity: 0.7,
+                opacity: 0.5,
                 cursor: "not-allowed",
               }}
             />
