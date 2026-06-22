@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { startEmailPolling, stopEmailPolling, triggerEmailPolling } from "@/lib/api/emailPolling";
 import { getGmailAuthUrl } from "@/lib/api/emailAgent.functions";
 import { useEmailConfig } from "@/hooks/useEmailConfig";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ConfigCategoriesInline,
   ConfigWhitelistInline,
@@ -88,11 +89,18 @@ export function EmailPollingWidget() {
     setDeleting(true);
     setError(null);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
       const response = await fetch("/api/delete-gmail-token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
       });
-      const data = (await response.json()) as { ok: boolean; error?: string };
+      const text = await response.text();
+      let data: { ok: boolean; error?: string };
+      try { data = JSON.parse(text); } catch { throw new Error(text || "Erro ao deletar token"); }
       if (!response.ok || !data.ok) throw new Error(data.error ?? "Erro ao deletar token");
       setLastResult(null);
       alert("✅ Token deletado! Você pode autorizar uma nova conta.");
