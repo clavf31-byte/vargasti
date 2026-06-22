@@ -187,6 +187,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
             Adicionar Item
           </h3>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: "transparent",
@@ -206,6 +207,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
           <label style={labelStyle}>Tipo de Item *</label>
           <div style={{ display: "flex", gap: spacing.md }}>
             <button
+              type="button"
               onClick={() => {
                 setTipo("servico");
                 setSelecionado(null);
@@ -224,6 +226,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
               Serviço
             </button>
             <button
+              type="button"
               onClick={() => {
                 setTipo("peca");
                 setSelecionado(null);
@@ -284,6 +287,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
 
             <div style={{ display: "flex", gap: spacing.md, marginTop: spacing.lg }}>
               <button
+                type="button"
                 onClick={() => {
                   setShowNewForm(false);
                   setNovoNome("");
@@ -304,6 +308,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleCreateNew}
                 disabled={creatingNew}
                 style={{
@@ -325,6 +330,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
         ) : listaItens.length === 0 ? (
           <div style={{ marginBottom: spacing.lg }}>
             <button
+              type="button"
               onClick={() => setShowNewForm(true)}
               style={{
                 width: "100%",
@@ -352,6 +358,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 {tipo === "servico" ? "Serviço" : "Peça/Material"} *
               </label>
               <button
+                type="button"
                 onClick={() => setShowNewForm(true)}
                 style={{
                   background: "transparent",
@@ -433,6 +440,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm }}>
                 <label style={{ ...labelStyle, marginBottom: 0 }}>{precoFieldLabel}</label>
                 <button
+                  type="button"
                   onClick={() => setPrecoCustomizado(!precoCustomizado)}
                   style={{
                     background: "transparent",
@@ -481,6 +489,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
             {/* Botões */}
             <div style={{ display: "flex", gap: spacing.md }}>
               <button
+                type="button"
                 onClick={onClose}
                 style={{
                   flex: 1,
@@ -496,6 +505,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleAdd}
                 style={{
                   flex: 1,
