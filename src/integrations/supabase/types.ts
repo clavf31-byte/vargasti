@@ -245,9 +245,11 @@ export type Database = {
       }
       clientes: {
         Row: {
+          celular: string | null
           cep: string | null
           cidade: string | null
           cnpj_cpf: string | null
+          contato: string | null
           created_at: string
           email: string | null
           endereco: string | null
@@ -261,9 +263,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          celular?: string | null
           cep?: string | null
           cidade?: string | null
           cnpj_cpf?: string | null
+          contato?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
@@ -277,9 +281,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          celular?: string | null
           cep?: string | null
           cidade?: string | null
           cnpj_cpf?: string | null
+          contato?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
