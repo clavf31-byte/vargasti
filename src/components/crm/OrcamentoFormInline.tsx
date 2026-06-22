@@ -5,7 +5,7 @@ import { colors, spacing, borderRadius } from "@/lib/colors";
 import { OrcamentoItensTable } from "./OrcamentoItensTable";
 import { OrcamentoItemForm } from "./OrcamentoItemForm";
 import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
-import { gerarNumeroOrcamento } from "@/hooks/useOrcamentoNumero";
+import { gerarNumeroOrcamento, previewNumeroOrcamento } from "@/hooks/useOrcamentoNumero";
 
 interface OrcamentoFormInlineProps {
   userId: string;
@@ -39,7 +39,7 @@ export function OrcamentoFormInline({
   useEffect(() => {
     if (!isOpen) return;
     setFormData((f) => ({ ...f, numero_formatado: "" }));
-    gerarNumeroOrcamento(userId).then((num) =>
+    previewNumeroOrcamento(userId).then((num) =>
       setFormData((f) => ({ ...f, numero_formatado: num }))
     );
   }, [isOpen, userId]);

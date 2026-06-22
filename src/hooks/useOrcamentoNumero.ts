@@ -1,5 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export async function previewNumeroOrcamento(userId: string): Promise<string> {
+  const currentYear = new Date().getFullYear();
+  const { data } = await supabase
+    .from("orcamento_sequences")
+    .select("next_number")
+    .eq("user_id", userId)
+    .eq("year", currentYear)
+    .single();
+  const next = data ? data.next_number + 1 : 1;
+  return `ORC-${currentYear}-${String(next).padStart(6, "0")}`;
+}
+
 export async function gerarNumeroOrcamento(userId: string): Promise<string> {
   const currentYear = new Date().getFullYear();
 
