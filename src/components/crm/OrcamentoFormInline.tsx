@@ -74,7 +74,7 @@ export function OrcamentoFormInline({
             impostos: formData.impostos,
             status: "rascunho",
             status_enum: formData.status_enum,
-            data_vencimento: formData.data_vencimento || null,
+            data_vencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
             user_id: userId,
           },
         ]);
@@ -228,15 +228,9 @@ export function OrcamentoFormInline({
           />
         </div>
 
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Data de Vencimento</label>
-          <input
-            type="date"
-            value={formData.data_vencimento}
-            onChange={(e) => setFormData({ ...formData, data_vencimento: e.target.value })}
-            style={inputStyle}
-          />
-        </div>
+        <p style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.lg, marginTop: 0 }}>
+          Este orçamento terá validade de <strong style={{ color: colors.text }}>7 dias</strong> a partir da criação.
+        </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
           <div>

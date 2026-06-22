@@ -378,12 +378,12 @@ function OrcamentoDetalhePage() {
 
             <div>
               <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>
-                Data de Vencimento
+                Válido até
               </p>
               <p style={{ fontSize: "14px", color: "#eaf3f8" }}>
                 {orcamento.data_vencimento
                   ? new Date(orcamento.data_vencimento).toLocaleDateString("pt-BR")
-                  : "—"}
+                  : "7 dias a partir da criação"}
               </p>
             </div>
 
