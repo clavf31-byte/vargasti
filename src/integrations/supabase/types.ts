@@ -1191,6 +1191,7 @@ export type Database = {
           metodo: string | null
           orcamento_id: string
           referencia: string | null
+          status: string
           updated_at: string
           user_id: string
           valor: number
@@ -1202,6 +1203,7 @@ export type Database = {
           metodo?: string | null
           orcamento_id: string
           referencia?: string | null
+          status?: string
           updated_at?: string
           user_id: string
           valor: number
@@ -1213,6 +1215,7 @@ export type Database = {
           metodo?: string | null
           orcamento_id?: string
           referencia?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
           valor?: number
