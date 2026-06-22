@@ -798,6 +798,8 @@ function SpreadsheetEditor({
   const [sheet, setSheet] = useState<SheetData>(() => parseSheet(content));
   const inputRefs = useRef<(HTMLInputElement | null)[][]>([]);
   const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
+  const [sel, setSel] = useState<{ r1: number; c1: number; r2: number; c2: number } | null>(null);
+  const isDragging = useRef(false);
   const resizingRef = useRef<{ col: number; startX: number; startW: number } | null>(null);
   const sheetRef = useRef(sheet);
   useEffect(() => { sheetRef.current = sheet; }, [sheet]);
@@ -854,45 +856,97 @@ function SpreadsheetEditor({
     commit({ ...sheet, rows, cw });
   }
 
+  // Selection range (normalized)
+  const selRange = sel ? {
+    minR: Math.min(sel.r1, sel.r2), maxR: Math.max(sel.r1, sel.r2),
+    minC: Math.min(sel.c1, sel.c2), maxC: Math.max(sel.c1, sel.c2),
+  } : activeCell ? { minR: activeCell[0], maxR: activeCell[0], minC: activeCell[1], maxC: activeCell[1] } : null;
+
+  function inSel(r: number, c: number) {
+    return selRange ? r >= selRange.minR && r <= selRange.maxR && c >= selRange.minC && c <= selRange.maxC : false;
+  }
+
+  // Formatting — applies to all cells in selection
+  const getFmt = (r: number, c: number): CellFmt => sheet.fmt[`${r},${c}`] ?? {};
+
+  const activeFmt: CellFmt = selRange ? (() => {
+    let b = true, i = true;
+    let a: "l" | "c" | "r" | undefined = sheet.fmt[`${selRange.minR},${selRange.minC}`]?.a;
+    let first = true;
+    for (let r = selRange.minR; r <= selRange.maxR; r++) {
+      for (let c = selRange.minC; c <= selRange.maxC; c++) {
+        const f = sheet.fmt[`${r},${c}`] ?? {};
+        if (!f.b) b = false;
+        if (!f.i) i = false;
+        if (!first && f.a !== a) a = undefined;
+        first = false;
+      }
+    }
+    return { b, i, a };
+  })() : {};
+
+  function applyFmt(key: "b" | "i") {
+    if (!selRange) return;
+    const allOn = (() => {
+      for (let r = selRange.minR; r <= selRange.maxR; r++)
+        for (let c = selRange.minC; c <= selRange.maxC; c++)
+          if (!sheet.fmt[`${r},${c}`]?.[key]) return false;
+      return true;
+    })();
+    const newFmt = { ...sheet.fmt };
+    for (let r = selRange.minR; r <= selRange.maxR; r++)
+      for (let c = selRange.minC; c <= selRange.maxC; c++) {
+        const k = `${r},${c}`;
+        newFmt[k] = { ...(newFmt[k] ?? {}), [key]: !allOn };
+      }
+    commit({ ...sheet, fmt: newFmt });
+  }
+
+  function applyAlign(a: "l" | "c" | "r") {
+    if (!selRange) return;
+    const single = selRange.minR === selRange.maxR && selRange.minC === selRange.maxC;
+    const toggle = single && sheet.fmt[`${selRange.minR},${selRange.minC}`]?.a === a;
+    const newFmt = { ...sheet.fmt };
+    for (let r = selRange.minR; r <= selRange.maxR; r++)
+      for (let c = selRange.minC; c <= selRange.maxC; c++) {
+        const k = `${r},${c}`;
+        newFmt[k] = { ...(newFmt[k] ?? {}), a: toggle ? undefined : a };
+      }
+    commit({ ...sheet, fmt: newFmt });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent, r: number, c: number) {
     const cols = sheet.rows[0]?.length ?? 6;
-    if (e.ctrlKey && e.key === "b") { e.preventDefault(); toggleFmt("b"); return; }
-    if (e.ctrlKey && e.key === "i") { e.preventDefault(); toggleFmt("i"); return; }
+    const numRows = sheet.rows.length;
+    if (e.ctrlKey && e.key.toLowerCase() === "a") {
+      e.preventDefault();
+      setSel({ r1: 0, c1: 0, r2: numRows - 1, c2: cols - 1 });
+      return;
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === "b") { e.preventDefault(); applyFmt("b"); return; }
+    if (e.ctrlKey && e.key.toLowerCase() === "i") { e.preventDefault(); applyFmt("i"); return; }
+
     if (e.key === "Tab") {
       e.preventDefault();
       if (c + 1 < cols) inputRefs.current[r]?.[c + 1]?.focus();
-      else if (r + 1 < sheet.rows.length) inputRefs.current[r + 1]?.[0]?.focus();
+      else if (r + 1 < numRows) inputRefs.current[r + 1]?.[0]?.focus();
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (r + 1 < sheet.rows.length) inputRefs.current[r + 1]?.[c]?.focus();
-    } else if (e.key === "ArrowUp" && r > 0) {
-      e.preventDefault(); inputRefs.current[r - 1]?.[c]?.focus();
-    } else if (e.key === "ArrowDown" && r + 1 < sheet.rows.length) {
-      e.preventDefault(); inputRefs.current[r + 1]?.[c]?.focus();
+      if (r + 1 < numRows) inputRefs.current[r + 1]?.[c]?.focus();
+    } else if (e.key === "ArrowUp") {
+      if (e.shiftKey && sel) { e.preventDefault(); setSel((s) => s ? { ...s, r2: Math.max(0, s.r2 - 1) } : null); }
+      else if (r > 0) { e.preventDefault(); inputRefs.current[r - 1]?.[c]?.focus(); }
+    } else if (e.key === "ArrowDown") {
+      if (e.shiftKey && sel) { e.preventDefault(); setSel((s) => s ? { ...s, r2: Math.min(numRows - 1, s.r2 + 1) } : null); }
+      else if (r + 1 < numRows) { e.preventDefault(); inputRefs.current[r + 1]?.[c]?.focus(); }
+    } else if (e.key === "ArrowLeft" && e.shiftKey && sel) {
+      e.preventDefault(); setSel((s) => s ? { ...s, c2: Math.max(0, s.c2 - 1) } : null);
+    } else if (e.key === "ArrowRight" && e.shiftKey && sel) {
+      e.preventDefault(); setSel((s) => s ? { ...s, c2: Math.min(cols - 1, s.c2 + 1) } : null);
     }
   }
 
-  // Formatting
-  const getFmt = (r: number, c: number): CellFmt => sheet.fmt[`${r},${c}`] ?? {};
-  const activeFmt = activeCell ? getFmt(activeCell[0], activeCell[1]) : {};
-
-  function toggleFmt(key: "b" | "i") {
-    if (!activeCell) return;
-    const [r, c] = activeCell;
-    const k = `${r},${c}`;
-    const prev = sheet.fmt[k] ?? {};
-    commit({ ...sheet, fmt: { ...sheet.fmt, [k]: { ...prev, [key]: !prev[key] } } });
-  }
-
-  function setAlign(a: "l" | "c" | "r") {
-    if (!activeCell) return;
-    const [r, c] = activeCell;
-    const k = `${r},${c}`;
-    const prev = sheet.fmt[k] ?? {};
-    commit({ ...sheet, fmt: { ...sheet.fmt, [k]: { ...prev, a: prev.a === a ? undefined : a } } });
-  }
-
-  // Column resize
+  // Column resize + drag selection cleanup
   useEffect(() => {
     function onMove(e: MouseEvent) {
       const rs = resizingRef.current;
@@ -905,9 +959,11 @@ function SpreadsheetEditor({
       });
     }
     function onUp() {
-      if (!resizingRef.current) return;
-      resizingRef.current = null;
-      onChange(JSON.stringify(sheetRef.current));
+      if (resizingRef.current) {
+        resizingRef.current = null;
+        onChange(JSON.stringify(sheetRef.current));
+      }
+      isDragging.current = false;
     }
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
@@ -918,6 +974,7 @@ function SpreadsheetEditor({
   }, [onChange]);
 
   const numCols = sheet.rows[0]?.length ?? 6;
+  const hasSelection = selRange !== null;
 
   const btnCls = (active: boolean) =>
     `px-2 py-1 rounded text-[11px] font-bold border transition-colors flex items-center justify-center ${
@@ -930,20 +987,20 @@ function SpreadsheetEditor({
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/60 bg-secondary/20 shrink-0">
-        <button onClick={() => toggleFmt("b")} disabled={!activeCell} className={btnCls(!!activeFmt.b)} title="Negrito (Ctrl+B)">
+        <button onClick={() => applyFmt("b")} disabled={!hasSelection} className={btnCls(!!activeFmt.b)} title="Negrito (Ctrl+B)">
           <span className="font-black text-[12px]">B</span>
         </button>
-        <button onClick={() => toggleFmt("i")} disabled={!activeCell} className={btnCls(!!activeFmt.i)} title="Itálico (Ctrl+I)">
+        <button onClick={() => applyFmt("i")} disabled={!hasSelection} className={btnCls(!!activeFmt.i)} title="Itálico (Ctrl+I)">
           <span className="italic text-[12px]">I</span>
         </button>
         <div className="w-px h-4 bg-border mx-0.5" />
-        <button onClick={() => setAlign("l")} disabled={!activeCell} className={btnCls(activeFmt.a === "l")} title="Alinhar à esquerda">
+        <button onClick={() => applyAlign("l")} disabled={!hasSelection} className={btnCls(activeFmt.a === "l")} title="Alinhar à esquerda">
           <AlignLeft className="size-3.5" />
         </button>
-        <button onClick={() => setAlign("c")} disabled={!activeCell} className={btnCls(activeFmt.a === "c")} title="Centralizar">
+        <button onClick={() => applyAlign("c")} disabled={!hasSelection} className={btnCls(activeFmt.a === "c")} title="Centralizar">
           <AlignCenter className="size-3.5" />
         </button>
-        <button onClick={() => setAlign("r")} disabled={!activeCell} className={btnCls(activeFmt.a === "r")} title="Alinhar à direita">
+        <button onClick={() => applyAlign("r")} disabled={!hasSelection} className={btnCls(activeFmt.a === "r")} title="Alinhar à direita">
           <AlignRight className="size-3.5" />
         </button>
         <div className="ml-auto flex gap-1.5">
@@ -957,7 +1014,7 @@ function SpreadsheetEditor({
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-auto p-2">
+      <div className="flex-1 overflow-auto p-2 select-none">
         <table className="border-collapse text-xs" style={{ tableLayout: "fixed" }}>
           <thead>
             <tr>
@@ -989,8 +1046,33 @@ function SpreadsheetEditor({
                 {row.map((cell, c) => {
                   const fmt = getFmt(r, c);
                   const isActive = activeCell?.[0] === r && activeCell?.[1] === c;
+                  const selected = inSel(r, c);
                   return (
-                    <td key={c} className={`border border-border/60 p-0 ${isActive ? "outline outline-1 outline-brand/60 outline-offset-[-1px]" : ""}`}>
+                    <td
+                      key={c}
+                      className={`border border-border/60 p-0 ${
+                        isActive
+                          ? "outline outline-1 outline-brand/70 outline-offset-[-1px] bg-brand/5"
+                          : selected ? "bg-brand/15" : ""
+                      }`}
+                      onMouseDown={(e) => {
+                        if (resizingRef.current) return;
+                        if (e.shiftKey && sel) {
+                          e.preventDefault();
+                          setSel({ ...sel, r2: r, c2: c });
+                          return;
+                        }
+                        isDragging.current = true;
+                        setSel({ r1: r, c1: c, r2: r, c2: c });
+                        setActiveCell([r, c]);
+                        inputRefs.current[r]?.[c]?.focus();
+                      }}
+                      onMouseEnter={() => {
+                        if (isDragging.current) {
+                          setSel((s) => s ? { ...s, r2: r, c2: c } : null);
+                        }
+                      }}
+                    >
                       <input
                         ref={(el) => {
                           if (!inputRefs.current[r]) inputRefs.current[r] = [];
@@ -1000,14 +1082,18 @@ function SpreadsheetEditor({
                         onChange={(e) => setCell(r, c, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, r, c)}
                         onPaste={(e) => handlePaste(e, r, c)}
-                        onFocus={() => setActiveCell([r, c])}
+                        onFocus={() => {
+                          setActiveCell([r, c]);
+                          if (!isDragging.current) setSel({ r1: r, c1: c, r2: r, c2: c });
+                        }}
                         style={{
                           fontWeight: fmt.b ? "bold" : "normal",
                           fontStyle: fmt.i ? "italic" : "normal",
                           textAlign: fmt.a === "c" ? "center" : fmt.a === "r" ? "right" : "left",
                           width: "100%",
+                          userSelect: "text",
                         }}
-                        className="px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none focus:bg-brand/5"
+                        className="px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none"
                       />
                     </td>
                   );
