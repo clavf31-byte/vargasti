@@ -97,6 +97,8 @@ function EditarOrcamentoPage() {
     setError(null);
     setMessage(null);
 
+    const aprovandoAgora = formData.status_enum === "aprovado" && orcamento?.status_enum !== "aprovado";
+
     try {
       await saveItens(id);
 
@@ -104,6 +106,7 @@ function EditarOrcamentoPage() {
         .from("orcamentos")
         .update({
           cliente_id: formData.cliente_id,
+          status: formData.status_enum,
           status_enum: formData.status_enum,
           desconto: formData.desconto,
           impostos: formData.impostos,
@@ -115,6 +118,28 @@ function EditarOrcamentoPage() {
         .eq("user_id", user!.id);
 
       if (err) throw err;
+
+      // Cria pagamento pendente ao aprovar (fallback frontend; trigger no banco também faz isso)
+      if (aprovandoAgora) {
+        try {
+          const { data: existing } = await supabase
+            .from("pagamentos")
+            .select("id")
+            .eq("orcamento_id", id)
+            .maybeSingle();
+
+          if (!existing) {
+            await supabase.from("pagamentos").insert({
+              orcamento_id: id,
+              user_id: user!.id,
+              valor: totalFinal,
+              status: "pendente",
+              data_pagamento: new Date().toISOString().split("T")[0],
+              referencia: orcamento!.numero_formatado,
+            });
+          }
+        } catch (_) {}
+      }
 
       setMessage("Orçamento atualizado com sucesso!");
       setTimeout(() => navigate({ to: `/crm/orcamentos/${id}` }), 1200);

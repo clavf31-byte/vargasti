@@ -55,8 +55,8 @@ export async function aprovarOrcamento(
     if (error) throw new Error(error.message || JSON.stringify(error));
     if (!ok) throw new Error("Orçamento não encontrado ou já processado");
 
-    // Notificação fire-and-forget — não bloqueia nem falha a aprovação
-    obterOrcamentoPorToken(token).then((orc) => {
+    // Notificação + pagamento pendente — fire-and-forget
+    obterOrcamentoPorToken(token).then(async (orc) => {
       if (!orc) return;
       sendApprovalNotification({
         data: {
@@ -66,6 +66,25 @@ export async function aprovarOrcamento(
           aprovado: true,
         },
       }).catch(() => {});
+
+      // Cria pagamento pendente se ainda não existe
+      try {
+        const { data: existing } = await supabase
+          .from("pagamentos")
+          .select("id")
+          .eq("orcamento_id", orc.id)
+          .maybeSingle();
+        if (!existing) {
+          await supabase.from("pagamentos").insert({
+            orcamento_id: orc.id,
+            user_id: orc.user_id,
+            valor: orc.total,
+            status: "pendente",
+            data_pagamento: new Date().toISOString().split("T")[0],
+            referencia: orc.numero_formatado,
+          });
+        }
+      } catch (_) {}
     }).catch(() => {});
 
     return { success: true };
