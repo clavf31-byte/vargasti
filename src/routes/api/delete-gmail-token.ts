@@ -5,22 +5,16 @@ export const Route = createFileRoute("/api/delete-gmail-token")({
     handlers: {
       POST: async ({ request }: { request: Request }) => {
         try {
-          // Security: Verify admin access
           const authHeader = request.headers.get("authorization");
           if (!authHeader?.startsWith("Bearer ")) {
-            return new Response("Unauthorized", { status: 403, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
           }
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const token = authHeader.replace("Bearer ", "");
           const { data, error } = await supabaseAdmin.auth.getClaims(token);
           if (error || !data?.claims?.sub) {
-            return new Response("Unauthorized", { status: 403, headers: { "Content-Type": "application/json" } });
-          }
-
-          const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(data.claims.sub);
-          if (userError || !userData?.user || userData.user.app_metadata?.role !== "admin") {
-            return new Response("Unauthorized", { status: 403, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
           }
 
           const supabaseUrl = process.env.SUPABASE_URL;
