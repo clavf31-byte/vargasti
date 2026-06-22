@@ -8,6 +8,7 @@ import {
   Plus, Trash2, FileText, Search, Tag,
   Lock, Eye, EyeOff, ShieldAlert, ShieldCheck,
   LayoutList, LayoutGrid, Table2, ChevronDown,
+  AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
@@ -95,16 +96,28 @@ function setNoteTypeInTags(tags: string, type: NoteType): string {
   return t;
 }
 
-type GridData = string[][];
+type CellFmt = { b?: boolean; i?: boolean; a?: "l" | "c" | "r" };
 
-function parseGrid(content: string, cols = 6, rows = 10): GridData {
+type SheetData = {
+  v: 2;
+  rows: string[][];
+  fmt: Record<string, CellFmt>;
+  cw: number[];
+};
+
+function emptySheet(cols = 6, rows = 10): SheetData {
+  return { v: 2, rows: Array.from({ length: rows }, () => Array(cols).fill("")), fmt: {}, cw: Array(cols).fill(120) };
+}
+
+function parseSheet(content: string): SheetData {
   try {
     const parsed = JSON.parse(content);
+    if (parsed && parsed.v === 2) return parsed as SheetData;
     if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
-      return parsed as GridData;
+      return { v: 2, rows: parsed as string[][], fmt: {}, cw: Array((parsed[0] as string[]).length).fill(120) };
     }
   } catch {}
-  return Array.from({ length: rows }, () => Array(cols).fill(""));
+  return emptySheet();
 }
 
 // ── component ─────────────────────────────────────────────────────────────────
@@ -178,9 +191,7 @@ function NotesPage() {
 
   async function createNote(type: NoteType) {
     setShowNewMenu(false);
-    const initialContent = type === "planilha"
-      ? JSON.stringify(Array.from({ length: 10 }, () => Array(6).fill("")))
-      : "";
+    const initialContent = type === "planilha" ? JSON.stringify(emptySheet()) : "";
     const initialTags = type === "planilha" ? "__type:planilha" : "";
     const { data, error } = await supabase.from("notes")
       .insert({
@@ -292,15 +303,14 @@ function NotesPage() {
       if (newType === "planilha") {
         // só inicializa grid se ainda não é planilha
         if (getNoteType(currentNote?.tags ?? "") !== "planilha") {
-          const emptyGrid: GridData = Array.from({ length: 10 }, () => Array(6).fill(""));
-          updates.content = JSON.stringify(emptyGrid);
+          updates.content = JSON.stringify(emptySheet());
           setContent(updates.content);
         }
       } else {
         // voltando para texto: limpa o JSON do grid
         try {
           const p = JSON.parse(content);
-          if (Array.isArray(p) && Array.isArray(p[0])) {
+          if ((Array.isArray(p) && Array.isArray(p[0])) || (p && p.v === 2)) {
             updates.content = "";
             setContent("");
           }
@@ -785,32 +795,35 @@ function SpreadsheetEditor({
   content: string;
   onChange: (val: string) => void;
 }) {
-  const [grid, setGrid] = useState<GridData>(() => parseGrid(content));
+  const [sheet, setSheet] = useState<SheetData>(() => parseSheet(content));
   const inputRefs = useRef<(HTMLInputElement | null)[][]>([]);
+  const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
+  const resizingRef = useRef<{ col: number; startX: number; startW: number } | null>(null);
+  const sheetRef = useRef(sheet);
+  useEffect(() => { sheetRef.current = sheet; }, [sheet]);
+
+  function commit(next: SheetData) {
+    setSheet(next);
+    onChange(JSON.stringify(next));
+  }
 
   function setCell(r: number, c: number, val: string) {
-    setGrid((prev) => {
-      const next = prev.map((row) => [...row]);
-      next[r][c] = val;
-      onChange(JSON.stringify(next));
-      return next;
-    });
+    const rows = sheet.rows.map((row, ri) =>
+      ri === r ? row.map((cell, ci) => (ci === c ? val : cell)) : [...row]
+    );
+    commit({ ...sheet, rows });
   }
 
   function addRow() {
-    setGrid((prev) => {
-      const cols = prev[0]?.length ?? 6;
-      const next = [...prev, Array(cols).fill("")];
-      onChange(JSON.stringify(next));
-      return next;
-    });
+    const cols = sheet.rows[0]?.length ?? 6;
+    commit({ ...sheet, rows: [...sheet.rows, Array(cols).fill("")] });
   }
 
   function addCol() {
-    setGrid((prev) => {
-      const next = prev.map((row) => [...row, ""]);
-      onChange(JSON.stringify(next));
-      return next;
+    commit({
+      ...sheet,
+      rows: sheet.rows.map((row) => [...row, ""]),
+      cw: [...sheet.cw, 120],
     });
   }
 
@@ -821,108 +834,188 @@ function SpreadsheetEditor({
       .filter((line, i, arr) => !(i === arr.length - 1 && line === ""))
       .map((line) => line.split("\t"));
 
-    if (pastedRows.length === 1 && pastedRows[0].length === 1) return; // colar texto simples normalmente
+    if (pastedRows.length === 1 && pastedRows[0].length === 1) return;
 
     e.preventDefault();
-    setGrid((prev) => {
-      const next = prev.map((row) => [...row]);
-      const neededRows = startR + pastedRows.length;
-      const neededCols = startC + Math.max(...pastedRows.map((row) => row.length));
+    const rows = sheet.rows.map((row) => [...row]);
+    const cw = [...sheet.cw];
+    const neededRows = startR + pastedRows.length;
+    const neededCols = startC + Math.max(...pastedRows.map((r) => r.length));
 
-      while (next.length < neededRows) {
-        next.push(Array(next[0]?.length ?? 6).fill(""));
-      }
-      if (neededCols > (next[0]?.length ?? 0)) {
-        for (let i = 0; i < next.length; i++) {
-          while (next[i].length < neededCols) next[i].push("");
-        }
-      }
+    while (rows.length < neededRows) rows.push(Array(rows[0]?.length ?? 6).fill(""));
+    if (neededCols > (rows[0]?.length ?? 0)) {
+      for (let i = 0; i < rows.length; i++) while (rows[i].length < neededCols) rows[i].push("");
+      while (cw.length < neededCols) cw.push(120);
+    }
+    for (let pr = 0; pr < pastedRows.length; pr++)
+      for (let pc = 0; pc < pastedRows[pr].length; pc++)
+        rows[startR + pr][startC + pc] = pastedRows[pr][pc];
 
-      for (let pr = 0; pr < pastedRows.length; pr++) {
-        for (let pc = 0; pc < pastedRows[pr].length; pc++) {
-          next[startR + pr][startC + pc] = pastedRows[pr][pc];
-        }
-      }
-
-      onChange(JSON.stringify(next));
-      return next;
-    });
+    commit({ ...sheet, rows, cw });
   }
 
   function handleKeyDown(e: React.KeyboardEvent, r: number, c: number) {
-    const cols = grid[0]?.length ?? 6;
+    const cols = sheet.rows[0]?.length ?? 6;
+    if (e.ctrlKey && e.key === "b") { e.preventDefault(); toggleFmt("b"); return; }
+    if (e.ctrlKey && e.key === "i") { e.preventDefault(); toggleFmt("i"); return; }
     if (e.key === "Tab") {
       e.preventDefault();
-      if (c + 1 < cols) {
-        inputRefs.current[r]?.[c + 1]?.focus();
-      } else if (r + 1 < grid.length) {
-        inputRefs.current[r + 1]?.[0]?.focus();
-      }
+      if (c + 1 < cols) inputRefs.current[r]?.[c + 1]?.focus();
+      else if (r + 1 < sheet.rows.length) inputRefs.current[r + 1]?.[0]?.focus();
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (r + 1 < grid.length) inputRefs.current[r + 1]?.[c]?.focus();
+      if (r + 1 < sheet.rows.length) inputRefs.current[r + 1]?.[c]?.focus();
     } else if (e.key === "ArrowUp" && r > 0) {
-      e.preventDefault();
-      inputRefs.current[r - 1]?.[c]?.focus();
-    } else if (e.key === "ArrowDown" && r + 1 < grid.length) {
-      e.preventDefault();
-      inputRefs.current[r + 1]?.[c]?.focus();
+      e.preventDefault(); inputRefs.current[r - 1]?.[c]?.focus();
+    } else if (e.key === "ArrowDown" && r + 1 < sheet.rows.length) {
+      e.preventDefault(); inputRefs.current[r + 1]?.[c]?.focus();
     }
   }
 
-  const colLetters = (grid[0]?.length ?? 0);
+  // Formatting
+  const getFmt = (r: number, c: number): CellFmt => sheet.fmt[`${r},${c}`] ?? {};
+  const activeFmt = activeCell ? getFmt(activeCell[0], activeCell[1]) : {};
+
+  function toggleFmt(key: "b" | "i") {
+    if (!activeCell) return;
+    const [r, c] = activeCell;
+    const k = `${r},${c}`;
+    const prev = sheet.fmt[k] ?? {};
+    commit({ ...sheet, fmt: { ...sheet.fmt, [k]: { ...prev, [key]: !prev[key] } } });
+  }
+
+  function setAlign(a: "l" | "c" | "r") {
+    if (!activeCell) return;
+    const [r, c] = activeCell;
+    const k = `${r},${c}`;
+    const prev = sheet.fmt[k] ?? {};
+    commit({ ...sheet, fmt: { ...sheet.fmt, [k]: { ...prev, a: prev.a === a ? undefined : a } } });
+  }
+
+  // Column resize
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      const rs = resizingRef.current;
+      if (!rs) return;
+      const newW = Math.max(50, rs.startW + e.clientX - rs.startX);
+      setSheet((prev) => {
+        const cw = [...prev.cw];
+        cw[rs.col] = newW;
+        return { ...prev, cw };
+      });
+    }
+    function onUp() {
+      if (!resizingRef.current) return;
+      resizingRef.current = null;
+      onChange(JSON.stringify(sheetRef.current));
+    }
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, [onChange]);
+
+  const numCols = sheet.rows[0]?.length ?? 6;
+
+  const btnCls = (active: boolean) =>
+    `px-2 py-1 rounded text-[11px] font-bold border transition-colors flex items-center justify-center ${
+      active
+        ? "bg-brand text-white border-brand"
+        : "text-muted-foreground border-border hover:border-brand/40 disabled:opacity-30"
+    }`;
 
   return (
-    <div className="flex-1 overflow-auto p-2">
-      <table className="border-collapse text-xs">
-        <thead>
-          <tr>
-            <th className="w-8 min-w-[2rem] bg-secondary/40 border border-border/60" />
-            {Array.from({ length: colLetters }, (_, c) => (
-              <th key={c} className="min-w-[100px] bg-secondary/40 border border-border/60 px-2 py-1 text-[9px] font-semibold text-muted-foreground text-center">
-                {String.fromCharCode(65 + c)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {grid.map((row, r) => (
-            <tr key={r}>
-              <td className="bg-secondary/20 border border-border/60 text-[9px] text-muted-foreground text-center w-8 select-none">
-                {r + 1}
-              </td>
-              {row.map((cell, c) => (
-                <td key={c} className="border border-border/60 p-0">
-                  <input
-                    ref={(el) => {
-                      if (!inputRefs.current[r]) inputRefs.current[r] = [];
-                      inputRefs.current[r][c] = el;
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/60 bg-secondary/20 shrink-0">
+        <button onClick={() => toggleFmt("b")} disabled={!activeCell} className={btnCls(!!activeFmt.b)} title="Negrito (Ctrl+B)">
+          <span className="font-black text-[12px]">B</span>
+        </button>
+        <button onClick={() => toggleFmt("i")} disabled={!activeCell} className={btnCls(!!activeFmt.i)} title="Itálico (Ctrl+I)">
+          <span className="italic text-[12px]">I</span>
+        </button>
+        <div className="w-px h-4 bg-border mx-0.5" />
+        <button onClick={() => setAlign("l")} disabled={!activeCell} className={btnCls(activeFmt.a === "l")} title="Alinhar à esquerda">
+          <AlignLeft className="size-3.5" />
+        </button>
+        <button onClick={() => setAlign("c")} disabled={!activeCell} className={btnCls(activeFmt.a === "c")} title="Centralizar">
+          <AlignCenter className="size-3.5" />
+        </button>
+        <button onClick={() => setAlign("r")} disabled={!activeCell} className={btnCls(activeFmt.a === "r")} title="Alinhar à direita">
+          <AlignRight className="size-3.5" />
+        </button>
+        <div className="ml-auto flex gap-1.5">
+          <button onClick={addRow} className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2 py-1 transition-colors hover:bg-surface-2">
+            + Linha
+          </button>
+          <button onClick={addCol} className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2 py-1 transition-colors hover:bg-surface-2">
+            + Coluna
+          </button>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="flex-1 overflow-auto p-2">
+        <table className="border-collapse text-xs" style={{ tableLayout: "fixed" }}>
+          <thead>
+            <tr>
+              <th className="w-8 bg-secondary/40 border border-border/60" />
+              {Array.from({ length: numCols }, (_, c) => (
+                <th
+                  key={c}
+                  className="relative bg-secondary/40 border border-border/60 px-2 py-1 text-[9px] font-semibold text-muted-foreground text-center select-none overflow-hidden"
+                  style={{ width: sheet.cw[c] ?? 120 }}
+                >
+                  {String.fromCharCode(65 + c)}
+                  <span
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      resizingRef.current = { col: c, startX: e.clientX, startW: sheet.cw[c] ?? 120 };
                     }}
-                    value={cell}
-                    onChange={(e) => setCell(r, c, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, r, c)}
-                    onPaste={(e) => handlePaste(e, r, c)}
-                    className="w-full px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none focus:bg-brand/5 min-w-[100px]"
+                    className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-brand/30"
                   />
-                </td>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="flex gap-2 mt-3 pl-8">
-        <button
-          onClick={addRow}
-          className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2.5 py-1 transition-colors hover:bg-surface-2"
-        >
-          + Linha
-        </button>
-        <button
-          onClick={addCol}
-          className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2.5 py-1 transition-colors hover:bg-surface-2"
-        >
-          + Coluna
-        </button>
+          </thead>
+          <tbody>
+            {sheet.rows.map((row, r) => (
+              <tr key={r}>
+                <td className="bg-secondary/20 border border-border/60 text-[9px] text-muted-foreground text-center w-8 select-none">
+                  {r + 1}
+                </td>
+                {row.map((cell, c) => {
+                  const fmt = getFmt(r, c);
+                  const isActive = activeCell?.[0] === r && activeCell?.[1] === c;
+                  return (
+                    <td key={c} className={`border border-border/60 p-0 ${isActive ? "outline outline-1 outline-brand/60 outline-offset-[-1px]" : ""}`}>
+                      <input
+                        ref={(el) => {
+                          if (!inputRefs.current[r]) inputRefs.current[r] = [];
+                          inputRefs.current[r][c] = el;
+                        }}
+                        value={cell}
+                        onChange={(e) => setCell(r, c, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, r, c)}
+                        onPaste={(e) => handlePaste(e, r, c)}
+                        onFocus={() => setActiveCell([r, c])}
+                        style={{
+                          fontWeight: fmt.b ? "bold" : "normal",
+                          fontStyle: fmt.i ? "italic" : "normal",
+                          textAlign: fmt.a === "c" ? "center" : fmt.a === "r" ? "right" : "left",
+                          width: "100%",
+                        }}
+                        className="px-2 py-1 text-xs text-foreground bg-transparent focus:outline-none focus:bg-brand/5"
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
