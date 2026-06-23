@@ -569,23 +569,36 @@ async function isEmailWhitelisted(emailFrom: string, client?: EmailDbClient): Pr
 async function isEmailBlacklisted(emailFrom: string, client?: EmailDbClient): Promise<boolean> {
   try {
     const supabase = await getEmailDbClient(client);
-    const { data: emailSettings } = await (supabase as any).rpc("load_email_settings");
 
-    if (!emailSettings || emailSettings.length === 0) return false;
+    // Tenta via RPC primeiro, com fallback direto na tabela
+    let blacklist: Array<{ email?: string; domain?: string }> = [];
 
-    const blacklist = emailSettings[0].blacklist || [];
+    const { data: rpcData } = await (supabase as any).rpc("load_email_settings");
+    if (rpcData && rpcData.length > 0 && rpcData[0].blacklist?.length > 0) {
+      blacklist = rpcData[0].blacklist;
+    } else {
+      // Fallback: leitura direta da tabela
+      const { data: direct } = await (supabase as any)
+        .from("email_settings")
+        .select("blacklist")
+        .eq("id", "00000000-0000-0000-0000-000000000000")
+        .single();
+      if (direct?.blacklist?.length > 0) blacklist = direct.blacklist;
+    }
+
     if (blacklist.length === 0) return false;
 
     const emailLower = emailFrom.toLowerCase();
-    const [emailPart, domainPart] = emailLower.split("@");
+    // Extrai a parte antes de < se vier no formato "Nome <email>"
+    const match = emailLower.match(/<([^>]+)>/);
+    const cleanEmail = match ? match[1] : emailLower;
+    const domainPart = cleanEmail.split("@")[1] ?? "";
 
     for (const entry of blacklist) {
-      // Check exact email match
-      if (entry.email && entry.email.toLowerCase() === emailLower) {
+      if (entry.email && entry.email.toLowerCase() === cleanEmail) {
         console.log("[email-pipeline] Email blocked by blacklist:", emailFrom);
         return true;
       }
-      // Check domain match
       if (entry.domain && domainPart && entry.domain.toLowerCase() === domainPart) {
         console.log("[email-pipeline] Domain blocked by blacklist:", domainPart);
         return true;
