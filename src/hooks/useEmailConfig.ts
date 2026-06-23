@@ -80,10 +80,10 @@ export function useEmailConfig() {
           else setPriorities(DEFAULT_PRIORITIES);
 
           if (result.blacklist?.length > 0) setBlacklist(result.blacklist);
-        } else {
-          // RPC returned empty, check localStorage
-          const savedBL = localStorage.getItem("email_blacklist");
-          if (savedBL) setBlacklist(JSON.parse(savedBL));
+          else {
+            const savedBL = localStorage.getItem("email_blacklist");
+            if (savedBL) setBlacklist(JSON.parse(savedBL));
+          }
         }
       } catch (err) {
         console.error("[useEmailConfig] Error loading from Supabase:", err);
@@ -150,7 +150,7 @@ export function useEmailConfig() {
     }
   };
 
-  const saveBlacklist = async (newBlacklist: EmailBlacklist[]) => {
+  const saveBlacklist = async (newBlacklist: EmailBlacklist[]): Promise<boolean> => {
     setBlacklist(newBlacklist);
     try {
       const { data, error } = await supabase.rpc("save_email_settings", {
@@ -158,10 +158,12 @@ export function useEmailConfig() {
       });
 
       if (error) throw error;
-      console.log("[useEmailConfig] Blacklist saved:", data);
+      localStorage.removeItem("email_blacklist");
+      return true;
     } catch (err) {
-      console.error("[useEmailConfig] Error saving blacklist:", err);
+      console.error("[useEmailConfig] Error saving blacklist to Supabase, using localStorage:", err);
       localStorage.setItem("email_blacklist", JSON.stringify(newBlacklist));
+      return false;
     }
   };
 
