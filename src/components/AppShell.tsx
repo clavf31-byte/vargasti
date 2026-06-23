@@ -4,7 +4,7 @@ import {
   Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText, ClipboardList, Headphones,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import client from "@/config/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,14 +125,25 @@ export function AppShell({ children }: { children?: ReactNode }) {
     .map((seg) => ROUTE_LABELS[seg] ?? seg)
     .filter(Boolean);
 
+  const isItemActive = (to: string) => to === "/" ? pathname === "/dashboard" : pathname.startsWith(to);
+
+  // Auto-abre o grupo que contém a rota ativa
+  useEffect(() => {
+    const allMods = [...NAV_MODULES, ...NAV_ADMIN];
+    for (const { group, items } of allMods) {
+      if (items.some((item) => isItemActive(item.to))) {
+        setExpandedGroups((prev) => prev[group] ? prev : { ...prev, [group]: true });
+        return;
+      }
+    }
+  }, [pathname]);
+
   const toggleGroup = (group: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [group]: !prev[group],
     }));
   };
-
-  const isItemActive = (to: string) => to === "/" ? pathname === "/dashboard" : pathname.startsWith(to);
 
   return (
     <div className="min-h-screen flex" style={{

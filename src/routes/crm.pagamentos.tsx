@@ -1,12 +1,12 @@
 import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Card, StatCard } from "@/components/ui";
 import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Search, Trash2, Banknote, CheckCircle2, Clock } from "lucide-react";
+import { Search, Trash2, Banknote, CheckCircle2, Clock, X } from "lucide-react";
 
 export const Route = createFileRoute("/crm/pagamentos")({
   head: () => ({ meta: [{ title: `Pagamentos · CRM ${client.name}` }] }),
@@ -42,6 +42,74 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function ModalPagamento({ pag, onClose, onConfirm }: {
+  pag: Pagamento;
+  onClose: () => void;
+  onConfirm: (valorPago: number) => Promise<void>;
+}) {
+  const [valorPago, setValorPago] = useState(pag.valor.toFixed(2));
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const parsed = parseFloat(valorPago) || 0;
+  const saldo = Math.max(0, pag.valor - parsed);
+
+  useEffect(() => { inputRef.current?.focus(); inputRef.current?.select(); }, []);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: borderRadius.lg, padding: spacing.xl, width: "100%", maxWidth: "400px", boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.lg }}>
+          <h3 style={{ margin: 0, color: colors.text, fontSize: "16px", fontWeight: 700 }}>Registrar Pagamento</h3>
+          <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: colors.textSecondary, cursor: "pointer" }}><X size={18} /></button>
+        </div>
+
+        <div style={{ marginBottom: spacing.lg, padding: spacing.md, background: colors.background, borderRadius: borderRadius.md }}>
+          <div style={{ fontSize: "12px", color: colors.textSecondary }}>Referência</div>
+          <div style={{ fontSize: "14px", color: colors.text, fontWeight: 600 }}>{pag.referencia || "—"}</div>
+          <div style={{ fontSize: "12px", color: colors.textSecondary, marginTop: spacing.xs }}>Valor total</div>
+          <div style={{ fontSize: "20px", color: colors.primary, fontWeight: 700 }}>R$ {pag.valor.toFixed(2)}</div>
+        </div>
+
+        <div style={{ marginBottom: spacing.md }}>
+          <label style={{ display: "block", fontSize: "13px", color: colors.textSecondary, marginBottom: spacing.sm, fontWeight: 600 }}>Valor pago</label>
+          <input
+            ref={inputRef}
+            type="number"
+            step="0.01"
+            min="0.01"
+            max={pag.valor}
+            value={valorPago}
+            onChange={(e) => setValorPago(e.target.value)}
+            style={{ width: "100%", padding: spacing.md, background: colors.background, border: `1px solid ${colors.border}`, borderRadius: borderRadius.md, color: colors.text, fontSize: "16px", fontWeight: 700, boxSizing: "border-box" as const }}
+          />
+        </div>
+
+        {saldo > 0.009 && (
+          <div style={{ marginBottom: spacing.lg, padding: spacing.md, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: borderRadius.md }}>
+            <div style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600 }}>Saldo restante a quitar</div>
+            <div style={{ fontSize: "18px", color: "#f59e0b", fontWeight: 700 }}>R$ {saldo.toFixed(2)}</div>
+            <div style={{ fontSize: "11px", color: colors.textSecondary, marginTop: 4 }}>Um novo registro pendente será criado pelo saldo.</div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: spacing.md }}>
+          <button type="button" onClick={onClose} style={{ flex: 1, padding: spacing.md, background: colors.background, border: `1px solid ${colors.border}`, borderRadius: borderRadius.md, color: colors.text, cursor: "pointer", fontSize: "14px" }}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={saving || parsed <= 0}
+            onClick={async () => { setSaving(true); await onConfirm(parsed); }}
+            style={{ flex: 1, padding: spacing.md, background: colors.primary, border: "none", borderRadius: borderRadius.md, color: "#000", cursor: "pointer", fontSize: "14px", fontWeight: 700, opacity: saving || parsed <= 0 ? 0.6 : 1 }}
+          >
+            {saving ? "Salvando..." : "Confirmar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PagamentosPage() {
   const { user } = useAuth();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
@@ -49,6 +117,7 @@ function PagamentosPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [modalPag, setModalPag] = useState<Pagamento | null>(null);
 
   const loadPagamentos = async () => {
     if (!user) return;
@@ -78,11 +147,27 @@ function PagamentosPage() {
     setFiltrados(r);
   }, [pagamentos, searchTerm, statusFilter]);
 
-  async function handleMarcarPago(pag: Pagamento) {
+  async function confirmarPagamento(pag: Pagamento, valorPago: number) {
+    const hoje = new Date().toISOString().split("T")[0];
+    const saldo = Math.round((pag.valor - valorPago) * 100) / 100;
+
+    // Atualiza pagamento atual com valor pago efetivo
     await supabase
       .from("pagamentos")
-      .update({ status: "pago", data_pagamento: new Date().toISOString().split("T")[0] })
+      .update({ status: "pago", valor: valorPago, data_pagamento: hoje })
       .eq("id", pag.id);
+
+    // Cria registro pendente pelo saldo, se houver
+    if (saldo > 0.009) {
+      await (supabase as any).from("pagamentos").insert({
+        orcamento_id: pag.orcamento_id,
+        user_id: user!.id,
+        valor: saldo,
+        status: "pendente",
+        data_pagamento: hoje,
+        referencia: pag.referencia ? `${pag.referencia} (saldo)` : null,
+      });
+    }
 
     // Criar OS automaticamente se ainda não existir
     const { data: existingOS } = await (supabase as any)
@@ -114,11 +199,12 @@ function PagamentosPage() {
           descricao: (orc as any).notas ?? (orc as any).numero_formatado,
           status: "aberta",
           prioridade: "normal",
-          data_inicio: new Date().toISOString().split("T")[0],
+          data_inicio: hoje,
         });
       }
     }
 
+    setModalPag(null);
     loadPagamentos();
   }
 
@@ -232,7 +318,7 @@ function PagamentosPage() {
                         <div style={{ display: "flex", gap: spacing.sm, justifyContent: "center" }}>
                           {(pag.status === "pendente") && (
                             <button
-                              onClick={() => handleMarcarPago(pag)}
+                              onClick={() => setModalPag(pag)}
                               style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.4)", color: "#22c55e", padding: `${spacing.sm} ${spacing.md}`, borderRadius: borderRadius.sm, cursor: "pointer", fontSize: "12px", display: "flex", gap: "4px", alignItems: "center", fontWeight: 600 }}
                             >
                               <CheckCircle2 size={13} /> Marcar pago
@@ -254,6 +340,13 @@ function PagamentosPage() {
           </Card>
         )}
       </div>
+      {modalPag && (
+        <ModalPagamento
+          pag={modalPag}
+          onClose={() => setModalPag(null)}
+          onConfirm={(valor) => confirmarPagamento(modalPag, valor)}
+        />
+      )}
     </AppShell>
   );
 }
