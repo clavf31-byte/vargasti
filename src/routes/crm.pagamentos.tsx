@@ -57,7 +57,7 @@ function ModalPagamento({ pag, onClose, onConfirm }: {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: borderRadius.lg, padding: spacing.xl, width: "100%", maxWidth: "400px", boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+      <div style={{ background: colors.backgroundSecondary, border: `1px solid ${colors.border}`, borderRadius: borderRadius.lg, padding: spacing.xl, width: "100%", maxWidth: "400px", boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.lg }}>
           <h3 style={{ margin: 0, color: colors.text, fontSize: "16px", fontWeight: 700 }}>Registrar Pagamento</h3>
           <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: colors.textSecondary, cursor: "pointer" }}><X size={18} /></button>
