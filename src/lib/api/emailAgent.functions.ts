@@ -123,6 +123,7 @@ export const getGmailAuthUrl = createServerFn({ method: "POST" })
     if (!userId) throw new Error("Unauthorized: No user context");
     const { clientId, redirectUri } = getGmailOAuthConfig();
     const state = await signGmailState(userId);
+    const loginHint = process.env.GMAIL_LOGIN_HINT;
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -131,6 +132,7 @@ export const getGmailAuthUrl = createServerFn({ method: "POST" })
       scope: "https://www.googleapis.com/auth/gmail.modify",
       prompt: "consent",
       state,
+      ...(loginHint ? { login_hint: loginHint } : {}),
     });
     const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
     return { url };
