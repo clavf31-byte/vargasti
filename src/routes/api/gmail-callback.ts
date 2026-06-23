@@ -49,9 +49,9 @@ export const Route = createFileRoute("/api/gmail-callback")({
 
         const clientId = process.env.GMAIL_CLIENT_ID;
         const clientSecret = process.env.GMAIL_CLIENT_SECRET;
-        const redirectUri = process.env.GMAIL_REDIRECT_URI;
+        const redirectUri = process.env.GMAIL_REDIRECT_URI ?? "https://www.vargasti.com.br/api/gmail-callback";
 
-        if (!clientId || !clientSecret || !redirectUri) {
+        if (!clientId || !clientSecret) {
           return new Response("Gmail OAuth credentials not configured", { status: 500 });
         }
 

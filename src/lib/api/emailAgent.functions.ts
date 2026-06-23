@@ -25,7 +25,7 @@ function getServerSigningSecret() {
 function getGmailOAuthConfig() {
   const clientId = process.env.GMAIL_CLIENT_ID;
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
-  const redirectUri = (process.env.GMAIL_REDIRECT_URI ?? "http://localhost:3000/api/gmail-callback").trim();
+  const redirectUri = (process.env.GMAIL_REDIRECT_URI ?? "https://www.vargasti.com.br/api/gmail-callback").trim();
 
   if (!clientId || !clientSecret) {
     throw new Error("Gmail credentials not configured");
