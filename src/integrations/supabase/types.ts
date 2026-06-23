@@ -496,6 +496,7 @@ export type Database = {
       }
       email_settings: {
         Row: {
+          blacklist: Json
           categories: Json
           created_at: string
           id: string
@@ -504,6 +505,7 @@ export type Database = {
           whitelist: Json
         }
         Insert: {
+          blacklist?: Json
           categories?: Json
           created_at?: string
           id?: string
@@ -512,6 +514,7 @@ export type Database = {
           whitelist?: Json
         }
         Update: {
+          blacklist?: Json
           categories?: Json
           created_at?: string
           id?: string
@@ -1694,9 +1697,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      load_email_settings: {
+        Args: never
+        Returns: {
+          blacklist: Json
+          categories: Json
+          priorities: Json
+          whitelist: Json
+        }[]
+      }
       reject_orcamento_by_token: {
         Args: { _motivo: string; _token: string }
         Returns: boolean
+      }
+      save_email_settings: {
+        Args: {
+          p_blacklist?: Json
+          p_categories?: Json
+          p_priorities?: Json
+          p_whitelist?: Json
+        }
+        Returns: {
+          message: string
+          success: boolean
+        }[]
       }
     }
     Enums: {
