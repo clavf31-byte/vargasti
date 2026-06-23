@@ -78,11 +78,47 @@ function PagamentosPage() {
     setFiltrados(r);
   }, [pagamentos, searchTerm, statusFilter]);
 
-  async function handleMarcarPago(id: string) {
+  async function handleMarcarPago(pag: Pagamento) {
     await supabase
       .from("pagamentos")
       .update({ status: "pago", data_pagamento: new Date().toISOString().split("T")[0] })
-      .eq("id", id);
+      .eq("id", pag.id);
+
+    // Criar OS automaticamente se ainda não existir
+    const { data: existingOS } = await (supabase as any)
+      .from("ordens_servico")
+      .select("id")
+      .eq("orcamento_id", pag.orcamento_id)
+      .maybeSingle();
+
+    if (!existingOS) {
+      const { data: orc } = await supabase
+        .from("orcamentos")
+        .select("cliente_id, notas, numero_formatado")
+        .eq("id", pag.orcamento_id)
+        .single();
+
+      if (orc) {
+        const year = new Date().getFullYear();
+        const { count } = await (supabase as any)
+          .from("ordens_servico")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user!.id);
+        const seq = String((count ?? 0) + 1).padStart(6, "0");
+
+        await (supabase as any).from("ordens_servico").insert({
+          user_id: user!.id,
+          cliente_id: (orc as any).cliente_id,
+          orcamento_id: pag.orcamento_id,
+          numero_formatado: `OS-${year}-${seq}`,
+          descricao: (orc as any).notas ?? (orc as any).numero_formatado,
+          status: "aberta",
+          prioridade: "normal",
+          data_inicio: new Date().toISOString().split("T")[0],
+        });
+      }
+    }
+
     loadPagamentos();
   }
 
@@ -196,7 +232,7 @@ function PagamentosPage() {
                         <div style={{ display: "flex", gap: spacing.sm, justifyContent: "center" }}>
                           {(pag.status === "pendente") && (
                             <button
-                              onClick={() => handleMarcarPago(pag.id)}
+                              onClick={() => handleMarcarPago(pag)}
                               style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.4)", color: "#22c55e", padding: `${spacing.sm} ${spacing.md}`, borderRadius: borderRadius.sm, cursor: "pointer", fontSize: "12px", display: "flex", gap: "4px", alignItems: "center", fontWeight: 600 }}
                             >
                               <CheckCircle2 size={13} /> Marcar pago
