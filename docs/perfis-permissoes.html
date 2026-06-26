@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfis e Permissões — VargasTI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 12px;
+      color: #1e293b;
+      background: #fff;
+      line-height: 1.5;
+    }
+
+    @page { size: A4 landscape; margin: 14mm; }
+
+    @media print {
+      .no-print { display: none; }
+      .page-break { page-break-before: always; }
+    }
+
+    /* CAPA */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 56px;
+      background: linear-gradient(135deg, #0f172a 0%, #0d2540 60%, #0f3460 100%);
+      color: #fff;
+      page-break-after: always;
+    }
+
+    .cover-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #22d3ee;
+      border: 1px solid #22d3ee44;
+      padding: 4px 12px;
+      border-radius: 100px;
+      display: inline-block;
+      margin-bottom: 32px;
+    }
+
+    .cover h1 {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 span { color: #22d3ee; }
+
+    .cover p {
+      font-size: 15px;
+      color: #94a3b8;
+      max-width: 520px;
+      margin-bottom: 48px;
+    }
+
+    .cover-meta { font-size: 11px; color: #64748b; }
+    .cover-meta strong { color: #cbd5e1; }
+
+    /* CONTEÚDO */
+    .doc { padding: 40px 32px; max-width: 100%; }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #22d3ee;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+
+    /* CHIPS DE PERFIL */
+    .profiles {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .profile-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 11px;
+    }
+
+    .chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .chip-role { font-weight: 700; }
+    .chip-desc { color: #64748b; font-size: 10px; }
+
+    .chip-admin        { color: #22d3ee; background: #22d3ee11; border-color: #22d3ee33; }
+    .chip-gestor       { color: #a78bfa; background: #a78bfa11; border-color: #a78bfa33; }
+    .chip-administrativo { color: #38bdf8; background: #38bdf811; border-color: #38bdf833; }
+    .chip-tecnico      { color: #fb923c; background: #fb923c11; border-color: #fb923c33; }
+    .chip-operador     { color: #94a3b8; background: #94a3b811; border-color: #94a3b833; }
+    .chip-cliente      { color: #34d399; background: #34d39911; border-color: #34d39933; }
+
+    .dot-admin         { background: #22d3ee; }
+    .dot-gestor        { background: #a78bfa; }
+    .dot-administrativo { background: #38bdf8; }
+    .dot-tecnico       { background: #fb923c; }
+    .dot-operador      { background: #94a3b8; }
+    .dot-cliente       { background: #34d399; }
+
+    /* TABELA */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-bottom: 32px;
+    }
+
+    thead tr th {
+      padding: 9px 10px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+
+    thead tr th:first-child { text-align: left; }
+
+    .th-admin        { background: #22d3ee22; color: #0e7490; }
+    .th-gestor       { background: #a78bfa22; color: #7c3aed; }
+    .th-administrativo { background: #38bdf822; color: #0284c7; }
+    .th-tecnico      { background: #fb923c22; color: #c2410c; }
+    .th-operador     { background: #94a3b822; color: #475569; }
+    .th-cliente      { background: #34d39922; color: #059669; }
+    .th-label        { background: #f1f5f9; color: #0f172a; }
+
+    .section-row td {
+      background: #0f172a;
+      color: #22d3ee;
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 7px 10px;
+    }
+
+    tbody tr:not(.section-row):nth-child(even) td { background: #f8fafc; }
+
+    tbody tr:not(.section-row) td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+
+    tbody tr:not(.section-row) td:first-child {
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .check { color: #16a34a; font-weight: 900; text-align: center; font-size: 13px; }
+    .dash  { color: #cbd5e1; text-align: center; font-size: 14px; }
+    .note  { font-size: 10px; color: #94a3b8; font-style: italic; }
+
+    /* NOTA RODAPÉ */
+    .footnote {
+      background: #f0fdff;
+      border-left: 4px solid #22d3ee;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      font-size: 11px;
+      color: #0e7490;
+      margin-bottom: 32px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 14px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #22d3ee;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(34,211,238,0.4);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-badge">Documentação Interna · Controle de Acesso</div>
+  <h1>Perfis e<br><span>Permissões</span></h1>
+  <p>Mapeamento completo de acessos por perfil de usuário no sistema de gestão VargasTI.</p>
+  <div class="cover-meta">
+    <div><strong>Sistema:</strong> VargasTI — Plataforma de Gestão</div>
+    <div><strong>Módulo:</strong> Controle de Acesso</div>
+    <div><strong>Data:</strong> <span id="docDate"></span></div>
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="doc">
+
+  <h2>Perfis de Acesso</h2>
+  <p class="subtitle">O sistema possui 6 perfis com permissões pré-definidas. O Admin pode personalizar individualmente cada usuário.</p>
+
+  <div class="profiles">
+    <div class="profile-chip chip-admin">
+      <div class="chip-dot dot-admin"></div>
+      <div><div class="chip-role">Administrador</div><div class="chip-desc">Acesso total irrestrito</div></div>
+    </div>
+    <div class="profile-chip chip-gestor">
+      <div class="chip-dot dot-gestor"></div>
+      <div><div class="chip-role">Gestor</div><div class="chip-desc">Gerência operacional e financeira</div></div>
+    </div>
+    <div class="profile-chip chip-administrativo">
+      <div class="chip-dot dot-administrativo"></div>
+      <div><div class="chip-role">Administrativo</div><div class="chip-desc">Clientes, orçamentos e contratos</div></div>
+    </div>
+    <div class="profile-chip chip-tecnico">
+      <div class="chip-dot dot-tecnico"></div>
+      <div><div class="chip-role">Técnico</div><div class="chip-desc">Chamados, agenda e ativos</div></div>
+    </div>
+    <div class="profile-chip chip-operador">
+      <div class="chip-dot dot-operador"></div>
+      <div><div class="chip-role">Operador</div><div class="chip-desc">Acesso básico operacional</div></div>
+    </div>
+    <div class="profile-chip chip-cliente">
+      <div class="chip-dot dot-cliente"></div>
+      <div><div class="chip-role">Cliente</div><div class="chip-desc">Portal do cliente (chamados e KB)</div></div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="th-label" style="width:28%">Permissão</th>
+        <th class="th-admin">Admin</th>
+        <th class="th-gestor">Gestor</th>
+        <th class="th-administrativo">Administrativo</th>
+        <th class="th-tecnico">Técnico</th>
+        <th class="th-operador">Operador</th>
+        <th class="th-cliente">Cliente</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- DASHBOARD -->
+      <tr class="section-row"><td colspan="7">Dashboard</td></tr>
+      <tr><td>Visualizar dashboard</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Ver indicadores financeiros</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver indicadores técnicos</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- CRM -->
+      <tr class="section-row"><td colspan="7">CRM — Clientes</td></tr>
+      <tr><td>Visualizar clientes</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td>Criar clientes</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Editar clientes</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Excluir clientes</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver histórico do cliente</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- ORÇAMENTOS -->
+      <tr class="section-row"><td colspan="7">Orçamentos</td></tr>
+      <tr><td>Visualizar orçamentos</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Criar / Editar</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Excluir</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Aprovar / Cancelar</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Enviar por e-mail / Gerar PDF</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver valores</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Aplicar desconto</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- CHAMADOS -->
+      <tr class="section-row"><td colspan="7">Chamados / OS</td></tr>
+      <tr><td>Ver todos os chamados</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver apenas os próprios</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Criar chamado</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Editar chamado</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Assumir chamado</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Concluir chamado</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Cancelar / Reabrir</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Excluir chamado</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- AGENDA -->
+      <tr class="section-row"><td colspan="7">Agenda</td></tr>
+      <tr><td>Ver agenda de todos</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Visualizar / Criar / Editar</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
+      <tr><td>Excluir agendamento</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- ATIVOS -->
+      <tr class="section-row"><td colspan="7">Ativos / Estoque</td></tr>
+      <tr><td>Visualizar ativos</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Criar / Editar / Excluir</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Movimentar ativos</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Aprovar solicitação</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver estoque</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- BASE DE CONHECIMENTO -->
+      <tr class="section-row"><td colspan="7">Base de Conhecimento</td></tr>
+      <tr><td>Visualizar artigos</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Criar / Editar / Publicar / Excluir</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- RELATÓRIOS -->
+      <tr class="section-row"><td colspan="7">Relatórios</td></tr>
+      <tr><td>Visualizar / Exportar</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver relatórios financeiros</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver relatórios técnicos</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+      <!-- ADMINISTRAÇÃO -->
+      <tr class="section-row"><td colspan="7">Administração do Sistema</td></tr>
+      <tr><td>Ver operadores</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Criar / Editar / Excluir operadores</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Aprovar novos acessos</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Alterar permissões de usuários</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Ver logs de acesso</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+      <tr><td>Configurações do sistema</td><td class="check">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td></tr>
+
+    </tbody>
+  </table>
+
+  <div class="footnote">
+    <strong>Personalização individual:</strong> O Administrador pode ajustar as permissões de qualquer usuário de forma independente do perfil padrão — ativando ou desativando permissões específicas na tela de Operadores.
+  </div>
+
+  <div class="footer">
+    <span>VargasTI — Documento interno · Controle de Acesso</span>
+    <span id="footerDate"></span>
+  </div>
+
+</div>
+
+<script>
+  const d = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  document.getElementById("docDate").textContent = d;
+  document.getElementById("footerDate").textContent = d;
+</script>
+
+<button class="print-btn no-print" onclick="window.print()">Salvar como PDF</button>
+
+</body>
+</html>

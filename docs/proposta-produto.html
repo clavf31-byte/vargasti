@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proposta Comercial — Sistema de Gestão VargasTI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1e293b;
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm 18mm 18mm 18mm;
+    }
+
+    @media print {
+      .no-print { display: none; }
+      .page-break { page-break-before: always; }
+      body { font-size: 12px; }
+    }
+
+    /* ── CAPA ── */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 48px;
+      background: linear-gradient(135deg, #0f172a 0%, #0d2540 60%, #0f3460 100%);
+      color: #fff;
+      page-break-after: always;
+    }
+
+    .cover-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #22d3ee;
+      border: 1px solid #22d3ee44;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 32px;
+    }
+
+    .cover h1 {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      max-width: 600px;
+    }
+
+    .cover h1 span { color: #22d3ee; }
+
+    .cover p {
+      font-size: 15px;
+      color: #94a3b8;
+      max-width: 480px;
+      margin-bottom: 48px;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .cover-meta strong { color: #cbd5e1; }
+
+    /* ── LAYOUT GERAL ── */
+    .doc { max-width: 780px; margin: 0 auto; padding: 48px 24px; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #22d3ee;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+
+    p { margin-bottom: 12px; color: #334155; }
+
+    ul { padding-left: 20px; margin-bottom: 12px; }
+    ul li { margin-bottom: 4px; color: #334155; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight {
+      background: #f0fdff;
+      border-left: 4px solid #22d3ee;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+    }
+
+    .highlight p { margin: 0; color: #0e7490; font-weight: 500; }
+
+    /* ── TABELA ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 12px;
+    }
+
+    thead tr { background: #0f172a; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; font-weight: 600; }
+
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+
+    td.check { color: #16a34a; font-weight: 700; text-align: center; }
+    td.dash  { color: #94a3b8; text-align: center; }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      min-width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #22d3ee;
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-body strong { display: block; font-size: 13px; color: #0f172a; margin-bottom: 2px; }
+    .step-body span   { font-size: 12px; color: #64748b; }
+
+    /* ── CARDS ── */
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .card ul { padding-left: 16px; }
+    .card ul li { font-size: 11.5px; color: #475569; margin-bottom: 3px; }
+
+    /* ── PILL ── */
+    .pill {
+      display: inline-block;
+      background: #f0fdff;
+      border: 1px solid #a5f3fc;
+      color: #0e7490;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    /* ── PRINT BUTTON ── */
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #22d3ee;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(34,211,238,0.4);
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #22d3ee;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-badge">Proposta Comercial · Confidencial</div>
+  <h1>Sistema de Gestão<br><span>para sua empresa</span></h1>
+  <p>Plataforma web completa para gerenciamento de clientes, contratos, orçamentos e chamados de suporte — entregue configurada, pronta para uso.</p>
+  <div class="cover-meta">
+    <div><strong>Produto:</strong> VargasTI — Plataforma de Gestão</div>
+    <div><strong>Modelo:</strong> Licença por instalação</div>
+    <div><strong>Versão do documento:</strong> 1.0 · <span id="docDate"></span></div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("docDate").textContent = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+</script>
+
+<!-- CONTEÚDO -->
+<div class="doc">
+
+  <!-- 1. O QUE É -->
+  <div class="section-label">Visão Geral</div>
+  <h2>O que é o sistema</h2>
+
+  <p>
+    Plataforma web desenvolvida para empresas que precisam organizar atendimentos, clientes, contratos e equipe em um único lugar, acessível de qualquer dispositivo com internet.
+  </p>
+  <p>
+    O sistema é entregue instalado, configurado com a identidade da empresa do cliente (nome, logotipo, domínio próprio) e pronto para uso imediato. Não requer instalação local, servidores próprios nem equipe de TI.
+  </p>
+
+  <div class="highlight">
+    <p>Cada cliente recebe uma instalação exclusiva — seus dados são 100% isolados e privados, sem compartilhamento com outros clientes.</p>
+  </div>
+
+
+  <!-- 2. MÓDULOS -->
+  <div class="section-label">O que inclui</div>
+  <h2>Módulos disponíveis</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h4>🎫 Chamados</h4>
+      <ul>
+        <li>Abertura de chamados com título e descrição</li>
+        <li>Numeração automática (CHA-0001, CHA-0002…)</li>
+        <li>Prioridade: Alta, Normal, Baixa</li>
+        <li>Progresso em 4 etapas: Aberto → Triagem → Andamento → Concluído</li>
+        <li>Thread de comentários e histórico de alterações</li>
+        <li>Contador de SLA (tempo em aberto)</li>
+        <li>Vínculo com cliente</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>👥 CRM — Clientes</h4>
+      <ul>
+        <li>Cadastro completo de clientes</li>
+        <li>Histórico de orçamentos e contratos por cliente</li>
+        <li>Pipeline de vendas visual</li>
+        <li>Filtros e busca rápida</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>📄 Contratos</h4>
+      <ul>
+        <li>Criação de contratos a partir de modelos</li>
+        <li>Fluxo de envio e recebimento assinado</li>
+        <li>Status: Rascunho, Enviado, Assinado</li>
+        <li>Modelos reutilizáveis por tipo de serviço</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>💰 Orçamentos</h4>
+      <ul>
+        <li>Geração de orçamentos profissionais</li>
+        <li>Aprovação ou recusa pelo cliente via link</li>
+        <li>Histórico de versões</li>
+        <li>Conversão de orçamento em contrato</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>✅ Tarefas</h4>
+      <ul>
+        <li>Gestão de tarefas por status e prioridade</li>
+        <li>Data de vencimento com alertas de atraso</li>
+        <li>Edição inline sem abrir nova tela</li>
+        <li>Filtros por status e prioridade</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>📊 Dashboard</h4>
+      <ul>
+        <li>Resumo de clientes, orçamentos e contratos</li>
+        <li>Tarefas pendentes em destaque</li>
+        <li>Ações rápidas para as funções mais usadas</li>
+        <li>Busca global com atalho Ctrl+K</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>🛠️ Ferramentas</h4>
+      <ul>
+        <li>Agente de e-mail com Gmail</li>
+        <li>Agente de WhatsApp</li>
+        <li>Editor de planilhas Excel online</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h4>🌐 Landing Page</h4>
+      <ul>
+        <li>Página pública de apresentação do negócio</li>
+        <li>Seções: hero, como funciona, clientes, planos</li>
+        <li>Botão de contato via WhatsApp</li>
+        <li>Personalizada com marca do cliente</li>
+      </ul>
+    </div>
+  </div>
+
+
+  <!-- 3. EDIÇÕES -->
+  <div class="page-break"></div>
+  <div class="section-label">Licenciamento</div>
+  <h2>Edições disponíveis</h2>
+
+  <p>O sistema pode ser licenciado em dois formatos, dependendo da necessidade do cliente:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Módulo</th>
+        <th>Edição Chamados</th>
+        <th>Edição Completa</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Sistema de Chamados</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Gestão de Clientes</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Dashboard</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Busca global (Ctrl+K)</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Contratos com assinatura</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Orçamentos com aprovação</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Gestão de Tarefas</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Pipeline de Vendas</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Ferramentas (e-mail, WhatsApp, Excel)</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Landing Page pública</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Domínio próprio</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Dados isolados (instância exclusiva)</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Identidade visual do cliente</td><td class="check">✓</td><td class="check">✓</td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- 4. STACK TÉCNICA -->
+  <div class="section-label">Tecnologia</div>
+  <h2>Stack técnica</h2>
+
+  <p>O sistema é construído com tecnologias modernas, estáveis e de alta demanda no mercado:</p>
+
+  <p>
+    <span class="pill">React 18</span>
+    <span class="pill">TypeScript</span>
+    <span class="pill">Vite</span>
+    <span class="pill">TanStack Router</span>
+    <span class="pill">Tailwind CSS</span>
+    <span class="pill">shadcn/ui</span>
+    <span class="pill">Supabase (PostgreSQL)</span>
+    <span class="pill">Cloudflare Workers</span>
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <h4>Frontend</h4>
+      <ul>
+        <li>React 18 com TypeScript</li>
+        <li>Interface responsiva (desktop e mobile)</li>
+        <li>Tema escuro profissional</li>
+        <li>Roteamento client-side com TanStack Router</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Backend e Banco</h4>
+      <ul>
+        <li>Supabase (PostgreSQL gerenciado)</li>
+        <li>Autenticação com controle de roles</li>
+        <li>Row Level Security — dados por usuário</li>
+        <li>Triggers automáticos (numeração, timestamps)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Infraestrutura</h4>
+      <ul>
+        <li>Deploy via Lovable (Cloudflare Workers)</li>
+        <li>CDN global — carregamento rápido</li>
+        <li>SSL automático (HTTPS)</li>
+        <li>Sem servidor para o cliente gerenciar</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Segurança</h4>
+      <ul>
+        <li>Autenticação por e-mail + senha</li>
+        <li>Sessão com heartbeat e logout forçado</li>
+        <li>Aprovação de novos usuários pelo admin</li>
+        <li>Log de acessos e ações</li>
+      </ul>
+    </div>
+  </div>
+
+
+  <!-- 5. PROCESSO DE ENTREGA -->
+  <div class="page-break"></div>
+  <div class="section-label">Processo</div>
+  <h2>Como é feita a entrega</h2>
+
+  <p>Após a contratação, o sistema é configurado e entregue em aproximadamente <strong>20 minutos</strong>:</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Coleta de dados</strong>
+        <span>Nome da empresa, logotipo, domínio desejado, WhatsApp de contato e módulos contratados.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Criação da instância</strong>
+        <span>Um repositório exclusivo é criado a partir do template do sistema, com os dados do cliente aplicados automaticamente.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Configuração do banco de dados</strong>
+        <span>Execução do script de setup que cria todas as tabelas, regras de segurança e dados iniciais no banco dedicado do cliente.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>Deploy e domínio</strong>
+        <span>O sistema é publicado na nuvem e vinculado ao domínio do cliente. Configuração de DNS orientada pelo suporte.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <strong>Criação do acesso admin</strong>
+        <span>Criação do usuário administrador do cliente, com e-mail e senha definidos pelo próprio cliente.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <strong>Entrega e treinamento</strong>
+        <span>Acesso entregue com orientação básica de uso. Suporte nos primeiros dias de operação.</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 6. HIERARQUIA DE USUÁRIOS -->
+  <div class="section-label">Controle de acesso</div>
+  <h2>Hierarquia de usuários</h2>
+
+  <table>
+    <thead>
+      <tr><th>Perfil</th><th>O que pode fazer</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Admin</strong></td>
+        <td>Acesso total. Aprova novos usuários, gerencia permissões e configurações do sistema.</td>
+      </tr>
+      <tr>
+        <td><strong>Administrativo</strong></td>
+        <td>Acesso a clientes, contratos, orçamentos e financeiro. Sem acesso a configurações.</td>
+      </tr>
+      <tr>
+        <td><strong>Coordenador</strong></td>
+        <td>Acesso a chamados, tarefas e relatórios de equipe.</td>
+      </tr>
+      <tr>
+        <td><strong>Técnico</strong></td>
+        <td>Acesso aos chamados atribuídos a ele e registro de atividades.</td>
+      </tr>
+      <tr>
+        <td><strong>Usuário</strong></td>
+        <td>Acesso básico conforme liberação do admin.</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- 7. PERSONALIZAÇÃO -->
+  <div class="section-label">Identidade do cliente</div>
+  <h2>O que é personalizado por cliente</h2>
+
+  <p>Cada instalação é adaptada para refletir a marca do cliente:</p>
+
+  <table>
+    <thead>
+      <tr><th>Elemento</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Nome da empresa</td><td>Aparece na sidebar, login, títulos de páginas, e-mails e landing page</td></tr>
+      <tr><td>Logotipo</td><td>Exibido na tela de login e na navegação principal</td></tr>
+      <tr><td>Slogan</td><td>Usado nos meta tags e rodapé</td></tr>
+      <tr><td>Domínio</td><td>O sistema roda no domínio próprio do cliente (ex: sistema.empresax.com.br)</td></tr>
+      <tr><td>WhatsApp</td><td>Botão de contato na landing page aponta para o número do cliente</td></tr>
+      <tr><td>Módulos ativos</td><td>Apenas os módulos contratados aparecem no menu — os demais ficam ocultos</td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- 8. O QUE ESTÁ PENDENTE -->
+  <div class="section-label">Roadmap</div>
+  <h2>Próximas entregas do template</h2>
+
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Arquivo <code>client.ts</code> com nome, slogan, domínio e módulos</td><td>✅ Concluído</td></tr>
+      <tr><td>Todos os textos do sistema lendo do <code>client.ts</code></td><td>✅ Concluído</td></tr>
+      <tr><td>Sistema de Chamados Fase 2 (tabela, comentários, SLA)</td><td>✅ Concluído</td></tr>
+      <tr><td>Menu lateral ocultando módulos desativados</td><td>🔜 Próximo</td></tr>
+      <tr><td>SQL master unificado (setup completo em um script)</td><td>🔜 Próximo</td></tr>
+      <tr><td>Logo configurável via <code>client.ts</code></td><td>🔜 Próximo</td></tr>
+      <tr><td>Marcar repositório como GitHub Template</td><td>🔜 Próximo</td></tr>
+    </tbody>
+  </table>
+
+
+  <div class="footer">
+    <span>VargasTI — Documento interno</span>
+    <span id="footerDate"></span>
+  </div>
+
+</div><!-- /doc -->
+
+<script>
+  document.getElementById("footerDate").textContent = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+</script>
+
+<button class="print-btn no-print" onclick="window.print()">Salvar como PDF</button>
+
+</body>
+</html>
