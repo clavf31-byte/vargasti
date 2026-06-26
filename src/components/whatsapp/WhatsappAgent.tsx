@@ -323,6 +323,9 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
           save_as_notes: config.save_as_notes,
           webhook_token: config.webhook_token,
           reply_to_groups: config.reply_to_groups ?? false,
+          schedule_enabled: config.schedule_enabled ?? false,
+          schedule_start: config.schedule_start ?? "08:00",
+          schedule_end: config.schedule_end ?? "18:00",
         }
       });
       setSaveOk(true);
@@ -652,6 +655,35 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
                   value={config.save_as_notes}
                   onChange={(v) => setConfig({ ...config, save_as_notes: v })}
                 />
+                <Toggle
+                  label="Horário de atendimento"
+                  description="Agente só responde dentro do horário configurado"
+                  value={config.schedule_enabled ?? false}
+                  onChange={(v) => setConfig({ ...config, schedule_enabled: v })}
+                />
+                {(config.schedule_enabled) && (
+                  <div className="flex items-center gap-3 pt-1 pl-1">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Início</label>
+                      <input
+                        type="time"
+                        value={config.schedule_start ?? "08:00"}
+                        onChange={(e) => setConfig({ ...config, schedule_start: e.target.value })}
+                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Fim</label>
+                      <input
+                        type="time"
+                        value={config.schedule_end ?? "18:00"}
+                        onChange={(e) => setConfig({ ...config, schedule_end: e.target.value })}
+                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                    <div className="pt-4 text-[10px] text-muted-foreground whitespace-nowrap">Fuso: BRT</div>
+                  </div>
+                )}
               </div>
             </DataCard>
 

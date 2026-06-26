@@ -25,6 +25,9 @@ export type WhatsappConfig = {
   save_as_notes: boolean;
   webhook_token: string;
   reply_to_groups: boolean;
+  schedule_enabled: boolean;
+  schedule_start: string;
+  schedule_end: string;
 };
 
 export type WhatsappMessage = {
@@ -82,6 +85,9 @@ const SaveConfigSchema = z.object({
   save_as_notes: z.boolean(),
   webhook_token: z.string(),
   reply_to_groups: z.boolean().optional().default(false),
+  schedule_enabled: z.boolean().optional().default(false),
+  schedule_start: z.string().optional().default("08:00"),
+  schedule_end: z.string().optional().default("18:00"),
 });
 
 export const saveWhatsappConfig = createServerFn({ method: "POST" })
@@ -105,6 +111,9 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
         save_as_notes: data.save_as_notes,
         webhook_token: data.webhook_token,
         reply_to_groups: data.reply_to_groups ?? false,
+        schedule_enabled: data.schedule_enabled ?? false,
+        schedule_start: data.schedule_start ?? "08:00",
+        schedule_end: data.schedule_end ?? "18:00",
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
@@ -433,6 +442,22 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
     });
 
     if (!cfg.auto_reply) return { ok: true, reply: null };
+
+    // Checagem de horário (America/Sao_Paulo)
+    if (cfg.schedule_enabled && cfg.schedule_start && cfg.schedule_end) {
+      const now = new Date();
+      const spTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+      const hhmm = spTime.getHours() * 60 + spTime.getMinutes();
+      const [sh, sm] = cfg.schedule_start.split(":").map(Number);
+      const [eh, em] = cfg.schedule_end.split(":").map(Number);
+      const start = sh * 60 + sm;
+      const end = eh * 60 + em;
+      const inSchedule = start <= end ? hhmm >= start && hhmm < end : hhmm >= start || hhmm < end;
+      if (!inSchedule) {
+        console.log("[whatsapp] Fora do horário de atendimento, mensagem ignorada");
+        return { ok: true, reply: null, reason: "outside_schedule" };
+      }
+    }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return { ok: false, reason: "no API key" };
