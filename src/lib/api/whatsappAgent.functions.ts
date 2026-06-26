@@ -28,6 +28,7 @@ export type WhatsappConfig = {
   schedule_enabled: boolean;
   schedule_start: string;
   schedule_end: string;
+  schedule_days: string; // "0,1,2,3,4,5,6" — 0=Dom,1=Seg,...,6=Sáb
 };
 
 export type WhatsappMessage = {
@@ -88,6 +89,7 @@ const SaveConfigSchema = z.object({
   schedule_enabled: z.boolean().optional().default(false),
   schedule_start: z.string().optional().default("08:00"),
   schedule_end: z.string().optional().default("18:00"),
+  schedule_days: z.string().optional().default("0,1,2,3,4,5,6"),
 });
 
 export const saveWhatsappConfig = createServerFn({ method: "POST" })
@@ -114,6 +116,7 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
         schedule_enabled: data.schedule_enabled ?? false,
         schedule_start: data.schedule_start ?? "08:00",
         schedule_end: data.schedule_end ?? "18:00",
+        schedule_days: data.schedule_days ?? "0,1,2,3,4,5,6",
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
@@ -443,18 +446,25 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
 
     if (!cfg.auto_reply) return { ok: true, reply: null };
 
-    // Checagem de horário (America/Sao_Paulo)
-    if (cfg.schedule_enabled && cfg.schedule_start && cfg.schedule_end) {
+    // Checagem de horário e dias (America/Sao_Paulo)
+    if (cfg.schedule_enabled) {
       const now = new Date();
       const spTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+      const dayOfWeek = spTime.getDay(); // 0=Dom ... 6=Sáb
       const hhmm = spTime.getHours() * 60 + spTime.getMinutes();
-      const [sh, sm] = cfg.schedule_start.split(":").map(Number);
-      const [eh, em] = cfg.schedule_end.split(":").map(Number);
+
+      const allowedDays = (cfg.schedule_days ?? "0,1,2,3,4,5,6")
+        .split(",").map((d) => parseInt(d.trim(), 10));
+      const dayAllowed = allowedDays.includes(dayOfWeek);
+
+      const [sh, sm] = (cfg.schedule_start ?? "08:00").split(":").map(Number);
+      const [eh, em] = (cfg.schedule_end ?? "18:00").split(":").map(Number);
       const start = sh * 60 + sm;
       const end = eh * 60 + em;
       const inSchedule = start <= end ? hhmm >= start && hhmm < end : hhmm >= start || hhmm < end;
-      if (!inSchedule) {
-        console.log("[whatsapp] Fora do horário de atendimento, mensagem ignorada");
+
+      if (!dayAllowed || !inSchedule) {
+        console.log("[whatsapp] Fora do horário/dia de atendimento, mensagem ignorada");
         return { ok: true, reply: null, reason: "outside_schedule" };
       }
     }

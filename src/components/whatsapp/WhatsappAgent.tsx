@@ -326,6 +326,7 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
           schedule_enabled: config.schedule_enabled ?? false,
           schedule_start: config.schedule_start ?? "08:00",
           schedule_end: config.schedule_end ?? "18:00",
+          schedule_days: config.schedule_days ?? "0,1,2,3,4,5,6",
         }
       });
       setSaveOk(true);
@@ -661,29 +662,69 @@ function AgentDetail({ agent, onBack, onUpdate, onDelete, onRefresh }: { agent: 
                   value={config.schedule_enabled ?? false}
                   onChange={(v) => setConfig({ ...config, schedule_enabled: v })}
                 />
-                {(config.schedule_enabled) && (
-                  <div className="flex items-center gap-3 pt-1 pl-1">
-                    <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Início</label>
-                      <input
-                        type="time"
-                        value={config.schedule_start ?? "08:00"}
-                        onChange={(e) => setConfig({ ...config, schedule_start: e.target.value })}
-                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                      />
+                {(config.schedule_enabled) && (() => {
+                  const DAYS = [
+                    { label: "Dom", value: 0 },
+                    { label: "Seg", value: 1 },
+                    { label: "Ter", value: 2 },
+                    { label: "Qua", value: 3 },
+                    { label: "Qui", value: 4 },
+                    { label: "Sex", value: 5 },
+                    { label: "Sáb", value: 6 },
+                  ];
+                  const activeDays = (config.schedule_days ?? "0,1,2,3,4,5,6")
+                    .split(",").map((d) => parseInt(d.trim(), 10));
+                  const toggleDay = (day: number) => {
+                    const next = activeDays.includes(day)
+                      ? activeDays.filter((d) => d !== day)
+                      : [...activeDays, day].sort((a, b) => a - b);
+                    setConfig({ ...config, schedule_days: next.join(",") });
+                  };
+                  return (
+                    <div className="pl-1 pt-1 space-y-3">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-2">Dias da semana</label>
+                        <div className="flex gap-1.5">
+                          {DAYS.map((d) => (
+                            <button
+                              key={d.value}
+                              type="button"
+                              onClick={() => toggleDay(d.value)}
+                              className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors ${
+                                activeDays.includes(d.value)
+                                  ? "bg-brand/20 border-brand text-brand"
+                                  : "bg-surface border-border text-muted-foreground"
+                              }`}
+                            >
+                              {d.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Início</label>
+                          <input
+                            type="time"
+                            value={config.schedule_start ?? "08:00"}
+                            onChange={(e) => setConfig({ ...config, schedule_start: e.target.value })}
+                            className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Fim</label>
+                          <input
+                            type="time"
+                            value={config.schedule_end ?? "18:00"}
+                            onChange={(e) => setConfig({ ...config, schedule_end: e.target.value })}
+                            className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                          />
+                        </div>
+                        <div className="pt-4 text-[10px] text-muted-foreground whitespace-nowrap">Fuso: BRT</div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Fim</label>
-                      <input
-                        type="time"
-                        value={config.schedule_end ?? "18:00"}
-                        onChange={(e) => setConfig({ ...config, schedule_end: e.target.value })}
-                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                      />
-                    </div>
-                    <div className="pt-4 text-[10px] text-muted-foreground whitespace-nowrap">Fuso: BRT</div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </DataCard>
 
