@@ -15,23 +15,6 @@ import type { ModulePermissions } from "@/hooks/useModulePermissions";
 
 const NAV_MODULES = [
   {
-    group: "Ferramentas",
-    groupIcon: Wrench,
-    items: [
-      { to: "/ferramentas/emails", label: "Email Agent", icon: Mail, permKey: "can_access_email" as keyof ModulePermissions },
-      { to: "/ferramentas/excel", label: "Excel Tool", icon: FileSpreadsheet, permKey: "can_access_excel" as keyof ModulePermissions },
-      { to: "/ferramentas/whatsapp", label: "WhatsApp", icon: MessageCircle },
-    ],
-  },
-  {
-    group: "Projetos & Notas",
-    groupIcon: FolderKanban,
-    items: [
-      { to: "/projetos", label: "Projetos", icon: FolderKanban, permKey: "can_access_projects" as keyof ModulePermissions },
-      { to: "/anotacoes", label: "Anotações", icon: NotebookPen, permKey: "can_access_notes" as keyof ModulePermissions },
-    ],
-  },
-  {
     group: "Agenda",
     groupIcon: CalendarDays,
     items: [
@@ -44,11 +27,28 @@ const NAV_MODULES = [
     items: [
       { to: "/crm/chamados", label: "Chamados", icon: Headphones, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/clientes", label: "Clientes", icon: Users, permKey: "can_access_crm" as keyof ModulePermissions },
-      { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/contratos", label: "Contratos", icon: ScrollText, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/contratos/modelos", label: "Modelos", icon: ClipboardList, permKey: "can_access_crm" as keyof ModulePermissions },
+      { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/os", label: "Ordens de Serviço", icon: Wrench, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail, permKey: "can_access_crm" as keyof ModulePermissions },
+    ],
+  },
+  {
+    group: "Ferramentas",
+    groupIcon: Wrench,
+    items: [
+      { to: "/ferramentas/emails", label: "Email Agent", icon: Mail, permKey: "can_access_email" as keyof ModulePermissions },
+      { to: "/ferramentas/excel", label: "Excel Tool", icon: FileSpreadsheet, permKey: "can_access_excel" as keyof ModulePermissions },
+      { to: "/ferramentas/whatsapp", label: "WhatsApp", icon: MessageCircle },
+    ],
+  },
+  {
+    group: "Projetos & Notas",
+    groupIcon: FolderKanban,
+    items: [
+      { to: "/anotacoes", label: "Anotações", icon: NotebookPen, permKey: "can_access_notes" as keyof ModulePermissions },
+      { to: "/projetos", label: "Projetos", icon: FolderKanban, permKey: "can_access_projects" as keyof ModulePermissions },
     ],
   },
   {
