@@ -18,9 +18,14 @@ export const Route = createFileRoute("/api/debug-interpret-email")({
             return new Response("Unauthorized", { status: 401, headers: { "Content-Type": "application/json" } });
           }
 
-          const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(data.claims.sub);
-          if (userError || !userData?.user || userData.user.app_metadata?.role !== "admin") {
-            return new Response("Unauthorized", { status: 401, headers: { "Content-Type": "application/json" } });
+          const { data: roleData } = await supabaseAdmin
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", data.claims.sub)
+            .eq("role", "admin")
+            .maybeSingle();
+          if (!roleData) {
+            return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
           }
 
           const { interpretEmailWithClaude } = await import("@/lib/api/emailAgent.functions");
