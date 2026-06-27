@@ -3,21 +3,26 @@ import { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, HTMLAttributes } 
 
 // ── PageHeader ────────────────────────────────────────────────────────────────
 interface PageHeaderProps {
-  category: string;
+  category?: string;
   title: string;
-  icon?: LucideIcon;
+  icon?: LucideIcon | ReactNode;
   iconClass?: string;
   subtitle?: string | ReactNode;
   actions?: ReactNode;
+  action?: ReactNode;
 }
 
-export function PageHeader({ category, title, icon: Icon, iconClass, subtitle, actions }: PageHeaderProps) {
+export function PageHeader({ category, title, icon: Icon, iconClass, subtitle, actions, action }: PageHeaderProps) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
       <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground uppercase tracking-[0.18em] mb-2">{category}</p>
+        {category && <p className="text-[11px] text-muted-foreground uppercase tracking-[0.18em] mb-2">{category}</p>}
         <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight flex items-center gap-3">
-          {Icon && <Icon className={`size-6 shrink-0 ${iconClass ?? "text-brand"}`} />}
+          {Icon && typeof Icon === "function" ? (
+            <Icon className={`size-6 shrink-0 ${iconClass ?? "text-brand"}`} />
+          ) : (
+            Icon
+          )}
           <span className="truncate">{title}</span>
         </h1>
         {subtitle && (
@@ -26,7 +31,7 @@ export function PageHeader({ category, title, icon: Icon, iconClass, subtitle, a
             : <div className="mt-1.5">{subtitle}</div>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {(actions || action) && <div className="flex items-center gap-2 shrink-0">{actions || action}</div>}
     </div>
   );
 }
