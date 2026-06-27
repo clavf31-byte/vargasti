@@ -1,5 +1,5 @@
-﻿import { CSSProperties, ReactNode } from "react";
-import { colors, shadows, borderRadius } from "@/lib/colors";
+import { CSSProperties, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface CardProps {
   children: ReactNode;
@@ -7,35 +7,19 @@ interface CardProps {
   clickable?: boolean;
   onClick?: () => void;
   style?: CSSProperties;
+  className?: string;
 }
 
-export function Card({ children, hover = false, clickable = false, onClick, style }: CardProps) {
+export function Card({ children, hover = false, clickable = false, onClick, style, className }: CardProps) {
   return (
     <div
       onClick={onClick}
-      style={{
-        background: colors.backgroundSecondary,
-        border: `1px solid ${colors.border}`,
-        borderRadius: borderRadius.lg,
-        padding: "1.5rem",
-        cursor: clickable ? "pointer" : "default",
-        transition: "all 0.3s ease",
-        boxShadow: shadows.small,
-        ...(hover && {
-          borderColor: colors.primary,
-          boxShadow: shadows.glow,
-          transform: "translateY(-4px)",
-        }),
-        ...style,
-      }}
-      onMouseEnter={(e) =>
-        hover &&
-        (e.currentTarget.style.borderColor = colors.primary)
-      }
-      onMouseLeave={(e) =>
-        hover &&
-        (e.currentTarget.style.borderColor = colors.border)
-      }
+      style={style}
+      className={cn(
+        "card-graphite p-6",
+        (hover || clickable) && "card-hover cursor-pointer hover:border-select/30 hover:-translate-y-0.5 hover:shadow-lg",
+        className
+      )}
     >
       {children}
     </div>

@@ -15,3 +15,10 @@ export {
   StatusBadge,
   SectionTitle,
 } from "@/components/shared";
+
+export {
+  PageHeader as ModernPageHeader,
+  StatCard as MetricCard,
+  ModernCard,
+  Btn,
+} from "@/components/shared";

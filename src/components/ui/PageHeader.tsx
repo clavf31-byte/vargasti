@@ -1,5 +1,4 @@
-﻿import { ReactNode } from "react";
-import { colors, spacing } from "@/lib/colors";
+import { ReactNode } from "react";
 
 interface PageHeaderProps {
   title: string;
@@ -10,47 +9,15 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, action, icon }: PageHeaderProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: spacing.xxl,
-        paddingBottom: spacing.lg,
-        borderBottom: `1px solid ${colors.border}`,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: spacing.lg }}>
-        {icon && (
-          <div style={{ fontSize: "32px", opacity: 0.7 }}>
-            {icon}
-          </div>
-        )}
+    <div className="flex justify-between items-start mb-8 pb-6 border-b border-border">
+      <div className="flex items-start gap-5">
+        {icon && <div className="text-3xl opacity-70 mt-1">{icon}</div>}
         <div>
-          <h1
-            style={{
-              margin: "0 0 0.5rem 0",
-              color: colors.text,
-              fontSize: "40px",
-              fontWeight: 700,
-            }}
-          >
-            {title}
-          </h1>
-          {subtitle && (
-            <p
-              style={{
-                margin: 0,
-                color: colors.textSecondary,
-                fontSize: "14px",
-              }}
-            >
-              {subtitle}
-            </p>
-          )}
+          <h1 className="text-4xl font-bold text-foreground tracking-tight mb-2">{title}</h1>
+          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
