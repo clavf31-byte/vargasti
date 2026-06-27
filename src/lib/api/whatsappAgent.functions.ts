@@ -402,6 +402,20 @@ const AGENT_TOOLS = [
       required: [],
     },
   },
+  {
+    name: "get_agenda_hoje",
+    description: "Retorna os eventos da agenda do usuário. Use quando o usuário perguntar sobre compromissos, reuniões, visitas, o que tem hoje, amanhã ou em determinado dia.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        dia: {
+          type: "string",
+          description: "Data no formato YYYY-MM-DD. Se não informado, usa a data de hoje.",
+        },
+      },
+      required: [],
+    },
+  },
 ] as const;
 
 export const processWebhookMessage = createServerFn({ method: "POST" })
@@ -578,6 +592,31 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
             }).then(undefined, () => null);
             noteCreated = true;
             toolResults.push({ type: "tool_result", tool_use_id: tool.id, content: "Anotação criada com sucesso." });
+          }
+
+          if (tool.name === "get_agenda_hoje") {
+            const input = tool.input as { dia?: string };
+            const diaStr = input.dia || new Date().toLocaleDateString("fr-CA", { timeZone: "America/Sao_Paulo" });
+            const { data: eventos } = await admin
+              .from("agenda_eventos")
+              .select("titulo, tipo, data_inicio, local, status, dia_inteiro")
+              .eq("user_id", cfg.user_id)
+              .gte("data_inicio", `${diaStr}T00:00:00`)
+              .lte("data_inicio", `${diaStr}T23:59:59`)
+              .neq("status", "cancelado")
+              .order("data_inicio");
+
+            if (!eventos || eventos.length === 0) {
+              toolResults.push({ type: "tool_result", tool_use_id: tool.id, content: `Nenhum evento na agenda para ${diaStr}.` });
+            } else {
+              const linhas = (eventos as any[]).map((e) => {
+                const hora = e.dia_inteiro
+                  ? "Dia todo"
+                  : new Date(e.data_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+                return `• ${hora} — ${e.titulo}${e.local ? ` (${e.local})` : ""}`;
+              });
+              toolResults.push({ type: "tool_result", tool_use_id: tool.id, content: `Agenda para ${diaStr}:\n${linhas.join("\n")}` });
+            }
           }
         }
 
