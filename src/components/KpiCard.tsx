@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
-interface SubItem { val: string; lbl: string; color?: string }
+interface SubItem { val: string; lbl: string; color?: string; colorClass?: string }
 
 interface KpiCardProps {
   label: string;
@@ -55,7 +55,7 @@ export function KpiCard({ label, value, icon: Icon, to, gradient, badge, breakdo
         {breakdown.map((item, i) => (
           <>
             <div key={i} className="text-center">
-              <div className="text-sm font-bold" style={{ color: item.color ?? "var(--foreground)" }}>{item.val}</div>
+              <div className={`text-sm font-bold ${item.colorClass ?? (item.color ? "" : "text-foreground")}`} style={item.color && !item.colorClass ? { color: item.color } : undefined}>{item.val}</div>
               <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">{item.lbl}</div>
             </div>
             {i < 2 && <div key={`sep-${i}`} className="w-px h-7 bg-white/6" />}

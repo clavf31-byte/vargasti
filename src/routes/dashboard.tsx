@@ -16,11 +16,11 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const ORC_STATUS: Record<string, { label: string; icon: typeof CheckCircle2; color: string; pill: string }> = {
-  aprovado:  { label: "Aprovado",  icon: CheckCircle2, color: "#4ade80", pill: "bg-success/15 text-success" },
-  enviado:   { label: "Enviado",   icon: Mail,         color: "#60a5fa", pill: "bg-select/15 text-select" },
-  rascunho:  { label: "Rascunho",  icon: FileEdit,     color: "#94a3b8", pill: "bg-surface-2 text-muted-foreground" },
-  rejeitado: { label: "Rejeitado", icon: FileEdit,     color: "#f87171", pill: "bg-destructive/15 text-destructive" },
+const ORC_STATUS: Record<string, { label: string; icon: typeof CheckCircle2; dotClass: string; pill: string }> = {
+  aprovado:  { label: "Aprovado",  icon: CheckCircle2, dotClass: "bg-brand",             pill: "bg-brand/15 text-brand" },
+  enviado:   { label: "Enviado",   icon: Mail,         dotClass: "bg-info",              pill: "bg-select/15 text-select" },
+  rascunho:  { label: "Rascunho",  icon: FileEdit,     dotClass: "bg-muted-foreground",  pill: "bg-surface-2 text-muted-foreground" },
+  rejeitado: { label: "Rejeitado", icon: FileEdit,     dotClass: "bg-destructive",       pill: "bg-destructive/15 text-destructive" },
 };
 
 const PRIORIDADE_CLS: Record<string, string> = {
@@ -139,9 +139,9 @@ function Dashboard() {
               gradient="blue"
               badge={clientesCount > 0 ? { text: `${clientesComOrcamento} com orç.`, variant: "up" } : undefined}
               breakdown={[
-                { val: String(clientesCount), lbl: "Total", color: "#60a5fa" },
+                { val: String(clientesCount), lbl: "Total", colorClass: "text-info" },
                 { val: String(clientesComOrcamento), lbl: "Com orçam." },
-                { val: String(clientesCount - clientesComOrcamento), lbl: "Sem orçam.", color: "#94a3b8" },
+                { val: String(clientesCount - clientesComOrcamento), lbl: "Sem orçam.", colorClass: "text-muted-foreground" },
               ]}
               footer={{ label: "Taxa de conversão", value: `${clientesConvPct}%` }}
               progress={clientesConvPct}
@@ -156,9 +156,9 @@ function Dashboard() {
                 ? { text: `${orcamentosStatus.enviado} pendente${orcamentosStatus.enviado > 1 ? "s" : ""}`, variant: "warn" }
                 : undefined}
               breakdown={[
-                { val: String(orcamentosStatus.aprovado), lbl: "Aprovados", color: "#4ade80" },
-                { val: String(orcamentosStatus.enviado),  lbl: "Enviados",  color: "#60a5fa" },
-                { val: String(orcamentosStatus.rascunho), lbl: "Rascunho",  color: "#94a3b8" },
+                { val: String(orcamentosStatus.aprovado), lbl: "Aprovados", colorClass: "text-brand" },
+                { val: String(orcamentosStatus.enviado),  lbl: "Enviados",  colorClass: "text-info" },
+                { val: String(orcamentosStatus.rascunho), lbl: "Rascunho",  colorClass: "text-muted-foreground" },
               ]}
               footer={{ label: "Total em aberto", value: fmtBRL(orcamentosTotalAberto) }}
               progress={orcAprovadosPct}
@@ -173,9 +173,9 @@ function Dashboard() {
                 ? { text: `${contratosStatus.enviado} ag. assinatura`, variant: "warn" }
                 : undefined}
               breakdown={[
-                { val: String(contratosStatus.assinado), lbl: "Assinados",  color: "#4ade80" },
-                { val: String(contratosStatus.enviado),  lbl: "Enviados",   color: "#60a5fa" },
-                { val: String(contratosStatus.rascunho), lbl: "Rascunho",   color: "#94a3b8" },
+                { val: String(contratosStatus.assinado), lbl: "Assinados",  colorClass: "text-brand" },
+                { val: String(contratosStatus.enviado),  lbl: "Enviados",   colorClass: "text-info" },
+                { val: String(contratosStatus.rascunho), lbl: "Rascunho",   colorClass: "text-muted-foreground" },
               ]}
               footer={{ label: "Taxa de assinatura", value: `${contratosAssPct}%` }}
               progress={contratosAssPct}
@@ -187,9 +187,9 @@ function Dashboard() {
               to="/crm/pagamentos"
               gradient="blue"
               breakdown={[
-                { val: fmtBRL(pagamentosTotal), lbl: "Total recebido", color: "#4ade80" },
+                { val: fmtBRL(pagamentosTotal), lbl: "Total recebido", colorClass: "text-brand" },
                 { val: String(pagamentosCount), lbl: "Registros" },
-                { val: "—", lbl: "Pendentes", color: "#94a3b8" },
+                { val: "—", lbl: "Pendentes", colorClass: "text-muted-foreground" },
               ]}
               footer={{ label: "Receita registrada", value: fmtBRL(pagamentosTotal) }}
               progress={pagamentosTotal > 0 ? Math.min(100, (pagamentosTotal / 10000) * 100) : 0}
@@ -298,7 +298,7 @@ function Dashboard() {
                       to={`/crm/orcamentos/${o.id}`}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
                     >
-                      <div className="size-2 rounded-full shrink-0" style={{ background: cfg.color }} />
+                      <div className={`size-2 rounded-full shrink-0 ${cfg.dotClass}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">{o.cliente_nome}</p>
                         <p className="text-[10px] text-muted-foreground">{o.numero_formatado} · {fmtDate(o.created_at)}</p>

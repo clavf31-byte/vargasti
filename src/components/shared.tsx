@@ -1,5 +1,6 @@
 import { Search, X, LucideIcon } from "lucide-react";
 import { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, HTMLAttributes } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ── PageHeader ────────────────────────────────────────────────────────────────
 interface PageHeaderProps {
@@ -157,16 +158,68 @@ export function SectionTitle({ icon: Icon, iconClass, children }: SectionTitlePr
 }
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
+export const DEFAULT_STATUS_COLOR: Record<string, string> = {
+  rascunho:             "text-muted-foreground border-muted-foreground/30 bg-surface-2",
+  enviado:              "text-info border-info/30 bg-info/10",
+  aprovado:             "text-brand border-brand/30 bg-brand/10",
+  assinado:             "text-brand border-brand/30 bg-brand/10",
+  rejeitado:            "text-destructive border-destructive/30 bg-destructive/10",
+  pendente:             "text-warning border-warning/30 bg-warning/10",
+  atrasado:             "text-destructive border-destructive/30 bg-destructive/10",
+  concluido:            "text-muted-foreground border-muted-foreground/30 bg-surface-2",
+  "concluído":          "text-muted-foreground border-muted-foreground/30 bg-surface-2",
+  conectado:            "text-brand border-brand/30 bg-brand/10",
+  desconectado:         "text-destructive border-destructive/30 bg-destructive/10",
+  ativo:                "text-brand border-brand/30 bg-brand/10",
+  agendado:             "text-info border-info/30 bg-info/10",
+  confirmado:           "text-brand border-brand/30 bg-brand/10",
+  cancelado:            "text-destructive border-destructive/30 bg-destructive/10",
+  "em andamento":       "text-info border-info/30 bg-info/10",
+  "em análise":         "text-warning border-warning/30 bg-warning/10",
+  "em desenvolvimento": "text-info border-info/30 bg-info/10",
+  arquivado:            "text-muted-foreground/50 border-muted-foreground/20 bg-surface-2/50",
+  ideia:                "text-muted-foreground border-muted-foreground/30 bg-surface-2",
+  testando:             "text-warning border-warning/30 bg-warning/10",
+  finalizado:           "text-brand border-brand/30 bg-brand/10",
+};
+
+export const DEFAULT_STATUS_DOT: Record<string, string> = {
+  rascunho:             "bg-muted-foreground/40",
+  enviado:              "bg-info",
+  aprovado:             "bg-brand",
+  assinado:             "bg-brand",
+  rejeitado:            "bg-destructive",
+  pendente:             "bg-warning",
+  atrasado:             "bg-destructive",
+  concluido:            "bg-muted-foreground/40",
+  "concluído":          "bg-muted-foreground/40",
+  conectado:            "bg-brand",
+  desconectado:         "bg-destructive",
+  ativo:                "bg-brand",
+  agendado:             "bg-info",
+  confirmado:           "bg-brand",
+  cancelado:            "bg-destructive",
+  "em andamento":       "bg-info",
+  "em análise":         "bg-warning",
+  "em desenvolvimento": "bg-info",
+  arquivado:            "bg-muted-foreground/30",
+  ideia:                "bg-muted-foreground/40",
+  testando:             "bg-warning",
+  finalizado:           "bg-brand",
+};
+
 interface StatusBadgeProps {
   status: string;
-  colorConfig: Record<string, string>;
+  colorConfig?: Record<string, string>;
   dotConfig?: Record<string, string>;
   showDot?: boolean;
 }
 
 export function StatusBadge({ status, colorConfig, dotConfig, showDot = false }: StatusBadgeProps) {
-  const cls = colorConfig[status] ?? "text-muted-foreground border-border bg-surface-2";
-  const dotCls = dotConfig?.[status] ?? "bg-muted-foreground/40";
+  const merged = colorConfig ? { ...DEFAULT_STATUS_COLOR, ...colorConfig } : DEFAULT_STATUS_COLOR;
+  const mergedDot = dotConfig ? { ...DEFAULT_STATUS_DOT, ...dotConfig } : DEFAULT_STATUS_DOT;
+  const cls = merged[status] ?? "text-muted-foreground border-border bg-surface-2";
+  const dotCls = mergedDot[status] ?? "bg-muted-foreground/40";
   return (
     <span className={`inline-flex items-center gap-1.5 text-[11px] border rounded-md px-2 py-0.5 font-medium ${cls}`}>
       {showDot && <span className={`size-1.5 rounded-full ${dotCls}`} />}
@@ -285,6 +338,29 @@ export function SelectableCard({ selected, className = "", children, ...rest }: 
       {...rest}
     >
       {children}
+    </div>
+  );
+}
+
+// ── SkeletonCard ──────────────────────────────────────────────────────────────
+export function SkeletonCard({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className="card-graphite p-5 space-y-3">
+      <Skeleton className="h-4 w-2/3 bg-surface-2" />
+      {Array.from({ length: rows }).map((_, i) => (
+        <Skeleton key={i} className={`h-3 bg-surface-2 ${i === rows - 1 ? "w-1/2" : "w-full"}`} />
+      ))}
+    </div>
+  );
+}
+
+// ── SkeletonTableRow ──────────────────────────────────────────────────────────
+export function SkeletonTableRow({ cols = 4 }: { cols?: number }) {
+  return (
+    <div className="flex items-center gap-4 px-4 py-3 border-b border-border/50">
+      {Array.from({ length: cols }).map((_, i) => (
+        <Skeleton key={i} className={`h-3 bg-surface-2 ${i === 0 ? "w-1/4" : i === cols - 1 ? "w-16" : "flex-1"}`} />
+      ))}
     </div>
   );
 }

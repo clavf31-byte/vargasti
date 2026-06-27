@@ -424,7 +424,7 @@ function NotesPage() {
       <div className={`${layoutMode === "vertical" ? "flex-row" : "flex-col"} flex h-[calc(100vh-2.5rem)] overflow-hidden`}>
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-        <div className={`${layoutMode === "vertical" ? "w-64 border-r" : "h-40 border-b"} border-border flex ${layoutMode === "vertical" ? "flex-col" : "flex-row"} shrink-0 overflow-x-auto`} style={{ background: layoutMode === "vertical" ? "#07111c" : "#0a1422" }}>
+        <div className={`bg-background ${layoutMode === "vertical" ? "w-64 border-r" : "h-40 border-b"} border-border flex ${layoutMode === "vertical" ? "flex-col" : "flex-row"} shrink-0 overflow-x-auto`}>
           {/* Header da sidebar */}
           <div className={`px-3 pt-3 pb-2 border-b border-border space-y-2 ${layoutMode === "horizontal" ? "flex items-center gap-2" : ""}`}>
             <div className="flex items-center justify-between flex-1">
@@ -433,7 +433,7 @@ function NotesPage() {
                 <button
                   onClick={() => setLayoutMode(layoutMode === "vertical" ? "horizontal" : "vertical")}
                   title={`Trocar para ${layoutMode === "vertical" ? "horizontal" : "vertical"}`}
-                  className="p-1.5 rounded-lg bg-surface-2 border border-border text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-colors"
+                  className="p-1.5 rounded-lg bg-surface-2 border border-border text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
                 >
                   {layoutMode === "vertical" ? <LayoutList className="size-3.5" /> : <LayoutGrid className="size-3.5" />}
                 </button>
@@ -458,7 +458,7 @@ function NotesPage() {
             <div className="relative">
               <button
                 onClick={() => setShowNewMenu((v) => !v)}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-3 border border-border text-foreground text-[10px] font-medium hover:bg-surface-3/80 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-2 border border-border text-foreground text-[10px] font-medium hover:bg-surface-2/80 transition-colors"
               >
                 <Plus className="size-3" />
                 Nova
@@ -619,7 +619,7 @@ function NotesPage() {
                     <p className="text-[11px] text-muted-foreground mt-1">Clique para revelar o conteúdo desta sessão</p>
                   </div>
                   <button onClick={() => setRevealed((prev) => new Set(prev).add(selected.id))}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm bg-surface-2 border border-border text-foreground rounded-xl hover:bg-surface-3 transition-colors">
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm bg-surface-2 border border-border text-foreground rounded-xl hover:bg-surface-2 transition-colors">
                     <Eye className="size-4" />
                     Revelar conteúdo
                   </button>
