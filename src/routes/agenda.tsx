@@ -326,7 +326,7 @@ function EventoDialog({ open, onOpenChange, evento, defaultDate, onSuccess }: {
   });
 
   const form = useForm<EventoForm>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: buildDefaultValues(null, defaultDate),
   });
 
