@@ -1,7 +1,7 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Mail, FileSpreadsheet, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText, ClipboardList, Headphones,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText, ClipboardList, Headphones, CalendarDays,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
@@ -29,6 +29,13 @@ const NAV_MODULES = [
     items: [
       { to: "/projetos", label: "Projetos", icon: FolderKanban, permKey: "can_access_projects" as keyof ModulePermissions },
       { to: "/anotacoes", label: "Anotações", icon: NotebookPen, permKey: "can_access_notes" as keyof ModulePermissions },
+    ],
+  },
+  {
+    group: "Agenda",
+    groupIcon: CalendarDays,
+    items: [
+      { to: "/agenda", label: "Agenda", icon: CalendarDays },
     ],
   },
   {

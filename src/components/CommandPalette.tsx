@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Mail, FileSpreadsheet, MessageCircle, FolderKanban, NotebookPen,
   Files, Settings, LayoutDashboard, Users, Banknote, ScrollText, FileText,
-  Building2, type LucideIcon, Loader2,
+  Building2, CalendarDays, type LucideIcon, Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +14,7 @@ const NAV_COMMANDS: { id: string; label: string; icon: LucideIcon; path: string 
   { id: "whatsapp", label: "WhatsApp", icon: MessageCircle, path: "/ferramentas/whatsapp" },
   { id: "projetos", label: "Projetos", icon: FolderKanban, path: "/projetos" },
   { id: "anotacoes", label: "Anotações", icon: NotebookPen, path: "/anotacoes" },
+  { id: "agenda", label: "Agenda", icon: CalendarDays, path: "/agenda" },
   { id: "crm", label: "CRM", icon: Users, path: "/crm" },
   { id: "clientes", label: "Clientes", icon: Building2, path: "/crm/clientes" },
   { id: "contratos", label: "Contratos", icon: FileText, path: "/crm/contratos" },
