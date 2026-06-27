@@ -468,7 +468,7 @@ export const processWebhookMessage = createServerFn({ method: "POST" })
       const hhmm = spTime.getHours() * 60 + spTime.getMinutes();
 
       const allowedDays = (cfg.schedule_days ?? "0,1,2,3,4,5,6")
-        .split(",").map((d) => parseInt(d.trim(), 10));
+        .split(",").map((d: string) => parseInt(d.trim(), 10));
       const dayAllowed = allowedDays.includes(dayOfWeek);
 
       const [sh, sm] = (cfg.schedule_start ?? "08:00").split(":").map(Number);
