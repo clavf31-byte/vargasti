@@ -65,8 +65,8 @@ const NAV_ADMIN = [
     group: "Admin",
     groupIcon: ShieldCheck,
     items: [
-      { to: "/admin", label: "Operadores", icon: ShieldCheck },
       { to: "/config", label: "Configurações", icon: Settings },
+      { to: "/admin", label: "Operadores", icon: ShieldCheck },
     ],
   },
 ];
@@ -85,7 +85,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     "user";
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
 
-  const ALL_MODULES = isAdmin ? [...NAV_MODULES, ...NAV_ADMIN] : NAV_MODULES;
+  const ALL_MODULES = isAdmin ? [...NAV_ADMIN, ...NAV_MODULES] : NAV_MODULES;
 
   const VISIBLE_MODULES = permsLoaded && !isAdmin
     ? ALL_MODULES.map(group => ({
