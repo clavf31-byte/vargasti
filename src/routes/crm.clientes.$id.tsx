@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Card, Button } from "@/components/ui";
-import { colors, spacing, borderRadius } from "@/lib/colors";
+import { PageHeader } from "@/components/shared";
 import { ChevronLeft, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/clientes/$id")({
   head: () => ({ meta: [{ title: `Editar Cliente · CRM ${client.name}` }] }),
@@ -53,51 +53,26 @@ function EditarClientePage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    nome: "",
-    contato: "",
-    email: "",
-    telefone: "",
-    celular: "",
-    cnpj_cpf: "",
-    endereco: "",
-    cidade: "",
-    estado: "",
-    cep: "",
+    nome: "", contato: "", email: "", telefone: "", celular: "",
+    cnpj_cpf: "", endereco: "", cidade: "", estado: "", cep: "",
   });
 
-  useEffect(() => {
-    if (!user || !id) return;
-    loadCliente();
-  }, [user, id]);
+  useEffect(() => { if (!user || !id) return; loadCliente(); }, [user, id]);
 
   async function loadCliente() {
     setLoading(true);
     try {
       const { data, error: err } = await supabase
-        .from("clientes")
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", user!.id)
-        .single();
-
+        .from("clientes").select("*").eq("id", id).eq("user_id", user!.id).single();
       if (err) throw err;
-
       setCliente(data as Cliente);
       setFormData({
-        nome: data.nome || "",
-        contato: data.contato || "",
-        email: data.email || "",
-        telefone: data.telefone || "",
-        celular: data.celular || "",
-        cnpj_cpf: data.cnpj_cpf || "",
-        endereco: data.endereco || "",
-        cidade: data.cidade || "",
-        estado: data.estado || "",
-        cep: data.cep || "",
+        nome: data.nome || "", contato: data.contato || "", email: data.email || "",
+        telefone: data.telefone || "", celular: data.celular || "", cnpj_cpf: data.cnpj_cpf || "",
+        endereco: data.endereco || "", cidade: data.cidade || "", estado: data.estado || "", cep: data.cep || "",
       });
     } catch (err) {
       setError("Erro ao carregar cliente");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -108,260 +83,98 @@ function EditarClientePage() {
     setSaving(true);
     setError(null);
     setMessage(null);
-
     try {
-      const { error: err } = await supabase
-        .from("clientes")
-        .update(formData)
-        .eq("id", id)
-        .eq("user_id", user!.id);
-
+      const { error: err } = await supabase.from("clientes").update(formData).eq("id", id).eq("user_id", user!.id);
       if (err) throw err;
-
-      setMessage("✅ Cliente atualizado com sucesso!");
+      setMessage("Cliente atualizado com sucesso!");
       setTimeout(() => navigate({ to: "/crm/clientes" }), 1500);
     } catch (err) {
       setError("Erro ao salvar cliente");
-      console.error(err);
     } finally {
       setSaving(false);
     }
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: spacing.md,
-    background: colors.background,
-    border: `1px solid ${colors.border}`,
-    borderRadius: borderRadius.md,
-    color: colors.text,
-    fontSize: "14px",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "block" as const,
-    fontSize: "14px",
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    fontWeight: 600 as const,
-  };
-
   if (loading) {
-    return (
-      <AppShell>
-        <div style={{ padding: spacing.xl }}>
-          <p style={{ color: colors.textSecondary }}>Carregando...</p>
-        </div>
-      </AppShell>
-    );
+    return <AppShell><div className="p-6 text-sm text-muted-foreground">Carregando...</div></AppShell>;
   }
 
   if (!cliente) {
-    return (
-      <AppShell>
-        <div style={{ padding: spacing.xl }}>
-          <p style={{ color: colors.error }}>Cliente não encontrado</p>
-        </div>
-      </AppShell>
-    );
+    return <AppShell><div className="p-6 text-sm text-destructive">Cliente não encontrado</div></AppShell>;
   }
 
   return (
     <AppShell>
-      <div style={{ padding: spacing.xl, maxWidth: "800px", margin: "0 auto" }}>
+      <div className="p-4 md:p-6 space-y-5 max-w-2xl mx-auto">
         <button
           onClick={() => navigate({ to: "/crm/clientes" })}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: spacing.sm,
-            background: "transparent",
-            border: "none",
-            color: colors.primary,
-            cursor: "pointer",
-            marginBottom: spacing.lg,
-            fontSize: "14px",
-            fontWeight: 600,
-          }}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-select hover:text-select/80 transition-colors"
         >
-          <ChevronLeft size={18} />
-          Voltar
+          <ChevronLeft className="size-4" /> Voltar
         </button>
 
-        <PageHeader
-          title="Editar Cliente"
-          subtitle={cliente.nome}
-          icon={<User size={32} color={colors.primary} />}
-        />
+        <PageHeader category="CRM" title="Editar Cliente" icon={User} subtitle={cliente.nome} />
 
-        <Card>
-          {error && (
-            <div
-              style={{
-                background: "rgba(211, 47, 47, 0.1)",
-                border: `1px solid ${colors.error}`,
-                borderRadius: borderRadius.md,
-                padding: spacing.md,
-                marginBottom: spacing.lg,
-                color: colors.error,
-                fontSize: "14px",
-              }}
-            >
-              {error}
+        <div className="card-graphite p-6">
+          {error && <div className="mb-4 px-3 py-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg">{error}</div>}
+          {message && <div className="mb-4 px-3 py-2 text-sm text-brand bg-brand/10 border border-brand/30 rounded-lg">{message}</div>}
+
+          <form onSubmit={handleSave} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nome *</label>
+              <input type="text" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} required className="input-base w-full" />
             </div>
-          )}
-
-          {message && (
-            <div
-              style={{
-                background: "rgba(76, 175, 80, 0.1)",
-                border: `1px solid ${colors.success}`,
-                borderRadius: borderRadius.md,
-                padding: spacing.md,
-                marginBottom: spacing.lg,
-                color: colors.success,
-                fontSize: "14px",
-              }}
-            >
-              {message}
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Contato</label>
+              <input type="text" placeholder="Nome da pessoa de contato" value={formData.contato} onChange={(e) => setFormData({ ...formData, contato: e.target.value })} className="input-base w-full" />
             </div>
-          )}
-
-          <form onSubmit={handleSave}>
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Nome *</label>
-              <input
-                type="text"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                required
-                style={inputStyle}
-              />
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Email</label>
+              <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })} className="input-base w-full" />
             </div>
-
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Contato</label>
-              <input
-                type="text"
-                placeholder="Nome da pessoa de contato"
-                value={formData.contato}
-                onChange={(e) => setFormData({ ...formData, contato: e.target.value })}
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
-                style={inputStyle}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: spacing.md,
-                marginBottom: spacing.lg,
-              }}
-            >
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label style={labelStyle}>Telefone</label>
-                <input
-                  type="text"
-                  placeholder="(XX) XXXX-XXXX"
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: fmtPhone(e.target.value) })}
-                  style={inputStyle}
-                />
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Telefone</label>
+                <input type="text" placeholder="(XX) XXXX-XXXX" value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: fmtPhone(e.target.value) })} className="input-base w-full" />
               </div>
               <div>
-                <label style={labelStyle}>Celular</label>
-                <input
-                  type="text"
-                  placeholder="(XX) XXXXX-XXXX"
-                  value={formData.celular}
-                  onChange={(e) => setFormData({ ...formData, celular: fmtCelular(e.target.value) })}
-                  style={inputStyle}
-                />
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Celular</label>
+                <input type="text" placeholder="(XX) XXXXX-XXXX" value={formData.celular} onChange={(e) => setFormData({ ...formData, celular: fmtCelular(e.target.value) })} className="input-base w-full" />
               </div>
             </div>
-
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>CPF/CNPJ</label>
-              <input
-                type="text"
-                value={formData.cnpj_cpf}
-                onChange={(e) => setFormData({ ...formData, cnpj_cpf: e.target.value })}
-                style={inputStyle}
-              />
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">CPF/CNPJ</label>
+              <input type="text" value={formData.cnpj_cpf} onChange={(e) => setFormData({ ...formData, cnpj_cpf: e.target.value })} className="input-base w-full" />
             </div>
-
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Endereço</label>
-              <input
-                type="text"
-                value={formData.endereco}
-                onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                style={inputStyle}
-              />
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Endereço</label>
+              <input type="text" value={formData.endereco} onChange={(e) => setFormData({ ...formData, endereco: e.target.value })} className="input-base w-full" />
             </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: spacing.md,
-                marginBottom: spacing.lg,
-              }}
-            >
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label style={labelStyle}>Cidade</label>
-                <input
-                  type="text"
-                  value={formData.cidade}
-                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                  style={inputStyle}
-                />
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cidade</label>
+                <input type="text" value={formData.cidade} onChange={(e) => setFormData({ ...formData, cidade: e.target.value })} className="input-base w-full" />
               </div>
               <div>
-                <label style={labelStyle}>Estado</label>
-                <input
-                  type="text"
-                  value={formData.estado}
-                  onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                  style={inputStyle}
-                />
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Estado</label>
+                <input type="text" value={formData.estado} onChange={(e) => setFormData({ ...formData, estado: e.target.value })} className="input-base w-full" />
               </div>
             </div>
-
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>CEP</label>
-              <input
-                type="text"
-                value={formData.cep}
-                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                style={inputStyle}
-              />
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">CEP</label>
+              <input type="text" value={formData.cep} onChange={(e) => setFormData({ ...formData, cep: e.target.value })} className="input-base w-full" />
             </div>
 
-            <div style={{ display: "flex", gap: spacing.md }}>
-              <Button
-                variant="secondary"
-                onClick={() => navigate({ to: "/crm/clientes" })}
-              >
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => navigate({ to: "/crm/clientes" })} className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
                 Cancelar
-              </Button>
-              <Button variant="primary" type="submit" disabled={saving}>
+              </button>
+              <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 transition-colors">
                 {saving ? "Salvando..." : "Salvar Alterações"}
-              </Button>
+              </button>
             </div>
           </form>
-        </Card>
+        </div>
       </div>
     </AppShell>
   );

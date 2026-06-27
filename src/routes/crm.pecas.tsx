@@ -1,40 +1,25 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { CRMLayout } from "@/components/crm/CRMLayout";
-import { PageHeader } from "@/components/ui";
-import { usePecas } from "@/hooks/usePecas";
-import { PecasTable } from "@/components/crm/PecasTable";
 import { Package } from "lucide-react";
-import { colors, spacing, borderRadius } from "@/lib/colors";
+import { usePecas } from "@/hooks/usePecas";
+import { AppShell } from "@/components/AppShell";
+import { PecasTable } from "@/components/crm/PecasTable";
+import { PageHeader } from "@/components/shared";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/pecas")({
-  head: () => ({ meta: [{ title: `Peças e Materiais · CRM ${client.name}` }] }),
+  head: () => ({ meta: [{ title: `Peças · CRM ${client.name}` }] }),
   component: PecasPage,
 });
 
-interface Peca {
-  id?: string;
-  codigo: string;
-  descricao: string;
-  categoria: string;
-  fabricante?: string | null;
-  valor_custo: number;
-  valor_venda: number;
-  estoque: number;
-  ativo: boolean;
-}
-
 function PecasPage() {
-  const { user } = useAuth();
-  const { pecas, addPeca, updatePeca, deletePeca } = usePecas(user?.id);
-
+  const { pecas, addPeca, updatePeca, deletePeca } = usePecas();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [formData, setFormData] = useState<Peca>({
+  const [formData, setFormData] = useState({
     codigo: "",
     descricao: "",
     categoria: "Hardware",
@@ -51,242 +36,155 @@ function PecasPage() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
     try {
       if (editingId) {
         await updatePeca(editingId, formData);
-        setMessage("✅ Peça atualizada!");
+        setMessage("Peça atualizada com sucesso!");
       } else {
         await addPeca(formData);
-        setMessage("✅ Peça criada!");
+        setMessage("Peça criada com sucesso!");
       }
-
-      setFormData({
-        codigo: "",
-        descricao: "",
-        categoria: "Hardware",
-        fabricante: "",
-        valor_custo: 0,
-        valor_venda: 0,
-        estoque: 0,
-        ativo: true,
-      });
+      setFormData({ codigo: "", descricao: "", categoria: "Hardware", fabricante: "", valor_custo: 0, valor_venda: 0, estoque: 0, ativo: true });
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
-      setMessage("❌ Erro ao salvar peça");
+      setMessage("Erro ao salvar peça");
       console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleEdit(peca: Peca) {
+  function handleEdit(peca: any) {
     setFormData(peca);
     setEditingId(peca.id || null);
     setShowForm(true);
   }
 
   function handleAddNew() {
-    setFormData({
-      codigo: "",
-      descricao: "",
-      categoria: "Hardware",
-      fabricante: "",
-      valor_custo: 0,
-      valor_venda: 0,
-      estoque: 0,
-      ativo: true,
-    });
+    setFormData({ codigo: "", descricao: "", categoria: "Hardware", fabricante: "", valor_custo: 0, valor_venda: 0, estoque: 0, ativo: true });
     setEditingId(null);
     setShowForm(true);
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: spacing.md,
-    background: colors.background,
-    border: `1px solid ${colors.border}`,
-    borderRadius: borderRadius.md,
-    color: colors.text,
-    fontSize: "14px",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "block" as const,
-    fontSize: "14px",
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    fontWeight: 600,
-  };
-
   return (
-    <CRMLayout>
-      <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
+    <AppShell>
+      <div className="p-4 md:p-6 space-y-5 max-w-6xl mx-auto">
         <PageHeader
+          category="CRM"
           title="Catálogo de Peças"
+          icon={Package}
           subtitle="Gestão de peças, materiais e estoque"
-          icon={<Package size={32} />}
         />
 
         {message && (
-          <div
-            style={{
-              background: message.startsWith("✅")
-                ? "rgba(76, 175, 80, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-              border: message.startsWith("✅")
-                ? "1px solid rgba(76, 175, 80, 0.3)"
-                : "1px solid rgba(239, 68, 68, 0.3)",
-              borderRadius: "6px",
-              padding: "12px",
-              marginBottom: "1.5rem",
-              color: message.startsWith("✅") ? "#66bb6a" : "#ef5350",
-              fontSize: "14px",
-            }}
-          >
+          <div className={cn(
+            "rounded-lg px-4 py-3 text-sm font-medium border",
+            message.startsWith("Erro")
+              ? "bg-destructive/10 border-destructive/30 text-destructive"
+              : "bg-brand/10 border-brand/30 text-brand"
+          )}>
             {message}
           </div>
         )}
 
         {showForm && (
-          <div
-            style={{
-              background: "rgba(6, 34, 53, 0.6)",
-              border: "1px solid rgba(19, 200, 211, 0.16)",
-              borderRadius: "12px",
-              padding: "2rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <h3 style={{ marginBottom: "1.5rem", fontSize: "16px", fontWeight: 600, color: colors.text }}>
+          <div className="card-graphite p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">
               {editingId ? "Editar Peça" : "Nova Peça"}
             </h3>
-
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label style={labelStyle}>Código *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código *</label>
                   <input
                     type="text"
                     value={formData.codigo}
                     onChange={(e) => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
                     placeholder="Ex: MEM-8GB"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Categoria *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoria *</label>
                   <select
                     value={formData.categoria}
                     onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                    style={inputStyle}
+                    className="input-base w-full"
                   >
-                    {categorias.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
+                    {categorias.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
-
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Descrição *</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição *</label>
                   <input
                     type="text"
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                     placeholder="Ex: Memória RAM 8GB DDR4"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Fabricante</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Fabricante</label>
                   <input
                     type="text"
                     value={formData.fabricante || ""}
                     onChange={(e) => setFormData({ ...formData, fabricante: e.target.value })}
                     placeholder="Ex: Kingston"
-                    style={inputStyle}
+                    className="input-base w-full"
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Estoque (Qtd) *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Estoque (Qtd) *</label>
                   <input
                     type="number"
                     value={formData.estoque}
                     onChange={(e) => setFormData({ ...formData, estoque: parseInt(e.target.value) || 0 })}
                     placeholder="0"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Valor de Custo (R$) *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor de Custo (R$) *</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.valor_custo}
                     onChange={(e) => setFormData({ ...formData, valor_custo: parseFloat(e.target.value) || 0 })}
                     placeholder="0.00"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Valor de Venda (R$) *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor de Venda (R$) *</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.valor_venda}
                     onChange={(e) => setFormData({ ...formData, valor_venda: parseFloat(e.target.value) || 0 })}
                     placeholder="0.00"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
               </div>
-
-              <div style={{ display: "flex", gap: spacing.md, justifyContent: "flex-end" }}>
+              <div className="flex gap-2 justify-end">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingId(null);
-                  }}
-                  style={{
-                    padding: "10px 16px",
-                    background: "transparent",
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: borderRadius.md,
-                    color: colors.text,
-                    cursor: "pointer",
-                    fontWeight: 600,
-                  }}
+                  onClick={() => { setShowForm(false); setEditingId(null); }}
+                  className="px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-surface-2 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  style={{
-                    padding: "10px 16px",
-                    background: colors.primary,
-                    border: "none",
-                    borderRadius: borderRadius.md,
-                    color: "#fff",
-                    cursor: loading ? "not-allowed" : "pointer",
-                    fontWeight: 600,
-                    opacity: loading ? 0.6 : 1,
-                  }}
+                  className="px-4 py-2 text-sm rounded-lg bg-select text-white font-semibold hover:bg-select/90 disabled:opacity-50 transition-colors"
                 >
                   {loading ? "Salvando..." : editingId ? "Atualizar" : "Criar"}
                 </button>
@@ -302,6 +200,6 @@ function PecasPage() {
           onDeletePeca={deletePeca}
         />
       </div>
-    </CRMLayout>
+    </AppShell>
   );
 }

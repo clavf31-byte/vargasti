@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServicos } from "@/hooks/useServicos";
 import { usePecas } from "@/hooks/usePecas";
-import { colors, spacing, borderRadius } from "@/lib/colors";
 import { X, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OrcamentoItem {
   descricao: string;
@@ -50,56 +50,22 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   }, [tipo, servicos, pecas]);
 
   async function handleCreateNew() {
-    if (!novoNome.trim() || novoPreco <= 0) {
-      alert("Preencha todos os campos");
-      return;
-    }
-
+    if (!novoNome.trim() || novoPreco <= 0) { alert("Preencha todos os campos"); return; }
     setCreatingNew(true);
     try {
       if (tipo === "servico") {
-        const { data } = await supabase.from("servicos").insert([
-          {
-            user_id: user!.id,
-            nome: novoNome,
-            valor_padrao: novoPreco,
-            descricao: novoDescricao,
-            ativo: true,
-            unidade: "h",
-            categoria: "Geral",
-          },
-        ]).select();
-
-        if (data && data[0]) {
-          setSelecionado(data[0]);
-          setPreco(data[0].valor_padrao);
-          setShowNewForm(false);
-          await refetchServicos?.();
-        }
+        const { data } = await supabase.from("servicos").insert([{
+          user_id: user!.id, nome: novoNome, valor_padrao: novoPreco, descricao: novoDescricao, ativo: true, unidade: "h", categoria: "Geral",
+        }]).select();
+        if (data?.[0]) { setSelecionado(data[0]); setPreco(data[0].valor_padrao); setShowNewForm(false); await refetchServicos?.(); }
       } else {
-        const { data } = await supabase.from("pecas").insert([
-          {
-            user_id: user!.id,
-            codigo: `PEC-${Date.now()}`,
-            descricao: novoNome,
-            categoria: novoDescricao || "Geral",
-            valor_venda: novoPreco,
-            valor_custo: novoPreco * 0.6,
-            ativo: true,
-          },
-        ]).select();
-
-        if (data && data[0]) {
-          setSelecionado(data[0]);
-          setPreco(data[0].valor_venda);
-          setShowNewForm(false);
-          await refetchPecas?.();
-        }
+        const { data } = await supabase.from("pecas").insert([{
+          user_id: user!.id, codigo: `PEC-${Date.now()}`, descricao: novoNome, categoria: novoDescricao || "Geral",
+          valor_venda: novoPreco, valor_custo: novoPreco * 0.6, ativo: true,
+        }]).select();
+        if (data?.[0]) { setSelecionado(data[0]); setPreco(data[0].valor_venda); setShowNewForm(false); await refetchPecas?.(); }
       }
-
-      setNovoNome("");
-      setNovoPreco(0);
-      setNovoDescricao("");
+      setNovoNome(""); setNovoPreco(0); setNovoDescricao("");
     } catch (err) {
       alert("Erro ao criar: " + (err instanceof Error ? err.message : "Desconhecido"));
     } finally {
@@ -109,420 +75,181 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
 
   function handleAdd() {
     if (!selecionado) return;
-
-    const item: OrcamentoItem = {
+    const precoFinal = precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda);
+    onAdd({
       descricao: selecionado.nome || selecionado.descricao,
       quantidade,
-      preco_unitario: precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda),
-      subtotal: quantidade * (precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda)),
+      preco_unitario: precoFinal,
+      subtotal: quantidade * precoFinal,
       categoria: tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
       tipo,
       servico_id: tipo === "servico" ? selecionado.id : undefined,
       peca_id: tipo === "peca" ? selecionado.id : undefined,
-    };
-
-    onAdd(item);
+    });
     onClose();
   }
-
-  const inputStyle = {
-    width: "100%",
-    padding: spacing.md,
-    background: colors.background,
-    border: `1px solid ${colors.border}`,
-    borderRadius: borderRadius.md,
-    color: colors.text,
-    fontSize: "14px",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "block" as const,
-    fontSize: "14px",
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    fontWeight: 600 as const,
-  };
 
   const listaItens = tipo === "servico" ? servicos : pecas;
   const precoFieldLabel = tipo === "servico" ? "Valor Padrão" : "Valor de Venda";
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div
-        style={{
-          background: colors.backgroundSecondary,
-          border: `1px solid ${colors.border}`,
-          borderRadius: borderRadius.lg,
-          padding: "2rem",
-          maxWidth: "500px",
-          width: "90%",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: spacing.lg,
-          }}
-        >
-          <h3 style={{ margin: 0, color: colors.text, fontSize: "18px", fontWeight: 600 }}>
-            Adicionar Item
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: colors.textSecondary,
-              fontSize: "24px",
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            <X size={24} />
+      <div className="card-graphite w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-base font-semibold text-foreground">Adicionar Item</h3>
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="size-5" />
           </button>
         </div>
 
-        {/* Tipo de Item */}
-        <div style={{ marginBottom: spacing.lg }}>
-          <label style={labelStyle}>Tipo de Item *</label>
-          <div style={{ display: "flex", gap: spacing.md }}>
-            <button
-              type="button"
-              onClick={() => {
-                setTipo("servico");
-                setSelecionado(null);
-              }}
-              style={{
-                flex: 1,
-                padding: spacing.md,
-                background: tipo === "servico" ? colors.primary : "transparent",
-                border: `1px solid ${tipo === "servico" ? colors.primary : colors.border}`,
-                borderRadius: borderRadius.md,
-                color: tipo === "servico" ? "#fff" : colors.text,
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              Serviço
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setTipo("peca");
-                setSelecionado(null);
-              }}
-              style={{
-                flex: 1,
-                padding: spacing.md,
-                background: tipo === "peca" ? colors.primary : "transparent",
-                border: `1px solid ${tipo === "peca" ? colors.primary : colors.border}`,
-                borderRadius: borderRadius.md,
-                color: tipo === "peca" ? "#fff" : colors.text,
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              Peça/Material
-            </button>
-          </div>
-        </div>
-
-        {/* Seleção de Item */}
-        {showNewForm ? (
-          <div style={{ marginBottom: spacing.lg }}>
-            <label style={labelStyle}>
-              {tipo === "servico" ? "Nome do Serviço" : "Descrição da Peça"} *
-            </label>
-            <input
-              type="text"
-              value={novoNome}
-              onChange={(e) => setNovoNome(e.target.value)}
-              placeholder={tipo === "servico" ? "Ex: Suporte Técnico" : "Ex: Memória RAM 8GB"}
-              style={inputStyle}
-              autoFocus
-            />
-
-            <label style={{ ...labelStyle, marginTop: spacing.lg }}>
-              {tipo === "servico" ? "Valor Padrão" : "Valor de Venda"} *
-            </label>
-            <input
-              type="number"
-              value={novoPreco}
-              onChange={(e) => setNovoPreco(parseFloat(e.target.value) || 0)}
-              min="0"
-              step="0.01"
-              style={inputStyle}
-            />
-
-            <label style={{ ...labelStyle, marginTop: spacing.lg }}>
-              {tipo === "servico" ? "Descrição" : "Categoria"}
-            </label>
-            <input
-              type="text"
-              value={novoDescricao}
-              onChange={(e) => setNovoDescricao(e.target.value)}
-              placeholder={tipo === "servico" ? "Descrição do serviço" : "Ex: Hardware"}
-              style={inputStyle}
-            />
-
-            <div style={{ display: "flex", gap: spacing.md, marginTop: spacing.lg }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowNewForm(false);
-                  setNovoNome("");
-                  setNovoPreco(0);
-                  setNovoDescricao("");
-                }}
-                style={{
-                  flex: 1,
-                  padding: spacing.md,
-                  background: "transparent",
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: borderRadius.md,
-                  color: colors.text,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateNew}
-                disabled={creatingNew}
-                style={{
-                  flex: 1,
-                  padding: spacing.md,
-                  background: colors.primary,
-                  border: "none",
-                  borderRadius: borderRadius.md,
-                  color: "#fff",
-                  cursor: creatingNew ? "not-allowed" : "pointer",
-                  fontWeight: 600,
-                  opacity: creatingNew ? 0.6 : 1,
-                }}
-              >
-                {creatingNew ? "Criando..." : "Criar e Usar"}
-              </button>
-            </div>
-          </div>
-        ) : listaItens.length === 0 ? (
-          <div style={{ marginBottom: spacing.lg }}>
-            <button
-              type="button"
-              onClick={() => setShowNewForm(true)}
-              style={{
-                width: "100%",
-                padding: spacing.lg,
-                background: colors.primary,
-                border: "none",
-                borderRadius: borderRadius.md,
-                color: "#fff",
-                cursor: "pointer",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: spacing.sm,
-              }}
-            >
-              <Plus size={18} />
-              Criar {tipo === "servico" ? "Novo Serviço" : "Nova Peça"}
-            </button>
-          </div>
-        ) : (
-          <div style={{ marginBottom: spacing.lg }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm }}>
-              <label style={{ ...labelStyle, marginBottom: 0 }}>
-                {tipo === "servico" ? "Serviço" : "Peça/Material"} *
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowNewForm(true)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: colors.primary,
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <Plus size={14} /> Novo
-              </button>
-            </div>
-            <select
-              value={selecionado?.id || ""}
-              onChange={(e) => {
-                const item: any = (listaItens as any[]).find((i) => i.id === e.target.value);
-                setSelecionado(item);
-                if (item) {
-                  setPreco(tipo === "servico" ? item.valor_padrao : item.valor_venda);
-                  setPrecoCustomizado(false);
-                }
-              }}
-              style={inputStyle}
-            >
-              <option value="">Selecione...</option>
-              {(listaItens as any[]).map((item) => (
-                <option key={item.id} value={item.id}>
-                  {tipo === "servico" ? item.nome : `[${item.codigo}] ${item.descricao}`}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {selecionado && (
-          <>
-            {/* Descrição (leitura) */}
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Descrição</label>
-              <div
-                style={{
-                  padding: spacing.md,
-                  background: colors.background,
-                  borderRadius: borderRadius.md,
-                  color: colors.text,
-                  fontSize: "14px",
-                }}
-              >
-                {tipo === "servico"
-                  ? selecionado.descricao || "Sem descrição"
-                  : `${selecionado.categoria} - ${selecionado.fabricante || "S/M"}`}
-              </div>
-            </div>
-
-            {/* Quantidade */}
-            <div style={{ marginBottom: spacing.lg }}>
-              <label style={labelStyle}>Quantidade *</label>
-              <input
-                type="number"
-                value={quantidade}
-                onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
-                min="1"
-                step={tipo === "servico" ? "0.5" : "1"}
-                style={inputStyle}
-              />
-              {tipo === "servico" && (
-                <div style={{ fontSize: "12px", color: colors.textSecondary, marginTop: spacing.sm }}>
-                  Unidade: {selecionado.unidade}
-                </div>
-              )}
-            </div>
-
-            {/* Preço */}
-            <div style={{ marginBottom: spacing.lg }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm }}>
-                <label style={{ ...labelStyle, marginBottom: 0 }}>{precoFieldLabel}</label>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Tipo de Item *</label>
+            <div className="flex gap-2">
+              {(["servico", "peca"] as const).map((t) => (
                 <button
+                  key={t}
                   type="button"
-                  onClick={() => setPrecoCustomizado(!precoCustomizado)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: colors.primary,
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                  }}
+                  onClick={() => { setTipo(t); setSelecionado(null); }}
+                  className={cn(
+                    "flex-1 py-2 text-sm font-semibold rounded-lg border transition-colors",
+                    tipo === t
+                      ? "bg-select text-white border-select"
+                      : "bg-transparent text-foreground border-border hover:border-select/40"
+                  )}
                 >
-                  {precoCustomizado ? "Usar Padrão" : "Customizar"}
+                  {t === "servico" ? "Serviço" : "Peça/Material"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {showNewForm ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  {tipo === "servico" ? "Nome do Serviço" : "Descrição da Peça"} *
+                </label>
+                <input type="text" value={novoNome} onChange={(e) => setNovoNome(e.target.value)}
+                  placeholder={tipo === "servico" ? "Ex: Suporte Técnico" : "Ex: Memória RAM 8GB"}
+                  className="input-base w-full" autoFocus />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  {tipo === "servico" ? "Valor Padrão" : "Valor de Venda"} *
+                </label>
+                <input type="number" value={novoPreco} onChange={(e) => setNovoPreco(parseFloat(e.target.value) || 0)}
+                  min="0" step="0.01" className="input-base w-full" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  {tipo === "servico" ? "Descrição" : "Categoria"}
+                </label>
+                <input type="text" value={novoDescricao} onChange={(e) => setNovoDescricao(e.target.value)}
+                  placeholder={tipo === "servico" ? "Descrição do serviço" : "Ex: Hardware"}
+                  className="input-base w-full" />
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => { setShowNewForm(false); setNovoNome(""); setNovoPreco(0); setNovoDescricao(""); }}
+                  className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
+                  Cancelar
+                </button>
+                <button type="button" onClick={handleCreateNew} disabled={creatingNew}
+                  className="flex-1 py-2.5 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 disabled:opacity-50 transition-colors">
+                  {creatingNew ? "Criando..." : "Criar e Usar"}
                 </button>
               </div>
-              <input
-                type="number"
-                value={preco}
-                onChange={(e) => setPreco(parseFloat(e.target.value) || 0)}
-                step="0.01"
-                disabled={!precoCustomizado}
-                style={{
-                  ...inputStyle,
-                  opacity: precoCustomizado ? 1 : 0.6,
-                  cursor: precoCustomizado ? "text" : "not-allowed",
-                }}
-              />
             </div>
-
-            {/* Subtotal */}
-            <div
-              style={{
-                padding: spacing.lg,
-                background: "rgba(13, 208, 215, 0.05)",
-                border: `1px solid rgba(13, 208, 215, 0.2)`,
-                borderRadius: borderRadius.md,
-                marginBottom: spacing.lg,
-              }}
-            >
-              <div style={{ fontSize: "12px", color: colors.textSecondary, marginBottom: spacing.sm }}>
-                Subtotal: {quantidade} × R$ {preco.toFixed(2)}
+          ) : listaItens.length === 0 ? (
+            <button type="button" onClick={() => setShowNewForm(true)}
+              className="w-full py-3 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 transition-colors flex items-center justify-center gap-2">
+              <Plus className="size-4" /> Criar {tipo === "servico" ? "Novo Serviço" : "Nova Peça"}
+            </button>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  {tipo === "servico" ? "Serviço" : "Peça/Material"} *
+                </label>
+                <button type="button" onClick={() => setShowNewForm(true)}
+                  className="text-xs font-semibold text-select hover:text-select/80 flex items-center gap-1">
+                  <Plus className="size-3" /> Novo
+                </button>
               </div>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: colors.primary }}>
-                R$ {(quantidade * preco).toFixed(2)}
-              </div>
+              <select
+                value={selecionado?.id || ""}
+                onChange={(e) => {
+                  const item: any = (listaItens as any[]).find((i) => i.id === e.target.value);
+                  setSelecionado(item);
+                  if (item) { setPreco(tipo === "servico" ? item.valor_padrao : item.valor_venda); setPrecoCustomizado(false); }
+                }}
+                className="input-base w-full"
+              >
+                <option value="">Selecione...</option>
+                {(listaItens as any[]).map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {tipo === "servico" ? item.nome : `[${item.codigo}] ${item.descricao}`}
+                  </option>
+                ))}
+              </select>
             </div>
+          )}
 
-            {/* Botões */}
-            <div style={{ display: "flex", gap: spacing.md }}>
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  background: "transparent",
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: borderRadius.md,
-                  color: colors.text,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleAdd}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  background: colors.primary,
-                  border: "none",
-                  borderRadius: borderRadius.md,
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Adicionar
-              </button>
-            </div>
-          </>
-        )}
+          {selecionado && (
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
+                <div className="input-base w-full text-foreground text-sm opacity-70 cursor-default">
+                  {tipo === "servico"
+                    ? selecionado.descricao || "Sem descrição"
+                    : `${selecionado.categoria} - ${selecionado.fabricante || "S/M"}`}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
+                <input type="number" value={quantidade}
+                  onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
+                  min="1" step={tipo === "servico" ? "0.5" : "1"} className="input-base w-full" />
+                {tipo === "servico" && (
+                  <p className="text-[11px] text-muted-foreground mt-1">Unidade: {selecionado.unidade}</p>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">{precoFieldLabel}</label>
+                  <button type="button" onClick={() => setPrecoCustomizado(!precoCustomizado)}
+                    className="text-xs font-semibold text-select hover:text-select/80">
+                    {precoCustomizado ? "Usar Padrão" : "Customizar"}
+                  </button>
+                </div>
+                <input type="number" value={preco} onChange={(e) => setPreco(parseFloat(e.target.value) || 0)}
+                  step="0.01" disabled={!precoCustomizado}
+                  className={cn("input-base w-full", !precoCustomizado && "opacity-50 cursor-not-allowed")} />
+              </div>
+
+              <div className="rounded-lg p-4 bg-select/5 border border-select/20">
+                <div className="text-xs text-muted-foreground mb-1">Subtotal: {quantidade} × R$ {preco.toFixed(2)}</div>
+                <div className="text-xl font-bold text-select">R$ {(quantidade * preco).toFixed(2)}</div>
+              </div>
+
+              <div className="flex gap-2">
+                <button type="button" onClick={onClose}
+                  className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
+                  Cancelar
+                </button>
+                <button type="button" onClick={handleAdd}
+                  className="flex-1 py-2.5 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 transition-colors">
+                  Adicionar
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

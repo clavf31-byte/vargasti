@@ -1,11 +1,10 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Card, Button } from "@/components/ui";
-import { colors, spacing, borderRadius } from "@/lib/colors";
+import { PageHeader, EmptyState, LoadingState, StatusBadge, Btn } from "@/components/shared";
 import { Plus, Eye, Send, FileUp, Trash2, ScrollText, FileEdit, CheckCircle2, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/")({
@@ -24,6 +23,12 @@ interface Contrato {
   created_at: string;
 }
 
+const STATUS_ICON: Record<string, React.ReactNode> = {
+  rascunho: <><FileEdit className="size-3" /> Rascunho</>,
+  enviado:  <><Mail className="size-3" /> Enviado</>,
+  assinado: <><CheckCircle2 className="size-3" /> Assinado</>,
+};
+
 function ContratosPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +43,6 @@ function ContratosPage() {
         .select("id, titulo, cliente_id, clientes(nome), status, email_enviado_em, assinado_em, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
-
       if (error) throw error;
       setContratos(data || []);
     } catch (e) {
@@ -58,157 +62,90 @@ function ContratosPage() {
     try {
       await (supabase as any).from("contracts").delete().eq("id", id);
       loadContratos();
-    } catch (e) {
+    } catch {
       alert("Erro ao deletar");
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const map: Record<string, string> = {
-      rascunho: colors.textSecondary,
-      enviado: colors.primary,
-      assinado: colors.success,
-    };
-    return map[status] || colors.text;
-  };
-
   return (
     <AppShell>
-      <div style={{ padding: spacing.xl, maxWidth: "1400px", margin: "0 auto" }}>
+      <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         <PageHeader
+          category="CRM"
           title="Contratos"
+          icon={ScrollText}
           subtitle={`${contratos.length} contrato(s)`}
-          action={
-            <Button variant="primary" onClick={() => navigate({ to: "/crm/contratos/novo" })}>
-              <Plus size={18} /> Novo Contrato
-            </Button>
+          actions={
+            <Btn variant="primary" onClick={() => navigate({ to: "/crm/contratos/novo" })}>
+              <Plus className="size-4" /> Novo Contrato
+            </Btn>
           }
-          icon={<ScrollText size={32} color={colors.primary} />}
         />
 
         {loading ? (
-          <p style={{ color: colors.textSecondary }}>Carregando...</p>
+          <LoadingState />
         ) : contratos.length === 0 ? (
-          <Card>
-            <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
-              Nenhum contrato criado
-            </p>
-          </Card>
+          <EmptyState icon={ScrollText} title="Nenhum contrato criado" />
         ) : (
-          <Card>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                    <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600 }}>
-                      Título
-                    </th>
-                    <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600 }}>
-                      Cliente
-                    </th>
-                    <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600 }}>
-                      Status
-                    </th>
-                    <th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600 }}>
-                      Data
-                    </th>
-                    <th style={{ padding: spacing.md, textAlign: "center", color: colors.textSecondary, fontWeight: 600 }}>
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contratos.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: `1px solid ${colors.borderLight}` }}>
-                      <td style={{ padding: spacing.md, color: colors.text, fontWeight: 500 }}>{c.titulo}</td>
-                      <td style={{ padding: spacing.md, color: colors.textSecondary }}>
-                        {(c.clientes as any)?.nome || "-"}
-                      </td>
-                      <td style={{ padding: spacing.md, color: getStatusColor(c.status), fontWeight: 600 }}>
-                        {c.status === "rascunho" && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><FileEdit size={12} /> Rascunho</span>}
-                        {c.status === "enviado" && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Mail size={12} /> Enviado</span>}
-                        {c.status === "assinado" && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={12} /> Assinado</span>}
-                      </td>
-                      <td style={{ padding: spacing.md, color: colors.textSecondary }}>
-                        {new Date(c.created_at).toLocaleDateString("pt-BR")}
-                      </td>
-                      <td style={{ padding: spacing.md, textAlign: "center", display: "flex", gap: spacing.sm, justifyContent: "center" }}>
+          <div className="card-graphite overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b-2 border-border">
+                  {["Título", "Cliente", "Status", "Data", "Ações"].map((h, i) => (
+                    <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 4 ? "text-center" : "text-left"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {contratos.map((c) => (
+                  <tr key={c.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
+                    <td className="px-4 py-3 font-medium text-foreground">{c.titulo}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{(c.clientes as any)?.nome || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold capitalize">
+                        {STATUS_ICON[c.status] ?? c.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
                         <button
                           onClick={() => navigate({ to: "/crm/contratos/$id", params: { id: c.id } })}
-                          style={{
-                            background: colors.background,
-                            border: `1px solid ${colors.border}`,
-                            color: colors.primary,
-                            padding: `${spacing.sm} ${spacing.md}`,
-                            borderRadius: borderRadius.sm,
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            display: "flex",
-                            gap: "4px",
-                            alignItems: "center",
-                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
                         >
-                          <Eye size={14} /> Ver
+                          <Eye className="size-3" /> Ver
                         </button>
                         {c.status === "rascunho" && (
                           <button
                             onClick={() => navigate({ to: "/crm/contratos/$id/enviar", params: { id: c.id } })}
-                            style={{
-                              background: colors.background,
-                              border: `1px solid ${colors.primary}`,
-                              color: colors.primary,
-                              padding: `${spacing.sm} ${spacing.md}`,
-                              borderRadius: borderRadius.sm,
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              display: "flex",
-                              gap: "4px",
-                              alignItems: "center",
-                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
                           >
-                            <Send size={14} /> Enviar
+                            <Send className="size-3" /> Enviar
                           </button>
                         )}
                         {c.status === "enviado" && (
                           <button
                             onClick={() => navigate({ to: "/crm/contratos/$id/receber", params: { id: c.id } })}
-                            style={{
-                              background: colors.background,
-                              border: `1px solid ${colors.success}`,
-                              color: colors.success,
-                              padding: `${spacing.sm} ${spacing.md}`,
-                              borderRadius: borderRadius.sm,
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              display: "flex",
-                              gap: "4px",
-                              alignItems: "center",
-                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-brand/30 text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors"
                           >
-                            <FileUp size={14} /> Receber
+                            <FileUp className="size-3" /> Receber
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(c.id)}
-                          style={{
-                            background: colors.background,
-                            border: `1px solid ${colors.error}`,
-                            color: colors.error,
-                            padding: `${spacing.sm} ${spacing.md}`,
-                            borderRadius: borderRadius.sm,
-                            cursor: "pointer",
-                            fontSize: "12px",
-                          }}
+                          className="inline-flex items-center justify-center p-1.5 border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 className="size-3.5" />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </AppShell>

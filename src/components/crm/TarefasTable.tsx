@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, Circle, Trash2, Plus } from "lucide-react";
-import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Button } from "@/components/ui";
 import type { Tarefa } from "@/hooks/useTarefas";
+import { cn } from "@/lib/utils";
 
 interface TarefasTableProps {
   tarefas: Tarefa[];
@@ -12,6 +11,17 @@ interface TarefasTableProps {
   onRemoveTarefa: (id: string) => void;
   onToggleStatus: (id: string) => void;
 }
+
+const PRIORIDADE_CLS: Record<string, string> = {
+  alta:   "text-destructive",
+  normal: "text-warning",
+  baixa:  "text-info",
+};
+const STATUS_CLS: Record<string, string> = {
+  concluida:    "text-brand",
+  em_progresso: "text-warning",
+  aberta:       "text-info",
+};
 
 function TarefaRow({
   tarefa,
@@ -27,126 +37,85 @@ function TarefaRow({
   const [titulo, setTitulo] = useState(tarefa.titulo);
   const [descricao, setDescricao] = useState(tarefa.descricao || "");
 
-  const getPrioridadeColor = (p: string) =>
-    ({ alta: colors.error, normal: colors.warning, baixa: colors.info })[p] ?? colors.textSecondary;
-
-  const getStatusColor = (s: string) =>
-    ({ concluida: colors.success, em_progresso: colors.warning, aberta: colors.info })[s] ?? colors.textSecondary;
-
-  const inputStyle = {
-    width: "100%",
-    padding: spacing.sm,
-    background: colors.background,
-    border: `1px solid ${colors.border}`,
-    borderRadius: borderRadius.sm,
-    color: colors.text,
-    fontSize: "13px",
-    boxSizing: "border-box" as const,
-  };
-
   const isVencida = new Date(tarefa.data_vencimento) < new Date();
   const isHoje = tarefa.data_vencimento === new Date().toISOString().split("T")[0];
+  const concluida = tarefa.status === "concluida";
 
   return (
-    <div
-      style={{
-        padding: spacing.md,
-        background: colors.backgroundSecondary,
-        border: `1px solid ${isVencida && tarefa.status !== "concluida" ? colors.error : colors.border}`,
-        borderRadius: borderRadius.md,
-        opacity: tarefa.status === "concluida" ? 0.6 : 1,
-      }}
-    >
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: spacing.md, alignItems: "start" }}>
-        <button
-          onClick={onToggle}
-          style={{ background: "transparent", border: "none", cursor: "pointer", padding: 0, marginTop: spacing.xs }}
-        >
-          {tarefa.status === "concluida"
-            ? <CheckCircle2 size={20} color={colors.success} />
-            : <Circle size={20} color={colors.border} />}
+    <div className={cn(
+      "p-4 card-graphite",
+      isVencida && !concluida && "border-destructive/50",
+      concluida && "opacity-60"
+    )}>
+      <div className="grid gap-3" style={{ gridTemplateColumns: "auto 1fr auto" }}>
+        <button onClick={onToggle} className="mt-0.5">
+          {concluida
+            ? <CheckCircle2 className="size-5 text-brand" />
+            : <Circle className="size-5 text-border" />}
         </button>
 
-        <div>
+        <div className="space-y-2">
           <input
             type="text"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             onBlur={() => { if (titulo !== tarefa.titulo) onUpdate({ titulo }); }}
             placeholder="Título da tarefa"
-            style={{ ...inputStyle, marginBottom: spacing.sm, fontWeight: 600, fontSize: "14px" }}
+            className="input-base w-full font-semibold text-sm"
           />
-
           <textarea
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             onBlur={() => { if (descricao !== (tarefa.descricao || "")) onUpdate({ descricao }); }}
             placeholder="Descrição (opcional)"
-            style={{ ...inputStyle, marginBottom: spacing.sm, minHeight: "60px", fontFamily: "inherit" }}
+            className="input-base w-full text-xs resize-none min-h-14 font-normal"
           />
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: spacing.sm }}>
+          <div className="grid grid-cols-3 gap-2">
             <div>
-              <label style={{ fontSize: "11px", color: colors.textSecondary, display: "block", marginBottom: "4px" }}>
-                Prioridade
-              </label>
+              <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Prioridade</label>
               <select
                 value={tarefa.prioridade}
                 onChange={(e) => onUpdate({ prioridade: e.target.value as Tarefa["prioridade"] })}
-                style={{ ...inputStyle, color: getPrioridadeColor(tarefa.prioridade) }}
+                className={cn("input-base w-full text-xs", PRIORIDADE_CLS[tarefa.prioridade])}
               >
                 <option value="baixa">Baixa</option>
                 <option value="normal">Normal</option>
                 <option value="alta">Alta</option>
               </select>
             </div>
-
             <div>
-              <label style={{ fontSize: "11px", color: colors.textSecondary, display: "block", marginBottom: "4px" }}>
-                Status
-              </label>
+              <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Status</label>
               <select
                 value={tarefa.status}
                 onChange={(e) => onUpdate({ status: e.target.value as Tarefa["status"] })}
-                style={{ ...inputStyle, color: getStatusColor(tarefa.status) }}
+                className={cn("input-base w-full text-xs", STATUS_CLS[tarefa.status])}
               >
                 <option value="aberta">Aberta</option>
                 <option value="em_progresso">Em Progresso</option>
                 <option value="concluida">Concluída</option>
               </select>
             </div>
-
             <div>
-              <label style={{ fontSize: "11px", color: colors.textSecondary, display: "block", marginBottom: "4px" }}>
-                Vencimento
-              </label>
+              <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Vencimento</label>
               <input
                 type="date"
                 value={tarefa.data_vencimento}
                 onChange={(e) => onUpdate({ data_vencimento: e.target.value })}
-                style={inputStyle}
+                className="input-base w-full text-xs"
               />
             </div>
           </div>
         </div>
 
-        <button
-          onClick={onRemove}
-          style={{ background: "transparent", border: "none", color: colors.error, cursor: "pointer", padding: 0 }}
-          title="Remover tarefa"
-        >
-          <Trash2 size={16} />
+        <button onClick={onRemove} className="text-destructive hover:text-destructive/80 transition-colors mt-0.5" title="Remover tarefa">
+          <Trash2 className="size-4" />
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: spacing.sm, marginTop: spacing.sm, fontSize: "11px" }}>
-        {isVencida && tarefa.status !== "concluida" && (
-          <span style={{ color: colors.error, fontWeight: 600 }}>⚠️ Vencida</span>
-        )}
-        {isHoje && (
-          <span style={{ color: colors.warning, fontWeight: 600 }}>📌 Hoje</span>
-        )}
-        <span style={{ color: getPrioridadeColor(tarefa.prioridade), fontWeight: 600 }}>
+      <div className="flex gap-2 mt-2 text-[11px]">
+        {isVencida && !concluida && <span className="text-destructive font-semibold">Vencida</span>}
+        {isHoje && <span className="text-warning font-semibold">Hoje</span>}
+        <span className={cn("font-semibold", PRIORIDADE_CLS[tarefa.prioridade])}>
           • {tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)}
         </span>
       </div>
@@ -154,41 +123,27 @@ function TarefaRow({
   );
 }
 
-export function TarefasTable({
-  tarefas,
-  loading,
-  onAddTarefa,
-  onUpdateTarefa,
-  onRemoveTarefa,
-  onToggleStatus,
-}: TarefasTableProps) {
+export function TarefasTable({ tarefas, loading, onAddTarefa, onUpdateTarefa, onRemoveTarefa, onToggleStatus }: TarefasTableProps) {
   return (
-    <div style={{ marginBottom: spacing.lg }}>
-      <div style={{ marginBottom: spacing.md, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h3 style={{ margin: 0, fontSize: "16px", color: colors.text, fontWeight: 600 }}>
-          Tarefas & Follow-ups
-        </h3>
-        <Button variant="primary" size="sm" onClick={onAddTarefa}>
-          <Plus size={16} /> Nova Tarefa
-        </Button>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">Tarefas & Follow-ups</h3>
+        <button
+          onClick={onAddTarefa}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition-colors"
+        >
+          <Plus className="size-3.5" /> Nova Tarefa
+        </button>
       </div>
 
       {loading ? (
-        <div style={{ padding: spacing.lg, textAlign: "center", color: colors.textSecondary }}>
-          Carregando...
-        </div>
+        <div className="text-center text-sm text-muted-foreground py-6">Carregando...</div>
       ) : tarefas.length === 0 ? (
-        <div style={{
-          padding: spacing.lg,
-          textAlign: "center",
-          color: colors.textSecondary,
-          background: colors.backgroundSecondary,
-          borderRadius: borderRadius.md,
-        }}>
+        <div className="card-graphite border-dashed p-6 text-center text-sm text-muted-foreground">
           Nenhuma tarefa criada
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing.md }}>
+        <div className="space-y-2">
           {tarefas.map((tarefa) => (
             <TarefaRow
               key={tarefa.id}

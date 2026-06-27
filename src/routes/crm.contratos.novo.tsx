@@ -1,11 +1,10 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Card, Button } from "@/components/ui";
-import { colors, spacing, borderRadius } from "@/lib/colors";
+import { PageHeader } from "@/components/shared";
 import { ChevronRight, ChevronLeft, ScrollText } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/novo")({
@@ -46,16 +45,16 @@ function substituteVariables(conteudo: string, valores: Record<string, string>):
 function buildAutoValues(cliente: Cliente | undefined): Record<string, string> {
   const hoje = new Date();
   return {
-    cliente_nome: cliente?.nome || "",
-    cliente_email: cliente?.email || "",
+    cliente_nome:     cliente?.nome || "",
+    cliente_email:    cliente?.email || "",
     cliente_telefone: cliente?.telefone || "",
-    cliente_cnpj: cliente?.cnpj_cpf || "",
-    cliente_cpf: cliente?.cnpj_cpf || "",
+    cliente_cnpj:     cliente?.cnpj_cpf || "",
+    cliente_cpf:      cliente?.cnpj_cpf || "",
     cliente_endereco: cliente?.endereco || "",
-    data: hoje.toLocaleDateString("pt-BR"),
-    data_atual: hoje.toLocaleDateString("pt-BR"),
-    ano: hoje.getFullYear().toString(),
-    mes: hoje.toLocaleDateString("pt-BR", { month: "long" }),
+    data:             hoje.toLocaleDateString("pt-BR"),
+    data_atual:       hoje.toLocaleDateString("pt-BR"),
+    ano:              hoje.getFullYear().toString(),
+    mes:              hoje.toLocaleDateString("pt-BR", { month: "long" }),
   };
 }
 
@@ -72,9 +71,7 @@ function NovoContratoPage() {
   const [valores, setValores] = useState<Record<string, string>>({});
   const [criando, setCriando] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
+  useEffect(() => { loadData(); }, [user]);
 
   const loadData = async () => {
     if (!user) return;
@@ -97,19 +94,14 @@ function NovoContratoPage() {
       alert("Preencha todos os campos obrigatórios");
       return;
     }
-
     const template = templates.find((t) => t.id === form.template_id);
     const cliente = clientes.find((c) => c.id === form.cliente_id);
-
     if (!template) return;
 
     const vars = extractVariables(template.conteudo);
     const auto = buildAutoValues(cliente);
-
     const initialValues: Record<string, string> = {};
-    for (const v of vars) {
-      initialValues[v] = auto[v] || "";
-    }
+    for (const v of vars) initialValues[v] = auto[v] || "";
 
     setVariaveis(vars);
     setValores(initialValues);
@@ -118,207 +110,148 @@ function NovoContratoPage() {
 
   const handleCreate = async () => {
     if (!user) return;
-
     setCriando(true);
     try {
       const template = templates.find((t) => t.id === form.template_id);
       if (!template) throw new Error("Template não encontrado");
-
       const conteudoFinal = substituteVariables(template.conteudo, valores);
-      const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
       const { data: contrato, error } = await (supabase as any)
         .from("contracts")
-        .insert([{
-          user_id: user.id,
-          cliente_id: form.cliente_id,
-          template_id: form.template_id,
-          titulo: form.titulo,
-          conteudo: conteudoFinal,
-          status: "rascunho",
-        }])
-        .select()
-        .single();
+        .insert([{ user_id: user.id, cliente_id: form.cliente_id, template_id: form.template_id, titulo: form.titulo, conteudo: conteudoFinal, status: "rascunho" }])
+        .select().single();
 
       if (error) throw error;
-
-      await (supabase as any).from("contract_history").insert([{
-        contract_id: contrato.id,
-        acao: "criado",
-        detalhes: { criado_em: new Date().toISOString() },
-      }]);
-
+      await (supabase as any).from("contract_history").insert([{ contract_id: contrato.id, acao: "criado", detalhes: { criado_em: new Date().toISOString() } }]);
       navigate({ to: `/crm/contratos/${contrato.id}` });
     } catch (e) {
-      console.error("Erro:", e);
       alert("Erro ao criar contrato: " + (e instanceof Error ? e.message : "Erro desconhecido"));
     } finally {
       setCriando(false);
     }
   };
 
-  const inputStyle = {
-    width: "100%",
-    padding: spacing.md,
-    background: colors.background,
-    border: `1px solid ${colors.border}`,
-    borderRadius: borderRadius.md,
-    color: colors.text,
-    fontSize: "14px",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "block" as const,
-    fontSize: "13px",
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    fontWeight: 600 as const,
-  };
-
   if (loading) {
-    return (
-      <AppShell>
-        <p style={{ padding: spacing.xl, color: colors.textSecondary }}>Carregando...</p>
-      </AppShell>
-    );
+    return <AppShell><div className="p-6 text-sm text-muted-foreground">Carregando...</div></AppShell>;
   }
 
   const selectedTemplate = templates.find((t) => t.id === form.template_id);
 
   return (
     <AppShell>
-      <div style={{ padding: spacing.xl, maxWidth: "800px", margin: "0 auto" }}>
-        <PageHeader title="Novo Contrato" subtitle={step === 1 ? "Passo 1 de 2 — Dados básicos" : "Passo 2 de 2 — Preencher variáveis"} icon={<ScrollText size={32} color={colors.primary} />} />
+      <div className="p-4 md:p-6 space-y-5 max-w-2xl mx-auto">
+        <PageHeader
+          category="CRM"
+          title="Novo Contrato"
+          icon={ScrollText}
+          subtitle={step === 1 ? "Passo 1 de 2 — Dados básicos" : "Passo 2 de 2 — Preencher variáveis"}
+        />
 
         {step === 1 && (
-          <Card>
-            <div style={{ display: "grid", gap: spacing.lg }}>
-              <div>
-                <label style={labelStyle}>Modelo de Contrato *</label>
-                <select value={form.template_id} onChange={(e) => setForm({ ...form, template_id: e.target.value })} style={inputStyle}>
-                  <option value="">Selecione um modelo</option>
-                  {templates.map((t) => (
-                    <option key={t.id} value={t.id}>{t.nome}</option>
-                  ))}
-                </select>
-                {templates.length === 0 && (
-                  <p style={{ margin: `${spacing.sm} 0 0`, fontSize: "12px", color: colors.error }}>
-                    Nenhum modelo ativo. <button onClick={() => navigate({ to: "/crm/contratos/modelos" })} style={{ background: "none", border: "none", color: colors.primary, cursor: "pointer", fontSize: "12px", padding: 0 }}>Criar modelo →</button>
-                  </p>
-                )}
-              </div>
-
-              {selectedTemplate && (
-                <div style={{ padding: spacing.md, background: colors.backgroundTertiary, borderRadius: borderRadius.md, fontSize: "13px", color: colors.textSecondary }}>
-                  <strong style={{ color: colors.text }}>{selectedTemplate.nome}</strong>
-                  {selectedTemplate.descricao && <p style={{ margin: `${spacing.sm} 0 0` }}>{selectedTemplate.descricao}</p>}
-                  {(() => {
-                    const vars = extractVariables(selectedTemplate.conteudo);
-                    return vars.length > 0 ? (
-                      <p style={{ margin: `${spacing.sm} 0 0` }}>
-                        Variáveis: {vars.map(v => (
-                          <span key={v} style={{ background: colors.primary + "22", color: colors.primary, padding: "2px 6px", borderRadius: "4px", fontSize: "11px", marginRight: "4px" }}>{`{{${v}}}`}</span>
-                        ))}
-                      </p>
-                    ) : null;
-                  })()}
-                </div>
+          <div className="card-graphite p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Modelo de Contrato *</label>
+              <select value={form.template_id} onChange={(e) => setForm({ ...form, template_id: e.target.value })} className="input-base w-full">
+                <option value="">Selecione um modelo</option>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+              </select>
+              {templates.length === 0 && (
+                <p className="mt-1 text-xs text-destructive">
+                  Nenhum modelo ativo.{" "}
+                  <button onClick={() => navigate({ to: "/crm/contratos/modelos" })} className="text-select underline cursor-pointer">
+                    Criar modelo →
+                  </button>
+                </p>
               )}
-
-              <div>
-                <label style={labelStyle}>Cliente *</label>
-                <select value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })} style={inputStyle}>
-                  <option value="">Selecione um cliente</option>
-                  {clientes.map((c) => (
-                    <option key={c.id} value={c.id}>{c.nome}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Título do Contrato *</label>
-                <input
-                  type="text"
-                  placeholder="ex: Contrato de Suporte TI — Empresa X"
-                  value={form.titulo}
-                  onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                  style={inputStyle}
-                />
-              </div>
             </div>
 
-            <div style={{ display: "flex", gap: spacing.md, marginTop: spacing.xl }}>
-              <Button variant="primary" onClick={handleNext}>
-                Próximo <ChevronRight size={16} />
-              </Button>
-              <Button variant="secondary" onClick={() => navigate({ to: "/crm/contratos" })}>
+            {selectedTemplate && (
+              <div className="rounded-lg p-3 bg-surface-2 text-xs text-muted-foreground">
+                <strong className="text-foreground">{selectedTemplate.nome}</strong>
+                {selectedTemplate.descricao && <p className="mt-1">{selectedTemplate.descricao}</p>}
+                {(() => {
+                  const vars = extractVariables(selectedTemplate.conteudo);
+                  return vars.length > 0 ? (
+                    <p className="mt-1">
+                      Variáveis: {vars.map(v => (
+                        <span key={v} className="inline-block bg-select/15 text-select px-1.5 py-0.5 rounded text-[10px] mr-1 font-mono">{`{{${v}}}`}</span>
+                      ))}
+                    </p>
+                  ) : null;
+                })()}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente *</label>
+              <select value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })} className="input-base w-full">
+                <option value="">Selecione um cliente</option>
+                {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título do Contrato *</label>
+              <input type="text" placeholder="ex: Contrato de Suporte TI — Empresa X" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className="input-base w-full" />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button onClick={handleNext} className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 transition-colors">
+                Próximo <ChevronRight className="size-4" />
+              </button>
+              <button onClick={() => navigate({ to: "/crm/contratos" })} className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors">
                 Cancelar
-              </Button>
+              </button>
             </div>
-          </Card>
+          </div>
         )}
 
         {step === 2 && (
-          <>
+          <div className="card-graphite p-6 space-y-4">
             {variaveis.length === 0 ? (
-              <Card>
-                <p style={{ color: colors.textSecondary, marginBottom: spacing.lg }}>
-                  Este modelo não possui variáveis. O contrato será criado com o conteúdo do template diretamente.
-                </p>
-                <div style={{ display: "flex", gap: spacing.md }}>
-                  <Button variant="primary" onClick={handleCreate} disabled={criando}>
+              <>
+                <p className="text-sm text-muted-foreground">Este modelo não possui variáveis. O contrato será criado com o conteúdo do template diretamente.</p>
+                <div className="flex gap-2">
+                  <button onClick={handleCreate} disabled={criando} className="px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors">
                     {criando ? "Criando..." : "Criar Contrato"}
-                  </Button>
-                  <Button variant="secondary" onClick={() => setStep(1)}>
-                    <ChevronLeft size={16} /> Voltar
-                  </Button>
+                  </button>
+                  <button onClick={() => setStep(1)} className="inline-flex items-center gap-1 px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors">
+                    <ChevronLeft className="size-4" /> Voltar
+                  </button>
                 </div>
-              </Card>
+              </>
             ) : (
-              <Card>
-                <p style={{ color: colors.textSecondary, fontSize: "13px", marginBottom: spacing.lg }}>
-                  Preencha as variáveis abaixo. Campos com dados do cliente foram preenchidos automaticamente.
-                </p>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg }}>
+              <>
+                <p className="text-xs text-muted-foreground">Preencha as variáveis abaixo. Campos com dados do cliente foram preenchidos automaticamente.</p>
+                <div className="grid grid-cols-2 gap-4">
                   {variaveis.map((v) => {
                     const isAuto = buildAutoValues(clientes.find(c => c.id === form.cliente_id))[v] !== undefined;
                     return (
                       <div key={v}>
-                        <label style={labelStyle}>
-                          {`{{${v}}}`}
-                          {isAuto && <span style={{ marginLeft: "6px", fontSize: "11px", color: colors.primary, fontWeight: 400 }}>auto</span>}
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-mono">
+                          {`{{${v}}}`} {isAuto && <span className="font-sans font-normal text-select">auto</span>}
                         </label>
-                        <input
-                          type="text"
-                          value={valores[v] || ""}
-                          onChange={(e) => setValores({ ...valores, [v]: e.target.value })}
-                          placeholder={`Valor para ${v}`}
-                          style={inputStyle}
-                        />
+                        <input type="text" value={valores[v] || ""} onChange={(e) => setValores({ ...valores, [v]: e.target.value })} placeholder={`Valor para ${v}`} className="input-base w-full" />
                       </div>
                     );
                   })}
                 </div>
 
-                <div style={{ marginTop: spacing.xl, padding: spacing.md, background: colors.backgroundTertiary, borderRadius: borderRadius.md }}>
-                  <p style={{ margin: 0, fontSize: "12px", color: colors.textSecondary }}>
-                    Variáveis não preenchidas serão mantidas como <code>{`{{nome_da_variavel}}`}</code> no contrato e podem ser editadas depois.
-                  </p>
+                <div className="rounded-lg p-3 bg-surface-2 text-xs text-muted-foreground">
+                  Variáveis não preenchidas serão mantidas como <code>{`{{nome_da_variavel}}`}</code> no contrato e podem ser editadas depois.
                 </div>
 
-                <div style={{ display: "flex", gap: spacing.md, marginTop: spacing.xl }}>
-                  <Button variant="primary" onClick={handleCreate} disabled={criando}>
+                <div className="flex gap-2">
+                  <button onClick={handleCreate} disabled={criando} className="px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors">
                     {criando ? "Criando..." : "Criar Contrato"}
-                  </Button>
-                  <Button variant="secondary" onClick={() => setStep(1)}>
-                    <ChevronLeft size={16} /> Voltar
-                  </Button>
+                  </button>
+                  <button onClick={() => setStep(1)} className="inline-flex items-center gap-1 px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors">
+                    <ChevronLeft className="size-4" /> Voltar
+                  </button>
                 </div>
-              </Card>
+              </>
             )}
-          </>
+          </div>
         )}
       </div>
     </AppShell>

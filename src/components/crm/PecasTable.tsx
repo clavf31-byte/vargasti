@@ -1,6 +1,5 @@
 import { Trash2, Plus, Edit2 } from "lucide-react";
-import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Button } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 interface Peca {
   id?: string;
@@ -21,139 +20,66 @@ interface PecasTableProps {
   onDeletePeca: (id: string) => void;
 }
 
-export function PecasTable({
-  pecas,
-  onAddPeca,
-  onEditPeca,
-  onDeletePeca,
-}: PecasTableProps) {
+export function PecasTable({ pecas, onAddPeca, onEditPeca, onDeletePeca }: PecasTableProps) {
   return (
-    <div style={{ marginTop: spacing.lg }}>
-      <div
-        style={{
-          marginBottom: spacing.md,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h3 style={{ fontSize: "14px", color: colors.textSecondary, fontWeight: 600 }}>
-          Peças e Materiais
-        </h3>
-        <Button variant="primary" size="sm" onClick={onAddPeca}>
-          <Plus size={16} /> Nova Peça
-        </Button>
+    <div className="mt-4 space-y-3">
+      <div className="flex justify-between items-center">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Peças e Materiais</p>
+        <button
+          onClick={onAddPeca}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition-colors"
+        >
+          <Plus className="size-3.5" /> Nova Peça
+        </button>
       </div>
 
       {pecas.length === 0 ? (
-        <div
-          style={{
-            padding: spacing.lg,
-            textAlign: "center",
-            color: colors.textSecondary,
-            background: colors.backgroundSecondary,
-            borderRadius: borderRadius.md,
-          }}
-        >
+        <div className="card-graphite border-dashed p-8 text-center text-sm text-muted-foreground">
           Nenhuma peça cadastrada
         </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="card-graphite overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
             <thead>
-              <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                <th style={{ padding: spacing.sm, textAlign: "left", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "100px" }}>
-                  Código
-                </th>
-                <th style={{ padding: spacing.sm, textAlign: "left", color: colors.textSecondary, fontSize: "12px", fontWeight: 600 }}>
-                  Descrição
-                </th>
-                <th style={{ padding: spacing.sm, textAlign: "left", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "100px" }}>
-                  Categoria
-                </th>
-                <th style={{ padding: spacing.sm, textAlign: "right", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "90px" }}>
-                  Custo
-                </th>
-                <th style={{ padding: spacing.sm, textAlign: "right", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "90px" }}>
-                  Venda
-                </th>
-                <th style={{ padding: spacing.sm, textAlign: "center", color: colors.textSecondary, fontSize: "12px", fontWeight: 600, width: "70px" }}>
-                  Estoque
-                </th>
-                <th style={{ padding: spacing.sm, textAlign: "center", width: "80px" }}></th>
+              <tr className="border-b-2 border-border">
+                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Código</th>
+                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Descrição</th>
+                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">Categoria</th>
+                <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Custo</th>
+                <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Venda</th>
+                <th className="px-3 py-2.5 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-20">Estoque</th>
+                <th className="px-3 py-2.5 text-center w-16"></th>
               </tr>
             </thead>
             <tbody>
-              {pecas.map((peca) => {
-                const margem = peca.valor_venda - peca.valor_custo;
-                const margemPct = peca.valor_custo > 0 ? (margem / peca.valor_custo) * 100 : 0;
-
+              {pecas.map((p) => {
+                const margem = p.valor_venda - p.valor_custo;
+                const margemPct = p.valor_custo > 0 ? (margem / p.valor_custo) * 100 : 0;
                 return (
-                  <tr key={peca.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                    <td style={{ padding: spacing.sm, color: colors.text, fontWeight: 600, fontSize: "12px" }}>
-                      {peca.codigo}
+                  <tr key={p.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
+                    <td className="px-3 py-2.5 font-semibold text-xs text-foreground">{p.codigo}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="font-medium text-foreground text-sm">{p.descricao}</div>
+                      {p.fabricante && <div className="text-[11px] text-muted-foreground mt-0.5">{p.fabricante}</div>}
                     </td>
-                    <td style={{ padding: spacing.sm, color: colors.text }}>
-                      <div style={{ fontSize: "13px", fontWeight: 500 }}>{peca.descricao}</div>
-                      {peca.fabricante && (
-                        <div style={{ fontSize: "11px", color: colors.textSecondary, marginTop: "2px" }}>
-                          {peca.fabricante}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: spacing.sm, color: colors.textSecondary, fontSize: "12px" }}>
-                      {peca.categoria}
-                    </td>
-                    <td style={{ padding: spacing.sm, color: colors.textSecondary, textAlign: "right", fontSize: "12px" }}>
-                      R$ {peca.valor_custo.toFixed(2)}
-                    </td>
-                    <td style={{ padding: spacing.sm, color: colors.text, textAlign: "right", fontWeight: 600 }}>
-                      <div>R$ {peca.valor_venda.toFixed(2)}</div>
-                      <div style={{ fontSize: "11px", color: margemPct > 0 ? "#66bb6a" : "#ef5350" }}>
-                        (+{margemPct.toFixed(0)}%)
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">{p.categoria}</td>
+                    <td className="px-3 py-2.5 text-right text-xs text-muted-foreground">R$ {p.valor_custo.toFixed(2)}</td>
+                    <td className="px-3 py-2.5 text-right">
+                      <div className="font-semibold text-foreground text-sm">R$ {p.valor_venda.toFixed(2)}</div>
+                      <div className={cn("text-[11px]", margemPct > 0 ? "text-brand" : "text-destructive")}>
+                        +{margemPct.toFixed(0)}%
                       </div>
                     </td>
-                    <td
-                      style={{
-                        padding: spacing.sm,
-                        color: peca.estoque > 5 ? colors.text : colors.error,
-                        textAlign: "center",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {peca.estoque}
+                    <td className={cn("px-3 py-2.5 text-center font-semibold text-sm", p.estoque > 5 ? "text-foreground" : "text-destructive")}>
+                      {p.estoque}
                     </td>
-                    <td style={{ padding: spacing.sm, textAlign: "center" }}>
-                      <div style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
-                        <button
-                          onClick={() => onEditPeca(peca)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: colors.primary,
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                          title="Editar"
-                        >
-                          <Edit2 size={14} />
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center justify-center gap-2">
+                        <button onClick={() => onEditPeca(p)} className="text-select hover:text-select/80 transition-colors" title="Editar">
+                          <Edit2 className="size-3.5" />
                         </button>
-                        <button
-                          onClick={() => peca.id && onDeletePeca(peca.id)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: colors.error,
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                          title="Remover"
-                        >
-                          <Trash2 size={14} />
+                        <button onClick={() => p.id && onDeletePeca(p.id)} className="text-destructive hover:text-destructive/80 transition-colors" title="Remover">
+                          <Trash2 className="size-3.5" />
                         </button>
                       </div>
                     </td>

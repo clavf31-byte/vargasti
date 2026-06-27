@@ -1,38 +1,25 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { CRMLayout } from "@/components/crm/CRMLayout";
-import { PageHeader } from "@/components/ui";
-import { useServicos } from "@/hooks/useServicos";
-import { ServicosTable } from "@/components/crm/ServicosTable";
 import { Wrench } from "lucide-react";
-import { colors, spacing, borderRadius } from "@/lib/colors";
+import { useServicos } from "@/hooks/useServicos";
+import { AppShell } from "@/components/AppShell";
+import { ServicosTable } from "@/components/crm/ServicosTable";
+import { PageHeader } from "@/components/shared";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/servicos")({
   head: () => ({ meta: [{ title: `Serviços · CRM ${client.name}` }] }),
   component: ServicosPage,
 });
 
-interface Servico {
-  id?: string;
-  nome: string;
-  categoria: string;
-  valor_padrao: number;
-  unidade: string;
-  descricao?: string | null;
-  ativo: boolean;
-}
-
 function ServicosPage() {
-  const { user } = useAuth();
-  const { servicos, addServico, updateServico, deleteServico } = useServicos(user?.id);
-
+  const { servicos, addServico, updateServico, deleteServico } = useServicos();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [formData, setFormData] = useState<Servico>({
+  const [formData, setFormData] = useState({
     nome: "",
     categoria: "Serviços Técnicos",
     valor_padrao: 0,
@@ -41,235 +28,138 @@ function ServicosPage() {
     ativo: true,
   });
 
-  const categorias = [
-    "Serviços Técnicos",
-    "Instalação",
-    "Redes",
-    "Deslocamento",
-    "Manutenção",
-    "Suporte",
-    "Consultoria",
-  ];
+  const categorias = ["Serviços Técnicos", "Instalação", "Redes", "Deslocamento", "Manutenção", "Suporte", "Consultoria"];
   const unidades = ["Hora", "Unidade", "Dia", "Semana", "Mês"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
     try {
       if (editingId) {
         await updateServico(editingId, formData);
-        setMessage("✅ Serviço atualizado!");
+        setMessage("Serviço atualizado com sucesso!");
       } else {
         await addServico(formData);
-        setMessage("✅ Serviço criado!");
+        setMessage("Serviço criado com sucesso!");
       }
-
-      setFormData({
-        nome: "",
-        categoria: "Serviços Técnicos",
-        valor_padrao: 0,
-        unidade: "Hora",
-        descricao: "",
-        ativo: true,
-      });
+      setFormData({ nome: "", categoria: "Serviços Técnicos", valor_padrao: 0, unidade: "Hora", descricao: "", ativo: true });
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
-      setMessage("❌ Erro ao salvar serviço");
+      setMessage("Erro ao salvar serviço");
       console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleEdit(servico: Servico) {
+  function handleEdit(servico: any) {
     setFormData(servico);
     setEditingId(servico.id || null);
     setShowForm(true);
   }
 
   function handleAddNew() {
-    setFormData({
-      nome: "",
-      categoria: "Serviços Técnicos",
-      valor_padrao: 0,
-      unidade: "Hora",
-      descricao: "",
-      ativo: true,
-    });
+    setFormData({ nome: "", categoria: "Serviços Técnicos", valor_padrao: 0, unidade: "Hora", descricao: "", ativo: true });
     setEditingId(null);
     setShowForm(true);
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: spacing.md,
-    background: colors.background,
-    border: `1px solid ${colors.border}`,
-    borderRadius: borderRadius.md,
-    color: colors.text,
-    fontSize: "14px",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "block" as const,
-    fontSize: "14px",
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    fontWeight: 600,
-  };
-
   return (
-    <CRMLayout>
-      <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+    <AppShell>
+      <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <PageHeader
+          category="CRM"
           title="Serviços"
+          icon={Wrench}
           subtitle="Cadastro e gestão de serviços oferecidos"
-          icon={<Wrench size={32} />}
         />
 
         {message && (
-          <div
-            style={{
-              background: message.startsWith("✅")
-                ? "rgba(76, 175, 80, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-              border: message.startsWith("✅")
-                ? "1px solid rgba(76, 175, 80, 0.3)"
-                : "1px solid rgba(239, 68, 68, 0.3)",
-              borderRadius: "6px",
-              padding: "12px",
-              marginBottom: "1.5rem",
-              color: message.startsWith("✅") ? "#66bb6a" : "#ef5350",
-              fontSize: "14px",
-            }}
-          >
+          <div className={cn(
+            "rounded-lg px-4 py-3 text-sm font-medium border",
+            message.startsWith("Erro")
+              ? "bg-destructive/10 border-destructive/30 text-destructive"
+              : "bg-brand/10 border-brand/30 text-brand"
+          )}>
             {message}
           </div>
         )}
 
         {showForm && (
-          <div
-            style={{
-              background: "rgba(6, 34, 53, 0.6)",
-              border: "1px solid rgba(19, 200, 211, 0.16)",
-              borderRadius: "12px",
-              padding: "2rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <h3 style={{ marginBottom: "1.5rem", fontSize: "16px", fontWeight: 600, color: colors.text }}>
+          <div className="card-graphite p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">
               {editingId ? "Editar Serviço" : "Novo Serviço"}
             </h3>
-
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg, marginBottom: spacing.lg }}>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label style={labelStyle}>Nome *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nome *</label>
                   <input
                     type="text"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Ex: Hora Técnica Presencial"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Categoria *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoria *</label>
                   <select
                     value={formData.categoria}
                     onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                    style={inputStyle}
+                    className="input-base w-full"
                   >
-                    {categorias.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
+                    {categorias.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Valor Padrão (R$) *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor Padrão (R$) *</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.valor_padrao}
                     onChange={(e) => setFormData({ ...formData, valor_padrao: parseFloat(e.target.value) || 0 })}
                     placeholder="0.00"
-                    style={inputStyle}
+                    className="input-base w-full"
                     required
                   />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>Unidade *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Unidade *</label>
                   <select
                     value={formData.unidade}
                     onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
-                    style={inputStyle}
+                    className="input-base w-full"
                   >
-                    {unidades.map((un) => (
-                      <option key={un} value={un}>
-                        {un}
-                      </option>
-                    ))}
+                    {unidades.map((un) => <option key={un} value={un}>{un}</option>)}
                   </select>
                 </div>
               </div>
-
-              <div style={{ marginBottom: spacing.lg }}>
-                <label style={labelStyle}>Descrição</label>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
                 <textarea
                   value={formData.descricao || ""}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                   placeholder="Descrição detalhada do serviço"
-                  style={{
-                    ...inputStyle,
-                    minHeight: "100px",
-                    fontFamily: "inherit",
-                    resize: "vertical",
-                  }}
+                  rows={3}
+                  className="input-base w-full resize-y"
                 />
               </div>
-
-              <div style={{ display: "flex", gap: spacing.md, justifyContent: "flex-end" }}>
+              <div className="flex gap-2 justify-end">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingId(null);
-                  }}
-                  style={{
-                    padding: "10px 16px",
-                    background: "transparent",
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: borderRadius.md,
-                    color: colors.text,
-                    cursor: "pointer",
-                    fontWeight: 600,
-                  }}
+                  onClick={() => { setShowForm(false); setEditingId(null); }}
+                  className="px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-surface-2 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  style={{
-                    padding: "10px 16px",
-                    background: colors.primary,
-                    border: "none",
-                    borderRadius: borderRadius.md,
-                    color: "#fff",
-                    cursor: loading ? "not-allowed" : "pointer",
-                    fontWeight: 600,
-                    opacity: loading ? 0.6 : 1,
-                  }}
+                  className="px-4 py-2 text-sm rounded-lg bg-select text-white font-semibold hover:bg-select/90 disabled:opacity-50 transition-colors"
                 >
                   {loading ? "Salvando..." : editingId ? "Atualizar" : "Criar"}
                 </button>
@@ -285,6 +175,6 @@ function ServicosPage() {
           onDeleteServico={deleteServico}
         />
       </div>
-    </CRMLayout>
+    </AppShell>
   );
 }

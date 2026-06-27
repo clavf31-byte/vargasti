@@ -1,18 +1,25 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
-import { PageHeader, Card, Button } from "@/components/ui";
-import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Search, Filter, Trash2, Eye, FileSpreadsheet } from "lucide-react";
+import { PageHeader, EmptyState, LoadingState, StatusBadge, Btn } from "@/components/shared";
+import { FileSpreadsheet, Search, Filter, Trash2, Eye } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/orcamentos/")({
   head: () => ({ meta: [{ title: `Orçamentos · CRM ${client.name}` }] }),
   component: OrcamentosPage,
 });
+
+const STATUS_FILTER_CLS: Record<string, string> = {
+  rascunho:  "text-muted-foreground border-muted-foreground/30",
+  enviado:   "text-info border-info/30",
+  aprovado:  "text-brand border-brand/30",
+  rejeitado: "text-destructive border-destructive/30",
+};
 
 function OrcamentosPage() {
   const { user } = useAuth();
@@ -27,55 +34,145 @@ function OrcamentosPage() {
 
   const loadData = async () => {
     if (!user) return;
-    try {
-      const [orcRes, clientRes] = await Promise.all([
-        supabase.from("orcamentos").select("*").eq("user_id", user.id).order("data_criacao", { ascending: false }),
-        supabase.from("clientes").select("id, nome").eq("user_id", user.id),
-      ]);
-      setOrcamentos(orcRes.data || []);
-      setClientes(clientRes.data || []);
-    } catch (e) {
-      console.error("Erro:", e);
-    } finally {
-      setLoading(false);
-    }
+    const [orcRes, clientRes] = await Promise.all([
+      supabase.from("orcamentos").select("*").eq("user_id", user.id).order("data_criacao", { ascending: false }),
+      supabase.from("clientes").select("id, nome").eq("user_id", user.id),
+    ]);
+    setOrcamentos(orcRes.data || []);
+    setClientes(clientRes.data || []);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    loadData();
-  }, [user]);
+  useEffect(() => { if (!user) { setLoading(false); return; } loadData(); }, [user]);
 
   useEffect(() => {
-    let resultado = orcamentos;
-    if (searchTerm) resultado = resultado.filter((orc) => (orc.numero_formatado || orc.numero || "").toLowerCase().includes(searchTerm.toLowerCase()));
-    if (statusFilter) resultado = resultado.filter((orc) => (orc.status_enum ?? orc.status) === statusFilter);
-    setFiltrados(resultado);
+    let r = orcamentos;
+    if (searchTerm) r = r.filter((o) => (o.numero_formatado || o.numero || "").toLowerCase().includes(searchTerm.toLowerCase()));
+    if (statusFilter) r = r.filter((o) => (o.status_enum ?? o.status) === statusFilter);
+    setFiltrados(r);
   }, [orcamentos, searchTerm, statusFilter]);
 
   const handleSuccess = () => { loadData(); setIsFormOpen(false); };
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza?")) return;
-    try { await supabase.from("orcamentos").delete().eq("id", id); loadData(); } catch (e) { alert("Erro ao deletar"); }
-  };
-
-  const getStatusColor = (status: string) => {
-    const map: Record<string, string> = { rascunho: colors.textSecondary, enviado: colors.primary, aprovado: colors.success, rejeitado: colors.error };
-    return map[status] || colors.text;
+    await supabase.from("orcamentos").delete().eq("id", id);
+    loadData();
   };
 
   const statuses = ["rascunho", "enviado", "aprovado", "rejeitado"];
 
   return (
     <AppShell>
-      <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
-        <PageHeader title="Orçamentos" subtitle={`${orcamentos.length} total • ${filtrados.length} exibindo`} action={<Button variant="primary" onClick={() => setIsFormOpen(!isFormOpen)}>{isFormOpen ? "Cancelar" : "+ Novo Orçamento"}</Button>} icon={<FileSpreadsheet size={32} color={colors.primary} />} />
+      <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
+        <PageHeader
+          category="CRM"
+          title="Orçamentos"
+          icon={FileSpreadsheet}
+          iconClass="text-info"
+          subtitle={`${orcamentos.length} total · ${filtrados.length} exibindo`}
+          actions={
+            <Btn variant="primary" onClick={() => setIsFormOpen((v) => !v)}>
+              {isFormOpen ? "Cancelar" : "+ Novo Orçamento"}
+            </Btn>
+          }
+        />
 
-        {isFormOpen && <><OrcamentoFormInline isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} userId={user!.id} clientes={clientes} /><div style={{ marginBottom: spacing.xl }} /></>}
+        {isFormOpen && (
+          <OrcamentoFormInline
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            onSuccess={handleSuccess}
+            userId={user!.id}
+            clientes={clientes}
+          />
+        )}
 
-        {!isFormOpen && (<Card><div style={{ display: "flex", gap: spacing.md, alignItems: "center", flexWrap: "wrap" }}><div style={{ flex: 1, minWidth: "200px", position: "relative" }}><Search size={18} style={{ position: "absolute", left: spacing.md, top: "50%", transform: "translateY(-50%)", color: colors.textSecondary }} /><input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: "100%", padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`, background: colors.background, border: `1px solid ${colors.border}`, borderRadius: borderRadius.md, color: colors.text, fontSize: "14px" }} /></div><div style={{ display: "flex", gap: spacing.sm, alignItems: "center" }}><Filter size={18} color={colors.textSecondary} />{statuses.map((s) => (<button key={s} onClick={() => setStatusFilter(statusFilter === s ? null : s)} style={{ padding: `${spacing.sm} ${spacing.md}`, background: statusFilter === s ? getStatusColor(s) : colors.background, color: statusFilter === s ? colors.background : colors.text, border: `1px solid ${statusFilter === s ? getStatusColor(s) : colors.border}`, borderRadius: borderRadius.full, cursor: "pointer", fontSize: "12px", fontWeight: 600, textTransform: "capitalize", transition: "all 0.3s" }}>{s}</button>))}</div></div></Card>)}
+        {!isFormOpen && (
+          <>
+            <div className="flex gap-3 flex-wrap items-center">
+              <div className="relative flex-1 min-w-48">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Buscar orçamento..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-surface/60 border border-border rounded-lg pl-10 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-select/60 focus:ring-2 focus:ring-select/20 transition-all"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="size-4 text-muted-foreground" />
+                {statuses.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(statusFilter === s ? null : s)}
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold rounded-full border capitalize transition-colors",
+                      statusFilter === s
+                        ? STATUS_FILTER_CLS[s] + " bg-surface-2"
+                        : "text-muted-foreground border-border hover:border-muted-foreground/40"
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {loading ? <p style={{ color: colors.textSecondary }}>Carregando...</p> : filtrados.length === 0 && !isFormOpen ? <Card><p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>{orcamentos.length === 0 ? "Nenhum" : "Nenhum encontrado"}</p></Card> : !isFormOpen ? (<Card><div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}><thead><tr style={{ borderBottom: `2px solid ${colors.border}` }}><th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>Número</th><th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>Status</th><th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>Valor</th><th style={{ padding: spacing.md, textAlign: "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>Data</th><th style={{ padding: spacing.md, textAlign: "center", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>Ações</th></tr></thead><tbody>{filtrados.map((orc) => (<tr key={orc.id} style={{ borderBottom: `1px solid ${colors.borderLight}`, transition: "background 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.background = colors.backgroundTertiary; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}><td style={{ padding: spacing.md, color: colors.text, fontWeight: 500 }}>{orc.numero_formatado || orc.numero}</td><td style={{ padding: spacing.md, color: getStatusColor(orc.status_enum ?? orc.status), fontWeight: 600 }}>{orc.status_enum ?? orc.status}</td><td style={{ padding: spacing.md, color: colors.success, fontWeight: 600 }}>R$ {(orc.total || 0).toFixed(2)}</td><td style={{ padding: spacing.md, color: colors.textSecondary }}>{new Date(orc.data_criacao).toLocaleDateString("pt-BR")}</td><td style={{ padding: spacing.md, textAlign: "center", display: "flex", gap: spacing.sm, justifyContent: "center" }}><button onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id: orc.id } })} style={{ background: colors.background, border: `1px solid ${colors.border}`, color: colors.primary, padding: `${spacing.sm} ${spacing.md}`, borderRadius: borderRadius.sm, cursor: "pointer", fontSize: "12px", display: "flex", gap: "4px", alignItems: "center" }}><Eye size={14} />Ver</button><button onClick={() => handleDelete(orc.id)} style={{ background: colors.background, border: `1px solid ${colors.error}`, color: colors.error, padding: `${spacing.sm} ${spacing.md}`, borderRadius: borderRadius.sm, cursor: "pointer", fontSize: "12px", display: "flex", gap: "4px", alignItems: "center" }}><Trash2 size={14} />Deletar</button></td></tr>))}</tbody></table></div></Card>) : null}
+            {loading ? (
+              <LoadingState />
+            ) : filtrados.length === 0 ? (
+              <EmptyState
+                icon={FileSpreadsheet}
+                title={orcamentos.length === 0 ? "Nenhum orçamento criado" : "Nenhum orçamento encontrado"}
+              />
+            ) : (
+              <div className="card-graphite overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-border">
+                      {["Número", "Status", "Valor", "Data", "Ações"].map((h, i) => (
+                        <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 4 ? "text-center" : "text-left"}`}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtrados.map((o) => (
+                      <tr key={o.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-foreground">{o.numero_formatado || o.numero}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={o.status_enum ?? o.status} />
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-brand">
+                          R$ {(o.total || 0).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {new Date(o.data_criacao).toLocaleDateString("pt-BR")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id: o.id } })}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
+                            >
+                              <Eye className="size-3" /> Ver
+                            </button>
+                            <button
+                              onClick={() => handleDelete(o.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
+                            >
+                              <Trash2 className="size-3" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </AppShell>
   );

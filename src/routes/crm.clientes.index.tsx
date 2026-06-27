@@ -1,14 +1,12 @@
-﻿import client from "@/config/client";
+import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { Users, Search, Trash2, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { ClienteFormInline } from "@/components/crm/ClienteFormInline";
-import { PageHeader, Card, Button } from "@/components/ui";
-import { colors, spacing, borderRadius } from "@/lib/colors";
-import { Search, Trash2, Eye } from "lucide-react";
+import { PageHeader, EmptyState, LoadingState, Btn } from "@/components/shared";
 
 export const Route = createFileRoute("/crm/clientes/")({
   head: () => ({ meta: [{ title: `Clientes · CRM ${client.name}` }] }),
@@ -35,18 +33,13 @@ function ClientesPage() {
 
   const loadClientes = async () => {
     if (!user) return;
-    try {
-      const { data } = await supabase
-        .from("clientes")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      setClientes((data as Cliente[]) || []);
-    } catch (e) {
-      console.error("Erro:", e);
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setClientes((data as Cliente[]) || []);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -55,107 +48,111 @@ function ClientesPage() {
   }, [user]);
 
   useEffect(() => {
-    let resultado = clientes;
+    let r = clientes;
     if (searchTerm) {
-      resultado = resultado.filter(
-        (c) =>
-          c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.cnpj_cpf?.includes(searchTerm)
+      const q = searchTerm.toLowerCase();
+      r = r.filter((c) =>
+        c.nome.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        c.cnpj_cpf?.includes(searchTerm)
       );
     }
-    setFiltrados(resultado);
+    setFiltrados(r);
   }, [clientes, searchTerm]);
 
   const handleSuccess = () => { loadClientes(); setIsFormOpen(false); };
-
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja deletar este cliente?")) return;
-    try {
-      await supabase.from("clientes").delete().eq("id", id);
-      loadClientes();
-    } catch (e) {
-      alert("Erro ao deletar cliente");
-    }
+    await supabase.from("clientes").delete().eq("id", id);
+    loadClientes();
   };
 
   return (
     <AppShell>
-      <div style={{ padding: spacing.xl, maxWidth: "1600px", margin: "0 auto" }}>
+      <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         <PageHeader
+          category="CRM"
           title="Clientes"
-          subtitle={`${clientes.length} total • ${filtrados.length} exibindo`}
-          action={
-            <Button variant="primary" onClick={() => setIsFormOpen(!isFormOpen)}>
+          icon={Users}
+          subtitle={`${clientes.length} total · ${filtrados.length} exibindo`}
+          actions={
+            <Btn variant="primary" onClick={() => setIsFormOpen((v) => !v)}>
               {isFormOpen ? "Cancelar" : "+ Novo Cliente"}
-            </Button>
+            </Btn>
           }
-          icon={<Users size={32} />}
         />
 
         {isFormOpen && (
-          <>
-            <ClienteFormInline isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} userId={user!.id} />
-            <div style={{ marginBottom: spacing.xl }} />
-          </>
+          <ClienteFormInline
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            onSuccess={handleSuccess}
+            userId={user!.id}
+          />
         )}
 
         {!isFormOpen && (
-          <Card>
-            <div style={{ position: "relative" }}>
-              <Search size={18} style={{ position: "absolute", left: spacing.md, top: "50%", transform: "translateY(-50%)", color: colors.textSecondary }} />
+          <>
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder="Buscar por nome, email ou CPF/CNPJ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: "100%", padding: `${spacing.sm} ${spacing.md} ${spacing.sm} 40px`, background: colors.background, border: `1px solid ${colors.border}`, borderRadius: borderRadius.md, color: colors.text, fontSize: "14px" }}
+                className="w-full bg-surface/60 border border-border rounded-lg pl-10 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-select/60 focus:ring-2 focus:ring-select/20 transition-all"
               />
             </div>
-          </Card>
-        )}
 
-        {loading ? (
-          <p style={{ color: colors.textSecondary }}>Carregando...</p>
-        ) : filtrados.length === 0 && !isFormOpen ? (
-          <Card>
-            <p style={{ color: colors.textSecondary, margin: 0, textAlign: "center" }}>
-              {clientes.length === 0 ? "Nenhum cliente cadastrado" : "Nenhum cliente encontrado"}
-            </p>
-          </Card>
-        ) : !isFormOpen ? (
-          <Card>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                    {["Nome", "Email", "Telefone", "CPF/CNPJ", "Ações"].map((h, i) => (
-                      <th key={h} style={{ padding: spacing.md, textAlign: i === 4 ? "center" : "left", color: colors.textSecondary, fontWeight: 600, fontSize: "12px" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtrados.map((cliente) => (
-                    <tr key={cliente.id} style={{ borderBottom: `1px solid ${colors.borderLight}`, transition: "background 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.background = colors.backgroundTertiary; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                      <td style={{ padding: spacing.md, color: colors.text, fontWeight: 500 }}>{cliente.nome}</td>
-                      <td style={{ padding: spacing.md, color: colors.textSecondary }}>{cliente.email || "—"}</td>
-                      <td style={{ padding: spacing.md, color: colors.textSecondary }}>{cliente.telefone || "—"}</td>
-                      <td style={{ padding: spacing.md, color: colors.textSecondary }}>{cliente.cnpj_cpf || "—"}</td>
-                      <td style={{ padding: spacing.md, textAlign: "center", display: "flex", gap: spacing.sm, justifyContent: "center" }}>
-                        <button onClick={() => navigate({ to: "/crm/clientes/$id", params: { id: cliente.id } })} style={{ background: colors.background, border: `1px solid ${colors.border}`, color: colors.primary, padding: `${spacing.sm} ${spacing.md}`, borderRadius: borderRadius.sm, cursor: "pointer", fontSize: "12px", display: "flex", gap: "4px", alignItems: "center" }}>
-                          <Eye size={14} /> Editar
-                        </button>
-                        <button onClick={() => handleDelete(cliente.id)} style={{ background: colors.background, border: `1px solid ${colors.error}`, color: colors.error, padding: `${spacing.sm} ${spacing.md}`, borderRadius: borderRadius.sm, cursor: "pointer", fontSize: "12px", display: "flex", gap: "4px", alignItems: "center" }}>
-                          <Trash2 size={14} /> Deletar
-                        </button>
-                      </td>
+            {loading ? (
+              <LoadingState />
+            ) : filtrados.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title={clientes.length === 0 ? "Nenhum cliente cadastrado" : "Nenhum cliente encontrado"}
+                subtitle={clientes.length === 0 ? "Crie seu primeiro cliente clicando em + Novo Cliente." : "Tente ajustar o filtro de busca."}
+              />
+            ) : (
+              <div className="card-graphite overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-border">
+                      {["Nome", "Email", "Telefone", "CPF/CNPJ", "Ações"].map((h, i) => (
+                        <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 4 ? "text-center" : "text-left"}`}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        ) : null}
+                  </thead>
+                  <tbody>
+                    {filtrados.map((c) => (
+                      <tr key={c.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
+                        <td className="px-4 py-3 font-medium text-foreground">{c.nome}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{c.email || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{c.telefone || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{c.cnpj_cpf || "—"}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => navigate({ to: "/crm/clientes/$id", params: { id: c.id } })}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
+                            >
+                              <Eye className="size-3" /> Editar
+                            </button>
+                            <button
+                              onClick={() => handleDelete(c.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
+                            >
+                              <Trash2 className="size-3" /> Deletar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </AppShell>
   );
