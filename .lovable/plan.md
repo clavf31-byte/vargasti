@@ -1,90 +1,151 @@
 # Padronização Visual VargasTI
 
-Vou unificar o visual do sistema inteiro usando como referência o Dashboard atual + a tela "Seus agentes". O foco é **somente visual** — funcionalidades, rotas, dados e regras de negócio permanecem intactos.
+Objetivo: unificar 100% do visual do sistema usando tokens semânticos, componentes reutilizáveis e o padrão graphite + verde marca + ciano de seleção já iniciado no dashboard e na tela "Seus agentes".
 
-## Decisão de cor de destaque
+Escopo visual apenas: nenhuma rota, endpoint, server function, schema de banco ou regra de negócio será alterada.
 
-A referência mostra borda **azul/ciano** no card selecionado, mas o sistema hoje usa **verde (brand)** como cor primária (logo VargasTI, status pulse, sidebar). Proponho:
+## Decisão de direção visual
 
-- **Manter verde** como cor primária da marca (botões primários, sidebar ativa, logo).
-- **Adicionar azul/ciano** como cor de *seleção* (borda + glow em cards selecionáveis, foco, accent), exatamente como no print.
+- Cor primária da marca: **verde** (`--brand`) — botões principais, sidebar ativa, logo, status positivos.
+- Cor de seleção/foco/accent: **azul/ciano** (`--select`) — borda e glow em cards selecionáveis, focus ring, badges de atenção, tabs ativas.
+- Fundo: graphite escuro (`--background`, `--surface`, `--surface-2`) com grid sutil e glows ciano/esmeralda já existentes.
+- Tipografia: Inter + JetBrains Mono, escala 14px base, títulos grandes e tracking ajustado.
+- Cards: bordas suaves, radius de 14–16px, sombras sutis, estados hover/transição padronizados.
 
-Isso preserva a identidade VargasTI e aplica fielmente o padrão do print.
+## Estado atual observado
 
-## Etapa 1 — Design tokens (`src/styles.css`)
+- Tokens CSS já existem em `src/styles.css` e estão razoáveis.
+- `src/components/shared.tsx` já contém vários componentes modernos: `PageHeader`, `SectionHeader`, `IconBox`, `StatCard`, `EmptyState`, `LoadingState`, `Toolbar`, `Btn`, `FieldInput`, `DataCard`, `ModernCard`, `SelectableCard`, `FormModal`, `StatusBadge`.
+- `src/components/ui/index.ts` ainda exporta componentes antigos baseados em `src/lib/colors.ts` (`AppCard`, `AppButton`, `StatCard`, `PageHeader`) que conflitam com os novos.
+- `src/lib/colors.ts` ainda é usado em várias rotas, especialmente CRM, forçando cores hardcoded e estilos inline.
+- `AppShell` tem estilos inline com hexadecimais e ainda não usa os tokens totalmente.
+- Dashboard e WhatsApp já seguem bem o padrão; Anotações e CRM precisam de mais trabalho.
 
-- Novos tokens: `--accent-select` (azul/ciano), `--card-graphite`, `--card-graphite-2`, `--border-soft`, `--ring-select`, `--shadow-card`, `--shadow-card-hover`.
-- Utilities novas: `.card-graphite`, `.card-selectable`, `.card-selected`, `.icon-box`, `.divider-soft`.
-- Padronizar raios (`--radius` para 14–16px), padding generoso, scrollbar já está ok.
+## Onda 1 — Fundação (tokens e componentes base)
 
-## Etapa 2 — Componentes globais (`src/components/ui-kit/`)
+1. **Limpar componentes antigos**
+   - Remover ou descontinuar `src/components/ui/AppCard.tsx`, `src/components/ui/AppButton.tsx`, `src/components/ui/StatCard.tsx`, `src/components/ui/PageHeader.tsx`.
+   - Atualizar `src/components/ui/index.ts` para re-exportar os componentes modernos de `src/components/shared.tsx` (mantendo compatibilidade de import para rotas que usam `@/components/ui`).
+   - Marcar `src/lib/colors.ts` como legado e criar função de migração documentada.
 
-Criar/refatorar componentes reutilizáveis (sem quebrar shadcn existente):
+2. **Ajustar `src/styles.css`**
+   - Garantir que todos os tokens usados nos componentes existam (`--background`, `--foreground`, `--card`, `--surface`, `--surface-2`, `--brand`, `--brand-muted`, `--brand-foreground`, `--select`, `--select-foreground`, `--destructive`, `--warning`, `--info`, `--border`, `--input`, `--ring`, `--shadow-card`, `--shadow-card-hover`, `--shadow-select`).
+   - Adicionar utilidades faltantes: `card-hover`, `btn-select`, `btn-ghost`, `text-balance`, `animate-fade-in-stagger`.
+   - Verificar contraste e dark mode.
 
-- `PageHeader` (já existe — incrementar com tamanhos do print).
-- `SectionHeader` — eyebrow + título grande + subtítulo.
-- `ModernCard` — base grafite + borda suave + radius grande + padding.
-- `SelectableCard` — variante com estado `selected` (borda azul/ciano + glow).
-- `MetricCard` — KPI estilo dashboard (refatorar `KpiCard`).
-- `ActionCard` — card com header (IconBox + título/subtítulo) + corpo + divisor + rodapé de ações (padrão do print).
-- `IconBox` — bloco quadrado arredondado com ícone grande.
-- `StatusBadge` — ponto colorido + texto (Conectado/Desconectado/Aguardando).
-- `EmptyState` — IconBox grande + título + subtítulo + CTA opcional (padrão "Criar novo agente" tracejado).
-- `LoadingState` — skeletons no mesmo tom dos cards.
-- `ModernButton` — variantes (`primary` verde, `select` azul, `ghost` escuro com borda, `destructive`, `secondary`). Implementado como variants no `button.tsx` existente.
-- `ModernInput`, `ModernTextarea`, `ModernSelect` — estilos consistentes (fundo escuro, borda suave, focus azul) aplicados aos componentes shadcn existentes (`input.tsx`, `textarea.tsx`, `select.tsx`).
-- `ModernModal` — overlay escuro + card grafite + animação (ajuste no `dialog.tsx`).
-- `ModernTable` — header escuro, linhas espaçadas, hover, badges (ajuste no `table.tsx`).
+3. **Alinhar componentes shadcn com o design system**
+   - `button.tsx`: adicionar variants `brand` (verde), `select` (ciano), `ghost-dark` (fundo escuro com borda).
+   - `card.tsx`: usar `card-graphite` utility e ajustar radius/padding.
+   - `input.tsx`, `textarea.tsx`, `select.tsx`: usar `input-base` utility com focus ciano.
+   - `table.tsx`: header escuro, linhas espaçadas, hover sutil, badges.
+   - `dialog.tsx`: overlay escuro, card grafite, animação fade-in.
+   - `sonner.tsx`: tema escuro grafite + borda suave.
 
-Estratégia: **estender os componentes shadcn existentes** ao invés de duplicar, para não quebrar imports.
+4. **Refinar `AppShell`**
+   - Substituir hexadecimais inline por tokens semânticos onde possível sem perder a identidade visual atual.
+   - Garantir que o header, sidebar e breadcrumb usem as mesmas cores/focus/selected states do restante do sistema.
+   - Manter respiro interno: `max-w-7xl mx-auto px-6 py-8` para conteúdo principal.
 
-## Etapa 3 — AppLayout
+## Onda 2 — Componentes globais (ui-kit)
 
-`AppShell` já está bom; pequenos ajustes:
-- Header da página interna usando `PageHeader` padronizado.
-- Garantir respiro (container `max-w-7xl mx-auto px-6 py-8`).
+1. **Consolidar `src/components/shared.tsx`**
+   - Manter todos os componentes já criados e garantir que usem apenas tokens do Tailwind (`bg-surface`, `border-border`, `text-brand`, `text-select`, etc.).
+   - Corrigir inconsistências menores: `StatusBadge` receber mapas padrão para status comuns (`rascunho`, `enviado`, `aprovado`, `rejeitado`, `pendente`, `atrasado`, `concluído`, `conectado`, `desconectado`).
+   - Adicionar `SkeletonCard` e `SkeletonTableRow` para loading states consistentes.
 
-## Etapa 4 — Aplicação por página
+2. **Criar `src/components/ui-kit/` (organização opcional)**
+   - Mover/duplicar os componentes mais genéricos para `src/components/ui-kit/` e deixar `src/components/shared.tsx` como re-exportador para compatibilidade.
+   - Criar `ActionCard`, `MetricCard`, `ModernButton`, `ModernInput`, `ModernSelect`, `ModernTextarea`, `ModernModal`, `ModernTable` como wrappers/variants sobre shadcn + tokens.
 
-Refatorar cada rota usando os componentes globais, **sem mexer em lógica**:
+## Onda 3 — Páginas de listagem e dashboard
 
-1. `routes/index.tsx` (Dashboard) — já é referência; normalizar para usar `MetricCard`/`ActionCard`.
-2. `routes/anotacoes.tsx`
-3. `routes/ferramentas.index.tsx` (Tools)
-4. `routes/ferramentas.excel.tsx` + `components/excel/*` (toolbars, tabela, modais)
-5. `routes/projetos.tsx`
-6. `routes/arquivos.tsx`
-7. `routes/config.tsx`
-8. `routes/admin.tsx` + `routes/usuarios.tsx` (Usuários)
-9. `routes/ferramentas.whatsapp.tsx` + `components/whatsapp/WhatsappAgent.tsx` (já é a referência — garantir consistência)
-10. `routes/login.tsx` — card grafite centralizado, mesmo estilo
+1. **`src/routes/dashboard.tsx`**
+   - Já está bem alinhado; normalizar para usar `MetricCard`/`ActionCard` consolidados.
+   - Remover hexadecimais inline (`#4ade80`, `#60a5fa`, etc.) e usar tokens (`text-brand`, `text-select`, `text-warning`, `text-destructive`, etc.).
+   - Padronizar headings e spacing.
 
-## Etapa 5 — Estados globais
+2. **`src/routes/projetos.tsx`**
+   - Substituir cards inline por `ModernCard`/`SelectableCard`.
+   - Usar `StatusBadge` com mapas padrão.
+   - Usar `Toolbar`, `Btn`, `FieldInput`, `FormModal`.
+   - Adicionar `EmptyState` e `LoadingState`.
 
-- Toasts (`sonner.tsx`) — tema escuro grafite + borda suave.
-- Empty states em todas as listas.
-- Loading states com skeletons consistentes.
+3. **`src/routes/arquivos.tsx`**
+   - Converter tabela inline para `ModernTable`.
+   - Padronizar stats com `StatCard`.
+   - Usar `EmptyState` e `LoadingState`.
+
+4. **`src/routes/ferramentas.index.tsx`**
+   - Substituir cards por `ActionCard` com `IconBox`.
+   - Padronizar badge/variante de disponibilidade.
+   - Ajustar hover/focus para borda ciano.
+
+5. **`src/routes/anotacoes.tsx`**
+   - Refatorar a sidebar, editor e lista para usar os tokens e componentes modernos.
+   - Substituir estilos inline por `card-graphite`, `btn-modern`, `input-base`.
+   - Adicionar `EmptyState` e `LoadingState`.
+   - Padronizar modais de proteção com `FormModal`.
+
+6. **`src/routes/admin.tsx` + `src/routes/admin.index.tsx` + `src/routes/admin.$operatorId.tsx` + `src/routes/usuarios.tsx` (se existir)**
+   - Aplicar `PageHeader`, `DataCard`, `ModernTable`, `StatusBadge`, `Btn`, `Toolbar`.
+   - Garantir que permissões e roles usem badges padrão.
+
+## Onda 4 — Páginas de detalhe, edição e ferramentas especializadas
+
+1. **`src/components/whatsapp/WhatsappAgent.tsx` + `src/routes/ferramentas.whatsapp.tsx`**
+   - Já é a referência; manter e ajustar pequenas inconsistências (tabs, alerts, inputs).
+   - Garantir que todos os botões usem `Btn` ou shadcn variants, não estilos inline.
+
+2. **`src/routes/ferramentas.excel.tsx` + `src/components/excel/*`**
+   - Refatorar toolbars, tabela, modais e cards para usar tokens.
+   - Substituir `ExcelTable` inline por `ModernTable`.
+   - Padronizar input/select/textarea.
+
+3. **`src/routes/ferramentas.emails.tsx` + `src/components/EmailConfigInline.tsx` + `src/components/EmailPollingWidget.tsx`**
+   - Aplicar `DataCard`, `SectionHeader`, `Btn`, `StatusBadge`, `ModernInput`.
+   - Padronizar estados de conexão (Conectado/Desconectado/Aguardando).
+
+4. **`src/routes/config.index.tsx` + `src/routes/config.permissions.tsx`**
+   - Refatorar para `ModernCard`, `FormModal`, `ModernTable`, `Btn`, `FieldInput`, `Switch` shadcn.
+   - Padronizar permissões com cards selecionáveis.
+
+5. **Rotas de CRM (`src/routes/crm.*`)**
+   - Substituir todos os imports de `@/lib/colors` por tokens Tailwind.
+   - Substituir `colors`, `spacing`, `borderRadius` inline por classes utilitárias (`bg-surface`, `border-border`, `p-6`, `rounded-xl`, etc.).
+   - Usar `PageHeader`, `DataCard`, `ModernTable`, `Btn`, `StatusBadge`, `FormModal`, `EmptyState`, `LoadingState`.
+   - Priorizar `crm.orcamentos.index.tsx`, `crm.clientes.index.tsx`, `crm.clientes.$id.tsx`, `crm.orcamentos.$id.tsx`, `crm.orcamentos.editar.$id.tsx` (já citadas em build errors recentes).
+
+## Onda 5 — Login, landing e estados globais
+
+1. **`src/routes/login.tsx`**
+   - Já está moderno; trocar hexadecimais restantes por tokens (`bg-surface`, `border-border`, `text-brand`, `text-select`, etc.).
+   - Garantir que inputs e botões usem as variants shadcn/ui-kit.
+
+2. **`src/routes/index.tsx` (landing page)**
+   - Manter identidade visual; ajustar seções para usar tokens onde houver hexadecimais inline.
+   - Garantir responsividade e contraste.
+
+3. **Estados globais**
+   - `sonner.tsx`: tema escuro grafite.
+   - `EmptyState` em todas as listas vazias.
+   - `LoadingState` com skeletons consistentes.
+   - Verificar se todos os `Error`/`404` boundaries usam o mesmo visual.
 
 ## Garantias
 
-- Nenhuma rota removida ou renomeada.
-- Nenhum endpoint, server function ou schema alterado.
-- `AuthContext`, supabase client, server functions: intactos.
-- Migrations, RLS, edge functions: intactos.
-- Apenas JSX/CSS/className/variants alterados.
+- Nenhuma rota será removida ou renomeada.
+- Nenhum endpoint, server function ou schema de banco será alterado.
+- `AuthContext`, supabase client, server functions, migrations, RLS e edge functions permanecem intactos.
+- Apenas JSX, CSS, className e variants de componentes serão alterados.
+- Zero cores hardcoded (`text-white`, `bg-black`, `bg-[#...]`) em componentes — todas via tokens semânticos.
 
-## Detalhes técnicos
+## Técnico
 
-- Tudo em Tailwind v4 + tokens semânticos em `src/styles.css`. Zero cor hardcoded (`bg-[#...]`, `text-white`).
-- Componentes em `src/components/ui-kit/` para clareza, re-exportando/estendendo shadcn.
-- Animações via `tw-animate-css` já instalado + utility `animate-fade-in` existente.
+- Tailwind v4 com `@theme inline` em `src/styles.css`.
+- Componentes em `src/components/shared.tsx` (compat) e `src/components/ui-kit/` (nova organização).
+- shadcn components estendidos via variants, não duplicados.
+- Animações via `tw-animate-css` e utilidades existentes (`animate-fade-in`).
 
-## Escopo de risco
+## Execução
 
-Refatoração visual ampla — 10+ rotas e 30+ componentes. Vou aplicar em ondas:
-1. Tokens + ui-kit (base).
-2. Páginas de listagem (Anotações, Projetos, Arquivos, Tools, Usuários).
-3. Páginas de detalhe/edição (Excel, WhatsApp, Config).
-4. Login + estados auxiliares.
-
-Posso pausar entre ondas se você quiser revisar progresso, ou ir direto até o fim. Confirma para eu começar?
+Aplicar em 5 ondas sequenciais. Entre cada onda, o build será verificado para evitar regressões. O usuário pode pausar/revisar após qualquer onda.
