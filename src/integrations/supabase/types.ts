@@ -14,6 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_eventos: {
+        Row: {
+          chamado_id: string | null
+          cliente_id: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          dia_inteiro: boolean
+          id: string
+          local: string | null
+          notificado_em: string | null
+          notificar_minutos_antes: number
+          notificar_numero: string | null
+          notificar_whatsapp: boolean
+          os_id: string | null
+          prioridade: string
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chamado_id?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          dia_inteiro?: boolean
+          id?: string
+          local?: string | null
+          notificado_em?: string | null
+          notificar_minutos_antes?: number
+          notificar_numero?: string | null
+          notificar_whatsapp?: boolean
+          os_id?: string | null
+          prioridade?: string
+          status?: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chamado_id?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          dia_inteiro?: boolean
+          id?: string
+          local?: string | null
+          notificado_em?: string | null
+          notificar_minutos_antes?: number
+          notificar_numero?: string | null
+          notificar_whatsapp?: boolean
+          os_id?: string | null
+          prioridade?: string
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_eventos_chamado_id_fkey"
+            columns: ["chamado_id"]
+            isOneToOne: false
+            referencedRelation: "chamados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_eventos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_eventos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alertas: {
         Row: {
           created_at: string
