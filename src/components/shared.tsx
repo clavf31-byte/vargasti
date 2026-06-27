@@ -95,12 +95,13 @@ interface StatCardProps {
   label: string;
   value: string | number;
   colorClass?: string;
+  color?: string;
 }
 
-export function StatCard({ label, value, colorClass = "text-foreground" }: StatCardProps) {
+export function StatCard({ label, value, colorClass = "text-foreground", color }: StatCardProps) {
   return (
     <div className="card-graphite px-5 py-4 flex items-center gap-4">
-      <div className={`text-2xl font-bold tabular-nums leading-none ${colorClass}`}>{value}</div>
+      <div className={`text-2xl font-bold tabular-nums leading-none ${colorClass}`} style={color ? { color } : undefined}>{value}</div>
       <div className="text-[10px] text-muted-foreground uppercase tracking-wider leading-tight">{label}</div>
     </div>
   );
