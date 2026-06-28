@@ -8,7 +8,7 @@ import { PageHeader, LoadingState } from "@/components/shared";
 import { Send, ArrowLeft, Mail } from "lucide-react";
 import { sendContractEmail } from "@/lib/api/sendContractEmail";
 
-export const Route = createFileRoute("/crm/contratos/$id/enviar")({
+export const Route = createFileRoute("/crm/contratos/enviar/$id")({
   head: () => ({ meta: [{ title: `Enviar Contrato · CRM ${client.name}` }] }),
   component: EnviarContrato,
 });
@@ -85,7 +85,7 @@ function EnviarContrato() {
       } catch {}
 
       alert("Contrato enviado com sucesso!");
-      navigate({ to: `/crm/contratos/${id}` });
+      navigate({ to: "/crm/contratos/$id", params: { id } });
     } catch (e) {
       alert("Erro ao enviar: " + (e instanceof Error ? e.message : "Erro desconhecido"));
     } finally {
@@ -99,7 +99,7 @@ function EnviarContrato() {
     <AppShell>
       <div className="p-4 md:p-6 space-y-5 max-w-2xl mx-auto">
         <button
-          onClick={() => navigate({ to: `/crm/contratos/${id}` })}
+          onClick={() => navigate({ to: "/crm/contratos/$id", params: { id } })}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-select hover:text-select/80 transition-colors"
         >
           <ArrowLeft className="size-4" /> Voltar
@@ -133,9 +133,6 @@ function EnviarContrato() {
               placeholder="Mensagem para enviar junto ao contrato"
               className="input-base w-full resize-y"
             />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              O cliente receberá o PDF do contrato e poderá assiná-lo digitalmente.
-            </p>
           </div>
 
           <div className="flex gap-2 pt-2">
@@ -147,7 +144,7 @@ function EnviarContrato() {
               <Send className="size-4" /> {enviando ? "Enviando..." : "Enviar Contrato"}
             </button>
             <button
-              onClick={() => navigate({ to: `/crm/contratos/${id}` })}
+              onClick={() => navigate({ to: "/crm/contratos/$id", params: { id } })}
               className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
             >
               Cancelar

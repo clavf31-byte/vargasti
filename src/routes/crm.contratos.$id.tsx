@@ -108,7 +108,7 @@ function ContratoDetalhe() {
               {!editando && contrato.status === "rascunho" && (
                 <>
                   <button
-                    onClick={() => navigate({ to: `/crm/contratos/${id}/enviar` })}
+                    onClick={() => navigate({ to: "/crm/contratos/enviar/$id", params: { id } })}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition-colors"
                   >
                     <Send className="size-3.5" /> Enviar

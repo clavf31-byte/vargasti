@@ -8,7 +8,7 @@ import { PageHeader, LoadingState } from "@/components/shared";
 import { Upload, CheckCircle2, ArrowLeft, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/crm/contratos/$id/receber")({
+export const Route = createFileRoute("/crm/contratos/receber/$id")({
   head: () => ({ meta: [{ title: `Receber Contrato · CRM ${client.name}` }] }),
   component: ReceberContrato,
 });
@@ -16,7 +16,6 @@ export const Route = createFileRoute("/crm/contratos/$id/receber")({
 interface Contrato {
   id: string;
   titulo: string;
-  status: string;
   clientes?: { nome: string } | null;
 }
 
@@ -36,7 +35,7 @@ function ReceberContrato() {
     try {
       const { data, error } = await (supabase as any)
         .from("contracts")
-        .select("id, titulo, status, clientes(nome)")
+        .select("id, titulo, clientes(nome)")
         .eq("id", id)
         .eq("user_id", user.id)
         .single();
@@ -78,7 +77,7 @@ function ReceberContrato() {
       } catch {}
 
       alert("Contrato assinado recebido com sucesso!");
-      navigate({ to: `/crm/contratos/${id}` });
+      navigate({ to: "/crm/contratos/$id", params: { id } });
     } catch (e) {
       alert("Erro ao fazer upload: " + (e instanceof Error ? e.message : "Erro desconhecido"));
     } finally {
@@ -92,7 +91,7 @@ function ReceberContrato() {
     <AppShell>
       <div className="p-4 md:p-6 space-y-5 max-w-2xl mx-auto">
         <button
-          onClick={() => navigate({ to: `/crm/contratos/${id}` })}
+          onClick={() => navigate({ to: "/crm/contratos/$id", params: { id } })}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-select hover:text-select/80 transition-colors"
         >
           <ArrowLeft className="size-4" /> Voltar
@@ -142,7 +141,7 @@ function ReceberContrato() {
               <CheckCircle2 className="size-4" /> {uploading ? "Salvando..." : "Confirmar Assinatura"}
             </button>
             <button
-              onClick={() => navigate({ to: `/crm/contratos/${id}` })}
+              onClick={() => navigate({ to: "/crm/contratos/$id", params: { id } })}
               className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
             >
               Cancelar

@@ -119,7 +119,7 @@ function ContratosPage() {
                         </button>
                         {c.status === "rascunho" && (
                           <button
-                            onClick={() => navigate({ to: "/crm/contratos/$id/enviar", params: { id: c.id } })}
+                            onClick={() => navigate({ to: "/crm/contratos/enviar/$id", params: { id: c.id } })}
                             className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
                           >
                             <Send className="size-3" /> Enviar
@@ -127,7 +127,7 @@ function ContratosPage() {
                         )}
                         {c.status === "enviado" && (
                           <button
-                            onClick={() => navigate({ to: "/crm/contratos/$id/receber", params: { id: c.id } })}
+                            onClick={() => navigate({ to: "/crm/contratos/receber/$id", params: { id: c.id } })}
                             className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-brand/30 text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors"
                           >
                             <FileUp className="size-3" /> Receber
