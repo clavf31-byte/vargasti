@@ -1,5 +1,13 @@
 import { Search, X, LucideIcon } from "lucide-react";
-import { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, HTMLAttributes } from "react";
+import {
+  createElement,
+  isValidElement,
+  ReactNode,
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  HTMLAttributes,
+  type ElementType,
+} from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // ── PageHeader ────────────────────────────────────────────────────────────────
@@ -14,16 +22,20 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ category, title, icon: Icon, iconClass, subtitle, actions, action }: PageHeaderProps) {
+  const renderedIcon = Icon
+    ? isValidElement(Icon)
+      ? Icon
+      : (typeof Icon === "function" || (typeof Icon === "object" && Icon !== null && "$$typeof" in Icon))
+        ? createElement(Icon as ElementType, { className: `size-6 shrink-0 ${iconClass ?? "text-brand"}` })
+        : Icon
+    : null;
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
       <div className="min-w-0">
         {category && <p className="text-[11px] text-muted-foreground uppercase tracking-[0.18em] mb-2">{category}</p>}
         <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight flex items-center gap-3">
-          {Icon && typeof Icon === "function" ? (
-            <Icon className={`size-6 shrink-0 ${iconClass ?? "text-brand"}`} />
-          ) : (
-            Icon
-          )}
+          {renderedIcon}
           <span className="truncate">{title}</span>
         </h1>
         {subtitle && (
