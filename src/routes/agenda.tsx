@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getAgendaStats,
   listEventosMes,
@@ -632,22 +633,28 @@ function AgendaPage() {
   const ano = currentMonth.getFullYear();
   const mes = currentMonth.getMonth() + 1;
 
+  const { session } = useAuth();
+  const isAuthed = !!session;
+
   const { data: stats } = useQuery({
     queryKey: ["agenda-stats"],
     queryFn: () => getAgendaStats(),
     staleTime: 60_000,
+    enabled: isAuthed,
   });
 
   const { data: eventosMes = [] } = useQuery({
     queryKey: ["agenda-mes", ano, mes],
     queryFn: () => listEventosMes({ data: { ano, mes } }),
     staleTime: 60_000,
+    enabled: isAuthed,
   });
 
   const { data: eventosDia = [], isLoading: loadingDia } = useQuery({
     queryKey: ["agenda-dia", selectedDateStr],
     queryFn: () => listEventosDia({ data: { data: selectedDateStr } }),
     staleTime: 30_000,
+    enabled: isAuthed,
   });
 
   const invalidateAll = () => {
