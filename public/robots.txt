@@ -1,2 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /crm
+Disallow: /admin
+Disallow: /config
+Disallow: /agenda
+Disallow: /projetos
+Disallow: /arquivos
+Disallow: /anotacoes
+Disallow: /ferramentas
+Disallow: /login
+
+Sitemap: https://www.vargasti.com.br/sitemap.xml

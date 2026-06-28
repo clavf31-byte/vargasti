@@ -84,6 +84,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: client.slogan },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/907a6cd1-2920-45bb-920b-ce91e86e32a2/id-preview-d9c14fc2--7986ff08-8133-4212-8727-07856cd99021.lovable.app-1780923585782.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/907a6cd1-2920-45bb-920b-ce91e86e32a2/id-preview-d9c14fc2--7986ff08-8133-4212-8727-07856cd99021.lovable.app-1780923585782.png" },
+      { property: "og:url", content: `https://${client.domain}` },
+      { property: "og:locale", content: "pt_BR" },
+      { name: "keywords", content: "suporte técnico TI, gestão de TI, helpdesk, monitoramento de redes, suporte informática, Porto Alegre, Rio Grande do Sul, VargasTI" },
+      { name: "geo.region", content: "BR-RS" },
+      { name: "geo.placename", content: "Porto Alegre" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
