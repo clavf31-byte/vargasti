@@ -139,7 +139,7 @@ function NovoContratoPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 space-y-5 max-w-2xl mx-auto">
+      <div className="p-4 md:p-6 space-y-5 max-w-4xl mx-auto">
         <PageHeader
           category="CRM"
           title="Novo Contrato"
@@ -149,20 +149,29 @@ function NovoContratoPage() {
 
         {step === 1 && (
           <div className="card-graphite p-6 space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Modelo de Contrato *</label>
-              <select value={form.template_id} onChange={(e) => setForm({ ...form, template_id: e.target.value })} className="input-base w-full">
-                <option value="">Selecione um modelo</option>
-                {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
-              </select>
-              {templates.length === 0 && (
-                <p className="mt-1 text-xs text-destructive">
-                  Nenhum modelo ativo.{" "}
-                  <button onClick={() => navigate({ to: "/crm/contratos/modelos" })} className="text-select underline cursor-pointer">
-                    Criar modelo →
-                  </button>
-                </p>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Modelo de Contrato *</label>
+                <select value={form.template_id} onChange={(e) => setForm({ ...form, template_id: e.target.value })} className="input-base w-full">
+                  <option value="">Selecione um modelo</option>
+                  {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                </select>
+                {templates.length === 0 && (
+                  <p className="mt-1 text-xs text-destructive">
+                    Nenhum modelo ativo.{" "}
+                    <button onClick={() => navigate({ to: "/crm/contratos/modelos" })} className="text-select underline cursor-pointer">
+                      Criar modelo →
+                    </button>
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente *</label>
+                <select value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })} className="input-base w-full">
+                  <option value="">Selecione um cliente</option>
+                  {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
+              </div>
             </div>
 
             {selectedTemplate && (
@@ -181,14 +190,6 @@ function NovoContratoPage() {
                 })()}
               </div>
             )}
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente *</label>
-              <select value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })} className="input-base w-full">
-                <option value="">Selecione um cliente</option>
-                {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </div>
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título do Contrato *</label>
