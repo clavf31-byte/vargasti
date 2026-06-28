@@ -113,9 +113,9 @@ function OrdensServicoPage() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="Abertas" value={qtdAberta} iconClass="text-info" />
-          <StatCard label="Em Andamento" value={qtdAndamento} iconClass="text-warning" />
-          <StatCard label="Concluídas" value={qtdConcluida} iconClass="text-brand" />
+          <StatCard label="Abertas" value={qtdAberta} colorClass="text-info" />
+          <StatCard label="Em Andamento" value={qtdAndamento} colorClass="text-warning" />
+          <StatCard label="Concluídas" value={qtdConcluida} colorClass="text-brand" />
         </div>
 
         <div className="flex gap-3 flex-wrap items-center">

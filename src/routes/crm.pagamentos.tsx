@@ -217,9 +217,9 @@ function PagamentosPage() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="Total Recebido" value={`R$ ${totalPago.toFixed(2)}`} iconClass="text-brand" />
-          <StatCard label="A Receber" value={`R$ ${totalPendente.toFixed(2)}`} iconClass="text-warning" />
-          <StatCard label="Pendentes" value={qtdPendente} iconClass="text-warning" />
+          <StatCard label="Total Recebido" value={`R$ ${totalPago.toFixed(2)}`} colorClass="text-brand" />
+          <StatCard label="A Receber" value={`R$ ${totalPendente.toFixed(2)}`} colorClass="text-warning" />
+          <StatCard label="Pendentes" value={qtdPendente} colorClass="text-warning" />
         </div>
 
         <div className="flex gap-3 flex-wrap items-center">
