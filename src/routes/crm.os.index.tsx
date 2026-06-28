@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, StatCard, EmptyState, LoadingState, StatusBadge } from "@/components/shared";
-import { Search, Wrench, CheckCircle2, Trash2 } from "lucide-react";
+import { PageHeader, StatCard, EmptyState, LoadingState, StatusBadge, Btn, InlineFormPanel } from "@/components/shared";
+import { Search, Wrench, CheckCircle2, Trash2, Plus, X } from "lucide-react";
 import { atualizarStatusOS } from "@/hooks/useOrdenServico";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +47,100 @@ const STATUS_ACTIVE_CLS: Record<string, string> = {
   cancelada:    "bg-destructive text-destructive-foreground border-destructive",
 };
 
+function NovaOSForm({ userId, onClose, onCreated }: { userId: string; onClose: () => void; onCreated: () => void }) {
+  const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
+  const [form, setForm] = useState({ cliente_id: "", descricao: "", prioridade: "normal" as "baixa" | "normal" | "alta", tecnico: "", data_inicio: new Date().toISOString().split("T")[0] });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    supabase.from("clientes").select("id, nome").eq("user_id", userId).order("nome").then(({ data }) => setClientes(data || []));
+  }, [userId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.cliente_id) return;
+    setSaving(true);
+    try {
+      const year = new Date().getFullYear();
+      const { count } = await supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("user_id", userId);
+      const numero = `OS-${year}-${String((count ?? 0) + 1).padStart(6, "0")}`;
+      const { error } = await supabase.from("ordens_servico").insert([{
+        user_id: userId,
+        cliente_id: form.cliente_id,
+        numero_formatado: numero,
+        descricao: form.descricao || null,
+        prioridade: form.prioridade,
+        tecnico: form.tecnico || null,
+        data_inicio: form.data_inicio,
+        status: "aberta",
+      }]);
+      if (error) throw error;
+      onCreated();
+      onClose();
+    } catch (err) {
+      alert("Erro ao criar OS: " + (err instanceof Error ? err.message : "Erro"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="card-graphite p-6 space-y-4">
+      <div className="flex items-center justify-between pb-4 border-b border-border">
+        <h2 className="text-base font-semibold text-foreground">Nova Ordem de Serviço</h2>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors"><X className="size-5" /></button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente *</label>
+            <select value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })} className="input-base w-full" required>
+              <option value="">Selecione um cliente</option>
+              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Prioridade</label>
+            <div className="flex gap-2 h-[38px]">
+              {(["baixa", "normal", "alta"] as const).map((p) => (
+                <button key={p} type="button" onClick={() => setForm({ ...form, prioridade: p })}
+                  className={`flex-1 rounded-lg border text-[11px] font-bold transition-all ${
+                    form.prioridade === p
+                      ? p === "alta" ? "bg-destructive/20 border-destructive text-destructive"
+                        : p === "normal" ? "bg-warning/20 border-warning text-warning"
+                        : "bg-surface-2 border-border text-foreground"
+                      : "border-border text-muted-foreground/40 hover:border-brand/30"
+                  }`}
+                >
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Técnico</label>
+            <input type="text" value={form.tecnico} onChange={(e) => setForm({ ...form, tecnico: e.target.value })} placeholder="Nome do técnico" className="input-base w-full" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Data de Início</label>
+            <input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} className="input-base w-full" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
+            <textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} placeholder="Descreva o serviço a ser realizado..." className="input-base w-full resize-none" />
+          </div>
+        </div>
+        <div className="flex gap-2 pt-2">
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">Cancelar</button>
+          <button type="submit" disabled={saving || !form.cliente_id} className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 disabled:opacity-40 transition-colors">
+            {saving ? "Criando..." : "Criar OS"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function OrdensServicoPage() {
   const { user } = useAuth();
   const [ordens, setOrdens] = useState<OS[]>([]);
@@ -54,6 +148,7 @@ function OrdensServicoPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const loadOrdens = async () => {
     if (!user) return;
@@ -110,7 +205,18 @@ function OrdensServicoPage() {
           icon={Wrench}
           iconClass="text-select"
           subtitle={`${ordens.length} total · ${filtradas.length} exibindo`}
+          actions={
+            <Btn variant="primary" onClick={() => setIsFormOpen((v) => !v)}>
+              <Plus className="size-4" /> {isFormOpen ? "Cancelar" : "Nova OS"}
+            </Btn>
+          }
         />
+
+        <InlineFormPanel open={isFormOpen}>
+          <NovaOSForm userId={user!.id} onClose={() => setIsFormOpen(false)} onCreated={loadOrdens} />
+        </InlineFormPanel>
+
+        <div className={`space-y-5 transition-opacity duration-300 ${isFormOpen ? "opacity-40 pointer-events-none select-none" : ""}`}>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard label="Abertas" value={qtdAberta} colorClass="text-info" />
@@ -202,6 +308,7 @@ function OrdensServicoPage() {
             </table>
           </div>
         )}
+        </div>
       </div>
     </AppShell>
   );
