@@ -7,6 +7,7 @@ import {
   InputHTMLAttributes,
   HTMLAttributes,
   type ElementType,
+  type FC,
 } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -414,3 +415,18 @@ export function FormModal({ title, subtitle, onClose, children, footer }: FormMo
     </div>
   );
 }
+
+// ── InlineFormPanel ───────────────────────────────────────────────────────────
+// Wrapper que anima height de 0 → auto usando CSS grid-template-rows.
+// Uso: <InlineFormPanel open={isFormOpen}><MeuForm /></InlineFormPanel>
+export const InlineFormPanel: FC<{ open: boolean; children: ReactNode }> = ({ open, children }) => (
+  <div
+    className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+      open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+    }`}
+  >
+    <div className="overflow-hidden">
+      <div className="pb-2">{children}</div>
+    </div>
+  </div>
+);

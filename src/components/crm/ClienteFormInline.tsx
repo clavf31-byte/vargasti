@@ -33,8 +33,6 @@ export function ClienteFormInline({ userId, onSuccess, isOpen, onClose }: Client
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);

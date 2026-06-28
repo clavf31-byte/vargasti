@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
-import { PageHeader, EmptyState, LoadingState, StatusBadge, Btn } from "@/components/shared";
+import { PageHeader, EmptyState, LoadingState, StatusBadge, Btn, InlineFormPanel } from "@/components/shared";
 import { FileSpreadsheet, Search, Filter, Trash2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,7 +77,7 @@ function OrcamentosPage() {
           }
         />
 
-        {isFormOpen && (
+        <InlineFormPanel open={isFormOpen}>
           <OrcamentoFormInline
             isOpen={isFormOpen}
             onClose={() => setIsFormOpen(false)}
@@ -85,10 +85,9 @@ function OrcamentosPage() {
             userId={user!.id}
             clientes={clientes}
           />
-        )}
+        </InlineFormPanel>
 
-        {!isFormOpen && (
-          <>
+        <div className={`space-y-5 transition-opacity duration-300 ${isFormOpen ? "opacity-40 pointer-events-none select-none" : ""}`}>
             <div className="flex gap-3 flex-wrap items-center">
               <div className="relative flex-1 min-w-48">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -171,8 +170,7 @@ function OrcamentosPage() {
                 </table>
               </div>
             )}
-          </>
-        )}
+        </div>
       </div>
     </AppShell>
   );

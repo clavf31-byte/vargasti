@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { ClienteFormInline } from "@/components/crm/ClienteFormInline";
-import { PageHeader, EmptyState, LoadingState, Btn } from "@/components/shared";
+import { PageHeader, EmptyState, LoadingState, Btn, InlineFormPanel } from "@/components/shared";
 
 export const Route = createFileRoute("/crm/clientes/")({
   head: () => ({ meta: [{ title: `Clientes · CRM ${client.name}` }] }),
@@ -82,17 +82,16 @@ function ClientesPage() {
           }
         />
 
-        {isFormOpen && (
+        <InlineFormPanel open={isFormOpen}>
           <ClienteFormInline
             isOpen={isFormOpen}
             onClose={() => setIsFormOpen(false)}
             onSuccess={handleSuccess}
             userId={user!.id}
           />
-        )}
+        </InlineFormPanel>
 
-        {!isFormOpen && (
-          <>
+        <div className={`space-y-5 transition-opacity duration-300 ${isFormOpen ? "opacity-40 pointer-events-none select-none" : ""}`}>
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <input
@@ -151,8 +150,7 @@ function ClientesPage() {
                 </table>
               </div>
             )}
-          </>
-        )}
+        </div>
       </div>
     </AppShell>
   );

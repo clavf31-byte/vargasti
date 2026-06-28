@@ -37,8 +37,6 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     );
   }, [isOpen, userId]);
 
-  if (!isOpen) return null;
-
   const subtotal = total;
   const totalComDescontoEImpostos = Math.max(0, subtotal - formData.desconto + formData.impostos);
 
