@@ -13,5 +13,5 @@ jobs:
         run: |
           curl -s -X GET \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            https://app.vargasti.com.br/api/cron/agenda-resumo \
+            https://vargasti.lovable.app/api/cron/agenda-resumo \
             -w "\nHTTP %{http_code}"
