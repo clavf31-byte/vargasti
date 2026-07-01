@@ -9,49 +9,9 @@ jobs:
   enviar:
     runs-on: ubuntu-latest
     steps:
-      - name: Enviar resumo da agenda via WhatsApp
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          WHATSAPP_NUMERO: ${{ secrets.CRON_WHATSAPP_NUMERO }}
+      - name: Chamar edge function agenda-cron
         run: |
-          node << 'EOF'
-          const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-
-          // Busca eventos do dia
-          const evRes = await fetch(
-            `${process.env.SUPABASE_URL}/rest/v1/agenda_eventos?select=titulo,data_inicio,dia_inteiro&data_inicio=gte.${hoje}T00:00:00&data_inicio=lte.${hoje}T23:59:59&status=neq.cancelado&status=neq.concluido&order=data_inicio`,
-            { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } }
-          );
-          const eventos = await evRes.json();
-          console.log('Eventos:', JSON.stringify(eventos));
-
-          if (!eventos?.length) { console.log('Sem eventos hoje.'); process.exit(0); }
-
-          // Busca config WhatsApp
-          const cfgRes = await fetch(
-            `${process.env.SUPABASE_URL}/rest/v1/whatsapp_config?select=evolution_url,evolution_key,instance_name&limit=1`,
-            { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } }
-          );
-          const [cfg] = await cfgRes.json();
-          console.log('Config WA:', cfg?.instance_name);
-
-          if (!cfg) { console.log('Sem whatsapp_config.'); process.exit(1); }
-
-          const dataFmt = new Date(`${hoje}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-          const linhas = eventos.map(e => {
-            const hora = e.dia_inteiro ? 'dia inteiro'
-              : new Date(e.data_inicio).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
-            return `• ${e.titulo} — ${hora}`;
-          });
-          const msg = `📅 *Agenda de hoje — ${dataFmt}*\n\n${linhas.join('\n')}`;
-
-          const sendRes = await fetch(`${cfg.evolution_url}/message/sendText/${cfg.instance_name}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', apikey: cfg.evolution_key },
-            body: JSON.stringify({ number: process.env.WHATSAPP_NUMERO, text: msg }),
-          });
-          const sendBody = await sendRes.text();
-          console.log(`WhatsApp HTTP ${sendRes.status}:`, sendBody);
-          if (!sendRes.ok) process.exit(1);
-          EOF
+          curl -s -X GET \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://mpueyricnfkyobjaviph.supabase.co/functions/v1/agenda-cron \
+            -w "\nHTTP %{http_code}"
