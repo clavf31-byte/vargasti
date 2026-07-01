@@ -26,9 +26,10 @@ export const APIRoute = createAPIFileRoute("/api/cron/agenda-resumo")({
 
     let enviados = 0;
 
+    const numeroDestino = (process.env.CRON_WHATSAPP_NUMERO ?? "").replace(/\D/g, "");
+
     for (const cfg of configs) {
-      const numero = (cfg as any).notificar_numero;
-      if (!numero) continue;
+      if (!numeroDestino) continue;
 
       const { data: eventos } = await admin
         .from("agenda_eventos")
@@ -54,7 +55,7 @@ export const APIRoute = createAPIFileRoute("/api/cron/agenda-resumo")({
       await fetch(`${cfg.evolution_url}/message/sendText/${cfg.instance_name}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: cfg.evolution_key },
-        body: JSON.stringify({ number: String(numero).replace(/\D/g, ""), text: msg }),
+        body: JSON.stringify({ number: numeroDestino, text: msg }),
       });
 
       enviados++;
