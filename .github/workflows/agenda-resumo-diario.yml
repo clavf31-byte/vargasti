@@ -1,0 +1,16 @@
+name: Agenda — Resumo Diário WhatsApp
+
+on:
+  schedule:
+    - cron: '0 11 * * *'  # 08:00 horário de Brasília (UTC-3)
+  workflow_dispatch:       # permite rodar manualmente para testar
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar endpoint de resumo
+        run: |
+          curl -sf -X GET \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://app.vargasti.com.br/api/cron/agenda-resumo
