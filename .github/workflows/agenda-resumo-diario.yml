@@ -11,6 +11,7 @@ jobs:
     steps:
       - name: Chamar endpoint de resumo
         run: |
-          curl -sf -X GET \
+          curl -s -X GET \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            https://app.vargasti.com.br/api/cron/agenda-resumo
+            https://app.vargasti.com.br/api/cron/agenda-resumo \
+            -w "\nHTTP %{http_code}"
