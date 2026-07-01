@@ -22,7 +22,7 @@ export const APIRoute = createAPIFileRoute("/api/cron/agenda-resumo")({
       .select("user_id, evolution_url, evolution_key, instance_name, notificar_numero")
       .not("evolution_url", "is", null);
 
-    if (!configs?.length) return Response.json({ ok: true, enviados: 0 });
+    if (!configs?.length) return Response.json({ ok: true, enviados: 0, debug: "sem whatsapp_config" });
 
     let enviados = 0;
 
@@ -52,15 +52,20 @@ export const APIRoute = createAPIFileRoute("/api/cron/agenda-resumo")({
       const dataFormatada = new Date(`${hoje}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
       const msg = `📅 *Agenda de hoje — ${dataFormatada}*\n\n${linhas.join("\n")}`;
 
-      await fetch(`${cfg.evolution_url}/message/sendText/${cfg.instance_name}`, {
+      const res = await fetch(`${cfg.evolution_url}/message/sendText/${cfg.instance_name}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: cfg.evolution_key },
         body: JSON.stringify({ number: numeroDestino, text: msg }),
       });
 
+      if (!res.ok) {
+        const err = await res.text();
+        return Response.json({ ok: false, debug: { status: res.status, erro: err, url: cfg.evolution_url, instance: cfg.instance_name } });
+      }
+
       enviados++;
     }
 
-    return Response.json({ ok: true, enviados });
+    return Response.json({ ok: true, enviados, debug: { configs: configs.length, hoje, numero: numeroDestino } });
   },
 });
