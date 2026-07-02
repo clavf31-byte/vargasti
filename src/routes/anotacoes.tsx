@@ -8,7 +8,7 @@ import {
   Plus, Trash2, FileText, Search, Tag,
   Lock, Eye, EyeOff, ShieldAlert, ShieldCheck,
   LayoutList, LayoutGrid, Table2, ChevronDown,
-  AlignLeft, AlignCenter, AlignRight,
+  AlignLeft, AlignCenter, AlignRight, Palette, CheckSquare, Type,
 } from "lucide-react";
 
 export const Route = createFileRoute("/anotacoes")({
@@ -169,6 +169,18 @@ function NotesPage() {
   const [noteType, setNoteType] = useState<NoteType>("texto");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contentEditableRef = useRef<HTMLDivElement>(null);
+
+  // toolbar formatting
+  const applyFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    contentEditableRef.current?.focus();
+  };
+
+  const applyColor = (color: string) => {
+    document.execCommand("foreColor", false, color);
+    contentEditableRef.current?.focus();
+  };
 
   // filtros
   const [search, setSearch] = useState("");
@@ -739,10 +751,39 @@ function NotesPage() {
                   onChange={(val) => handleFieldChange("content", val)}
                 />
               ) : (
-                <textarea value={content} onChange={(e) => handleFieldChange("content", e.target.value)}
-                  placeholder="Comece a escrever..."
-                  style={{ fontSize: `${getTextFontSize(tags)}px` }}
-                  className="flex-1 bg-transparent p-4 text-foreground resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed" />
+                <div className="flex-1 flex flex-col">
+                  {/* Toolbar de formatação */}
+                  <div className="flex items-center gap-1 px-4 py-2 border-b border-border/60 bg-surface-2/30">
+                    <button onClick={() => applyFormat("strikethrough")} title="Riscado (Alt+Shift+5)"
+                      className="p-1.5 rounded hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors">
+                      <Type className="size-4" />
+                    </button>
+                    <div className="w-px h-4 bg-border/40" />
+                    <button onClick={() => applyColor("#ef4444")} title="Vermelho"
+                      className="w-6 h-6 rounded hover:scale-110 transition-transform" style={{ background: "#ef4444" }} />
+                    <button onClick={() => applyColor("#f59e0b")} title="Laranja"
+                      className="w-6 h-6 rounded hover:scale-110 transition-transform" style={{ background: "#f59e0b" }} />
+                    <button onClick={() => applyColor("#3b82f6")} title="Azul"
+                      className="w-6 h-6 rounded hover:scale-110 transition-transform" style={{ background: "#3b82f6" }} />
+                    <button onClick={() => applyColor("#10b981")} title="Verde"
+                      className="w-6 h-6 rounded hover:scale-110 transition-transform" style={{ background: "#10b981" }} />
+                    <button onClick={() => applyColor(getComputedStyle(document.documentElement).getPropertyValue('--foreground'))} title="Resetar cor"
+                      className="p-1.5 rounded hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors text-xs">✕</button>
+                    <div className="w-px h-4 bg-border/40" />
+                    <button onClick={() => applyFormat("insertUnorderedList")} title="Lista"
+                      className="p-1.5 rounded hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors">
+                      <CheckSquare className="size-4" />
+                    </button>
+                  </div>
+                  {/* Editor */}
+                  <div ref={contentEditableRef} contentEditable suppressContentEditableWarning
+                    onInput={(e) => handleFieldChange("content", e.currentTarget.innerHTML)}
+                    dangerouslySetInnerHTML={{ __html: content }}
+                    placeholder="Comece a escrever..."
+                    style={{ fontSize: `${getTextFontSize(tags)}px` }}
+                    className="flex-1 bg-transparent p-4 text-foreground focus:outline-none placeholder:text-muted-foreground leading-relaxed overflow-y-auto"
+                  />
+                </div>
               )}
             </div>
           );
