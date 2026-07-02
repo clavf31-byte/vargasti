@@ -171,6 +171,13 @@ function NotesPage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
+  // sincronizar conteúdo ao abrir nota (não a cada keystroke)
+  useEffect(() => {
+    if (contentEditableRef.current && selected && content !== undefined) {
+      contentEditableRef.current.innerHTML = content;
+    }
+  }, [selected?.id]);
+
   // toolbar formatting
   const applyFormat = (command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -778,8 +785,6 @@ function NotesPage() {
                   {/* Editor */}
                   <div ref={contentEditableRef} contentEditable suppressContentEditableWarning
                     onInput={(e) => handleFieldChange("content", e.currentTarget.innerHTML)}
-                    dangerouslySetInnerHTML={{ __html: content }}
-                    placeholder="Comece a escrever..."
                     style={{ fontSize: `${getTextFontSize(tags)}px` }}
                     className="flex-1 bg-transparent p-4 text-foreground focus:outline-none placeholder:text-muted-foreground leading-relaxed overflow-y-auto"
                   />
