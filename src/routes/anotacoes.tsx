@@ -762,14 +762,23 @@ function NotesPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {noteType !== "planilha" && (
-                  <select
-                    value={getTextFontSize(tags)}
-                    onChange={(e) => handleFieldChange("tags", setTextFontSizeInTags(tags, parseInt(e.target.value)))}
-                    title="Tamanho da fonte"
-                    className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none appearance-none cursor-pointer"
-                  >
-                    {TEXT_FONT_SIZES.map((s) => <option key={s} value={s}>{s}px</option>)}
-                  </select>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground flex items-center gap-1 focus:outline-none hover:border-muted-foreground/40 cursor-pointer">
+                        {getTextFontSize(tags)}px
+                        <ChevronDown className="size-2.5 opacity-60" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="min-w-[80px]">
+                      {TEXT_FONT_SIZES.map((s) => (
+                        <DropdownMenuItem key={s}
+                          onClick={() => handleFieldChange("tags", setTextFontSizeInTags(tags, s))}
+                          className={getTextFontSize(tags) === s ? "font-semibold" : ""}>
+                          {s}px
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <Tag className="size-3 text-muted-foreground/40 shrink-0" />
