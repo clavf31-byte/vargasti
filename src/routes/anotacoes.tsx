@@ -136,6 +136,41 @@ function parseSheet(content: string): SheetData {
   return emptySheet();
 }
 
+const STATUS_OPTIONS = [
+  { value: "todos", label: "Todos status" },
+  ...STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+];
+const CATEGORY_OPTIONS = [
+  { value: "todas", label: "Todas cat." },
+  ...CATEGORIES.map((c) => ({ value: c, label: c })),
+];
+
+function FilterDropdown({ options, value, onChange }: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const current = options.find((o) => o.value === value);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex-1 border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground flex items-center justify-between gap-1 focus:outline-none hover:border-muted-foreground/40 bg-surface-2 min-w-0">
+          <span className="truncate">{current?.label ?? value}</span>
+          <ChevronDown className="size-2.5 opacity-60 shrink-0" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[130px]">
+        {options.map((o) => (
+          <DropdownMenuItem key={o.value} onClick={() => onChange(o.value)}
+            className={value === o.value ? "font-semibold" : ""}>
+            {o.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 // ── component ─────────────────────────────────────────────────────────────────
 
 function NotesPage() {
@@ -462,20 +497,10 @@ function NotesPage() {
               </div>
             </div>
             {layoutMode === "horizontal" && (
-              <>
-                <div className="flex gap-1.5">
-                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
-                    <option value="todos">Todos status</option>
-                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                    className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
-                    <option value="todas">Todas cat.</option>
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-              </>
+              <div className="flex gap-1.5">
+                <FilterDropdown options={STATUS_OPTIONS} value={filterStatus} onChange={setFilterStatus} />
+                <FilterDropdown options={CATEGORY_OPTIONS} value={filterCategory} onChange={setFilterCategory} />
+              </div>
             )}
             <div className="relative">
               <button
@@ -513,16 +538,8 @@ function NotesPage() {
             </div>
             {layoutMode === "vertical" && (
               <div className="flex gap-1.5">
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
-                  <option value="todos">Todos status</option>
-                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer">
-                  <option value="todas">Todas cat.</option>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <FilterDropdown options={STATUS_OPTIONS} value={filterStatus} onChange={setFilterStatus} />
+                <FilterDropdown options={CATEGORY_OPTIONS} value={filterCategory} onChange={setFilterCategory} />
               </div>
             )}
 
