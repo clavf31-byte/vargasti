@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { Resend } from "resend";
 
@@ -12,6 +13,7 @@ const SendContractEmailSchema = z.object({
 });
 
 export const sendContractEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(SendContractEmailSchema)
   .handler(async ({ data }) => {
     const apiKey = process.env.RESEND_API_KEY;
