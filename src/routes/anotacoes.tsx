@@ -154,7 +154,7 @@ function FilterDropdown({ options, value, onChange }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex-1 border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground flex items-center justify-between gap-1 focus:outline-none hover:border-muted-foreground/40 bg-surface-2 min-w-0">
+        <button className="flex-1 border border-border rounded-lg px-2 py-1 text-sm text-foreground flex items-center justify-between gap-1 focus:outline-none hover:border-muted-foreground/40 bg-surface-2 min-w-0">
           <span className="truncate">{current?.label ?? value}</span>
           <ChevronDown className="size-2.5 opacity-60 shrink-0" />
         </button>
@@ -548,7 +548,7 @@ function NotesPage() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar anotação..."
-                className="w-full bg-background border border-border rounded-xl px-2.5 pl-7 py-1.5 text-xs focus:outline-none focus:border-muted-foreground/40 focus:ring-1 focus:ring-muted-foreground/20 placeholder:text-muted-foreground transition-all" />
+                className="w-full bg-background border border-border rounded-xl px-2.5 pl-7 py-1.5 text-sm focus:outline-none focus:border-muted-foreground/40 focus:ring-1 focus:ring-muted-foreground/20 placeholder:text-muted-foreground transition-all" />
             </div>
             {layoutMode === "vertical" && (
               <div className="flex gap-1.5">
@@ -731,7 +731,7 @@ function NotesPage() {
               <div className="flex items-center gap-2 px-5 py-2 border-b border-border/60 flex-wrap">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className={`border rounded-lg px-2 py-1 text-[10px] font-medium cursor-pointer transition-colors flex items-center gap-1 focus:outline-none ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
+                    <button className={`border rounded-lg px-2 py-1 text-sm font-medium cursor-pointer transition-colors flex items-center gap-1 focus:outline-none ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
                       {noteStatus.charAt(0).toUpperCase() + noteStatus.slice(1)}
                       <ChevronDown className="size-2.5 opacity-60" />
                     </button>
@@ -747,7 +747,7 @@ function NotesPage() {
                 </DropdownMenu>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground cursor-pointer transition-colors flex items-center gap-1 focus:outline-none hover:border-muted-foreground/40">
+                    <button className="border border-border rounded-lg px-2 py-1 text-sm text-foreground cursor-pointer transition-colors flex items-center gap-1 focus:outline-none hover:border-muted-foreground/40">
                       {category}
                       <ChevronDown className="size-2.5 opacity-60" />
                     </button>
@@ -764,7 +764,7 @@ function NotesPage() {
                 {noteType !== "planilha" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground flex items-center gap-1 focus:outline-none hover:border-muted-foreground/40 cursor-pointer">
+                      <button className="border border-border rounded-lg px-2 py-1 text-sm text-foreground flex items-center gap-1 focus:outline-none hover:border-muted-foreground/40 cursor-pointer">
                         {getTextFontSize(tags)}px
                         <ChevronDown className="size-2.5 opacity-60" />
                       </button>
@@ -784,7 +784,7 @@ function NotesPage() {
                   <Tag className="size-3 text-muted-foreground/40 shrink-0" />
                   <input value={displayTags(tags)} onChange={(e) => handleFieldChange("tags", e.target.value)}
                     placeholder="tags separadas por vírgula..."
-                    className="flex-1 bg-transparent text-[10px] text-muted-foreground focus:outline-none placeholder:text-muted-foreground/40 min-w-0" />
+                    className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground min-w-0" />
                 </div>
               </div>
 
