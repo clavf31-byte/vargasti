@@ -714,10 +714,22 @@ function NotesPage() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <select value={category} onChange={(e) => handleFieldChange("category", e.target.value)}
-                  className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer transition-colors">
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground cursor-pointer transition-colors flex items-center gap-1 focus:outline-none hover:border-muted-foreground/40">
+                      {category}
+                      <ChevronDown className="size-2.5 opacity-60" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[110px]">
+                    {CATEGORIES.map((c) => (
+                      <DropdownMenuItem key={c} onClick={() => handleFieldChange("category", c)}
+                        className={c === category ? "font-semibold" : ""}>
+                        {c}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {noteType !== "planilha" && (
                   <select
                     value={getTextFontSize(tags)}
