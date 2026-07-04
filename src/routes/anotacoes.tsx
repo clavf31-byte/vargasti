@@ -1154,15 +1154,23 @@ function SpreadsheetEditor({
           <AlignRight className="size-3.5" />
         </button>
         <div className="w-px h-4 bg-border mx-0.5" />
-        <select
-          value={activeFontSize}
-          onChange={(e) => applySize(parseInt(e.target.value))}
-          disabled={!hasSelection}
-          title="Tamanho da fonte"
-          className="text-[11px] text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 focus:outline-none cursor-pointer disabled:opacity-30"
-        >
-          {SHEET_FONT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button title="Tamanho da fonte"
+              className={`text-[11px] text-muted-foreground border border-border rounded px-1.5 py-0.5 flex items-center gap-0.5 focus:outline-none hover:border-brand/40 transition-colors ${!hasSelection ? "opacity-30 pointer-events-none" : "cursor-pointer"}`}>
+              {activeFontSize}
+              <ChevronDown className="size-2.5 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[60px]">
+            {SHEET_FONT_SIZES.map((s) => (
+              <DropdownMenuItem key={s} onClick={() => applySize(s)}
+                className={activeFontSize === s ? "font-semibold" : ""}>
+                {s}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <div className="ml-auto flex gap-1.5">
           <button onClick={addRow} className="text-[10px] text-muted-foreground hover:text-foreground border border-border/60 rounded px-2 py-1 transition-colors hover:bg-surface-2">
             + Linha
