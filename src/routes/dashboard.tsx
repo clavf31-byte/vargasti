@@ -253,21 +253,20 @@ function Dashboard() {
               <Plus className="size-4 text-select" />
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Ações Rápidas</p>
             </div>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {actions.map(({ to, icon: Icon, label, desc, cls }) => (
                 <Link
                   key={to + label}
                   to={to}
-                  className="card-selectable hover:card-selectable-hover p-3.5 flex items-center gap-3"
+                  className="card-selectable hover:card-selectable-hover p-3 flex items-center gap-2.5"
                 >
-                  <div className={`size-9 rounded-xl border ${cls} grid place-items-center shrink-0`}>
-                    <Icon className="size-4" />
+                  <div className={`size-8 rounded-xl border ${cls} grid place-items-center shrink-0`}>
+                    <Icon className="size-3.5" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
-                    <p className="text-[10px] text-muted-foreground">{desc}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">{label}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{desc}</p>
                   </div>
-                  <ChevronRight className="size-4 text-muted-foreground/40 shrink-0" />
                 </Link>
               ))}
             </div>
