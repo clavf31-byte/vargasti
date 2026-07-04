@@ -227,6 +227,20 @@ function NotesPage() {
     contentEditableRef.current?.focus();
   };
 
+  const insertChecklist = () => {
+    document.execCommand("insertHTML", false, '<span data-ck="1" style="cursor:pointer;user-select:none;margin-right:6px">☐</span>&nbsp;');
+    contentEditableRef.current?.focus();
+    handleFieldChange("content", contentEditableRef.current?.innerHTML ?? "");
+  };
+
+  const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.ck === "1" && selected) {
+      t.textContent = t.textContent === "☐" ? "☑" : "☐";
+      scheduleAutoSave(selected.id, { content: contentEditableRef.current?.innerHTML ?? "" });
+    }
+  };
+
   // filtros
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
@@ -821,7 +835,7 @@ function NotesPage() {
                     <button onClick={() => applyColor(getComputedStyle(document.documentElement).getPropertyValue('--foreground'))} title="Resetar cor"
                       className="p-1.5 rounded hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors text-xs">✕</button>
                     <div className="w-px h-4 bg-border/40" />
-                    <button onClick={() => applyFormat("insertUnorderedList")} title="Lista"
+                    <button onClick={insertChecklist} title="Checklist"
                       className="p-1.5 rounded hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors">
                       <CheckSquare className="size-4" />
                     </button>
@@ -829,6 +843,7 @@ function NotesPage() {
                   {/* Editor */}
                   <div ref={contentEditableRef} contentEditable suppressContentEditableWarning
                     onInput={(e) => handleFieldChange("content", e.currentTarget.innerHTML)}
+                    onClick={handleEditorClick}
                     style={{ fontSize: `${getTextFontSize(tags)}px` }}
                     className="flex-1 bg-transparent p-4 text-foreground focus:outline-none placeholder:text-muted-foreground leading-relaxed overflow-y-auto"
                   />
