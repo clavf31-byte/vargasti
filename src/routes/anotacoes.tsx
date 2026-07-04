@@ -10,6 +10,9 @@ import {
   LayoutList, LayoutGrid, Table2, ChevronDown,
   AlignLeft, AlignCenter, AlignRight, Palette, CheckSquare, Type,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/anotacoes")({
   head: () => ({ meta: [{ title: `Anotações · ${client.name}` }] }),
@@ -695,10 +698,22 @@ function NotesPage() {
 
               {/* Metadados */}
               <div className="flex items-center gap-2 px-5 py-2 border-b border-border/60 flex-wrap">
-                <select value={noteStatus} onChange={(e) => handleFieldChange("status", e.target.value)}
-                  className={`bg-transparent border rounded-lg px-2 py-1 text-[10px] font-medium focus:outline-none appearance-none cursor-pointer transition-colors ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
-                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={`border rounded-lg px-2 py-1 text-[10px] font-medium cursor-pointer transition-colors flex items-center gap-1 focus:outline-none ${STATUS_COLORS[noteStatus] || "border-border text-muted-foreground"}`}>
+                      {noteStatus.charAt(0).toUpperCase() + noteStatus.slice(1)}
+                      <ChevronDown className="size-2.5 opacity-60" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[120px]">
+                    {STATUSES.map((s) => (
+                      <DropdownMenuItem key={s} onClick={() => handleFieldChange("status", s)}
+                        className={s === noteStatus ? "font-semibold" : ""}>
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <select value={category} onChange={(e) => handleFieldChange("category", e.target.value)}
                   className="bg-transparent border border-border rounded-lg px-2 py-1 text-[10px] text-muted-foreground focus:outline-none focus:border-muted-foreground/40 appearance-none cursor-pointer transition-colors">
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
