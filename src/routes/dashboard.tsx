@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import {
   Users, FileText, Banknote, Plus, TrendingUp, ScrollText,
   Clock, CheckCircle2, Mail, FileEdit, ChevronRight,
-  FileSignature, AlertTriangle, CalendarClock, ListTodo,
+  FileSignature, AlertTriangle, CalendarClock, ListTodo, NotebookPen,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -96,6 +96,7 @@ function Dashboard() {
     { to: "/crm/contratos",  icon: ScrollText,      label: "Novo Contrato",  desc: "Criar contrato",      cls: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
     { to: "/crm/pagamentos", icon: Banknote,        label: "Reg. Pagamento", desc: "Adicionar pagamento", cls: "bg-warning/10 border-warning/20 text-warning" },
     { to: "/crm/tarefas",    icon: ListTodo,        label: "Nova Tarefa",    desc: "Criar tarefa",        cls: "bg-teal-500/10 border-teal-500/20 text-teal-400" },
+    { to: "/anotacoes",      icon: NotebookPen,     label: "Nova Anotação",  desc: "Criar anotação",      cls: "bg-orange-500/10 border-orange-500/20 text-orange-400" },
     { to: "/crm",            icon: TrendingUp,      label: "CRM Dashboard",  desc: "Ver métricas",        cls: "bg-surface-2 border-border text-muted-foreground" },
   ];
 

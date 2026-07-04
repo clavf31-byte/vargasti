@@ -1,7 +1,7 @@
 import { Link, useRouterState, Outlet } from "@tanstack/react-router";
 import {
   LayoutDashboard, Mail, FileSpreadsheet, NotebookPen, FolderKanban,
-  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText, ClipboardList, Headphones, CalendarDays,
+  Files, Settings, User, LogOut, Menu, X, Search, ShieldCheck, ChevronDown, MessageCircle, Wrench, Users, ScrollText, ClipboardList, Headphones, CalendarDays, ListTodo,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
@@ -32,6 +32,7 @@ const NAV_MODULES = [
       { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/os", label: "Ordens de Serviço", icon: Wrench, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail, permKey: "can_access_crm" as keyof ModulePermissions },
+      { to: "/crm/tarefas", label: "Tarefas", icon: ListTodo, permKey: "can_access_crm" as keyof ModulePermissions },
     ],
   },
   {
