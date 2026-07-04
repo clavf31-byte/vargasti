@@ -1,4 +1,4 @@
-import client from "@/config/client";
+﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,8 @@ import { Plus, Edit2, Trash2, ClipboardList, Download } from "lucide-react";
 
 const MODELO_SUPORTE_TI = {
   nome: "Contrato de Suporte e Infraestrutura de TI",
-  descricao: "Contrato mensal com suporte técnico, comodato de equipamentos e antivírus Acronis",
-  conteudo: `PROPOSTA COMERCIAL E TÉCNICA
+  descricao: "Contrato mensal com suporte tÃ©cnico, comodato de equipamentos e antivÃ­rus Acronis",
+  conteudo: `PROPOSTA COMERCIAL E TÃ‰CNICA
 Contrato Mensal de Suporte e Infraestrutura de TI
 
 Cliente: {{cliente_nome}}
@@ -24,7 +24,7 @@ Data: ____ / ____ / ________`,
 };
 
 export const Route = createFileRoute("/crm/contratos/modelos")({
-  head: () => ({ meta: [{ title: `Modelos de Contratos · CRM ${client.name}` }] }),
+  head: () => ({ meta: [{ title: `Modelos de Contratos Â· CRM ${client.name}` }] }),
   component: ModelosPage,
 });
 
@@ -94,7 +94,7 @@ function ModelosPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         <PageHeader
           category="CRM"
           title="Modelos de Contrato"
@@ -113,7 +113,7 @@ function ModelosPage() {
               <div className="font-semibold text-foreground text-sm">{MODELO_SUPORTE_TI.nome}</div>
               <div className="text-xs text-muted-foreground mt-1">{MODELO_SUPORTE_TI.descricao}</div>
               <div className="text-[11px] text-muted-foreground mt-2">
-                Variáveis:{" "}
+                VariÃ¡veis:{" "}
                 <code className="bg-surface px-1 py-0.5 rounded text-[10px]">
                   {"{{cliente_nome}}, {{data}}, {{estacoes_trabalho}}, {{licencas_acronis}}, {{valor_setup}}, {{valor_mensal}}, {{vigencia_meses}}, {{dia_vencimento}}"}
                 </code>
@@ -136,15 +136,15 @@ function ModelosPage() {
                 <input type="text" placeholder="ex: Contrato de Suporte TI" value={newTemplate.nome} onChange={(e) => setNewTemplate({ ...newTemplate, nome: e.target.value })} className="input-base w-full" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">DescriÃ§Ã£o</label>
                 <input type="text" placeholder="Descreva o contrato" value={newTemplate.descricao} onChange={(e) => setNewTemplate({ ...newTemplate, descricao: e.target.value })} className="input-base w-full" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Conteúdo do Contrato *</label>
-              <p className="text-[11px] text-muted-foreground mb-1.5">Use variáveis como: {"{{cliente_nome}}"}, {"{{data}}"}, {"{{valor}}"}, etc.</p>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">ConteÃºdo do Contrato *</label>
+              <p className="text-[11px] text-muted-foreground mb-1.5">Use variÃ¡veis como: {"{{cliente_nome}}"}, {"{{data}}"}, {"{{valor}}"}, etc.</p>
               <textarea
-                placeholder="Cole aqui o conteúdo do seu contrato..."
+                placeholder="Cole aqui o conteÃºdo do seu contrato..."
                 value={newTemplate.conteudo}
                 onChange={(e) => setNewTemplate({ ...newTemplate, conteudo: e.target.value })}
                 rows={8}
@@ -171,7 +171,7 @@ function ModelosPage() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b-2 border-border">
-                  {["Nome", "Descrição", "Ações"].map((h, i) => (
+                  {["Nome", "DescriÃ§Ã£o", "AÃ§Ãµes"].map((h, i) => (
                     <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 2 ? "text-center" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
@@ -180,7 +180,7 @@ function ModelosPage() {
                 {templates.map((t) => (
                   <tr key={t.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
                     <td className="px-4 py-3 font-medium text-foreground">{t.nome}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{t.descricao || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{t.descricao || "â€”"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button
@@ -208,3 +208,4 @@ function ModelosPage() {
     </AppShell>
   );
 }
+

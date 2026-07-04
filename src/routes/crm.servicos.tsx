@@ -1,4 +1,4 @@
-import client from "@/config/client";
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Wrench } from "lucide-react";
@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/servicos")({
-  head: () => ({ meta: [{ title: `Serviços · CRM ${client.name}` }] }),
+  head: () => ({ meta: [{ title: `ServiÃ§os Â· CRM ${client.name}` }] }),
   component: ServicosPage,
 });
 
@@ -21,15 +21,15 @@ function ServicosPage() {
   const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     nome: "",
-    categoria: "Serviços Técnicos",
+    categoria: "ServiÃ§os TÃ©cnicos",
     valor_padrao: 0,
     unidade: "Hora",
     descricao: "",
     ativo: true,
   });
 
-  const categorias = ["Serviços Técnicos", "Instalação", "Redes", "Deslocamento", "Manutenção", "Suporte", "Consultoria"];
-  const unidades = ["Hora", "Unidade", "Dia", "Semana", "Mês"];
+  const categorias = ["ServiÃ§os TÃ©cnicos", "InstalaÃ§Ã£o", "Redes", "Deslocamento", "ManutenÃ§Ã£o", "Suporte", "Consultoria"];
+  const unidades = ["Hora", "Unidade", "Dia", "Semana", "MÃªs"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,16 +38,16 @@ function ServicosPage() {
     try {
       if (editingId) {
         await updateServico(editingId, formData);
-        setMessage("Serviço atualizado com sucesso!");
+        setMessage("ServiÃ§o atualizado com sucesso!");
       } else {
         await addServico(formData);
-        setMessage("Serviço criado com sucesso!");
+        setMessage("ServiÃ§o criado com sucesso!");
       }
-      setFormData({ nome: "", categoria: "Serviços Técnicos", valor_padrao: 0, unidade: "Hora", descricao: "", ativo: true });
+      setFormData({ nome: "", categoria: "ServiÃ§os TÃ©cnicos", valor_padrao: 0, unidade: "Hora", descricao: "", ativo: true });
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
-      setMessage("Erro ao salvar serviço");
+      setMessage("Erro ao salvar serviÃ§o");
       console.error(err);
     } finally {
       setLoading(false);
@@ -61,19 +61,19 @@ function ServicosPage() {
   }
 
   function handleAddNew() {
-    setFormData({ nome: "", categoria: "Serviços Técnicos", valor_padrao: 0, unidade: "Hora", descricao: "", ativo: true });
+    setFormData({ nome: "", categoria: "ServiÃ§os TÃ©cnicos", valor_padrao: 0, unidade: "Hora", descricao: "", ativo: true });
     setEditingId(null);
     setShowForm(true);
   }
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         <PageHeader
           category="CRM"
-          title="Serviços"
+          title="ServiÃ§os"
           icon={Wrench}
-          subtitle="Cadastro e gestão de serviços oferecidos"
+          subtitle="Cadastro e gestÃ£o de serviÃ§os oferecidos"
         />
 
         {message && (
@@ -90,7 +90,7 @@ function ServicosPage() {
         {showForm && (
           <div className="card-graphite p-6 space-y-4">
             <h3 className="text-sm font-semibold text-foreground">
-              {editingId ? "Editar Serviço" : "Novo Serviço"}
+              {editingId ? "Editar ServiÃ§o" : "Novo ServiÃ§o"}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -100,7 +100,7 @@ function ServicosPage() {
                     type="text"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder="Ex: Hora Técnica Presencial"
+                    placeholder="Ex: Hora TÃ©cnica Presencial"
                     className="input-base w-full"
                     required
                   />
@@ -116,7 +116,7 @@ function ServicosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor Padrão (R$) *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor PadrÃ£o (R$) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -139,11 +139,11 @@ function ServicosPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">DescriÃ§Ã£o</label>
                 <textarea
                   value={formData.descricao || ""}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  placeholder="Descrição detalhada do serviço"
+                  placeholder="DescriÃ§Ã£o detalhada do serviÃ§o"
                   rows={3}
                   className="input-base w-full resize-y"
                 />
@@ -178,3 +178,4 @@ function ServicosPage() {
     </AppShell>
   );
 }
+

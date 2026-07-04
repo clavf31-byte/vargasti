@@ -1,4 +1,4 @@
-import client from "@/config/client";
+﻿import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Package } from "lucide-react";
@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/pecas")({
-  head: () => ({ meta: [{ title: `Peças · CRM ${client.name}` }] }),
+  head: () => ({ meta: [{ title: `PeÃ§as Â· CRM ${client.name}` }] }),
   component: PecasPage,
 });
 
@@ -30,7 +30,7 @@ function PecasPage() {
     ativo: true,
   });
 
-  const categorias = ["Hardware", "Software", "Cabeamento", "Conectores", "Fontes", "Memória", "Armazenamento", "Outros"];
+  const categorias = ["Hardware", "Software", "Cabeamento", "Conectores", "Fontes", "MemÃ³ria", "Armazenamento", "Outros"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,16 +39,16 @@ function PecasPage() {
     try {
       if (editingId) {
         await updatePeca(editingId, formData);
-        setMessage("Peça atualizada com sucesso!");
+        setMessage("PeÃ§a atualizada com sucesso!");
       } else {
         await addPeca(formData);
-        setMessage("Peça criada com sucesso!");
+        setMessage("PeÃ§a criada com sucesso!");
       }
       setFormData({ codigo: "", descricao: "", categoria: "Hardware", fabricante: "", valor_custo: 0, valor_venda: 0, estoque: 0, ativo: true });
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
-      setMessage("Erro ao salvar peça");
+      setMessage("Erro ao salvar peÃ§a");
       console.error(err);
     } finally {
       setLoading(false);
@@ -69,12 +69,12 @@ function PecasPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 space-y-5 max-w-6xl mx-auto">
+      <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         <PageHeader
           category="CRM"
-          title="Catálogo de Peças"
+          title="CatÃ¡logo de PeÃ§as"
           icon={Package}
-          subtitle="Gestão de peças, materiais e estoque"
+          subtitle="GestÃ£o de peÃ§as, materiais e estoque"
         />
 
         {message && (
@@ -91,12 +91,12 @@ function PecasPage() {
         {showForm && (
           <div className="card-graphite p-6 space-y-4">
             <h3 className="text-sm font-semibold text-foreground">
-              {editingId ? "Editar Peça" : "Nova Peça"}
+              {editingId ? "Editar PeÃ§a" : "Nova PeÃ§a"}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">CÃ³digo *</label>
                   <input
                     type="text"
                     value={formData.codigo}
@@ -117,12 +117,12 @@ function PecasPage() {
                   </select>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição *</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">DescriÃ§Ã£o *</label>
                   <input
                     type="text"
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Ex: Memória RAM 8GB DDR4"
+                    placeholder="Ex: MemÃ³ria RAM 8GB DDR4"
                     className="input-base w-full"
                     required
                   />
@@ -203,3 +203,4 @@ function PecasPage() {
     </AppShell>
   );
 }
+
