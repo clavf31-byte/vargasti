@@ -91,14 +91,14 @@ function Dashboard() {
     ? Math.round((contratosStatus.assinado / contratosCount) * 100) : 0;
 
   const actions = [
-    { to: "/crm/clientes",   icon: Users,          label: "Novo Cliente",   desc: "Cadastrar cliente",   cls: "bg-brand/10 border-brand/20 text-brand" },
-    { to: "/crm/orcamentos", icon: FileText,        label: "Novo Orçamento", desc: "Criar orçamento",     cls: "bg-info/10 border-info/20 text-info" },
-    { to: "/crm/contratos",  icon: ScrollText,      label: "Novo Contrato",  desc: "Criar contrato",      cls: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
-    { to: "/crm/pagamentos", icon: Banknote,        label: "Reg. Pagamento", desc: "Adicionar pagamento", cls: "bg-warning/10 border-warning/20 text-warning" },
-    { to: "/crm/tarefas",    icon: ListTodo,        label: "Nova Tarefa",    desc: "Criar tarefa",        cls: "bg-teal-500/10 border-teal-500/20 text-teal-400" },
-    { to: "/anotacoes",      icon: NotebookPen,     label: "Nova Anotação",  desc: "Criar anotação",      cls: "bg-orange-500/10 border-orange-500/20 text-orange-400" },
-    { to: "/projetos",       icon: FolderKanban,    label: "Novo Projeto",   desc: "Criar projeto",       cls: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" },
     { to: "/crm",            icon: TrendingUp,      label: "CRM Dashboard",  desc: "Ver métricas",        cls: "bg-surface-2 border-border text-muted-foreground" },
+    { to: "/anotacoes",      icon: NotebookPen,     label: "Nova Anotação",  desc: "Criar anotação",      cls: "bg-orange-500/10 border-orange-500/20 text-orange-400" },
+    { to: "/crm/tarefas",    icon: ListTodo,        label: "Nova Tarefa",    desc: "Criar tarefa",        cls: "bg-teal-500/10 border-teal-500/20 text-teal-400" },
+    { to: "/crm/clientes",   icon: Users,           label: "Novo Cliente",   desc: "Cadastrar cliente",   cls: "bg-brand/10 border-brand/20 text-brand" },
+    { to: "/crm/contratos",  icon: ScrollText,      label: "Novo Contrato",  desc: "Criar contrato",      cls: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
+    { to: "/crm/orcamentos", icon: FileText,        label: "Novo Orçamento", desc: "Criar orçamento",     cls: "bg-info/10 border-info/20 text-info" },
+    { to: "/projetos",       icon: FolderKanban,    label: "Novo Projeto",   desc: "Criar projeto",       cls: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" },
+    { to: "/crm/pagamentos", icon: Banknote,        label: "Reg. Pagamento", desc: "Adicionar pagamento", cls: "bg-warning/10 border-warning/20 text-warning" },
   ];
 
   return (
