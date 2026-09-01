@@ -8,10 +8,34 @@ interface ApprovalResult {
   error?: string;
 }
 
+function montarUrlAprovacao(token: string): string {
+  const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/$/, "") || window.location.origin;
+  return `${baseUrl}/orcamento/approve/${token}`;
+}
+
 export async function gerarLinkAprovacao(
-  orcamentoId: string
+  orcamentoId: string,
+  opts: { forceNew?: boolean } = {}
 ): Promise<ApprovalResult> {
   try {
+    // Reusa o token atual se ainda estiver pendente — assim links já
+    // compartilhados continuam válidos a cada novo "Compartilhar".
+    if (!opts.forceNew) {
+      const { data: atual } = await supabase
+        .from("orcamentos")
+        .select("approval_token, approval_status")
+        .eq("id", orcamentoId)
+        .maybeSingle();
+
+      if (atual?.approval_token && atual.approval_status === "pending") {
+        return {
+          token: atual.approval_token,
+          approval_url: montarUrlAprovacao(atual.approval_token),
+          success: true,
+        };
+      }
+    }
+
     // Gerar token localmente
     const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
@@ -26,13 +50,9 @@ export async function gerarLinkAprovacao(
 
     if (updateError) throw updateError;
 
-    // Gerar URL
-    const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/$/, "") || window.location.origin;
-    const approvalUrl = `${baseUrl}/orcamento/approve/${token}`;
-
     return {
       token,
-      approval_url: approvalUrl,
+      approval_url: montarUrlAprovacao(token),
       success: true,
     };
   } catch (err) {

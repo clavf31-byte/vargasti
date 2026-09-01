@@ -29,6 +29,7 @@ export function OrcamentoCompartilhamento({
 }: OrcamentoCompartilhamentoProps) {
   const [copying, setCopying] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [avisoRastreamento, setAvisoRastreamento] = useState<string | null>(null);
   const {
     rastrearCompartilhamento,
     gerarMensagemProfissional,
@@ -45,8 +46,15 @@ export function OrcamentoCompartilhamento({
 
   async function handleCompartilhar(canal: "whatsapp" | "sms" | "email") {
     setActionLoading(true);
+    setAvisoRastreamento(null);
     try {
-      await rastrearCompartilhamento(orcamento.id, cliente.id, canal);
+      // O registro é auxiliar: se falhar, avisa mas não impede o envio.
+      const track = await rastrearCompartilhamento(orcamento.id, cliente.id, canal);
+      if (!track.success) {
+        setAvisoRastreamento(
+          "Compartilhamento aberto, mas não foi possível registrar no histórico."
+        );
+      }
 
       if (canal === "whatsapp") {
         const urlWA = construirUrlWhatsApp(
@@ -307,6 +315,22 @@ export function OrcamentoCompartilhamento({
             )}
           </div>
         </div>
+
+        {avisoRastreamento && (
+          <div
+            style={{
+              background: "rgba(234, 179, 8, 0.1)",
+              border: "1px solid rgba(234, 179, 8, 0.3)",
+              borderRadius: "6px",
+              padding: "10px 12px",
+              marginBottom: "1rem",
+              color: "#eab308",
+              fontSize: "12px",
+            }}
+          >
+            {avisoRastreamento}
+          </div>
+        )}
 
         <div style={{ background: "rgba(13, 208, 215, 0.05)", borderRadius: "6px", padding: "1rem" }}>
           <p style={{ color: "#8da2b4", fontSize: "11px", textTransform: "uppercase", marginBottom: "0.5rem" }}>
