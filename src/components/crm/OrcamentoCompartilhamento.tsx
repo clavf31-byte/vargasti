@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Copy, X, Mail, MessageCircle, Share2, Download } from "lucide-react";
 import QRCode from "qrcode.react";
 import { useOrcamentoCompartilhamento } from "@/hooks/useOrcamentoCompartilhamento";
@@ -34,7 +34,6 @@ export function OrcamentoCompartilhamento({
     gerarMensagemProfissional,
     construirUrlWhatsApp,
     construirUrlSMS,
-    gerarTextoCompartilhamento,
   } = useOrcamentoCompartilhamento();
 
   const mensagemProfissional = gerarMensagemProfissional(
