@@ -8,7 +8,8 @@ import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { criarOrdenServicoDoOrcamento } from "@/hooks/useOrdenServico";
 import { criarNotaFiscal } from "@/hooks/useNotaFiscal";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
-import { ChevronLeft, Mail, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Copy, Edit } from "lucide-react";
+import { ChevronLeft, Mail, Share2, DollarSign, Download, CheckCircle2, XCircle, Clock, Edit } from "lucide-react";
+import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -55,6 +56,7 @@ function OrcamentoDetalhePage() {
   const [message, setMessage] = useState("");
   const [messageOk, setMessageOk] = useState(true);
   const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -468,8 +470,23 @@ function OrcamentoDetalhePage() {
 
           {["rascunho", "enviado", "rejeitado"].includes(orcamento.status_enum) && (
             <button
-              onClick={handleEnviarComEmail}
-              disabled={actionLoading || !cliente.email}
+              onClick={async () => {
+                setActionLoading(true);
+                setMessage("");
+                try {
+                  const linkResult = await gerarLinkAprovacao(orcamento.id);
+                  if (!linkResult.success) throw new Error("Erro ao gerar link");
+                  setApprovalUrl(linkResult.approval_url);
+                  setShowShareModal(true);
+                } catch (err) {
+                  const errorMsg = err instanceof Error ? err.message : "Erro ao gerar link";
+                  setMessage(errorMsg);
+                  setMessageOk(false);
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
+              disabled={actionLoading}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -480,13 +497,37 @@ function OrcamentoDetalhePage() {
                 border: "none",
                 borderRadius: "6px",
                 color: "white",
+                cursor: actionLoading ? "not-allowed" : "pointer",
+                fontWeight: 600,
+                opacity: actionLoading ? 0.6 : 1,
+              }}
+            >
+              <Share2 size={16} />
+              {actionLoading ? "Gerando..." : "Compartilhar"}
+            </button>
+          )}
+
+          {["rascunho", "enviado", "rejeitado"].includes(orcamento.status_enum) && (
+            <button
+              onClick={handleEnviarComEmail}
+              disabled={actionLoading || !cliente.email}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                padding: "12px 16px",
+                background: "rgba(59, 130, 246, 0.2)",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                borderRadius: "6px",
+                color: "#3b82f6",
                 cursor: actionLoading || !cliente.email ? "not-allowed" : "pointer",
                 fontWeight: 600,
                 opacity: actionLoading || !cliente.email ? 0.6 : 1,
               }}
             >
               <Mail size={16} />
-              {actionLoading ? "Enviando..." : orcamento.status_enum === "rascunho" ? "Enviar por Email" : "Reenviar por Email"}
+              {actionLoading ? "Enviando..." : "Email"}
             </button>
           )}
 
@@ -559,54 +600,18 @@ function OrcamentoDetalhePage() {
           )}
         </div>
 
-        {approvalUrl && (
-          <div
-            style={{
-              background: "rgba(13, 208, 215, 0.05)",
-              border: "1px solid rgba(13, 208, 215, 0.2)",
-              borderRadius: "12px",
-              padding: "1.5rem",
-              marginBottom: "2rem",
+        {showShareModal && approvalUrl && cliente && orcamento && (
+          <OrcamentoCompartilhamento
+            orcamento={orcamento}
+            cliente={cliente}
+            approvalUrl={approvalUrl}
+            onClose={() => setShowShareModal(false)}
+            onCompartilhado={(canal) => {
+              setMessage(`Orçamento compartilhado via ${canal} com sucesso!`);
+              setMessageOk(true);
+              setTimeout(() => setShowShareModal(false), 1000);
             }}
-          >
-            <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Link de Aprovação</p>
-            <code
-              style={{
-                display: "block",
-                padding: "12px",
-                background: "rgba(0, 0, 0, 0.2)",
-                borderRadius: "6px",
-                color: "#0bd0d7",
-                fontSize: "12px",
-                wordBreak: "break-all",
-                marginBottom: "1rem",
-              }}
-            >
-              {approvalUrl}
-            </code>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(approvalUrl);
-                setMessage("Link copiado!"); setMessageOk(true);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 16px",
-                background: "#0bd0d7",
-                border: "none",
-                borderRadius: "6px",
-                color: "#000",
-                cursor: "pointer",
-                fontWeight: 600,
-                fontSize: "13px",
-              }}
-            >
-              <Copy size={14} />
-              Copiar Link
-            </button>
-          </div>
+          />
         )}
       </div>
     </AppShell>
