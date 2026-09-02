@@ -103,7 +103,7 @@ export function OSForm({
 
         <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-            Descrição do problema
+            Descrição do Problema
           </label>
           <textarea
             value={form.descricao}
@@ -116,7 +116,7 @@ export function OSForm({
 
         <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-            Descrição da solução <span className="font-normal text-muted-foreground/60">— o que foi feito</span>
+            Descrição da Solução <span className="font-normal text-muted-foreground/60">— o que foi feito</span>
           </label>
           <textarea
             value={form.solucao}
