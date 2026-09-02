@@ -8,7 +8,7 @@ import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { criarOrdenServicoDoOrcamento } from "@/hooks/useOrdenServico";
 import { criarNotaFiscal } from "@/hooks/useNotaFiscal";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
-import { ChevronLeft, Mail, Share2, DollarSign, Download, CheckCircle2, XCircle, Clock, Edit } from "lucide-react";
+import { ChevronLeft, Mail, Share2, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Edit } from "lucide-react";
 import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
