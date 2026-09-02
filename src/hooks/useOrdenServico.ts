@@ -7,6 +7,7 @@ interface OrdemServicoInput {
   descricao?: string;
   prioridade?: "baixa" | "normal" | "alta";
   data_inicio?: string;
+  tecnico?: string;
 }
 
 interface OrdemServico {
@@ -28,17 +29,13 @@ export async function criarOrdenServicoDoOrcamento(
 
     if (orcError) throw orcError;
 
-    // Gerar número da OS (OS-2026-000001)
-    const year = new Date().getFullYear();
-    const { data: seqData } = await supabase
-      .from("orcamento_sequences")
-      .select("next_number")
-      .eq("year", year)
-      .eq("user_id", input.user_id)
-      .single();
+    // Número da OS via RPC atômico (reserva e devolve OS-AAAA-000000)
+    const { data: numeroOS, error: numError } = await supabase.rpc("gerar_numero_os", {
+      _user_id: input.user_id,
+    });
 
-    const nextNumber = (seqData?.next_number || 1) + 1;
-    const numeroOS = `OS-${year}-${String(nextNumber).padStart(6, "0")}`;
+    if (numError) throw numError;
+    if (!numeroOS) throw new Error("Falha ao gerar número da OS");
 
     // Criar OS
     const { data: osData, error: osError } = await supabase
@@ -50,6 +47,7 @@ export async function criarOrdenServicoDoOrcamento(
           orcamento_id: input.orcamento_id,
           numero_formatado: numeroOS,
           descricao: input.descricao || orcamento.notas,
+          tecnico: input.tecnico || null,
           status: "aberta",
           prioridade: input.prioridade || "normal",
           data_inicio: input.data_inicio || new Date().toISOString().split("T")[0],
@@ -109,6 +107,33 @@ export async function atualizarStatusOS(
     const { error } = await supabase
       .from("ordens_servico")
       .update({ status: novoStatus, updated_at: new Date().toISOString() })
+      .eq("id", osId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Erro ao atualizar OS",
+    };
+  }
+}
+
+interface OrdemServicoPatch {
+  descricao?: string | null;
+  prioridade?: "baixa" | "normal" | "alta";
+  data_inicio?: string;
+  tecnico?: string | null;
+}
+
+export async function atualizarOrdemServico(
+  osId: string,
+  patch: OrdemServicoPatch
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("ordens_servico")
+      .update({ ...patch, updated_at: new Date().toISOString() })
       .eq("id", osId);
 
     if (error) throw error;

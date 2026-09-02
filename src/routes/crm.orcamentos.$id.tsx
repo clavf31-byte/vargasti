@@ -10,6 +10,7 @@ import { criarNotaFiscal } from "@/hooks/useNotaFiscal";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
 import { ChevronLeft, Mail, Share2, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Edit } from "lucide-react";
 import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
+import { OSForm, type OSFormValues } from "@/components/crm/OSForm";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -57,6 +58,7 @@ function OrcamentoDetalhePage() {
   const [messageOk, setMessageOk] = useState(true);
   const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showConverterOS, setShowConverterOS] = useState(false);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -145,7 +147,7 @@ function OrcamentoDetalhePage() {
     }
   }
 
-  async function handleConverterOS() {
+  async function handleConverterOS(values: OSFormValues) {
     if (!orcamento || !cliente || !user) return;
 
     setActionLoading(true);
@@ -156,12 +158,15 @@ function OrcamentoDetalhePage() {
         orcamento_id: orcamento.id,
         cliente_id: cliente.id,
         user_id: user.id,
-        descricao: orcamento.notas,
-        prioridade: "normal",
+        descricao: values.descricao || orcamento.notas,
+        prioridade: values.prioridade,
+        data_inicio: values.data_inicio,
+        tecnico: values.tecnico || undefined,
       });
 
       if (!result.success) throw new Error(result.error);
 
+      setShowConverterOS(false);
       setOrcamento({ ...orcamento, status_enum: "faturado" });
       setMessage(`Ordem de Serviço criada: ${result.os?.numero_formatado}`); setMessageOk(true);
     } catch (err) {
@@ -553,7 +558,7 @@ function OrcamentoDetalhePage() {
 
           {orcamento.status_enum === "aprovado" && (
             <button
-              onClick={handleConverterOS}
+              onClick={() => setShowConverterOS((v) => !v)}
               disabled={actionLoading}
               style={{
                 display: "flex",
@@ -571,7 +576,7 @@ function OrcamentoDetalhePage() {
               }}
             >
               <Zap size={16} />
-              {actionLoading ? "Criando..." : "Converter em OS"}
+              {showConverterOS ? "Fechar" : "Converter em OS"}
             </button>
           )}
 
@@ -599,6 +604,29 @@ function OrcamentoDetalhePage() {
             </button>
           )}
         </div>
+
+        {showConverterOS && orcamento.status_enum === "aprovado" && (
+          <div
+            style={{
+              background: "rgba(6, 34, 53, 0.6)",
+              border: "1px solid rgba(19, 200, 211, 0.16)",
+              borderRadius: "12px",
+              padding: "1.5rem",
+              marginBottom: "2rem",
+            }}
+          >
+            <p style={{ fontSize: "14px", fontWeight: 600, color: "#eaf3f8", marginBottom: "1rem" }}>
+              Converter em Ordem de Serviço
+            </p>
+            <OSForm
+              initial={{ descricao: orcamento.notas }}
+              submitLabel="Criar OS"
+              saving={actionLoading}
+              onSubmit={handleConverterOS}
+              onCancel={() => setShowConverterOS(false)}
+            />
+          </div>
+        )}
 
         {showShareModal && approvalUrl && cliente && orcamento && (
           <OrcamentoCompartilhamento
