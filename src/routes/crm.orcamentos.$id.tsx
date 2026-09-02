@@ -159,6 +159,7 @@ function OrcamentoDetalhePage() {
         cliente_id: cliente.id,
         user_id: user.id,
         descricao: values.descricao || orcamento.notas,
+        solucao: values.solucao || undefined,
         prioridade: values.prioridade,
         data_inicio: values.data_inicio,
         tecnico: values.tecnico || undefined,

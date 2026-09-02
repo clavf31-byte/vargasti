@@ -5,6 +5,7 @@ interface OrdemServicoInput {
   cliente_id: string;
   user_id: string;
   descricao?: string;
+  solucao?: string;
   prioridade?: "baixa" | "normal" | "alta";
   data_inicio?: string;
   tecnico?: string;
@@ -47,6 +48,7 @@ export async function criarOrdenServicoDoOrcamento(
           orcamento_id: input.orcamento_id,
           numero_formatado: numeroOS,
           descricao: input.descricao || orcamento.notas,
+          solucao: input.solucao || null,
           tecnico: input.tecnico || null,
           status: "aberta",
           prioridade: input.prioridade || "normal",
@@ -121,6 +123,7 @@ export async function atualizarStatusOS(
 
 interface OrdemServicoPatch {
   descricao?: string | null;
+  solucao?: string | null;
   prioridade?: "baixa" | "normal" | "alta";
   data_inicio?: string;
   tecnico?: string | null;

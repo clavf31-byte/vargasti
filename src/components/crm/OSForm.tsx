@@ -2,6 +2,7 @@ import { useState, type ReactNode, type FormEvent } from "react";
 
 export type OSFormValues = {
   descricao: string;
+  solucao: string;
   prioridade: "baixa" | "normal" | "alta";
   data_inicio: string;
   tecnico: string;
@@ -33,6 +34,7 @@ export function OSForm({
 }: OSFormProps) {
   const [form, setForm] = useState<OSFormValues>({
     descricao: initial?.descricao ?? "",
+    solucao: initial?.solucao ?? "",
     prioridade: initial?.prioridade ?? "normal",
     data_inicio: initial?.data_inicio ?? hoje(),
     tecnico: initial?.tecnico ?? "",
@@ -41,7 +43,12 @@ export function OSForm({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit || saving) return;
-    onSubmit({ ...form, descricao: form.descricao.trim(), tecnico: form.tecnico.trim() });
+    onSubmit({
+      ...form,
+      descricao: form.descricao.trim(),
+      solucao: form.solucao.trim(),
+      tecnico: form.tecnico.trim(),
+    });
   };
 
   return (
@@ -96,13 +103,26 @@ export function OSForm({
 
         <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-            Descrição / o que será feito
+            Descrição do problema
           </label>
           <textarea
             value={form.descricao}
             onChange={(e) => setForm({ ...form, descricao: e.target.value })}
             rows={4}
-            placeholder="Descreva o serviço a ser realizado..."
+            placeholder="O que o cliente relatou / diagnóstico..."
+            className="input-base w-full resize-none"
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+            Descrição da solução <span className="font-normal text-muted-foreground/60">— o que foi feito</span>
+          </label>
+          <textarea
+            value={form.solucao}
+            onChange={(e) => setForm({ ...form, solucao: e.target.value })}
+            rows={4}
+            placeholder="Preencher durante ou após o serviço..."
             className="input-base w-full resize-none"
           />
         </div>

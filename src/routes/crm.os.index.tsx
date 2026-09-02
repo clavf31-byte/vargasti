@@ -21,6 +21,7 @@ type OS = {
   status: "aberta" | "em_andamento" | "concluida" | "cancelada";
   prioridade: string;
   descricao?: string;
+  solucao?: string;
   data_inicio: string;
   data_conclusao?: string;
   tecnico?: string;
@@ -68,6 +69,7 @@ function NovaOSForm({ userId, onClose, onCreated }: { userId: string; onClose: (
         cliente_id: clienteId,
         numero_formatado: numero,
         descricao: values.descricao || null,
+        solucao: values.solucao || null,
         prioridade: values.prioridade,
         tecnico: values.tecnico || null,
         data_inicio: values.data_inicio,
@@ -158,6 +160,7 @@ function OrdensServicoPage() {
     setSavingEdit(true);
     const res = await atualizarOrdemServico(editing.id, {
       descricao: values.descricao || null,
+      solucao: values.solucao || null,
       prioridade: values.prioridade,
       data_inicio: values.data_inicio,
       tecnico: values.tecnico || null,
@@ -209,6 +212,7 @@ function OrdensServicoPage() {
               <OSForm
                 initial={{
                   descricao: editing.descricao ?? "",
+                  solucao: editing.solucao ?? "",
                   prioridade: (editing.prioridade as OSFormValues["prioridade"]) || "normal",
                   data_inicio: editing.data_inicio ? editing.data_inicio.split("T")[0] : undefined,
                   tecnico: editing.tecnico ?? "",
