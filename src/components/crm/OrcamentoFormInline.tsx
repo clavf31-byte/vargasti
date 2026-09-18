@@ -19,6 +19,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     numero_formatado: "",
     cliente_id: "",
     descricao: "",
+    resumo_executivo: "",
     desconto: 0,
     impostos: 0,
     status_enum: "rascunho",
@@ -51,6 +52,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         numero_formatado: numero,
         cliente_id: formData.cliente_id,
         notas: formData.descricao,
+        resumo_executivo: formData.resumo_executivo,
         total: totalComDescontoEImpostos,
         desconto: formData.desconto,
         impostos: formData.impostos,
@@ -67,7 +69,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
 
       if (itens.length > 0) await saveItens(createdOrc.id);
 
-      setFormData({ numero_formatado: "", cliente_id: "", descricao: "", desconto: 0, impostos: 0, status_enum: "rascunho", data_vencimento: "" });
+      setFormData({ numero_formatado: "", cliente_id: "", descricao: "", resumo_executivo: "", desconto: 0, impostos: 0, status_enum: "rascunho", data_vencimento: "" });
       onSuccess();
       onClose();
     } catch (err) {
@@ -118,13 +120,30 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição / Observações</label>
           <textarea
             value={formData.descricao}
             onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
             rows={3}
             className="input-base w-full resize-y"
+            placeholder="Contexto do serviço, problema do cliente, observações..."
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+            Resumo Executivo (aparece na tela de aprovação)
+          </label>
+          <textarea
+            value={formData.resumo_executivo}
+            onChange={(e) => setFormData({ ...formData, resumo_executivo: e.target.value })}
+            rows={2}
+            className="input-base w-full resize-y"
+            placeholder="Ex: Seu notebook vai funcionar novamente. Vamos reparar o carregador danificado e fazer testes."
+          />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            💡 Se deixar vazio, será gerado automaticamente a partir dos itens
+          </p>
         </div>
 
         <OrcamentoItensTable

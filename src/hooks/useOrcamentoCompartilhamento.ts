@@ -10,6 +10,23 @@ interface CompartilhamentoData {
   clicado_em?: string;
 }
 
+export function gerarResumoExecutivo(
+  itens: Array<{ descricao: string; quantidade?: number }>,
+  notas?: string
+): string {
+  if (!itens || itens.length === 0) return "";
+
+  const descricoesPrincipais = itens
+    .slice(0, 3)
+    .map(i => {
+      const desc = i.descricao;
+      const primeiraParte = desc.split(/[-–]/)[0].trim();
+      return primeiraParte.length > 60 ? primeiraParte.substring(0, 60) + "..." : primeiraParte;
+    });
+
+  return descricoesPrincipais.join(", ");
+}
+
 export function useOrcamentoCompartilhamento() {
   async function rastrearCompartilhamento(
     orcamentoId: string,

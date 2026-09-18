@@ -24,6 +24,7 @@ type Orcamento = {
   impostos?: number;
   data_vencimento: string;
   notas: string;
+  resumo_executivo?: string;
   status_enum: string;
 };
 
@@ -49,6 +50,7 @@ function EditarOrcamentoPage() {
     impostos: 0,
     data_vencimento: "",
     notas: "",
+    resumo_executivo: "",
   });
 
   const totalFinal = Math.max(0, subtotal - formData.desconto + formData.impostos);
@@ -73,6 +75,7 @@ function EditarOrcamentoPage() {
         impostos: orc.impostos || 0,
         data_vencimento: orc.data_vencimento || "",
         notas: orc.notas || "",
+        resumo_executivo: orc.resumo_executivo || "",
       });
     } catch (err) {
       setError("Erro ao carregar orçamento");
@@ -103,6 +106,7 @@ function EditarOrcamentoPage() {
           impostos: formData.impostos,
           data_vencimento: formData.data_vencimento || null,
           notas: formData.notas,
+          resumo_executivo: formData.resumo_executivo,
           total: totalFinal,
         })
         .eq("id", id)
@@ -182,6 +186,18 @@ function EditarOrcamentoPage() {
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição / Notas</label>
               <textarea value={formData.notas} onChange={(e) => setFormData({ ...formData, notas: e.target.value })} rows={3} className="input-base w-full resize-y" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Resumo Executivo (tela de aprovação)</label>
+              <textarea
+                value={formData.resumo_executivo}
+                onChange={(e) => setFormData({ ...formData, resumo_executivo: e.target.value })}
+                rows={2}
+                className="input-base w-full resize-y"
+                placeholder="Ex: Seu notebook vai funcionar novamente..."
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">Se deixar vazio, será gerado automaticamente a partir dos itens</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

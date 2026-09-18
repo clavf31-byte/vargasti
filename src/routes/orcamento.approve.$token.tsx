@@ -2,6 +2,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { obterOrcamentoPorToken, aprovarOrcamento, rejeitarOrcamento } from "@/hooks/useOrcamentoApproval";
+import { gerarResumoExecutivo } from "@/hooks/useOrcamentoCompartilhamento";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -150,6 +151,39 @@ function ApproveOrcamentoPage() {
           </div>
 
           <div style={{ padding: "28px 32px" }}>
+
+            {/* SOLUÇÃO PROTAGONISTA */}
+            {(orcamento?.resumo_executivo || orcamento?.itens?.length > 0) && (
+              <div style={{
+                background: "rgba(13, 208, 215, 0.05)",
+                border: "1px solid rgba(13, 208, 215, 0.2)",
+                borderRadius: 10,
+                padding: 20,
+                marginBottom: 24,
+              }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2332", marginBottom: 12 }}>
+                  🔧 Sua Solução Está Pronta
+                </div>
+                {orcamento?.resumo_executivo ? (
+                  <div style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 12 }}>
+                    {orcamento.resumo_executivo}
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 12 }}>
+                      Será feito:
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: 20 }}>
+                      {(orcamento?.itens || []).slice(0, 3).map((item: any, idx: number) => (
+                        <li key={idx} style={{ fontSize: 13, color: "#1a2332", marginBottom: 6, fontWeight: 500 }}>
+                          ✓ {item.descricao}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* INFO GRID */}
             <div style={styles.infoGrid}>
