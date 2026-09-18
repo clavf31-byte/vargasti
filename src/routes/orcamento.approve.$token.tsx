@@ -37,6 +37,7 @@ function ApproveOrcamentoPage() {
   const [status, setStatus] = useState<"loaded" | "approved" | "rejected">("loaded");
   const [rejectionMotivo, setRejectionMotivo] = useState("");
   const [showRejectionForm, setShowRejectionForm] = useState(false);
+  const [showApprovalConfirm, setShowApprovalConfirm] = useState(false);
 
   useEffect(() => {
     obterOrcamentoPorToken(token).then((data) => {
@@ -68,12 +69,17 @@ function ApproveOrcamentoPage() {
     }
   };
 
-  async function handleAprovar() {
+  function handleAprovar() {
+    setShowApprovalConfirm(true);
+  }
+
+  async function confirmAprovar() {
     setProcessing(true);
     const result = await aprovarOrcamento(token);
     if (result.success) setStatus("approved");
     else setError(result.error || "Erro ao aprovar.");
     setProcessing(false);
+    setShowApprovalConfirm(false);
   }
 
   async function handleRejeitar() {
@@ -323,6 +329,72 @@ function ApproveOrcamentoPage() {
         </p>
 
       </div>
+
+      {/* MODAL CONFIRMAÇÃO APROVAÇÃO */}
+      {showApprovalConfirm && (
+        <div style={{
+          position: "fixed" as const,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 100,
+        }} onClick={() => setShowApprovalConfirm(false)}>
+          <div style={{
+            background: "white",
+            borderRadius: 12,
+            padding: 32,
+            maxWidth: 400,
+            textAlign: "center" as const,
+            boxShadow: "0 10px 40px rgba(0,0,0,.2)",
+          }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1a2332", marginBottom: 12 }}>
+              Confirmar Aprovação
+            </h2>
+            <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, lineHeight: 1.6 }}>
+              Tem certeza que deseja aprovar o orçamento <strong>#{orcamento?.numero_formatado}</strong>?
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <button
+                onClick={() => setShowApprovalConfirm(false)}
+                style={{
+                  padding: "12px 24px",
+                  border: "1.5px solid #e2e8f0",
+                  borderRadius: 8,
+                  background: "white",
+                  color: "#64748b",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmAprovar}
+                disabled={processing}
+                style={{
+                  padding: "12px 24px",
+                  borderRadius: 8,
+                  background: "linear-gradient(135deg, #0bd0d7, #0891b2)",
+                  color: "white",
+                  border: "none",
+                  cursor: processing ? "not-allowed" : "pointer",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  opacity: processing ? 0.6 : 1,
+                }}
+              >
+                {processing ? "Aprovando..." : "Sim, Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
