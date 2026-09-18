@@ -237,24 +237,6 @@ function ApproveOrcamentoPage() {
               </div>
             </div>
 
-            {/* VALOR DESTACADO */}
-            <div style={{
-              background: "linear-gradient(135deg, rgba(13, 208, 215, 0.1), rgba(8, 113, 139, 0.1))",
-              border: "2px solid rgba(13, 208, 215, 0.3)",
-              borderRadius: 10,
-              padding: "20px",
-              marginBottom: 28,
-              textAlign: "center" as const,
-            }}>
-              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Investimento total para sua solução:</div>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 8 }}>
-                <span style={{ fontSize: 20, color: "#0bd0d7", fontWeight: 600 }}>R$</span>
-                <span style={{ fontSize: 48, fontWeight: 800, color: "#0c2a3e", lineHeight: 1 }}>
-                  {(orcamento?.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
-
             {/* ERRO */}
             {error && (
               <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px", marginBottom: 20, color: "#dc2626", fontSize: 14 }}>
