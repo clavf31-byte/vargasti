@@ -9,7 +9,7 @@ export async function previewNumeroOrcamento(userId: string): Promise<string> {
     .eq("year", currentYear)
     .single();
   const next = data ? data.next_number + 1 : 1;
-  return `ORC-${currentYear}-${String(next).padStart(6, "0")}`;
+  return `ORC-${currentYear}-${String(next).padStart(3, "0")}`;
 }
 
 export async function gerarNumeroOrcamento(userId: string): Promise<string> {
