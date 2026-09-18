@@ -58,6 +58,7 @@ function OrcamentoDetalhePage() {
   const [messageOk, setMessageOk] = useState(true);
   const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showReverterConfirm, setShowReverterConfirm] = useState(false);
   const [showConverterOS, setShowConverterOS] = useState(false);
 
   useEffect(() => {
@@ -239,6 +240,38 @@ function OrcamentoDetalhePage() {
     } catch (e) {
       setMessage("Erro ao gerar PDF"); setMessageOk(false);
       console.error(e);
+    }
+  }
+
+  async function handleReverterParaRascunho() {
+    if (!orcamento || !user) return;
+
+    setActionLoading(true);
+    setMessage("");
+
+    try {
+      const { error: err } = await supabase
+        .from("orcamentos")
+        .update({
+          status_enum: "rascunho",
+          approval_status: null,
+          approval_token: null,
+        })
+        .eq("id", orcamento.id)
+        .eq("user_id", user.id);
+
+      if (err) throw err;
+
+      setOrcamento({ ...orcamento, status_enum: "rascunho" });
+      setMessage("Orçamento revertido para rascunho com sucesso!");
+      setMessageOk(true);
+      setShowReverterConfirm(false);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erro ao reverter";
+      setMessage(errorMsg);
+      setMessageOk(false);
+    } finally {
+      setActionLoading(false);
     }
   }
 
@@ -604,6 +637,29 @@ function OrcamentoDetalhePage() {
               {actionLoading ? "Gerando..." : "Gerar Nota Fiscal"}
             </button>
           )}
+
+          {orcamento.status_enum === "aprovado" && (
+            <button
+              onClick={() => setShowReverterConfirm(true)}
+              disabled={actionLoading}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                padding: "12px 16px",
+                background: "rgba(239, 68, 68, 0.2)",
+                border: "1px solid rgba(239, 68, 68, 0.4)",
+                borderRadius: "6px",
+                color: "#ef4444",
+                cursor: actionLoading ? "not-allowed" : "pointer",
+                fontWeight: 600,
+                opacity: actionLoading ? 0.6 : 1,
+              }}
+            >
+              ↶ Reverter para Rascunho
+            </button>
+          )}
         </div>
 
         {showConverterOS && orcamento.status_enum === "aprovado" && (
@@ -626,6 +682,71 @@ function OrcamentoDetalhePage() {
               onSubmit={handleConverterOS}
               onCancel={() => setShowConverterOS(false)}
             />
+          </div>
+        )}
+
+        {showReverterConfirm && (
+          <div style={{
+            position: "fixed" as const,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+          }} onClick={() => setShowReverterConfirm(false)}>
+            <div style={{
+              background: "white",
+              borderRadius: 12,
+              padding: 32,
+              maxWidth: 400,
+              textAlign: "center" as const,
+              boxShadow: "0 10px 40px rgba(0,0,0,.2)",
+            }} onClick={(e) => e.stopPropagation()}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1a2332", marginBottom: 12 }}>
+                Reverter para Rascunho?
+              </h2>
+              <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, lineHeight: 1.6 }}>
+                Tem certeza que deseja reverter o orçamento <strong>#{orcamento?.numero_formatado}</strong> para rascunho? Ele deixará de estar aprovado.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <button
+                  onClick={() => setShowReverterConfirm(false)}
+                  style={{
+                    padding: "12px 24px",
+                    border: "1.5px solid #e2e8f0",
+                    borderRadius: 8,
+                    background: "white",
+                    color: "#64748b",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleReverterParaRascunho}
+                  disabled={actionLoading}
+                  style={{
+                    padding: "12px 24px",
+                    borderRadius: 8,
+                    background: "#ef4444",
+                    color: "white",
+                    border: "none",
+                    cursor: actionLoading ? "not-allowed" : "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    opacity: actionLoading ? 0.6 : 1,
+                  }}
+                >
+                  {actionLoading ? "Revertendo..." : "Sim, Reverter"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
