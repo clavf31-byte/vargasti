@@ -7,7 +7,16 @@ import vargasLogo from "@/assets/vargasti-icon.png";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/orcamento/approve/$token")({
-  head: () => ({ meta: [{ title: `Aprovar Orçamento · ${client.name}` }] }),
+  head: () => ({
+    meta: [
+      { title: `Aprovar Orçamento · ${client.name}` },
+      { name: "og:title", content: `Orçamento para Aprovação · ${client.name}` },
+      { name: "og:description", content: "Clique para revisar e aprovar seu orçamento" },
+      { name: "og:type", content: "website" },
+      { name: "og:image", content: "https://vargasti.com.br/assets/vargasti-og.png" },
+      { name: "twitter:card", content: "summary" },
+    ]
+  }),
   component: ApproveOrcamentoPage,
 });
 
@@ -32,10 +41,32 @@ function ApproveOrcamentoPage() {
   useEffect(() => {
     obterOrcamentoPorToken(token).then((data) => {
       if (!data) setError("Orçamento não encontrado ou link inválido.");
-      else setOrcamento(data);
+      else {
+        setOrcamento(data);
+
+        // Atualizar meta tags com dados do orçamento
+        const ogTitle = `Orçamento #${data.numero_formatado} · ${data.cliente?.nome || "Cliente"} · ${client.name}`;
+        const ogDesc = `Valor: R$ ${data.total?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} | Clique para revisar e aprovar`;
+
+        document.title = ogTitle;
+        updateMetaTag("og:title", ogTitle);
+        updateMetaTag("og:description", ogDesc);
+      }
       setLoading(false);
     });
   }, [token]);
+
+  const updateMetaTag = (name: string, content: string) => {
+    let element = document.querySelector(`meta[property="${name}"]`);
+    if (!element) element = document.querySelector(`meta[name="${name}"]`);
+    if (element) element.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.setAttribute(name.startsWith("og:") ? "property" : "name", name);
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  };
 
   async function handleAprovar() {
     setProcessing(true);
