@@ -138,13 +138,7 @@ function ApproveOrcamentoPage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0bd0d7", marginBottom: 6 }}>Orçamento</div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "#f0f9ff", marginBottom: 4 }}>#{orcamento?.numero_formatado}</div>
             <div style={{ fontSize: 13, color: "#7db8cc" }}>Para: <strong style={{ color: "#c0dde9" }}>{orcamento?.cliente?.nome || "—"}</strong></div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 20 }}>
-              <span style={{ fontSize: 16, color: "#0bd0d7", fontWeight: 600 }}>R$</span>
-              <span style={{ fontSize: 40, fontWeight: 800, color: "#ffffff", lineHeight: 1 }}>
-                {(orcamento?.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" as const }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" as const }}>
               <span style={styles.badge}><span style={styles.badgeDot} />Aguardando aprovação</span>
               <span style={styles.badge}>Válido por 7 dias</span>
             </div>
@@ -240,6 +234,24 @@ function ApproveOrcamentoPage() {
               <div style={{ ...styles.totalRow, borderTop: desconto > 0 ? "1px solid #e2e8f0" : "none", marginTop: desconto > 0 ? 8 : 0, paddingTop: desconto > 0 ? 12 : 0, fontSize: 16, fontWeight: 700, color: "#0c2a3e" }}>
                 <span>Total</span>
                 <span style={{ color: "#0891b2" }}>{fmtBRL(orcamento?.total || 0)}</span>
+              </div>
+            </div>
+
+            {/* VALOR DESTACADO */}
+            <div style={{
+              background: "linear-gradient(135deg, rgba(13, 208, 215, 0.1), rgba(8, 113, 139, 0.1))",
+              border: "2px solid rgba(13, 208, 215, 0.3)",
+              borderRadius: 10,
+              padding: "20px",
+              marginBottom: 28,
+              textAlign: "center" as const,
+            }}>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Investimento total para sua solução:</div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 8 }}>
+                <span style={{ fontSize: 20, color: "#0bd0d7", fontWeight: 600 }}>R$</span>
+                <span style={{ fontSize: 48, fontWeight: 800, color: "#0c2a3e", lineHeight: 1 }}>
+                  {(orcamento?.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
 
