@@ -22,6 +22,7 @@ type Pagamento = {
   metodo?: string | null;
   referencia?: string | null;
   status: "pendente" | "pago" | "cancelado";
+  agenda_evento_id?: string | null;
 };
 
 function ModalAgendarPagamento({ pag, onClose, onConfirm }: {
@@ -255,7 +256,7 @@ function PagamentosPage() {
   const handleAgendarPagamento = async (pag: Pagamento, dataAgendamento: string) => {
     try {
       const titulo = `💰 Receber R$ ${pag.valor.toFixed(2)} - ${pag.referencia || pag.orcamento_id.slice(0, 8)}`;
-      await createEvento({
+      const evento = await createEvento({
         data: {
           titulo,
           descricao: null,
@@ -274,6 +275,15 @@ function PagamentosPage() {
           notificar_minutos_antes: 30,
         }
       });
+
+      // Vincular evento à pagamento
+      if (evento?.id) {
+        await supabase
+          .from("pagamentos")
+          .update({ agenda_evento_id: evento.id })
+          .eq("id", pag.id);
+      }
+
       setModalAgendar(null);
       loadPagamentos();
     } catch (err: any) {
@@ -352,8 +362,8 @@ function PagamentosPage() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b-2 border-border">
-                  {["Referência", "Valor", "Status", "Data", "Método", "Ações"].map((h, i) => (
-                    <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 5 ? "text-center" : "text-left"}`}>{h}</th>
+                  {["Referência", "Valor", "Status", "Data", "Método", "Agendamento", "Ações"].map((h, i) => (
+                    <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 6 ? "text-center" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -373,6 +383,16 @@ function PagamentosPage() {
                       {new Date(pag.data_pagamento).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{pag.metodo || "—"}</td>
+                    <td className="px-4 py-3">
+                      {pag.agenda_evento_id ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-select">
+                          <Calendar className="size-3.5" />
+                          Agendado
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         {pag.status === "pendente" && (
