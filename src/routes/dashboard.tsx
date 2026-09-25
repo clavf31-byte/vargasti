@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { KpiCard } from "@/components/KpiCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCRMMetrics } from "@/hooks/useCRMMetrics";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import {
   Users, FileText, Banknote, Plus, TrendingUp, ScrollText,
@@ -59,12 +60,30 @@ function fmtVencimento(dateStr: string) {
 function Dashboard() {
   const { user } = useAuth();
   const metrics = useCRMMetrics();
+  const [pagamentosPendentes, setPagamentosPendentes] = useState({ count: 0, total: 0 });
 
   const [time, setTime] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadPagamentosPendentes = async () => {
+      const { data } = await supabase
+        .from("pagamentos")
+        .select("id, valor")
+        .eq("user_id", user.id)
+        .eq("status", "pendente");
+      if (data) {
+        const count = data.length;
+        const total = data.reduce((sum, p) => sum + (p.valor || 0), 0);
+        setPagamentosPendentes({ count, total });
+      }
+    };
+    loadPagamentosPendentes();
+  }, [user]);
 
   const firstName =
     user?.user_metadata?.full_name?.split(" ")[0] ??
@@ -191,7 +210,7 @@ function Dashboard() {
               breakdown={[
                 { val: fmtBRL(pagamentosTotal), lbl: "Total recebido", colorClass: "text-brand" },
                 { val: String(pagamentosCount), lbl: "Registros" },
-                { val: "—", lbl: "Pendentes", colorClass: "text-muted-foreground" },
+                { val: `${pagamentosPendentes.count} | ${fmtBRL(pagamentosPendentes.total)}`, lbl: "Pendentes", colorClass: pagamentosPendentes.count > 0 ? "text-warning" : "text-muted-foreground" },
               ]}
               footer={{ label: "Receita registrada", value: fmtBRL(pagamentosTotal) }}
               progress={pagamentosTotal > 0 ? Math.min(100, (pagamentosTotal / 10000) * 100) : 0}
