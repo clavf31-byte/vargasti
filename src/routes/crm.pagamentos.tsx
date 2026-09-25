@@ -374,20 +374,23 @@ function PagamentosPage() {
                       })()}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-end gap-2">
                         {pag.status === "pendente" && (
                           <button
                             onClick={() => setModalPag(pag)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold border border-brand/40 text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold border border-brand/40 text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors"
+                            title="Registrar pagamento e agendar lembrete"
                           >
-                            <CheckCircle2 className="size-3" /> Marcar pago
+                            <CheckCircle2 className="size-3.5" />
+                            Marcar pago
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(pag.id)}
-                          className="inline-flex items-center justify-center p-1.5 border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
+                          className="inline-flex items-center justify-center p-2 border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
+                          title="Deletar pagamento"
                         >
-                          <Trash2 className="size-3.5" />
+                          <Trash2 className="size-4" />
                         </button>
                       </div>
                     </td>
