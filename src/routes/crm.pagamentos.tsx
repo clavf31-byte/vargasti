@@ -255,19 +255,28 @@ function PagamentosPage() {
   const handleAgendarPagamento = async (pag: Pagamento, dataAgendamento: string) => {
     try {
       const titulo = `💰 Receber R$ ${pag.valor.toFixed(2)} - ${pag.referencia || pag.orcamento_id.slice(0, 8)}`;
-      await createEvento({
+      const resultado = await createEvento({
         titulo,
-        tipo: "lembrete",
+        descricao: null,
+        tipo: "lembrete" as const,
         data_inicio: `${dataAgendamento}T09:00:00`,
+        data_fim: null,
         dia_inteiro: true,
-        status: "agendado",
-        prioridade: "normal",
+        local: null,
+        status: "agendado" as const,
+        prioridade: "normal" as const,
+        cliente_id: null,
+        chamado_id: null,
+        os_id: null,
+        notificar_whatsapp: false,
+        notificar_numero: null,
+        notificar_minutos_antes: 30,
       });
       setModalAgendar(null);
       loadPagamentos();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao agendar:", err);
-      alert("Erro ao agendar pagamento. Tente novamente.");
+      alert(`Erro ao agendar: ${err?.message || "Tente novamente."}`);
     }
   };
 
