@@ -124,35 +124,36 @@ export function TimelinePreview({ orcamentoId, userId }: TimelinePreviewProps) {
     <div
       style={{
         display: "flex",
-        alignItems: "center",
-        gap: "1rem",
-        padding: "0.75rem 0",
-        fontSize: "12px",
+        alignItems: "flex-end",
+        justifyContent: "flex-start",
+        gap: "2rem",
+        padding: "0.5rem 0",
+        fontSize: "11px",
         color: "#8da2b4",
       }}
     >
       {/* Orçamento */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
         {getCircle(statuses.orc)}
-        <FileText size={14} style={{ color: getColor(statuses.orc) }} />
+        <span style={{ fontWeight: 500, whiteSpace: "nowrap" }}>Orçamento</span>
       </div>
 
       {/* Seta */}
-      <span style={{ color: "#0bd0d7" }}>→</span>
+      <span style={{ color: "#0bd0d7", fontSize: "16px", marginBottom: "1rem" }}>→</span>
 
       {/* OS */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
         {getCircle(statuses.os)}
-        <Wrench size={14} style={{ color: getColor(statuses.os) }} />
+        <span style={{ fontWeight: 500, whiteSpace: "nowrap" }}>OS</span>
       </div>
 
       {/* Seta */}
-      <span style={{ color: "#0bd0d7" }}>→</span>
+      <span style={{ color: "#0bd0d7", fontSize: "16px", marginBottom: "1rem" }}>→</span>
 
       {/* Pagamento */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
         {getCircle(statuses.pag)}
-        <DollarSign size={14} style={{ color: getColor(statuses.pag) }} />
+        <span style={{ fontWeight: 500, whiteSpace: "nowrap" }}>Pagamento</span>
       </div>
     </div>
   );
