@@ -2,18 +2,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  FileText, Wrench, DollarSign, CheckCircle2, Clock, AlertCircle, ChevronRight
+  FileText, Wrench, DollarSign
 } from "lucide-react";
 
 type Etapa = {
   id: string;
   titulo: string;
+  descricao: string;
   icon: React.ReactNode;
   status: "concluido" | "em_progresso" | "aguardando";
-  statusLabel: string;
   statusColor: string;
-  data?: string;
-  detalhes?: string;
 };
 
 interface TimelineAcompanhamentoProps {
@@ -61,32 +59,26 @@ export function TimelineAcompanhamento({ orcamentoId }: TimelineAcompanhamentoPr
         {
           id: "orcamento",
           titulo: "Orçamento",
-          icon: <FileText size={20} />,
+          descricao: orc ? `${orc.numero_formatado} • R$ ${orc.total.toFixed(2)}` : "—",
+          icon: <FileText size={24} />,
           status: getStatusOrçamento(orc?.status_enum),
-          statusLabel: getStatusLabel(orc?.status_enum),
           statusColor: getStatusColor(orc?.status_enum),
-          data: orc ? new Date(orc.data_criacao).toLocaleDateString("pt-BR") : undefined,
-          detalhes: orc ? `${orc.numero_formatado} • R$ ${orc.total.toFixed(2)}` : undefined,
         },
         {
           id: "os",
           titulo: "Ordem de Serviço",
-          icon: <Wrench size={20} />,
+          descricao: os ? `${os.numero_formatado}` : "Será criada automaticamente",
+          icon: <Wrench size={24} />,
           status: os ? getStatusOS(os.status) : "aguardando",
-          statusLabel: os ? getStatusLabel(os.status) : "Aguardando",
           statusColor: os ? getStatusColor(os.status) : "#8da2b4",
-          data: os ? new Date(os.data_inicio).toLocaleDateString("pt-BR") : undefined,
-          detalhes: os ? `${os.numero_formatado} • Criada automaticamente` : "Será criada quando orçamento for aprovado",
         },
         {
           id: "pagamento",
           titulo: "Pagamento",
-          icon: <DollarSign size={20} />,
+          descricao: pag ? `R$ ${pag.valor.toFixed(2)}` : "Será criado ao concluir",
+          icon: <DollarSign size={24} />,
           status: pag ? getStatusPagamento(pag.status) : "aguardando",
-          statusLabel: pag ? getStatusLabel(pag.status) : "Aguardando",
           statusColor: pag ? getStatusColor(pag.status) : "#8da2b4",
-          data: pag ? new Date(pag.data_pagamento).toLocaleDateString("pt-BR") : undefined,
-          detalhes: pag ? `R$ ${pag.valor.toFixed(2)}` : "Será criado quando OS for concluída",
         },
       ];
 
@@ -168,145 +160,95 @@ export function TimelineAcompanhamento({ orcamentoId }: TimelineAcompanhamentoPr
   }
 
   return (
-    <div style={{ padding: "0" }}>
+    <div style={{ padding: "2rem", background: "rgba(6, 34, 53, 0.6)", borderRadius: "12px" }}>
+      <h3 style={{ fontSize: "12px", fontWeight: 700, color: "#8da2b4", marginBottom: "2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        Progresso
+      </h3>
+
+      {/* Timeline Horizontal */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr auto 1fr",
-          gap: "1rem",
-          alignItems: "stretch",
-          marginBottom: "2rem",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          position: "relative",
+          paddingBottom: "2rem",
         }}
       >
-        {etapas.map((etapa, idx) => (
-          <div key={etapa.id}>
-            {/* Card da Etapa */}
+        {/* Linha conectora de fundo */}
+        <div
+          style={{
+            position: "absolute",
+            top: "30px",
+            left: "0",
+            right: "0",
+            height: "2px",
+            background: "rgba(13, 208, 215, 0.2)",
+            zIndex: 0,
+          }}
+        />
+
+        {etapas.map((etapa, idx) => {
+          const isConcluido = etapa.status === "concluido";
+          const isEmProgresso = etapa.status === "em_progresso";
+
+          return (
             <div
+              key={etapa.id}
               style={{
-                background: "rgba(6, 34, 53, 0.6)",
-                border: `2px solid ${etapa.statusColor}20`,
-                borderRadius: "12px",
-                padding: "1.5rem",
-                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                flex: 1,
                 position: "relative",
+                zIndex: 1,
               }}
             >
-              {/* Ícone da etapa */}
+              {/* Círculo do progresso */}
               <div
                 style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "50%",
+                  background: isConcluido || isEmProgresso ? etapa.statusColor : "transparent",
+                  border: `2px solid ${etapa.statusColor}`,
                   display: "flex",
+                  alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: "1rem",
-                  color: etapa.statusColor,
+                  marginBottom: "1.5rem",
+                  color: isConcluido || isEmProgresso ? "white" : etapa.statusColor,
+                  flexShrink: 0,
+                  boxShadow: (isConcluido || isEmProgresso) ? `0 0 20px ${etapa.statusColor}40` : "none",
                 }}
               >
                 {etapa.icon}
               </div>
 
-              {/* Título */}
-              <h3
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "#eaf3f8",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {etapa.titulo}
-              </h3>
-
-              {/* Status Visual */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                  marginBottom: "1rem",
-                  fontSize: "12px",
-                  color: etapa.statusColor,
-                  fontWeight: 600,
-                }}
-              >
-                {getStatusIcon(etapa.status)}
-                {etapa.statusLabel}
+              {/* Label e descrição */}
+              <div style={{ textAlign: "center" }}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "#eaf3f8",
+                    margin: "0 0 0.5rem 0",
+                  }}
+                >
+                  {etapa.titulo}
+                </p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#8da2b4",
+                    margin: "0",
+                  }}
+                >
+                  {etapa.descricao}
+                </p>
               </div>
-
-              {/* Dados */}
-              {etapa.data && (
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#8da2b4",
-                    marginBottom: "0.5rem",
-                    borderTop: "1px solid rgba(19, 200, 211, 0.16)",
-                    paddingTop: "1rem",
-                  }}
-                >
-                  {etapa.data}
-                </div>
-              )}
-
-              {etapa.detalhes && (
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#0bd0d7",
-                    fontWeight: 500,
-                  }}
-                >
-                  {etapa.detalhes}
-                </div>
-              )}
-
-              {!etapa.data && (
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#8da2b4",
-                    fontStyle: "italic",
-                    marginTop: "0.5rem",
-                  }}
-                >
-                  {etapa.detalhes}
-                </div>
-              )}
             </div>
-          </div>
-        ))}
-
-        {/* Setas de conexão (ficam entre os cards) */}
-        {[0, 1].map((idx) => (
-          <div
-            key={`arrow-${idx}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#0bd0d7",
-            }}
-          >
-            <ChevronRight size={24} />
-          </div>
-        ))}
-      </div>
-
-      {/* Resumo no rodapé */}
-      <div
-        style={{
-          background: "rgba(13, 208, 215, 0.05)",
-          border: "1px solid rgba(13, 208, 215, 0.2)",
-          borderRadius: "8px",
-          padding: "1rem",
-          fontSize: "12px",
-          color: "#8da2b4",
-          textAlign: "center",
-        }}
-      >
-        <p>
-          ✨ Este é o fluxo automático: ao aprovar o orçamento, a OS será criada automaticamente. Quando a OS
-          for concluída, o pagamento será criado e ficará pendente.
-        </p>
+          );
+        })}
       </div>
     </div>
   );
