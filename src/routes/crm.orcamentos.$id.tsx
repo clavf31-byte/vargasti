@@ -11,6 +11,7 @@ import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
 import { ChevronLeft, Mail, Share2, Zap, DollarSign, Download, CheckCircle2, XCircle, Clock, Edit } from "lucide-react";
 import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { OSForm, type OSFormValues } from "@/components/crm/OSForm";
+import { TimelineAcompanhamento } from "@/components/crm/TimelineAcompanhamento";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -60,6 +61,7 @@ function OrcamentoDetalhePage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showReverterConfirm, setShowReverterConfirm] = useState(false);
   const [showConverterOS, setShowConverterOS] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState<"detalhes" | "itens" | "acompanhamento">("detalhes");
 
   useEffect(() => {
     if (!user || !id) return;
@@ -662,26 +664,111 @@ function OrcamentoDetalhePage() {
           )}
         </div>
 
-        {showConverterOS && orcamento.status_enum === "aprovado" && (
-          <div
-            style={{
-              background: "rgba(6, 34, 53, 0.6)",
-              border: "1px solid rgba(19, 200, 211, 0.16)",
-              borderRadius: "12px",
-              padding: "1.5rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <p style={{ fontSize: "14px", fontWeight: 600, color: "#eaf3f8", marginBottom: "1rem" }}>
-              Converter em Ordem de Serviço
-            </p>
-            <OSForm
-              initial={{ descricao: orcamento.notas }}
-              submitLabel="Criar OS"
-              saving={actionLoading}
-              onSubmit={handleConverterOS}
-              onCancel={() => setShowConverterOS(false)}
-            />
+        {/* Abas */}
+        <div
+          style={{
+            display: "flex",
+            gap: "1rem",
+            marginBottom: "2rem",
+            borderBottom: "1px solid rgba(19, 200, 211, 0.16)",
+            paddingBottom: "0",
+          }}
+        >
+          {[
+            { id: "detalhes", label: "Detalhes" },
+            { id: "itens", label: "Itens" },
+            { id: "acompanhamento", label: "Acompanhamento 📊" },
+          ].map((aba) => (
+            <button
+              key={aba.id}
+              onClick={() => setAbaAtiva(aba.id as any)}
+              style={{
+                padding: "1rem 1.5rem",
+                background: "none",
+                border: "none",
+                borderBottom: abaAtiva === aba.id ? "3px solid #0bd0d7" : "3px solid transparent",
+                color: abaAtiva === aba.id ? "#0bd0d7" : "#8da2b4",
+                cursor: "pointer",
+                fontWeight: abaAtiva === aba.id ? 600 : 500,
+                fontSize: "14px",
+                transition: "all 0.2s",
+              }}
+            >
+              {aba.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Conteúdo da Aba Detalhes */}
+        {abaAtiva === "detalhes" && (
+          <div style={{ marginBottom: "2rem" }}>
+            {/* Aqui vai o conteúdo atual de detalhes */}
+            <div
+              style={{
+                background: "rgba(6, 34, 53, 0.6)",
+                border: "1px solid rgba(19, 200, 211, 0.16)",
+                borderRadius: "12px",
+                padding: "2rem",
+                marginBottom: "2rem",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "2rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Data de Criação</p>
+                  <p style={{ fontSize: "14px", color: "#eaf3f8" }}>
+                    {orcamento.data_criacao
+                      ? new Date(orcamento.data_criacao).toLocaleDateString("pt-BR")
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {orcamento.notas && (
+                <div style={{ borderTop: "1px solid rgba(19, 200, 211, 0.16)", paddingTop: "1.5rem" }}>
+                  <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Observações</p>
+                  <p style={{ fontSize: "14px", color: "#eaf3f8", whiteSpace: "pre-wrap" }}>
+                    {orcamento.notas}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {showConverterOS && orcamento.status_enum === "aprovado" && (
+              <div
+                style={{
+                  background: "rgba(6, 34, 53, 0.6)",
+                  border: "1px solid rgba(19, 200, 211, 0.16)",
+                  borderRadius: "12px",
+                  padding: "1.5rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                <p style={{ fontSize: "14px", fontWeight: 600, color: "#eaf3f8", marginBottom: "1rem" }}>
+                  Converter em Ordem de Serviço
+                </p>
+                <OSForm
+                  initial={{ descricao: orcamento.notas }}
+                  submitLabel="Criar OS"
+                  saving={actionLoading}
+                  onSubmit={handleConverterOS}
+                  onCancel={() => setShowConverterOS(false)}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Conteúdo da Aba Acompanhamento */}
+        {abaAtiva === "acompanhamento" && (
+          <div style={{ marginBottom: "2rem" }}>
+            <TimelineAcompanhamento orcamentoId={id} />
           </div>
         )}
 
