@@ -268,7 +268,7 @@ function PagamentosPage() {
           status: "agendado" as const,
           prioridade: "normal" as const,
           cliente_id: null,
-          chamado_id: null,
+          atendimento_id: null,
           os_id: null,
           notificar_whatsapp: false,
           notificar_numero: null,
