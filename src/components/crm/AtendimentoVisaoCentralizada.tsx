@@ -84,7 +84,7 @@ export function AtendimentoVisaoCentralizada({ atendimento: atendData }: { atend
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     const colors: Record<string, string> = {
       "aprovado": "bg-green-500/20 text-green-300 border-green-500/30",
       "aberta": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
@@ -93,10 +93,10 @@ export function AtendimentoVisaoCentralizada({ atendimento: atendData }: { atend
       "pendente": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
       "pago": "bg-green-500/20 text-green-300 border-green-500/30",
     };
-    return colors[status] || "bg-slate-500/20 text-slate-300 border-slate-500/30";
+    return colors[status ?? ""] || "bg-slate-500/20 text-slate-300 border-slate-500/30";
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | null) => {
     const labels: Record<string, string> = {
       "aprovado": "✓ Aprovado",
       "aberta": "● Aberta",
@@ -105,7 +105,7 @@ export function AtendimentoVisaoCentralizada({ atendimento: atendData }: { atend
       "pendente": "● Pendente",
       "pago": "✓ Pago",
     };
-    return labels[status] || status;
+    return labels[status ?? ""] || status || "—";
   };
 
   if (loading) {
