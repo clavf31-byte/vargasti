@@ -1,12 +1,13 @@
 ﻿import client from "@/config/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useAtendimentos, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Plus, Search, ChevronRight, Loader2, Clock, X, Trash2,
+  Plus, Search, ChevronRight, Loader2, Clock, X, Trash2, Edit,
 } from "lucide-react";
 import { InlineFormPanel } from "@/components/shared";
 
@@ -164,11 +165,14 @@ function NovoAtendimentoForm({
 function AtendimentosPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { atendimentos, loading, createAtendimento, deleteAtendimento } = useAtendimentos(user?.id);
+  const { atendimentos, loading, createAtendimento, updateAtendimento, deleteAtendimento } = useAtendimentos(user?.id);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({ titulo: "", descricao: "", cliente_id: "", prioridade: "normal" as AtendimentoPrioridade, data_agendamento: "" });
   const [statusFilter, setStatusFilter] = useState<AtendimentoStatus | "todos">("todos");
   const [prioFilter, setPrioFilter] = useState<AtendimentoPrioridade | "todas">("todas");
   const [search, setSearch] = useState("");
+  const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
 
   const filtered = atendimentos.filter((c) => {
     if (statusFilter !== "todos" && c.status !== statusFilter) return false;
@@ -189,9 +193,38 @@ function AtendimentosPage() {
   };
   for (const c of atendimentos) counts[c.status]++;
 
+  useEffect(() => {
+    (supabase as any).from("clientes").select("id, nome").order("nome").then(({ data }: any) => {
+      if (data) setClientes(data);
+    });
+  }, []);
+
   const handleCreate = async (data: Parameters<typeof createAtendimento>[0]) => {
     const c = await createAtendimento(data);
     if (c) navigate({ to: "/crm/atendimentos/$id", params: { id: c.id } });
+  };
+
+  const handleEdit = (atendimento: any) => {
+    setEditFormData({
+      titulo: atendimento.titulo,
+      descricao: atendimento.descricao || "",
+      cliente_id: atendimento.cliente_id || "",
+      prioridade: atendimento.prioridade,
+      data_agendamento: atendimento.data_agendamento ? new Date(atendimento.data_agendamento).toISOString().slice(0, 16) : "",
+    });
+    setEditingId(atendimento.id);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editFormData.titulo.trim()) return;
+    await updateAtendimento(id, {
+      titulo: editFormData.titulo.trim(),
+      descricao: editFormData.descricao.trim() || null,
+      cliente_id: editFormData.cliente_id || null,
+      prioridade: editFormData.prioridade,
+      data_agendamento: editFormData.data_agendamento ? new Date(editFormData.data_agendamento).toISOString() : null,
+    });
+    setEditingId(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -221,7 +254,97 @@ function AtendimentosPage() {
           <NovoAtendimentoForm onClose={() => setIsFormOpen(false)} onCreate={handleCreate} />
         </InlineFormPanel>
 
-        <div className={`space-y-6 transition-opacity duration-300 ${isFormOpen ? "opacity-40 pointer-events-none select-none" : ""}`}>
+        <InlineFormPanel open={!!editingId}>
+          {editingId && (
+            <div className="card-graphite p-6 space-y-4">
+              <div className="flex items-center justify-between pb-4 border-b border-border">
+                <h2 className="text-base font-semibold text-foreground">Editar Atendimento</h2>
+                <button type="button" onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(editingId); }} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título *</label>
+                    <input
+                      autoFocus
+                      value={editFormData.titulo}
+                      onChange={(e) => setEditFormData({ ...editFormData, titulo: e.target.value })}
+                      className="input-base w-full"
+                    />
+                  </div>
+
+                  {clientes.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente (opcional)</label>
+                      <select value={editFormData.cliente_id} onChange={(e) => setEditFormData({ ...editFormData, cliente_id: e.target.value })} className="input-base w-full">
+                        <option value="">Sem cliente</option>
+                        {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Prioridade</label>
+                    <div className="flex gap-2 h-[38px]">
+                      {(["alta", "normal", "baixa"] as AtendimentoPrioridade[]).map((p) => (
+                        <button
+                          key={p} type="button" onClick={() => setEditFormData({ ...editFormData, prioridade: p })}
+                          className={`flex-1 rounded-lg border text-[11px] font-bold transition-all ${
+                            editFormData.prioridade === p
+                              ? p === "alta" ? "bg-destructive/20 border-destructive text-destructive"
+                                : p === "normal" ? "bg-warning/20 border-warning text-warning"
+                                : "bg-surface-2 border-border text-foreground"
+                              : "border-border text-muted-foreground/40 hover:border-brand/30"
+                          }`}
+                        >
+                          {PRIO_CFG[p].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Data de Agendamento (opcional)</label>
+                    <input
+                      type="datetime-local"
+                      value={editFormData.data_agendamento}
+                      onChange={(e) => setEditFormData({ ...editFormData, data_agendamento: e.target.value })}
+                      className="input-base w-full"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (opcional)</label>
+                    <textarea
+                      value={editFormData.descricao}
+                      onChange={(e) => setEditFormData({ ...editFormData, descricao: e.target.value })}
+                      rows={3}
+                      className="input-base w-full resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button type="button" onClick={() => setEditingId(null)} className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!editFormData.titulo.trim()}
+                    className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Salvar Alterações
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </InlineFormPanel>
+
+        <div className={`space-y-6 transition-opacity duration-300 ${isFormOpen || editingId ? "opacity-40 pointer-events-none select-none" : ""}`}>
 
         {/* STATUS CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -312,6 +435,13 @@ function AtendimentosPage() {
                         </p>
                       )}
                     </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEdit(c); }}
+                      className="p-1.5 text-muted-foreground hover:text-brand transition-colors opacity-0 group-hover:opacity-100"
+                      title="Editar atendimento"
+                    >
+                      <Edit className="size-4" />
+                    </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }}
                       className="p-1.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
