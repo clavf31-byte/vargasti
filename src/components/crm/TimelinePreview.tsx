@@ -47,21 +47,21 @@ export function TimelinePreview({ orcamentoId, userId }: TimelinePreviewProps) {
         .eq("user_id", userId)
         .maybeSingle();
 
-      const getOrcStatus = (s?: string): EtapaStatus => {
+      const getOrcStatus = (s?: string | null): EtapaStatus => {
         if (!s) return "aguardando";
         if (s === "aprovado") return "concluido";
         if (["rascunho", "enviado"].includes(s)) return "em_progresso";
         return "aguardando";
       };
 
-      const getOsStatus = (s?: string): EtapaStatus => {
+      const getOsStatus = (s?: string | null): EtapaStatus => {
         if (!s) return "aguardando";
         if (s === "concluida") return "concluido";
         if (s === "aberta") return "em_progresso";
         return "aguardando";
       };
 
-      const getPagStatus = (s?: string): EtapaStatus => {
+      const getPagStatus = (s?: string | null): EtapaStatus => {
         if (!s) return "aguardando";
         if (s === "pago") return "concluido";
         if (s === "pendente") return "em_progresso";

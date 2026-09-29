@@ -396,10 +396,9 @@ function AtendimentoPage() {
             </div>
           </div>
         </div>
-
-      </div>
         </>
         )}
+      </div>
     </AppShell>
   );
 }

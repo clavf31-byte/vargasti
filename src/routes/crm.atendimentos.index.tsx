@@ -98,7 +98,7 @@ function NovoAtendimentoForm({
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Prioridade</label>
             <div className="flex gap-2 h-[38px]">
-              {(["alta", "normal", "baixa"] as ChamadoPrioridade[]).map((p) => (
+              {(["alta", "normal", "baixa"] as AtendimentoPrioridade[]).map((p) => (
                 <button
                   key={p} type="button" onClick={() => setPrioridade(p)}
                   className={`flex-1 rounded-lg border text-[11px] font-bold transition-all ${

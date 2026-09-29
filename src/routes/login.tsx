@@ -201,13 +201,13 @@ function LoginPage() {
                   />
                   <span className="text-xs">Lembrar-me</span>
                 </label>
-                <Link
-                  to="/forgot-password"
+                <a
+                  href="mailto:suporte@vargasti.com.br?subject=Recuperar%20senha"
                   className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
                 >
                   Esqueci minha senha
                   <ChevronRight size={12} />
-                </Link>
+                </a>
               </div>
 
               {error && (
@@ -234,9 +234,9 @@ function LoginPage() {
 
             <p className="mt-6 text-center text-sm text-slate-400">
               Não tem conta?{" "}
-              <Link to="/signup" className="text-emerald-400 hover:text-emerald-300 font-semibold">
+              <a href="mailto:suporte@vargasti.com.br?subject=Solicitar%20acesso" className="text-emerald-400 hover:text-emerald-300 font-semibold">
                 Criar conta
-              </Link>
+              </a>
             </p>
 
             {/* Status bar */}

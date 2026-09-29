@@ -315,7 +315,8 @@ function Dashboard() {
                   return (
                     <Link
                       key={o.id}
-                      to={`/crm/orcamentos/${o.id}`}
+                      to="/crm/orcamentos/$id"
+                      params={{ id: o.id }}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
                     >
                       <div className={`size-2 rounded-full shrink-0 ${cfg.dotClass}`} />

@@ -4,33 +4,33 @@ import { Eye, ArrowRight } from "lucide-react";
 
 interface AtendimentoData {
   id: string;
-  numero_formatado: string;
+  numero_formatado: string | null;
   titulo: string;
-  cliente_nome?: string;
+  cliente_nome?: string | null;
   status: string;
-  equipamento?: string;
-  defeito?: string;
-  data_inicio?: string;
+  equipamento?: string | null;
+  defeito?: string | null;
+  data_inicio?: string | null;
   created_at: string;
-  orcamento_id?: string;
-  ordem_servico_id?: string;
-  pagamento_id?: string;
+  orcamento_id?: string | null;
+  ordem_servico_id?: string | null;
+  pagamento_id?: string | null;
 }
 
 interface OrcamentoData {
   id: string;
-  numero_formatado: string;
+  numero_formatado: string | null;
   total: number;
-  status_enum: string;
+  status_enum: string | null;
   data_criacao: string;
 }
 
 interface OSData {
   id: string;
-  numero_formatado: string;
+  numero_formatado: string | null;
   status: string;
-  data_inicio: string;
-  data_conclusao?: string;
+  data_inicio: string | null;
+  data_conclusao?: string | null;
 }
 
 interface PagamentoData {
@@ -84,7 +84,7 @@ export function AtendimentoVisaoCentralizada({ atendimento: atendData }: { atend
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     const colors: Record<string, string> = {
       "aprovado": "bg-green-500/20 text-green-300 border-green-500/30",
       "aberta": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
@@ -93,10 +93,10 @@ export function AtendimentoVisaoCentralizada({ atendimento: atendData }: { atend
       "pendente": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
       "pago": "bg-green-500/20 text-green-300 border-green-500/30",
     };
-    return colors[status] || "bg-slate-500/20 text-slate-300 border-slate-500/30";
+    return colors[status ?? ""] || "bg-slate-500/20 text-slate-300 border-slate-500/30";
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | null) => {
     const labels: Record<string, string> = {
       "aprovado": "✓ Aprovado",
       "aberta": "● Aberta",
@@ -105,7 +105,7 @@ export function AtendimentoVisaoCentralizada({ atendimento: atendData }: { atend
       "pendente": "● Pendente",
       "pago": "✓ Pago",
     };
-    return labels[status] || status;
+    return labels[status ?? ""] || status || "—";
   };
 
   if (loading) {

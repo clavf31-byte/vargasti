@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
 function getAdmin() {
@@ -8,8 +8,10 @@ function getAdmin() {
   );
 }
 
-export const APIRoute = createAPIFileRoute("/api/cron/agenda-resumo")({
-  GET: async ({ request }) => {
+export const Route = createFileRoute("/api/cron/agenda-resumo")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
     if (request.headers.get("x-cron-secret") !== process.env.CRON_SECRET) {
       return new Response("Unauthorized", { status: 401 });
     }
@@ -67,5 +69,7 @@ export const APIRoute = createAPIFileRoute("/api/cron/agenda-resumo")({
     }
 
     return Response.json({ ok: true, enviados, debug: { configs: configs.length, hoje, numero: numeroDestino } });
+      },
+    },
   },
 });
