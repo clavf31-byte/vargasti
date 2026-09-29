@@ -18,6 +18,7 @@ export interface Atendimento {
   anotacoes: string | null;
   data_inicio: string | null;
   data_conclusao: string | null;
+  data_agendamento: string | null;
   orcamento_id: string | null;
   ordem_servico_id: string | null;
   pagamento_id: string | null;
@@ -79,6 +80,7 @@ export function useAtendimentos(userId?: string) {
     prioridade: AtendimentoPrioridade;
     equipamento?: string;
     defeito?: string;
+    data_agendamento?: string;
   }) {
     if (!userId) return null;
     const { data: row, error } = await (supabase as any)
