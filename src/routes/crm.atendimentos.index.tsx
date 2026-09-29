@@ -39,12 +39,13 @@ function NovoAtendimentoForm({
   onClose, onCreate,
 }: {
   onClose: () => void;
-  onCreate: (data: { titulo: string; descricao?: string; cliente_id?: string; prioridade: AtendimentoPrioridade }) => Promise<void>;
+  onCreate: (data: { titulo: string; descricao?: string; cliente_id?: string; prioridade: AtendimentoPrioridade; data_agendamento?: string }) => Promise<void>;
 }) {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [clienteId, setClienteId] = useState("");
   const [prioridade, setPrioridade] = useState<AtendimentoPrioridade>("normal");
+  const [dataAgendamento, setDataAgendamento] = useState("");
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -58,8 +59,14 @@ function NovoAtendimentoForm({
     e.preventDefault();
     if (!titulo.trim()) return;
     setSaving(true);
-    await onCreate({ titulo: titulo.trim(), descricao: descricao.trim() || undefined, cliente_id: clienteId || undefined, prioridade });
-    setTitulo(""); setDescricao(""); setClienteId(""); setPrioridade("normal");
+    await onCreate({
+      titulo: titulo.trim(),
+      descricao: descricao.trim() || undefined,
+      cliente_id: clienteId || undefined,
+      prioridade,
+      data_agendamento: dataAgendamento || undefined
+    });
+    setTitulo(""); setDescricao(""); setClienteId(""); setPrioridade("normal"); setDataAgendamento("");
     onClose();
   };
 
@@ -113,6 +120,16 @@ function NovoAtendimentoForm({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Data de Agendamento (opcional)</label>
+            <input
+              type="datetime-local"
+              value={dataAgendamento}
+              onChange={(e) => setDataAgendamento(e.target.value)}
+              className="input-base w-full"
+            />
           </div>
 
           <div className="sm:col-span-2">

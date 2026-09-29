@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAtendimento, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import { AtendimentoVisaoCentralizada } from "@/components/crm/AtendimentoVisaoCentralizada";
+import { AtendimentoProximosEventos } from "@/components/crm/AtendimentoProximosEventos";
 import {
   ArrowLeft, MessageCircle, Search, Wrench, CheckCircle2,
   Circle, Clock, AlertTriangle, Calendar, User, Save, Loader2,
@@ -160,6 +161,9 @@ function AtendimentoPage() {
             </p>
           </div>
         </div>
+
+        {/* PRÓXIMOS EVENTOS */}
+        <AtendimentoProximosEventos atendimentoId={atendimento.id} dataAgendamento={atendimento.data_agendamento} />
 
         {/* VIEW MODE TOGGLE */}
         <div className="flex gap-2 border-b border-border">
