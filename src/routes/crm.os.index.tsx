@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, StatCard, EmptyState, LoadingState, StatusBadge, Btn, InlineFormPanel } from "@/components/shared";
-import { Search, Wrench, CheckCircle2, Trash2, Plus, X, Pencil } from "lucide-react";
+import { Search, Wrench, CheckCircle2, Trash2, Plus, X, Pencil, Eye } from "lucide-react";
 import { atualizarStatusOS, atualizarOrdemServico } from "@/hooks/useOrdenServico";
 import { OSForm, type OSFormValues } from "@/components/crm/OSForm";
+import { TimelineStatus } from "@/components/crm/TimelineStatus";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/os/")({
@@ -27,6 +28,7 @@ type OS = {
   tecnico?: string;
   cliente?: { id: string; nome: string } | null;
   orcamento?: { numero_formatado: string } | null;
+  orcamento_id?: string;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -104,6 +106,11 @@ function NovaOSForm({ userId, onClose, onCreated }: { userId: string; onClose: (
   );
 }
 
+type OSDetailed = OS & {
+  orcamento_data?: { numero_formatado: string; status_enum: string; data_criacao: string; total: number } | null;
+  pagamento?: { status: string; data_pagamento?: string; valor: number } | null;
+};
+
 function OrdensServicoPage() {
   const { user } = useAuth();
   const [ordens, setOrdens] = useState<OS[]>([]);
@@ -114,6 +121,7 @@ function OrdensServicoPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editing, setEditing] = useState<OS | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [viewing, setViewing] = useState<OSDetailed | null>(null);
 
   const loadOrdens = async () => {
     if (!user) return;
@@ -174,6 +182,67 @@ function OrdensServicoPage() {
     }
   }
 
+  async function handleViewDetails(os: OS) {
+    if (!user) return;
+    const { data: orcData } = await supabase
+      .from("orcamentos")
+      .select("numero_formatado, status_enum, data_criacao, total")
+      .eq("id", os.orcamento_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const { data: pagData } = await supabase
+      .from("pagamentos")
+      .select("status, data_pagamento, valor")
+      .eq("orcamento_id", os.orcamento_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    setViewing({
+      ...os,
+      orcamento_data: orcData,
+      pagamento: pagData,
+    } as OSDetailed);
+  }
+
+  function buildTimelineEtapas(detailed: OSDetailed) {
+    const etapas: Array<{ label: string; data: string; status: "concluido" | "em_progresso" | "aguardando" }> = [];
+    let etapaAtual = 0;
+
+    // Orçamento
+    const orcStatus = detailed.orcamento_data?.status_enum || "rascunho";
+    const orcData = detailed.orcamento_data?.data_criacao ? new Date(detailed.orcamento_data.data_criacao).toLocaleDateString("pt-BR") : "—";
+    etapas.push({
+      label: "Orçamento",
+      data: orcData,
+      status: orcStatus === "aprovado" ? "concluido" : orcStatus === "rascunho" || orcStatus === "enviado" ? "em_progresso" : "aguardando",
+    });
+    if (orcStatus === "aprovado") etapaAtual = 1;
+
+    // OS
+    const osStatus = detailed.status;
+    const osData = new Date(detailed.data_inicio).toLocaleDateString("pt-BR");
+    etapas.push({
+      label: "OS",
+      data: osData,
+      status: osStatus === "concluida" ? "concluido" : osStatus === "aberta" || osStatus === "em_andamento" ? "em_progresso" : "aguardando",
+    });
+    if (osStatus === "concluida") etapaAtual = 2;
+    else if (osStatus === "aberta" || osStatus === "em_andamento") etapaAtual = 1;
+
+    // Pagamento
+    const pagData = detailed.pagamento?.data_pagamento ? new Date(detailed.pagamento.data_pagamento).toLocaleDateString("pt-BR") : "—";
+    etapas.push({
+      label: "Pagamento",
+      data: pagData,
+      status: detailed.pagamento?.status === "pago" ? "concluido" : detailed.pagamento?.status === "pendente" ? "em_progresso" : "aguardando",
+    });
+    if (detailed.pagamento?.status === "pago") etapaAtual = 3;
+    else if (detailed.pagamento?.status === "pendente") etapaAtual = 2;
+
+    return { etapas, etapaAtual: Math.min(etapaAtual, etapas.length - 1) };
+  }
+
   const qtdAberta    = ordens.filter((o) => o.status === "aberta").length;
   const qtdAndamento = ordens.filter((o) => o.status === "em_andamento").length;
   const qtdConcluida = ordens.filter((o) => o.status === "concluida").length;
@@ -224,6 +293,55 @@ function OrdensServicoPage() {
               />
             </div>
           )}
+        </InlineFormPanel>
+
+        <InlineFormPanel open={!!viewing}>
+          {viewing && (() => {
+            const { etapas, etapaAtual } = buildTimelineEtapas(viewing);
+            return (
+              <div className="card-graphite p-6 space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-border">
+                  <h2 className="text-base font-semibold text-foreground">
+                    {viewing.numero_formatado || "OS"}
+                  </h2>
+                  <button onClick={() => setViewing(null)} className="text-muted-foreground hover:text-foreground transition-colors"><X className="size-5" /></button>
+                </div>
+
+                <TimelineStatus etapas={etapas} etapaAtual={etapaAtual} />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Cliente</p>
+                    <p className="text-sm text-foreground">{viewing.cliente?.nome || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                    <StatusBadge status={viewing.status} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Prioridade</p>
+                    <p className={cn("text-sm font-semibold capitalize", PRIORIDADE_CLS[viewing.prioridade])}>{viewing.prioridade}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Técnico</p>
+                    <p className="text-sm text-foreground">{viewing.tecnico || "—"}</p>
+                  </div>
+                  {viewing.descricao && (
+                    <div className="sm:col-span-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Descrição</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{viewing.descricao}</p>
+                    </div>
+                  )}
+                  {viewing.solucao && (
+                    <div className="sm:col-span-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Solução</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{viewing.solucao}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </InlineFormPanel>
 
         <div className={`space-y-5 transition-opacity duration-300 ${isFormOpen || editing ? "opacity-40 pointer-events-none select-none" : ""}`}>
@@ -306,6 +424,11 @@ function OrdensServicoPage() {
                             <CheckCircle2 className="size-3" /> Concluir
                           </button>
                         )}
+                        <button onClick={() => handleViewDetails(os)}
+                          className="inline-flex items-center justify-center p-1.5 border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
+                          title="Ver detalhes">
+                          <Eye className="size-3.5" />
+                        </button>
                         <button onClick={() => setEditing(os)}
                           className="inline-flex items-center justify-center p-1.5 border border-border text-muted-foreground bg-surface-2/40 rounded-lg hover:text-foreground hover:border-muted-foreground/40 transition-colors">
                           <Pencil className="size-3.5" />
