@@ -86,7 +86,7 @@ export type Database = {
             foreignKeyName: "agenda_eventos_chamado_id_fkey"
             columns: ["chamado_id"]
             isOneToOne: false
-            referencedRelation: "chamados"
+            referencedRelation: "atendimentos"
             referencedColumns: ["id"]
           },
           {
@@ -152,9 +152,9 @@ export type Database = {
           },
         ]
       }
-      chamado_comentarios: {
+      atendimento_comentarios: {
         Row: {
-          chamado_id: string
+          atendimento_id: string
           conteudo: string
           created_at: string
           id: string
@@ -163,7 +163,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          chamado_id: string
+          atendimento_id: string
           conteudo: string
           created_at?: string
           id?: string
@@ -172,7 +172,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          chamado_id?: string
+          atendimento_id?: string
           conteudo?: string
           created_at?: string
           id?: string
@@ -182,24 +182,29 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "chamado_comentarios_chamado_id_fkey"
-            columns: ["chamado_id"]
+            foreignKeyName: "atendimento_comentarios_atendimento_id_fkey"
+            columns: ["atendimento_id"]
             isOneToOne: false
-            referencedRelation: "chamados"
+            referencedRelation: "atendimentos"
             referencedColumns: ["id"]
           },
         ]
       }
-      chamados: {
+      atendimentos: {
         Row: {
           anotacoes: string | null
           cliente_id: string | null
           created_at: string
           data_conclusao: string | null
           data_inicio: string | null
+          defeito: string | null
           descricao: string | null
+          equipamento: string | null
           id: string
           numero_formatado: string | null
+          orcamento_id: string | null
+          ordem_servico_id: string | null
+          pagamento_id: string | null
           prioridade: string
           responsavel_id: string | null
           status: string
@@ -213,9 +218,14 @@ export type Database = {
           created_at?: string
           data_conclusao?: string | null
           data_inicio?: string | null
+          defeito?: string | null
           descricao?: string | null
+          equipamento?: string | null
           id?: string
           numero_formatado?: string | null
+          orcamento_id?: string | null
+          ordem_servico_id?: string | null
+          pagamento_id?: string | null
           prioridade?: string
           responsavel_id?: string | null
           status?: string
@@ -229,9 +239,14 @@ export type Database = {
           created_at?: string
           data_conclusao?: string | null
           data_inicio?: string | null
+          defeito?: string | null
           descricao?: string | null
+          equipamento?: string | null
           id?: string
           numero_formatado?: string | null
+          orcamento_id?: string | null
+          ordem_servico_id?: string | null
+          pagamento_id?: string | null
           prioridade?: string
           responsavel_id?: string | null
           status?: string
@@ -240,6 +255,27 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "atendimentos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimentos_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimentos_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chamados_cliente_id_fkey"
             columns: ["cliente_id"]
@@ -938,6 +974,60 @@ export type Database = {
           },
         ]
       }
+      orcamento_compartilhamento: {
+        Row: {
+          canal: string
+          clicado_em: string | null
+          cliente_id: string
+          created_at: string | null
+          enviado_em: string | null
+          id: string
+          orcamento_id: string
+          status: string
+          updated_at: string | null
+          visualizado_em: string | null
+        }
+        Insert: {
+          canal: string
+          clicado_em?: string | null
+          cliente_id: string
+          created_at?: string | null
+          enviado_em?: string | null
+          id?: string
+          orcamento_id: string
+          status?: string
+          updated_at?: string | null
+          visualizado_em?: string | null
+        }
+        Update: {
+          canal?: string
+          clicado_em?: string | null
+          cliente_id?: string
+          created_at?: string | null
+          enviado_em?: string | null
+          id?: string
+          orcamento_id?: string
+          status?: string
+          updated_at?: string | null
+          visualizado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_compartilhamento_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_compartilhamento_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_itens: {
         Row: {
           created_at: string
@@ -1085,6 +1175,7 @@ export type Database = {
           numero: string
           numero_formatado: string | null
           rejected_at: string | null
+          resumo_executivo: string | null
           status: string
           status_enum: string | null
           total: number
@@ -1111,6 +1202,7 @@ export type Database = {
           numero: string
           numero_formatado?: string | null
           rejected_at?: string | null
+          resumo_executivo?: string | null
           status?: string
           status_enum?: string | null
           total?: number
@@ -1137,6 +1229,7 @@ export type Database = {
           numero?: string
           numero_formatado?: string | null
           rejected_at?: string | null
+          resumo_executivo?: string | null
           status?: string
           status_enum?: string | null
           total?: number
@@ -1166,7 +1259,9 @@ export type Database = {
           orcamento_id: string | null
           prioridade: string
           responsavel_id: string | null
+          solucao: string | null
           status: string
+          tecnico: string | null
           updated_at: string
           user_id: string
         }
@@ -1182,7 +1277,9 @@ export type Database = {
           orcamento_id?: string | null
           prioridade?: string
           responsavel_id?: string | null
+          solucao?: string | null
           status?: string
+          tecnico?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1198,7 +1295,9 @@ export type Database = {
           orcamento_id?: string | null
           prioridade?: string
           responsavel_id?: string | null
+          solucao?: string | null
           status?: string
+          tecnico?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1277,11 +1376,40 @@ export type Database = {
           },
         ]
       }
+      os_sequences: {
+        Row: {
+          created_at: string | null
+          id: string
+          next_number: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          next_number?: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          next_number?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       pagamentos: {
         Row: {
+          agenda_evento_id: string | null
+          atendimento_id: string | null
           created_at: string
+          data_lembrete: string | null
           data_pagamento: string
+          descricao: string | null
           id: string
+          lembrete_visto: boolean | null
           metodo: string | null
           orcamento_id: string
           referencia: string | null
@@ -1291,9 +1419,14 @@ export type Database = {
           valor: number
         }
         Insert: {
+          agenda_evento_id?: string | null
+          atendimento_id?: string | null
           created_at?: string
+          data_lembrete?: string | null
           data_pagamento?: string
+          descricao?: string | null
           id?: string
+          lembrete_visto?: boolean | null
           metodo?: string | null
           orcamento_id: string
           referencia?: string | null
@@ -1303,9 +1436,14 @@ export type Database = {
           valor: number
         }
         Update: {
+          agenda_evento_id?: string | null
+          atendimento_id?: string | null
           created_at?: string
+          data_lembrete?: string | null
           data_pagamento?: string
+          descricao?: string | null
           id?: string
+          lembrete_visto?: boolean | null
           metodo?: string | null
           orcamento_id?: string
           referencia?: string | null
@@ -1315,6 +1453,20 @@ export type Database = {
           valor?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_pagamentos_atendimento"
+            columns: ["atendimento_id"]
+            isOneToOne: false
+            referencedRelation: "atendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_agenda_evento_id_fkey"
+            columns: ["agenda_evento_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_eventos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pagamentos_orcamento_id_fkey"
             columns: ["orcamento_id"]
@@ -1637,6 +1789,10 @@ export type Database = {
           label: string
           reply_to_groups: boolean | null
           save_as_notes: boolean | null
+          schedule_days: string
+          schedule_enabled: boolean
+          schedule_end: string
+          schedule_start: string
           updated_at: string | null
           user_id: string
           webhook_token: string | null
@@ -1653,6 +1809,10 @@ export type Database = {
           label?: string
           reply_to_groups?: boolean | null
           save_as_notes?: boolean | null
+          schedule_days?: string
+          schedule_enabled?: boolean
+          schedule_end?: string
+          schedule_start?: string
           updated_at?: string | null
           user_id: string
           webhook_token?: string | null
@@ -1669,6 +1829,10 @@ export type Database = {
           label?: string
           reply_to_groups?: boolean | null
           save_as_notes?: boolean | null
+          schedule_days?: string
+          schedule_enabled?: boolean
+          schedule_end?: string
+          schedule_start?: string
           updated_at?: string | null
           user_id?: string
           webhook_token?: string | null
@@ -1718,6 +1882,7 @@ export type Database = {
     Functions: {
       approve_orcamento_by_token: { Args: { _token: string }; Returns: boolean }
       gerar_approval_token: { Args: never; Returns: string }
+      gerar_numero_os: { Args: { _user_id: string }; Returns: string }
       get_approval_link_by_token: {
         Args: { _token: string }
         Returns: {
@@ -1839,12 +2004,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1868,11 +2033,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1893,11 +2058,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1918,11 +2083,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1935,11 +2100,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
