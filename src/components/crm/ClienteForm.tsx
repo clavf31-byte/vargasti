@@ -9,6 +9,13 @@ interface ClienteFormProps {
   userId: string;
 }
 
+function fmtPhone(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 10);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+}
+
 export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormProps) {
   const [formData, setFormData] = useState({
     nome: "",
@@ -177,8 +184,9 @@ export function ClienteForm({ isOpen, onClose, onSuccess, userId }: ClienteFormP
             </label>
             <input
               type="tel"
+              placeholder="(XX) XXXX-XXXX"
               value={formData.telefone}
-              onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, telefone: fmtPhone(e.target.value) })}
               style={{
                 width: "100%",
                 padding: "8px 12px",
