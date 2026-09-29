@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       agenda_eventos: {
         Row: {
-          chamado_id: string | null
+          atendimento_id: string | null
           cliente_id: string | null
           created_at: string
           data_fim: string | null
@@ -38,7 +38,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          chamado_id?: string | null
+          atendimento_id?: string | null
           cliente_id?: string | null
           created_at?: string
           data_fim?: string | null
@@ -60,7 +60,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          chamado_id?: string | null
+          atendimento_id?: string | null
           cliente_id?: string | null
           created_at?: string
           data_fim?: string | null
@@ -84,7 +84,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "agenda_eventos_chamado_id_fkey"
-            columns: ["chamado_id"]
+            columns: ["atendimento_id"]
             isOneToOne: false
             referencedRelation: "atendimentos"
             referencedColumns: ["id"]
@@ -101,6 +101,13 @@ export type Database = {
             columns: ["os_id"]
             isOneToOne: false
             referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_agenda_eventos_atendimento_id"
+            columns: ["atendimento_id"]
+            isOneToOne: false
+            referencedRelation: "atendimentos"
             referencedColumns: ["id"]
           },
         ]
@@ -195,6 +202,7 @@ export type Database = {
           anotacoes: string | null
           cliente_id: string | null
           created_at: string
+          data_agendamento: string | null
           data_conclusao: string | null
           data_inicio: string | null
           defeito: string | null
@@ -216,6 +224,7 @@ export type Database = {
           anotacoes?: string | null
           cliente_id?: string | null
           created_at?: string
+          data_agendamento?: string | null
           data_conclusao?: string | null
           data_inicio?: string | null
           defeito?: string | null
@@ -237,6 +246,7 @@ export type Database = {
           anotacoes?: string | null
           cliente_id?: string | null
           created_at?: string
+          data_agendamento?: string | null
           data_conclusao?: string | null
           data_inicio?: string | null
           defeito?: string | null
