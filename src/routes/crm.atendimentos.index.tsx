@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAtendimentos, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Plus, Search, ChevronRight, Loader2, Clock, X,
+  Plus, Search, ChevronRight, Loader2, Clock, X, Trash2,
 } from "lucide-react";
 import { InlineFormPanel } from "@/components/shared";
 
@@ -147,7 +147,7 @@ function NovoAtendimentoForm({
 function AtendimentosPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { atendimentos, loading, createAtendimento } = useAtendimentos(user?.id);
+  const { atendimentos, loading, createAtendimento, deleteAtendimento } = useAtendimentos(user?.id);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<AtendimentoStatus | "todos">("todos");
   const [prioFilter, setPrioFilter] = useState<AtendimentoPrioridade | "todas">("todas");
@@ -175,6 +175,11 @@ function AtendimentosPage() {
   const handleCreate = async (data: Parameters<typeof createAtendimento>[0]) => {
     const c = await createAtendimento(data);
     if (c) navigate({ to: "/crm/atendimentos/$id", params: { id: c.id } });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja deletar este atendimento?")) return;
+    await deleteAtendimento(id);
   };
 
   return (
@@ -290,6 +295,13 @@ function AtendimentosPage() {
                         </p>
                       )}
                     </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }}
+                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                      title="Deletar atendimento"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
                     <ChevronRight className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
                   </div>
                 </button>
