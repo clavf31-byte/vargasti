@@ -8,7 +8,6 @@ import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
 import { PageHeader, EmptyState, LoadingState, StatusBadge, Btn, InlineFormPanel } from "@/components/shared";
 import { FileSpreadsheet, Search, Filter, Trash2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TimelinePreview } from "@/components/crm/TimelinePreview";
 
 export const Route = createFileRoute("/crm/orcamentos/")({
   head: () => ({ meta: [{ title: `Orçamentos · CRM ${client.name}` }] }),
@@ -138,41 +137,34 @@ function OrcamentosPage() {
                   </thead>
                   <tbody>
                     {filtrados.map((o) => (
-                      <React.Fragment key={o.id}>
-                        <tr className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
-                          <td className="px-4 py-3 font-semibold text-foreground">{o.numero_formatado || o.numero}</td>
-                          <td className="px-4 py-3">
-                            <StatusBadge status={o.status_enum ?? o.status} />
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-brand">
-                            R$ {(o.total || 0).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {new Date(o.data_criacao).toLocaleDateString("pt-BR")}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id: o.id } })}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
-                              >
-                                <Eye className="size-3" /> Ver
-                              </button>
-                              <button
-                                onClick={() => handleDelete(o.id)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
-                              >
-                                <Trash2 className="size-3" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr className="border-b border-border/30 bg-surface-2/20">
-                          <td colSpan={5} className="px-4 py-2">
-                            {user && <TimelinePreview orcamentoId={o.id} userId={user.id} />}
-                          </td>
-                        </tr>
-                      </React.Fragment>
+                      <tr key={o.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-foreground">{o.numero_formatado || o.numero}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={o.status_enum ?? o.status} />
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-brand">
+                          R$ {(o.total || 0).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {new Date(o.data_criacao).toLocaleDateString("pt-BR")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id: o.id } })}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
+                            >
+                              <Eye className="size-3" /> Ver
+                            </button>
+                            <button
+                              onClick={() => handleDelete(o.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors"
+                            >
+                              <Trash2 className="size-3" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     ))}
                   </tbody>
                 </table>
