@@ -183,7 +183,7 @@ function OrdensServicoPage() {
   }
 
   async function handleViewDetails(os: OS) {
-    if (!user) return;
+    if (!user || !os.orcamento_id) return;
     const { data: orcData } = await supabase
       .from("orcamentos")
       .select("numero_formatado, status_enum, data_criacao, total")

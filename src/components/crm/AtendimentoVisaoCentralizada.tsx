@@ -4,33 +4,33 @@ import { Eye, ArrowRight } from "lucide-react";
 
 interface AtendimentoData {
   id: string;
-  numero_formatado: string;
+  numero_formatado: string | null;
   titulo: string;
-  cliente_nome?: string;
+  cliente_nome?: string | null;
   status: string;
-  equipamento?: string;
-  defeito?: string;
-  data_inicio?: string;
+  equipamento?: string | null;
+  defeito?: string | null;
+  data_inicio?: string | null;
   created_at: string;
-  orcamento_id?: string;
-  ordem_servico_id?: string;
-  pagamento_id?: string;
+  orcamento_id?: string | null;
+  ordem_servico_id?: string | null;
+  pagamento_id?: string | null;
 }
 
 interface OrcamentoData {
   id: string;
-  numero_formatado: string;
+  numero_formatado: string | null;
   total: number;
-  status_enum: string;
+  status_enum: string | null;
   data_criacao: string;
 }
 
 interface OSData {
   id: string;
-  numero_formatado: string;
+  numero_formatado: string | null;
   status: string;
-  data_inicio: string;
-  data_conclusao?: string;
+  data_inicio: string | null;
+  data_conclusao?: string | null;
 }
 
 interface PagamentoData {

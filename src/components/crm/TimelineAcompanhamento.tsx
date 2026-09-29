@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  FileText, Wrench, DollarSign
+  AlertCircle, CheckCircle2, Clock, DollarSign, FileText, Wrench
 } from "lucide-react";
 
 type Etapa = {
@@ -90,28 +90,28 @@ export function TimelineAcompanhamento({ orcamentoId }: TimelineAcompanhamentoPr
     }
   }
 
-  const getStatusOrçamento = (status?: string) => {
+  const getStatusOrçamento = (status?: string | null) => {
     if (!status) return "aguardando";
     if (status === "aprovado") return "concluido";
     if (status === "rascunho" || status === "enviado") return "em_progresso";
     return "aguardando";
   };
 
-  const getStatusOS = (status?: string) => {
+  const getStatusOS = (status?: string | null) => {
     if (!status) return "aguardando";
     if (status === "concluida") return "concluido";
     if (status === "aberta") return "em_progresso";
     return "aguardando";
   };
 
-  const getStatusPagamento = (status?: string) => {
+  const getStatusPagamento = (status?: string | null) => {
     if (!status) return "aguardando";
     if (status === "pago") return "concluido";
     if (status === "pendente") return "em_progresso";
     return "aguardando";
   };
 
-  const getStatusLabel = (status?: string) => {
+  const getStatusLabel = (status?: string | null) => {
     const labels: Record<string, string> = {
       rascunho: "Rascunho",
       enviado: "Enviado",
@@ -128,7 +128,7 @@ export function TimelineAcompanhamento({ orcamentoId }: TimelineAcompanhamentoPr
     return labels[status || ""] || "—";
   };
 
-  const getStatusColor = (status?: string) => {
+  const getStatusColor = (status?: string | null) => {
     const colors: Record<string, string> = {
       rascunho: "#a855f7",
       enviado: "#3b82f6",

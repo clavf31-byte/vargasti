@@ -108,7 +108,7 @@ export const listEventosDia = createServerFn({ method: "GET" })
 
     const { data: eventos, error } = await supabaseAdmin
       .from("agenda_eventos")
-      .select("*, clientes(nome), chamados(titulo, numero_formatado), ordens_servico(numero_formatado)")
+      .select("*, clientes(nome), atendimentos(titulo, numero_formatado), ordens_servico(numero_formatado)")
       .eq("user_id", context.userId)
       .gte("data_inicio", `${data.data}T00:00:00`)
       .lte("data_inicio", `${data.data}T23:59:59`)
@@ -119,8 +119,8 @@ export const listEventosDia = createServerFn({ method: "GET" })
     return ((eventos ?? []).map((e: any) => ({
       ...e,
       cliente_nome: e.clientes?.nome ?? null,
-      chamado_titulo: e.chamados?.titulo ?? null,
-      chamado_numero: e.chamados?.numero_formatado ?? null,
+      chamado_titulo: e.atendimentos?.titulo ?? null,
+      chamado_numero: e.atendimentos?.numero_formatado ?? null,
       os_numero: e.ordens_servico?.numero_formatado ?? null,
     }))) as AgendaEvento[];
   });
@@ -132,7 +132,7 @@ export const loadFormData = createServerFn({ method: "GET" })
 
     const [clientes, chamados, os] = await Promise.all([
       supabaseAdmin.from("clientes").select("id, nome").eq("user_id", context.userId).order("nome").limit(100),
-      supabaseAdmin.from("chamados").select("id, titulo, numero_formatado").eq("user_id", context.userId)
+      supabaseAdmin.from("atendimentos").select("id, titulo, numero_formatado").eq("user_id", context.userId)
         .not("status", "eq", "concluido").order("created_at", { ascending: false }).limit(50),
       supabaseAdmin.from("ordens_servico").select("id, numero_formatado, descricao").eq("user_id", context.userId)
         .not("status", "eq", "concluida").order("created_at", { ascending: false }).limit(50),
