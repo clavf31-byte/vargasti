@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAtendimento, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
+import { AtendimentoVisaoCentralizada } from "@/components/crm/AtendimentoVisaoCentralizada";
 import {
   ArrowLeft, MessageCircle, Search, Wrench, CheckCircle2,
   Circle, Clock, AlertTriangle, Calendar, User, Save, Loader2,
-  Send, Info,
+  Send, Info, Eye,
 } from "lucide-react";
 
 export const Route = createFileRoute("/crm/atendimentos/$id")({
@@ -59,6 +60,7 @@ function AtendimentoPage() {
   const [saving, setSaving] = useState(false);
   const [novoComentario, setNovoComentario] = useState("");
   const [sendingComent, setSendingComent] = useState(false);
+  const [viewMode, setViewMode] = useState<'detalhes' | 'centralizado'>('centralizado');
   const comentariosEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -158,6 +160,35 @@ function AtendimentoPage() {
             </p>
           </div>
         </div>
+
+        {/* VIEW MODE TOGGLE */}
+        <div className="flex gap-2 border-b border-border">
+          <button
+            onClick={() => setViewMode('centralizado')}
+            className={`px-4 py-2 text-sm font-semibold transition-colors ${
+              viewMode === 'centralizado'
+                ? 'text-brand border-b-2 border-brand'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Eye className="inline size-4 mr-1.5" /> Visão Centralizada
+          </button>
+          <button
+            onClick={() => setViewMode('detalhes')}
+            className={`px-4 py-2 text-sm font-semibold transition-colors ${
+              viewMode === 'detalhes'
+                ? 'text-brand border-b-2 border-brand'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Detalhes Completos
+          </button>
+        </div>
+
+        {viewMode === 'centralizado' ? (
+          <AtendimentoVisaoCentralizada atendimento={atendimento} />
+        ) : (
+        <>
 
         {/* PROGRESS STEPS */}
         <div className="card-selectable p-6">
@@ -367,6 +398,8 @@ function AtendimentoPage() {
         </div>
 
       </div>
+        </>
+        )}
     </AppShell>
   );
 }
