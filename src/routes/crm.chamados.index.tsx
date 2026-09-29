@@ -3,26 +3,26 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChamados, type ChamadoStatus, type ChamadoPrioridade } from "@/hooks/useChamados";
+import { useAtendimentos, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Plus, Search, ChevronRight, Loader2, Clock, X,
 } from "lucide-react";
 import { InlineFormPanel } from "@/components/shared";
 
-export const Route = createFileRoute("/crm/chamados/")({
-  head: () => ({ meta: [{ title: `Chamados · ${client.name}` }] }),
-  component: ChamadosPage,
+export const Route = createFileRoute("/crm/atendimentos/")({
+  head: () => ({ meta: [{ title: `Atendimentos · ${client.name}` }] }),
+  component: AtendimentosPage,
 });
 
-const STATUS_CFG: Record<ChamadoStatus, { label: string; cls: string; dot: string }> = {
+const STATUS_CFG: Record<AtendimentoStatus, { label: string; cls: string; dot: string }> = {
   aberto:       { label: "Aberto",        cls: "text-slate-400 bg-slate-400/10 border-slate-400/25",   dot: "bg-slate-400" },
   em_triagem:   { label: "Em triagem",    cls: "text-cyan-400 bg-cyan-400/10 border-cyan-400/25",       dot: "bg-cyan-400" },
   em_andamento: { label: "Em andamento",  cls: "text-warning bg-warning/10 border-warning/25",          dot: "bg-warning" },
   concluido:    { label: "Concluído",     cls: "text-success bg-success/10 border-success/25",          dot: "bg-success" },
 };
 
-const PRIO_CFG: Record<ChamadoPrioridade, { label: string; cls: string }> = {
+const PRIO_CFG: Record<AtendimentoPrioridade, { label: string; cls: string }> = {
   alta:   { label: "Alta",   cls: "text-destructive" },
   normal: { label: "Normal", cls: "text-warning" },
   baixa:  { label: "Baixa",  cls: "text-muted-foreground" },
@@ -35,16 +35,16 @@ function slaElapsed(createdAt: string) {
   return `${Math.floor(h / 24)}d`;
 }
 
-function NovoChamadoForm({
+function NovoAtendimentoForm({
   onClose, onCreate,
 }: {
   onClose: () => void;
-  onCreate: (data: { titulo: string; descricao?: string; cliente_id?: string; prioridade: ChamadoPrioridade }) => Promise<void>;
+  onCreate: (data: { titulo: string; descricao?: string; cliente_id?: string; prioridade: AtendimentoPrioridade }) => Promise<void>;
 }) {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [clienteId, setClienteId] = useState("");
-  const [prioridade, setPrioridade] = useState<ChamadoPrioridade>("normal");
+  const [prioridade, setPrioridade] = useState<AtendimentoPrioridade>("normal");
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -66,7 +66,7 @@ function NovoChamadoForm({
   return (
     <div className="card-graphite p-6 space-y-4">
       <div className="flex items-center justify-between pb-4 border-b border-border">
-        <h2 className="text-base font-semibold text-foreground">Novo Chamado</h2>
+        <h2 className="text-base font-semibold text-foreground">Novo Atendimento</h2>
         <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
           <X className="size-5" />
         </button>
@@ -136,7 +136,7 @@ function NovoChamadoForm({
             className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
           >
             {saving && <Loader2 className="size-3.5 animate-spin" />}
-            Abrir Chamado
+            Abrir Atendimento
           </button>
         </div>
       </form>
@@ -144,16 +144,16 @@ function NovoChamadoForm({
   );
 }
 
-function ChamadosPage() {
+function AtendimentosPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { chamados, loading, createChamado } = useChamados(user?.id);
+  const { atendimentos, loading, createAtendimento } = useAtendimentos(user?.id);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<ChamadoStatus | "todos">("todos");
-  const [prioFilter, setPrioFilter] = useState<ChamadoPrioridade | "todas">("todas");
+  const [statusFilter, setStatusFilter] = useState<AtendimentoStatus | "todos">("todos");
+  const [prioFilter, setPrioFilter] = useState<AtendimentoPrioridade | "todas">("todas");
   const [search, setSearch] = useState("");
 
-  const filtered = chamados.filter((c) => {
+  const filtered = atendimentos.filter((c) => {
     if (statusFilter !== "todos" && c.status !== statusFilter) return false;
     if (prioFilter !== "todas" && c.prioridade !== prioFilter) return false;
     if (search) {
@@ -167,14 +167,14 @@ function ChamadosPage() {
     return true;
   });
 
-  const counts: Record<ChamadoStatus, number> = {
+  const counts: Record<AtendimentoStatus, number> = {
     aberto: 0, em_triagem: 0, em_andamento: 0, concluido: 0,
   };
-  for (const c of chamados) counts[c.status]++;
+  for (const c of atendimentos) counts[c.status]++;
 
-  const handleCreate = async (data: Parameters<typeof createChamado>[0]) => {
-    const c = await createChamado(data);
-    if (c) navigate({ to: "/crm/chamados/$id", params: { id: c.id } });
+  const handleCreate = async (data: Parameters<typeof createAtendimento>[0]) => {
+    const c = await createAtendimento(data);
+    if (c) navigate({ to: "/crm/atendimentos/$id", params: { id: c.id } });
   };
 
   return (
@@ -184,26 +184,26 @@ function ChamadosPage() {
         {/* HEADER */}
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Chamados</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{chamados.length} no total</p>
+            <h1 className="text-2xl font-bold text-foreground">Atendimentos</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{atendimentos.length} no total</p>
           </div>
           <button
             onClick={() => setIsFormOpen((v) => !v)}
             className="flex items-center gap-2 px-4 py-2.5 bg-brand text-white text-sm font-semibold rounded-xl hover:bg-brand/90 transition-colors"
           >
-            <Plus className="size-4" /> {isFormOpen ? "Cancelar" : "Novo Chamado"}
+            <Plus className="size-4" /> {isFormOpen ? "Cancelar" : "Novo Atendimento"}
           </button>
         </div>
 
         <InlineFormPanel open={isFormOpen}>
-          <NovoChamadoForm onClose={() => setIsFormOpen(false)} onCreate={handleCreate} />
+          <NovoAtendimentoForm onClose={() => setIsFormOpen(false)} onCreate={handleCreate} />
         </InlineFormPanel>
 
         <div className={`space-y-6 transition-opacity duration-300 ${isFormOpen ? "opacity-40 pointer-events-none select-none" : ""}`}>
 
         {/* STATUS CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {(Object.keys(STATUS_CFG) as ChamadoStatus[]).map((s) => (
+          {(Object.keys(STATUS_CFG) as AtendimentoStatus[]).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(statusFilter === s ? "todos" : s)}
@@ -253,7 +253,7 @@ function ChamadosPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
-            {chamados.length === 0 ? "Nenhum chamado ainda. Abra o primeiro!" : "Nenhum chamado encontrado."}
+            {atendimentos.length === 0 ? "Nenhum atendimento ainda. Abra o primeiro!" : "Nenhum atendimento encontrado."}
           </div>
         ) : (
           <div className="space-y-2">
@@ -263,7 +263,7 @@ function ChamadosPage() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => navigate({ to: "/crm/chamados/$id", params: { id: c.id } })}
+                  onClick={() => navigate({ to: "/crm/atendimentos/$id", params: { id: c.id } })}
                   className="w-full card-selectable p-4 flex items-center gap-4 text-left hover:ring-1 hover:ring-brand/20 transition-all group"
                 >
                   <span className={`size-2 rounded-full shrink-0 ${sc.dot}`} />

@@ -3,28 +3,28 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChamado, type ChamadoStatus, type ChamadoPrioridade } from "@/hooks/useChamados";
+import { useAtendimento, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import {
   ArrowLeft, MessageCircle, Search, Wrench, CheckCircle2,
   Circle, Clock, AlertTriangle, Calendar, User, Save, Loader2,
   Send, Info,
 } from "lucide-react";
 
-export const Route = createFileRoute("/crm/chamados/$id")({
-  head: () => ({ meta: [{ title: `Chamado · ${client.name}` }] }),
-  component: ChamadoPage,
+export const Route = createFileRoute("/crm/atendimentos/$id")({
+  head: () => ({ meta: [{ title: `Atendimento · ${client.name}` }] }),
+  component: AtendimentoPage,
 });
 
-const STEPS: { key: ChamadoStatus; label: string; sublabel: string; icon: typeof Circle }[] = [
-  { key: "aberto",       label: "Aberto",        sublabel: "Chamado registrado",     icon: MessageCircle },
+const STEPS: { key: AtendimentoStatus; label: string; sublabel: string; icon: typeof Circle }[] = [
+  { key: "aberto",       label: "Aberto",        sublabel: "Atendimento registrado",     icon: MessageCircle },
   { key: "em_triagem",   label: "Em Triagem",    sublabel: "Analisando o problema",  icon: Search },
   { key: "em_andamento", label: "Em Andamento",  sublabel: "Técnico atuando",        icon: Wrench },
   { key: "concluido",    label: "Concluído",     sublabel: "Problema resolvido",     icon: CheckCircle2 },
 ];
 
-const STATUS_ORDER: ChamadoStatus[] = ["aberto", "em_triagem", "em_andamento", "concluido"];
+const STATUS_ORDER: AtendimentoStatus[] = ["aberto", "em_triagem", "em_andamento", "concluido"];
 
-const PRIO_CFG: Record<ChamadoPrioridade, { label: string; cls: string; icon: typeof AlertTriangle | null }> = {
+const PRIO_CFG: Record<AtendimentoPrioridade, { label: string; cls: string; icon: typeof AlertTriangle | null }> = {
   alta:   { label: "Alta",   cls: "text-destructive bg-destructive/10 border-destructive/25", icon: AlertTriangle },
   normal: { label: "Média",  cls: "text-warning bg-warning/10 border-warning/25",             icon: null },
   baixa:  { label: "Baixa",  cls: "text-muted-foreground bg-surface-2 border-border",         icon: null },
@@ -49,11 +49,11 @@ function slaElapsed(createdAt: string, conclusao?: string | null) {
   return `${d}d ${rh}h`;
 }
 
-function ChamadoPage() {
+function AtendimentoPage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { chamado, loading, comentarios, loadingComentarios, update, addComentario } = useChamado(id, user?.id);
+  const { atendimento, loading, comentarios, loadingComentarios, update, addComentario } = useAtendimento(id, user?.id);
 
   const [anotacoes, setAnotacoes] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -65,16 +65,16 @@ function ChamadoPage() {
     comentariosEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [comentarios.length]);
 
-  const anotacoesValue = anotacoes ?? chamado?.anotacoes ?? "";
-  const currentStepIdx = STATUS_ORDER.indexOf(chamado?.status ?? "aberto");
+  const anotacoesValue = anotacoes ?? atendimento?.anotacoes ?? "";
+  const currentStepIdx = STATUS_ORDER.indexOf(atendimento?.status ?? "aberto");
 
-  const STATUS_LABELS: Record<ChamadoStatus, string> = {
+  const STATUS_LABELS: Record<AtendimentoStatus, string> = {
     aberto: "Aberto", em_triagem: "Em triagem", em_andamento: "Em andamento", concluido: "Concluído",
   };
 
-  const handleStatusChange = async (status: ChamadoStatus) => {
+  const handleStatusChange = async (status: AtendimentoStatus) => {
     const changes: Record<string, unknown> = { status };
-    if (status === "em_andamento" && !chamado?.data_inicio) {
+    if (status === "em_andamento" && !atendimento?.data_inicio) {
       changes.data_inicio = new Date().toISOString().split("T")[0];
     }
     if (status === "concluido") {
@@ -108,15 +108,15 @@ function ChamadoPage() {
     );
   }
 
-  if (!chamado) {
+  if (!atendimento) {
     return (
       <AppShell>
-        <div className="p-8 text-center text-muted-foreground">Chamado não encontrado.</div>
+        <div className="p-8 text-center text-muted-foreground">Atendimento não encontrado.</div>
       </AppShell>
     );
   }
 
-  const prio = PRIO_CFG[chamado.prioridade] ?? PRIO_CFG.normal;
+  const prio = PRIO_CFG[atendimento.prioridade] ?? PRIO_CFG.normal;
   const PrioIcon = prio.icon;
 
   return (
@@ -126,17 +126,17 @@ function ChamadoPage() {
         {/* BACK + HEADER */}
         <div className="space-y-4">
           <button
-            onClick={() => navigate({ to: "/crm/chamados" })}
+            onClick={() => navigate({ to: "/crm/atendimentos" })}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="size-3.5" /> Voltar para Chamados
+            <ArrowLeft className="size-3.5" /> Voltar para Atendimentos
           </button>
 
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              {chamado.numero_formatado && (
+              {atendimento.numero_formatado && (
                 <span className="text-xs font-mono text-muted-foreground/60 bg-surface-2 border border-border px-2 py-0.5 rounded">
-                  {chamado.numero_formatado}
+                  {atendimento.numero_formatado}
                 </span>
               )}
               <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${prio.cls}`}>
@@ -145,15 +145,15 @@ function ChamadoPage() {
               </span>
               <span className="text-[10px] text-muted-foreground/50 flex items-center gap-1">
                 <Clock className="size-2.5" />
-                {chamado.status === "concluido" ? "Resolvido em " : "Aberto há "}
-                {slaElapsed(chamado.created_at, chamado.data_conclusao)}
+                {atendimento.status === "concluido" ? "Resolvido em " : "Aberto há "}
+                {slaElapsed(atendimento.created_at, atendimento.data_conclusao)}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-foreground">{chamado.titulo}</h1>
+            <h1 className="text-xl font-bold text-foreground">{atendimento.titulo}</h1>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="size-3" /> {fmtDate(chamado.created_at)}
-              {chamado.cliente_nome && chamado.cliente_nome !== "—" && (
-                <> · <User className="size-3" /> {chamado.cliente_nome}</>
+              <Calendar className="size-3" /> {fmtDate(atendimento.created_at)}
+              {atendimento.cliente_nome && atendimento.cliente_nome !== "—" && (
+                <> · <User className="size-3" /> {atendimento.cliente_nome}</>
               )}
             </p>
           </div>
@@ -208,10 +208,10 @@ function ChamadoPage() {
           {/* Left: descrição + anotações + comentários */}
           <div className="space-y-5">
 
-            {chamado.descricao && (
+            {atendimento.descricao && (
               <div className="card-selectable p-5 space-y-2">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Descrição</p>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{chamado.descricao}</p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{atendimento.descricao}</p>
               </div>
             )}
 
@@ -228,7 +228,7 @@ function ChamadoPage() {
               <div className="flex justify-end">
                 <button
                   onClick={handleSaveAnotacoes}
-                  disabled={saving || anotacoesValue === (chamado.anotacoes ?? "")}
+                  disabled={saving || anotacoesValue === (atendimento.anotacoes ?? "")}
                   className="flex items-center gap-2 px-4 py-2 bg-brand text-white text-xs font-semibold rounded-lg hover:bg-brand/90 transition-colors disabled:opacity-40"
                 >
                   {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
@@ -303,12 +303,12 @@ function ChamadoPage() {
             <div className="card-selectable p-5 space-y-4">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Detalhes</p>
               <div className="space-y-3 text-xs">
-                {chamado.cliente_nome && chamado.cliente_nome !== "—" && (
+                {atendimento.cliente_nome && atendimento.cliente_nome !== "—" && (
                   <div className="flex items-start gap-2">
                     <User className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
                       <p className="text-muted-foreground">Cliente</p>
-                      <p className="font-semibold text-foreground">{chamado.cliente_nome}</p>
+                      <p className="font-semibold text-foreground">{atendimento.cliente_nome}</p>
                     </div>
                   </div>
                 )}
@@ -316,30 +316,30 @@ function ChamadoPage() {
                   <Clock className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
                     <p className="text-muted-foreground">Abertura</p>
-                    <p className="font-semibold text-foreground">{fmtDate(chamado.created_at)}</p>
+                    <p className="font-semibold text-foreground">{fmtDate(atendimento.created_at)}</p>
                   </div>
                 </div>
-                {chamado.data_inicio && (
+                {atendimento.data_inicio && (
                   <div className="flex items-start gap-2">
                     <Wrench className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
                       <p className="text-muted-foreground">Início atendimento</p>
-                      <p className="font-semibold text-foreground">{fmtDate(chamado.data_inicio, false)}</p>
+                      <p className="font-semibold text-foreground">{fmtDate(atendimento.data_inicio, false)}</p>
                     </div>
                   </div>
                 )}
-                {chamado.data_conclusao && (
+                {atendimento.data_conclusao && (
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="size-3.5 text-success mt-0.5 shrink-0" />
                     <div>
                       <p className="text-muted-foreground">Conclusão</p>
-                      <p className="font-semibold text-foreground">{fmtDate(chamado.data_conclusao, false)}</p>
+                      <p className="font-semibold text-foreground">{fmtDate(atendimento.data_conclusao, false)}</p>
                     </div>
                   </div>
                 )}
                 <div className="pt-2 border-t border-border">
                   <p className="text-muted-foreground mb-1">Tempo total</p>
-                  <p className="text-lg font-bold text-brand">{slaElapsed(chamado.created_at, chamado.data_conclusao)}</p>
+                  <p className="text-lg font-bold text-brand">{slaElapsed(atendimento.created_at, atendimento.data_conclusao)}</p>
                 </div>
               </div>
             </div>
@@ -348,12 +348,12 @@ function ChamadoPage() {
             <div className="card-selectable p-5 space-y-3">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Prioridade</p>
               <div className="space-y-1.5">
-                {(["alta", "normal", "baixa"] as ChamadoPrioridade[]).map((p) => (
+                {(["alta", "normal", "baixa"] as AtendimentoPrioridade[]).map((p) => (
                   <button
                     key={p}
                     onClick={() => update({ prioridade: p }, `Prioridade alterada para "${PRIO_CFG[p].label}"`)}
                     className={`w-full py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
-                      chamado.prioridade === p
+                      atendimento.prioridade === p
                         ? PRIO_CFG[p].cls
                         : "border-border text-muted-foreground/50 hover:border-brand/30 hover:text-muted-foreground"
                     }`}
