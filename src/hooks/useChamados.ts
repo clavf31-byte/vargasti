@@ -1,31 +1,36 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type ChamadoStatus = "aberto" | "em_triagem" | "em_andamento" | "concluido";
-export type ChamadoPrioridade = "alta" | "normal" | "baixa";
+export type AtendimentoStatus = "aberto" | "em_triagem" | "em_andamento" | "concluido";
+export type AtendimentoPrioridade = "alta" | "normal" | "baixa";
 export type ComentarioTipo = "comentario" | "sistema";
 
-export interface Chamado {
+export interface Atendimento {
   id: string;
   numero_formatado: string | null;
   titulo: string;
   descricao: string | null;
-  status: ChamadoStatus;
-  prioridade: ChamadoPrioridade;
+  status: AtendimentoStatus;
+  prioridade: AtendimentoPrioridade;
   cliente_id: string | null;
   responsavel_id: string | null;
   user_id: string;
   anotacoes: string | null;
   data_inicio: string | null;
   data_conclusao: string | null;
+  orcamento_id: string | null;
+  ordem_servico_id: string | null;
+  pagamento_id: string | null;
+  equipamento: string | null;
+  defeito: string | null;
   created_at: string;
   updated_at: string;
   cliente_nome?: string;
 }
 
-export interface Comentario {
+export interface ComentarioAtendimento {
   id: string;
-  chamado_id: string;
+  atendimento_id: string;
   user_id: string;
   conteudo: string;
   tipo: ComentarioTipo;
@@ -34,8 +39,18 @@ export interface Comentario {
   autor_nome?: string;
 }
 
-export function useChamados(userId?: string) {
-  const [chamados, setChamados] = useState<Chamado[]>([]);
+// Backward compatibility aliases
+export type ChamadoStatus = AtendimentoStatus;
+export type ChamadoPrioridade = AtendimentoPrioridade;
+export interface Chamado extends Atendimento {
+  chamado_id?: string;
+}
+export interface Comentario extends ComentarioAtendimento {
+  chamado_id?: string;
+}
+
+export function useAtendimentos(userId?: string) {
+  const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -43,11 +58,11 @@ export function useChamados(userId?: string) {
     setLoading(true);
     try {
       const { data } = await (supabase as any)
-        .from("chamados")
+        .from("atendimentos")
         .select("*, clientes(nome)")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
-      setChamados(
+      setAtendimentos(
         (data || []).map((r: any) => ({ ...r, cliente_nome: r.clientes?.nome ?? "—" }))
       );
     } finally {
@@ -57,67 +72,82 @@ export function useChamados(userId?: string) {
 
   useEffect(() => { load(); }, [load]);
 
-  async function createChamado(data: {
+  async function createAtendimento(data: {
     titulo: string;
     descricao?: string;
     cliente_id?: string;
-    prioridade: ChamadoPrioridade;
+    prioridade: AtendimentoPrioridade;
+    equipamento?: string;
+    defeito?: string;
   }) {
     if (!userId) return null;
     const { data: row, error } = await (supabase as any)
-      .from("chamados")
+      .from("atendimentos")
       .insert({ user_id: userId, status: "aberto", ...data })
       .select("*, clientes(nome)")
       .single();
     if (error) { console.error(error); return null; }
-    const c: Chamado = { ...row, cliente_nome: row.clientes?.nome ?? "—" };
-    setChamados((prev) => [c, ...prev]);
-    return c;
+    const att: Atendimento = { ...row, cliente_nome: row.clientes?.nome ?? "—" };
+    setAtendimentos((prev) => [att, ...prev]);
+    return att;
   }
 
-  async function updateChamado(id: string, changes: Partial<Chamado>) {
-    const { error } = await (supabase as any).from("chamados").update(changes).eq("id", id);
+  async function updateAtendimento(id: string, changes: Partial<Atendimento>) {
+    const { error } = await (supabase as any).from("atendimentos").update(changes).eq("id", id);
     if (error) { console.error(error); return; }
-    setChamados((prev) => prev.map((c) => (c.id === id ? { ...c, ...changes } : c)));
+    setAtendimentos((prev) => prev.map((c) => (c.id === id ? { ...c, ...changes } : c)));
   }
 
-  async function deleteChamado(id: string) {
-    await (supabase as any).from("chamados").delete().eq("id", id);
-    setChamados((prev) => prev.filter((c) => c.id !== id));
+  async function deleteAtendimento(id: string) {
+    await (supabase as any).from("atendimentos").delete().eq("id", id);
+    setAtendimentos((prev) => prev.filter((c) => c.id !== id));
   }
 
-  return { chamados, loading, createChamado, updateChamado, deleteChamado, reload: load };
+  return { atendimentos, loading, createAtendimento, updateAtendimento, deleteAtendimento, reload: load };
 }
 
-export function useChamado(id: string, userId?: string) {
-  const [chamado, setChamado] = useState<Chamado | null>(null);
+// Backward compatibility alias
+export function useChamados(userId?: string) {
+  const { atendimentos, loading, createAtendimento, updateAtendimento, deleteAtendimento, reload } = useAtendimentos(userId);
+  return {
+    chamados: atendimentos,
+    loading,
+    createChamado: createAtendimento,
+    updateChamado: updateAtendimento,
+    deleteChamado: deleteAtendimento,
+    reload,
+  };
+}
+
+export function useAtendimento(id: string, userId?: string) {
+  const [atendimento, setAtendimento] = useState<Atendimento | null>(null);
   const [loading, setLoading] = useState(true);
-  const [comentarios, setComentarios] = useState<Comentario[]>([]);
+  const [comentarios, setComentarios] = useState<ComentarioAtendimento[]>([]);
   const [loadingComentarios, setLoadingComentarios] = useState(false);
 
   useEffect(() => {
     if (!userId || !id) return;
-    loadChamado();
+    loadAtendimento();
     loadComentarios();
   }, [id, userId]);
 
-  async function loadChamado() {
+  async function loadAtendimento() {
     setLoading(true);
     const { data } = await (supabase as any)
-      .from("chamados")
+      .from("atendimentos")
       .select("*, clientes(nome)")
       .eq("id", id)
       .single();
-    if (data) setChamado({ ...data, cliente_nome: data.clientes?.nome ?? "—" });
+    if (data) setAtendimento({ ...data, cliente_nome: data.clientes?.nome ?? "—" });
     setLoading(false);
   }
 
   async function loadComentarios() {
     setLoadingComentarios(true);
     const { data } = await (supabase as any)
-      .from("chamado_comentarios")
+      .from("atendimento_comentarios")
       .select("*, profiles(full_name)")
-      .eq("chamado_id", id)
+      .eq("atendimento_id", id)
       .order("created_at", { ascending: true });
     setComentarios(
       (data || []).map((r: any) => ({
@@ -128,20 +158,20 @@ export function useChamado(id: string, userId?: string) {
     setLoadingComentarios(false);
   }
 
-  async function update(changes: Partial<Chamado>, logStatus?: string) {
-    if (!chamado) return;
-    await (supabase as any).from("chamados").update(changes).eq("id", id);
-    setChamado((prev) => prev ? { ...prev, ...changes } : prev);
+  async function update(changes: Partial<Atendimento>, logStatus?: string) {
+    if (!atendimento) return;
+    await (supabase as any).from("atendimentos").update(changes).eq("id", id);
+    setAtendimento((prev) => prev ? { ...prev, ...changes } : prev);
 
     if (logStatus && userId) {
       const evento: any = {
-        chamado_id: id,
+        atendimento_id: id,
         user_id: userId,
         conteudo: logStatus,
         tipo: "sistema",
       };
       const { data: comentRow } = await (supabase as any)
-        .from("chamado_comentarios")
+        .from("atendimento_comentarios")
         .insert(evento)
         .select("*, profiles(full_name)")
         .single();
@@ -157,8 +187,8 @@ export function useChamado(id: string, userId?: string) {
   async function addComentario(conteudo: string) {
     if (!userId || !conteudo.trim()) return;
     const { data: row } = await (supabase as any)
-      .from("chamado_comentarios")
-      .insert({ chamado_id: id, user_id: userId, conteudo: conteudo.trim(), tipo: "comentario" })
+      .from("atendimento_comentarios")
+      .insert({ atendimento_id: id, user_id: userId, conteudo: conteudo.trim(), tipo: "comentario" })
       .select("*, profiles(full_name)")
       .single();
     if (row) {
@@ -169,5 +199,11 @@ export function useChamado(id: string, userId?: string) {
     }
   }
 
-  return { chamado, loading, comentarios, loadingComentarios, update, addComentario };
+  return { atendimento, loading, comentarios, loadingComentarios, update, addComentario };
+}
+
+// Backward compatibility alias
+export function useChamado(id: string, userId?: string) {
+  const { atendimento, loading, comentarios, loadingComentarios, update, addComentario } = useAtendimento(id, userId);
+  return { chamado: atendimento, loading, comentarios, loadingComentarios, update, addComentario };
 }
