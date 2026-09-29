@@ -62,6 +62,7 @@ import { Route as CrmContratosModelosRouteImport } from './routes/crm.contratos.
 import { Route as CrmContratosIdRouteImport } from './routes/crm.contratos.$id'
 import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
 import { Route as CrmAtendimentosIdRouteImport } from './routes/crm.atendimentos.$id'
+import { Route as ApiCronAgendaResumoRouteImport } from './routes/api.cron.agenda-resumo'
 import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
 import { Route as CrmContratosReceberIdRouteImport } from './routes/crm.contratos.receber.$id'
 import { Route as CrmContratosEnviarIdRouteImport } from './routes/crm.contratos.enviar.$id'
@@ -331,6 +332,11 @@ const CrmAtendimentosIdRoute = CrmAtendimentosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => CrmAtendimentosRoute,
 } as any)
+const ApiCronAgendaResumoRoute = ApiCronAgendaResumoRouteImport.update({
+  id: '/api/cron/agenda-resumo',
+  path: '/api/cron/agenda-resumo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
   id: '/editar/$id',
   path: '/editar/$id',
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
+  '/api/cron/agenda-resumo': typeof ApiCronAgendaResumoRoute
   '/crm/atendimentos/$id': typeof CrmAtendimentosIdRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/contratos/$id': typeof CrmContratosIdRoute
@@ -439,6 +446,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/config': typeof ConfigIndexRoute
   '/ferramentas': typeof FerramentasIndexRoute
+  '/api/cron/agenda-resumo': typeof ApiCronAgendaResumoRoute
   '/crm/atendimentos/$id': typeof CrmAtendimentosIdRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/contratos/$id': typeof CrmContratosIdRoute
@@ -498,6 +506,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
+  '/api/cron/agenda-resumo': typeof ApiCronAgendaResumoRoute
   '/crm/atendimentos/$id': typeof CrmAtendimentosIdRoute
   '/crm/clientes/$id': typeof CrmClientesIdRoute
   '/crm/contratos/$id': typeof CrmContratosIdRoute
@@ -558,6 +567,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/config/'
     | '/ferramentas/'
+    | '/api/cron/agenda-resumo'
     | '/crm/atendimentos/$id'
     | '/crm/clientes/$id'
     | '/crm/contratos/$id'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/config'
     | '/ferramentas'
+    | '/api/cron/agenda-resumo'
     | '/crm/atendimentos/$id'
     | '/crm/clientes/$id'
     | '/crm/contratos/$id'
@@ -666,6 +677,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/config/'
     | '/ferramentas/'
+    | '/api/cron/agenda-resumo'
     | '/crm/atendimentos/$id'
     | '/crm/clientes/$id'
     | '/crm/contratos/$id'
@@ -706,6 +718,7 @@ export interface RootRouteChildren {
   ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
   ApiVersionRoute: typeof ApiVersionRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  ApiCronAgendaResumoRoute: typeof ApiCronAgendaResumoRoute
   OrcamentoApproveTokenRoute: typeof OrcamentoApproveTokenRoute
 }
 
@@ -1082,6 +1095,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmAtendimentosIdRouteImport
       parentRoute: typeof CrmAtendimentosRoute
     }
+    '/api/cron/agenda-resumo': {
+      id: '/api/cron/agenda-resumo'
+      path: '/api/cron/agenda-resumo'
+      fullPath: '/api/cron/agenda-resumo'
+      preLoaderRoute: typeof ApiCronAgendaResumoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/orcamentos/editar/$id': {
       id: '/crm/orcamentos/editar/$id'
       path: '/editar/$id'
@@ -1278,6 +1298,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGmailWebhookRoute: ApiGmailWebhookRoute,
   ApiVersionRoute: ApiVersionRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  ApiCronAgendaResumoRoute: ApiCronAgendaResumoRoute,
   OrcamentoApproveTokenRoute: OrcamentoApproveTokenRoute,
 }
 export const routeTree = rootRouteImport
