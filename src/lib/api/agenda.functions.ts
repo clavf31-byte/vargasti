@@ -15,7 +15,7 @@ export type AgendaEvento = {
   status: "agendado" | "confirmado" | "cancelado" | "concluido";
   prioridade: "alta" | "normal" | "baixa";
   cliente_id: string | null;
-  chamado_id: string | null;
+  atendimento_id: string | null;
   os_id: string | null;
   notificar_whatsapp: boolean;
   notificar_numero: string | null;
@@ -24,8 +24,8 @@ export type AgendaEvento = {
   created_at: string;
   updated_at: string;
   cliente_nome?: string | null;
-  chamado_titulo?: string | null;
-  chamado_numero?: string | null;
+  atendimento_titulo?: string | null;
+  atendimento_numero?: string | null;
   os_numero?: string | null;
 };
 
@@ -45,7 +45,7 @@ const eventoSchema = z.object({
   status: z.enum(["agendado", "confirmado", "cancelado", "concluido"]).optional().default("agendado"),
   prioridade: z.enum(["alta", "normal", "baixa"]).optional().default("normal"),
   cliente_id: z.string().uuid().nullable().optional(),
-  chamado_id: z.string().uuid().nullable().optional(),
+  atendimento_id: z.string().uuid().nullable().optional(),
   os_id: z.string().uuid().nullable().optional(),
   notificar_whatsapp: z.boolean().optional().default(false),
   notificar_numero: z.string().nullable().optional(),
@@ -119,8 +119,8 @@ export const listEventosDia = createServerFn({ method: "GET" })
     return ((eventos ?? []).map((e: any) => ({
       ...e,
       cliente_nome: e.clientes?.nome ?? null,
-      chamado_titulo: e.atendimentos?.titulo ?? null,
-      chamado_numero: e.atendimentos?.numero_formatado ?? null,
+      atendimento_titulo: e.atendimentos?.titulo ?? null,
+      atendimento_numero: e.atendimentos?.numero_formatado ?? null,
       os_numero: e.ordens_servico?.numero_formatado ?? null,
     }))) as AgendaEvento[];
   });

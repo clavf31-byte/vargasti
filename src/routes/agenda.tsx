@@ -104,7 +104,7 @@ const formSchema = z.object({
   status:                  z.enum(["agendado", "confirmado", "cancelado", "concluido"]).default("agendado"),
   prioridade:              z.enum(["alta", "normal", "baixa"]).default("normal"),
   cliente_id:              z.string().optional().default("none"),
-  chamado_id:              z.string().optional().default("none"),
+  atendimento_id:          z.string().optional().default("none"),
   os_id:                   z.string().optional().default("none"),
   notificar_whatsapp:      z.boolean().default(false),
   notificar_numero:        z.string().optional().default(""),
@@ -132,7 +132,7 @@ function buildDefaultValues(evento: AgendaEvento | null, defaultDate: Date): Eve
       status:                  evento.status,
       prioridade:              evento.prioridade,
       cliente_id:              evento.cliente_id ?? "none",
-      chamado_id:              evento.chamado_id ?? "none",
+      atendimento_id:          evento.atendimento_id ?? "none",
       os_id:                   evento.os_id ?? "none",
       notificar_whatsapp:      evento.notificar_whatsapp,
       notificar_numero:        evento.notificar_numero ?? "",
@@ -144,7 +144,7 @@ function buildDefaultValues(evento: AgendaEvento | null, defaultDate: Date): Eve
     data_inicio: format(defaultDate, "yyyy-MM-dd"), hora_inicio: "09:00",
     data_fim: "", hora_fim: "10:00",
     dia_inteiro: false, local: "", status: "agendado", prioridade: "normal",
-    cliente_id: "none", chamado_id: "none", os_id: "none",
+    cliente_id: "none", atendimento_id: "none", os_id: "none",
     notificar_whatsapp: false, notificar_numero: "", notificar_minutos_antes: 30,
   };
 }
@@ -282,10 +282,10 @@ function EventoCard({ evento, onEdit, onDelete, onStatusChange, onWhatsApp }: {
               {evento.cliente_nome}
             </span>
           )}
-          {evento.chamado_numero && (
+          {evento.atendimento_numero && (
             <span className="flex items-center gap-1">
               <FileText className="h-3 w-3" />
-              {evento.chamado_numero}
+              {evento.atendimento_numero}
             </span>
           )}
           {evento.os_numero && (
@@ -361,7 +361,7 @@ function EventoDialog({ open, onOpenChange, evento, defaultDate, onSuccess }: {
         status:                  values.status,
         prioridade:              values.prioridade,
         cliente_id:              values.cliente_id === "none" ? null : values.cliente_id || null,
-        chamado_id:              values.chamado_id === "none" ? null : values.chamado_id || null,
+        atendimento_id:          values.atendimento_id === "none" ? null : values.atendimento_id || null,
         os_id:                   values.os_id === "none" ? null : values.os_id || null,
         notificar_whatsapp:      values.notificar_whatsapp,
         notificar_numero:        values.notificar_numero || null,
@@ -527,7 +527,7 @@ function EventoDialog({ open, onOpenChange, evento, defaultDate, onSuccess }: {
                   <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                   Chamado de suporte
                 </Label>
-                <Controller control={form.control} name="chamado_id" render={({ field }) => (
+                <Controller control={form.control} name="atendimento_id" render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                     <SelectContent>
