@@ -5,7 +5,6 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAtendimentos, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Plus, Search, ChevronRight, Loader2, Clock, X, Trash2, Edit,
 } from "lucide-react";
