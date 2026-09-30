@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAtendimento, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import { AtendimentoVisaoCentralizada } from "@/components/crm/AtendimentoVisaoCentralizada";
+import { AtendimentoUnificado } from "@/components/crm/AtendimentoUnificado";
 import { AtendimentoProximosEventos } from "@/components/crm/AtendimentoProximosEventos";
 import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
 import { InlineFormPanel } from "@/components/shared";
@@ -12,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MessageCircle, Search, Wrench, CheckCircle2,
   Circle, Clock, AlertTriangle, Calendar, User, Save, Loader2,
-  Send, Info, Eye, FileSpreadsheet,
+  Send, Info, Eye, FileSpreadsheet, Grid3x3,
 } from "lucide-react";
 
 export const Route = createFileRoute("/crm/atendimentos/$id")({
@@ -64,7 +65,7 @@ function AtendimentoPage() {
   const [saving, setSaving] = useState(false);
   const [novoComentario, setNovoComentario] = useState("");
   const [sendingComent, setSendingComent] = useState(false);
-  const [viewMode, setViewMode] = useState<'detalhes' | 'centralizado'>('centralizado');
+  const [viewMode, setViewMode] = useState<'detalhes' | 'centralizado' | 'unificado'>('centralizado');
   const [isOrcamentoFormOpen, setIsOrcamentoFormOpen] = useState(false);
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
   const comentariosEndRef = useRef<HTMLDivElement>(null);
@@ -209,6 +210,16 @@ function AtendimentoPage() {
         {/* VIEW MODE TOGGLE */}
         <div className="flex gap-2 border-b border-border">
           <button
+            onClick={() => setViewMode('unificado')}
+            className={`px-4 py-2 text-sm font-semibold transition-colors ${
+              viewMode === 'unificado'
+                ? 'text-brand border-b-2 border-brand'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Grid3x3 className="inline size-4 mr-1.5" /> Visão Unificada
+          </button>
+          <button
             onClick={() => setViewMode('centralizado')}
             className={`px-4 py-2 text-sm font-semibold transition-colors ${
               viewMode === 'centralizado'
@@ -230,7 +241,13 @@ function AtendimentoPage() {
           </button>
         </div>
 
-        {viewMode === 'centralizado' ? (
+        {viewMode === 'unificado' ? (
+          <AtendimentoUnificado
+            atendimento={atendimento}
+            clientes={clientes}
+            onNavigateBack={() => navigate({ to: "/crm/atendimentos" })}
+          />
+        ) : viewMode === 'centralizado' ? (
           <AtendimentoVisaoCentralizada atendimento={atendimento} />
         ) : (
         <>
