@@ -1,4 +1,4 @@
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Wrench, Package } from "lucide-react";
 
 interface OrcamentoItem {
   id?: string;
@@ -25,7 +25,7 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
   return (
     <div className="space-y-3 mb-4">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-muted-foreground">Itens do Orçamento</label>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">📦 Itens do Orçamento</label>
         <button
           type="button"
           onClick={onAddItem}
@@ -40,42 +40,45 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
           Nenhum item adicionado
         </div>
       ) : (
-        <div className="overflow-x-auto space-y-2">
-          <div className="card-graphite overflow-hidden">
+        <div className="space-y-2">
+          <div className="card-graphite overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b-2 border-border">
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Descrição</th>
-                  <th className="px-3 py-2.5 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-32">Categoria</th>
-                  <th className="px-3 py-2.5 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-16">Qtd</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Preço Unit.</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Subtotal</th>
-                  <th className="px-3 py-2.5 w-10"></th>
+                <tr className="border-b border-border">
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-auto">Descrição</th>
+                  <th className="px-3 py-3 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-20">Qtd</th>
+                  <th className="px-3 py-3 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">Unitário</th>
+                  <th className="px-3 py-3 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">Total</th>
+                  <th className="px-3 py-3 w-8"></th>
                 </tr>
               </thead>
               <tbody>
                 {itens.map((item, idx) => (
-                  <tr key={idx} className="border-b border-border/50">
-                    <td className="px-3 py-2">
-                      <input
-                        type="text"
-                        value={item.descricao}
-                        onChange={(e) => onUpdateItem(idx, { ...item, descricao: e.target.value })}
-                        placeholder="Descrição do item"
-                        className="input-base w-full text-xs"
-                      />
+                  <tr key={idx} className="border-b border-border/50 hover:bg-surface/50 transition-colors">
+                    <td className="px-3 py-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          {item.tipo === 'servico' ? (
+                            <Wrench className="size-3.5 text-cyan-400 shrink-0" />
+                          ) : (
+                            <Package className="size-3.5 text-amber-400 shrink-0" />
+                          )}
+                          <input
+                            type="text"
+                            value={item.descricao}
+                            onChange={(e) => onUpdateItem(idx, { ...item, descricao: e.target.value })}
+                            placeholder="Descrição do item"
+                            className="input-base flex-1 text-xs font-medium"
+                          />
+                        </div>
+                        {item.peca_id && (
+                          <div className="text-[10px] text-muted-foreground/60 ml-5">
+                            SKU: {item.peca_id.slice(0, 8)}
+                          </div>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-3 py-2">
-                      <select
-                        value={item.categoria || "Produtos, peças e materiais"}
-                        onChange={(e) => onUpdateItem(idx, { ...item, categoria: e.target.value })}
-                        className="input-base w-full text-xs"
-                      >
-                        <option value="Serviços">Serviços</option>
-                        <option value="Produtos, peças e materiais">Produtos, peças e materiais</option>
-                      </select>
-                    </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-3">
                       <input
                         type="number"
                         value={item.quantidade}
@@ -85,9 +88,10 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
                         }}
                         placeholder="1"
                         className="input-base w-full text-xs text-center"
+                        step="0.1"
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-3">
                       <input
                         type="number"
                         value={item.preco_unitario}
@@ -100,12 +104,16 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
                         className="input-base w-full text-xs text-right"
                       />
                     </td>
-                    <td className="px-3 py-2 text-right font-semibold text-foreground text-xs">
+                    <td className="px-3 py-3 text-right font-semibold text-success text-xs">
                       R$ {item.subtotal.toFixed(2)}
                     </td>
-                    <td className="px-3 py-2 text-center">
-                      <button onClick={() => onRemoveItem(idx)} className="text-destructive hover:text-destructive/80 transition-colors" title="Remover item">
-                        <Trash2 className="size-3.5" />
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        onClick={() => onRemoveItem(idx)}
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        title="Remover item"
+                      >
+                        <Trash2 className="size-4" />
                       </button>
                     </td>
                   </tr>
@@ -114,10 +122,15 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
             </table>
           </div>
 
-          <div className="flex justify-end px-3 py-2.5 bg-surface rounded-lg border-t-2 border-border">
+          {/* TOTALS SECTION */}
+          <div className="grid grid-cols-2 gap-3 px-3 py-3 bg-surface/50 rounded-lg border border-border/50">
             <div className="text-right">
-              <div className="text-xs text-muted-foreground mb-0.5">Total:</div>
-              <div className="text-2xl font-bold text-foreground">R$ {total.toFixed(2)}</div>
+              <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Subtotal</div>
+              <div className="text-lg font-semibold text-foreground">R$ {total.toFixed(2)}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">TOTAL</div>
+              <div className="text-xl font-bold text-brand">R$ {total.toFixed(2)}</div>
             </div>
           </div>
         </div>
