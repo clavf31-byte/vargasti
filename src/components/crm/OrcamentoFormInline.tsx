@@ -12,9 +12,11 @@ interface OrcamentoFormInlineProps {
   onSuccess: () => void;
   isOpen: boolean;
   onClose: () => void;
+  atendimento_id?: string;
+  cliente_id_pre?: string;
 }
 
-export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClose }: OrcamentoFormInlineProps) {
+export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClose, atendimento_id, cliente_id_pre }: OrcamentoFormInlineProps) {
   const [formData, setFormData] = useState({
     numero_formatado: "",
     cliente_id: "",
@@ -32,11 +34,11 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
 
   useEffect(() => {
     if (!isOpen) return;
-    setFormData((f) => ({ ...f, numero_formatado: "" }));
+    setFormData((f) => ({ ...f, numero_formatado: "", cliente_id: cliente_id_pre || "" }));
     previewNumeroOrcamento(userId).then((num) =>
       setFormData((f) => ({ ...f, numero_formatado: num }))
     );
-  }, [isOpen, userId]);
+  }, [isOpen, userId, cliente_id_pre]);
 
   const subtotal = total;
   const totalComDescontoEImpostos = Math.max(0, subtotal - formData.desconto + formData.impostos);
@@ -60,6 +62,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         status_enum: formData.status_enum,
         data_vencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
         user_id: userId,
+        atendimento_id: atendimento_id || null,
       }]);
       if (insertError) throw insertError;
 

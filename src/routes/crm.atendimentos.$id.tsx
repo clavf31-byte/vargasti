@@ -6,10 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAtendimento, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
 import { AtendimentoVisaoCentralizada } from "@/components/crm/AtendimentoVisaoCentralizada";
 import { AtendimentoProximosEventos } from "@/components/crm/AtendimentoProximosEventos";
+import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
+import { InlineFormPanel } from "@/components/shared";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MessageCircle, Search, Wrench, CheckCircle2,
   Circle, Clock, AlertTriangle, Calendar, User, Save, Loader2,
-  Send, Info, Eye,
+  Send, Info, Eye, FileSpreadsheet,
 } from "lucide-react";
 
 export const Route = createFileRoute("/crm/atendimentos/$id")({
@@ -62,7 +65,16 @@ function AtendimentoPage() {
   const [novoComentario, setNovoComentario] = useState("");
   const [sendingComent, setSendingComent] = useState(false);
   const [viewMode, setViewMode] = useState<'detalhes' | 'centralizado'>('centralizado');
+  const [isOrcamentoFormOpen, setIsOrcamentoFormOpen] = useState(false);
+  const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
   const comentariosEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any).from("clientes").select("id, nome").eq("user_id", user.id).order("nome").then(({ data }: any) => {
+      if (data) setClientes(data);
+    });
+  }, [user]);
 
   useEffect(() => {
     comentariosEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -164,6 +176,35 @@ function AtendimentoPage() {
 
         {/* PRÓXIMOS EVENTOS */}
         <AtendimentoProximosEventos atendimentoId={atendimento.id} dataAgendamento={atendimento.data_agendamento} />
+
+        {/* CRIAR ORÇAMENTO */}
+        <div className="card-graphite p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="size-4 text-muted-foreground" />
+            <div>
+              <h3 className="text-xs font-semibold text-foreground">Orçamento</h3>
+              <p className="text-xs text-muted-foreground/70">{atendimento.orcamento_id ? "Vinculado" : "Nenhum orçamento ainda"}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsOrcamentoFormOpen(true)}
+            className="px-3 py-1.5 bg-info/20 text-info hover:bg-info/30 border border-info/30 rounded-lg text-xs font-semibold transition-colors"
+          >
+            + Criar Orçamento
+          </button>
+        </div>
+
+        <InlineFormPanel open={isOrcamentoFormOpen}>
+          <OrcamentoFormInline
+            userId={user!.id}
+            clientes={clientes}
+            onSuccess={() => { setIsOrcamentoFormOpen(false); }}
+            isOpen={isOrcamentoFormOpen}
+            onClose={() => setIsOrcamentoFormOpen(false)}
+            atendimento_id={atendimento.id}
+            cliente_id_pre={atendimento.cliente_id}
+          />
+        </InlineFormPanel>
 
         {/* VIEW MODE TOGGLE */}
         <div className="flex gap-2 border-b border-border">
