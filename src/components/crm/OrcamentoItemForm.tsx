@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServicos } from "@/hooks/useServicos";
 import { usePecas } from "@/hooks/usePecas";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Search, Wrench, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrcamentoItem {
@@ -27,11 +27,15 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const { servicos, loadServicos: refetchServicos } = useServicos(user?.id);
   const { pecas, loadPecas: refetchPecas } = usePecas(user?.id);
 
-  const [tipo, setTipo] = useState<"servico" | "peca">("servico");
+  const [tipo, setTipo] = useState<"servico" | "peca" | "manual">("servico");
   const [selecionado, setSelecionado] = useState<any>(null);
   const [quantidade, setQuantidade] = useState(1);
   const [precoCustomizado, setPrecoCustomizado] = useState(false);
   const [preco, setPreco] = useState(0);
+  const [busca, setBusca] = useState("");
+
+  const [manualNome, setManualNome] = useState("");
+  const [manualPreco, setManualPreco] = useState(0);
 
   const [showNewForm, setShowNewForm] = useState(false);
   const [novoNome, setNovoNome] = useState("");
@@ -73,7 +77,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     }
   }
 
-  function handleAdd() {
+  function handleAddCatalogo() {
     if (!selecionado) return;
     const precoFinal = precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda);
     onAdd({
@@ -89,7 +93,30 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     onClose();
   }
 
+  function handleAddManual() {
+    if (!manualNome.trim() || manualPreco <= 0) {
+      alert("Preencha nome e preço");
+      return;
+    }
+    onAdd({
+      descricao: manualNome.trim(),
+      quantidade,
+      preco_unitario: manualPreco,
+      subtotal: quantidade * manualPreco,
+      categoria: "Item Manual",
+    });
+    onClose();
+  }
+
   const listaItens = tipo === "servico" ? servicos : pecas;
+  const itensFiltrados = listaItens.filter(item => {
+    const termo = busca.toLowerCase();
+    if (tipo === "servico") {
+      return (item.nome?.toLowerCase().includes(termo) || item.descricao?.toLowerCase().includes(termo));
+    } else {
+      return (item.codigo?.toLowerCase().includes(termo) || item.descricao?.toLowerCase().includes(termo));
+    }
+  });
   const precoFieldLabel = tipo === "servico" ? "Valor Padrão" : "Valor de Venda";
 
   return (
@@ -107,27 +134,87 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Tipo de Item *</label>
+            <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Como deseja adicionar?</label>
             <div className="flex gap-2">
-              {(["servico", "peca"] as const).map((t) => (
+              {(["servico", "peca", "manual"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
-                  onClick={() => { setTipo(t); setSelecionado(null); }}
+                  onClick={() => { setTipo(t); setSelecionado(null); setBusca(""); }}
                   className={cn(
-                    "flex-1 py-2 text-sm font-semibold rounded-lg border transition-colors",
+                    "flex-1 py-2 text-sm font-semibold rounded-lg border transition-colors flex items-center justify-center gap-1.5",
                     tipo === t
-                      ? "bg-select text-white border-select"
-                      : "bg-transparent text-foreground border-border hover:border-select/40"
+                      ? "bg-brand text-brand-foreground border-brand"
+                      : "bg-transparent text-foreground border-border hover:border-brand/40"
                   )}
                 >
-                  {t === "servico" ? "Serviço" : "Peça/Material"}
+                  {t === "servico" && <Wrench className="size-4" />}
+                  {t === "peca" && <Package className="size-4" />}
+                  {t === "manual" && <Plus className="size-4" />}
+                  {t === "servico" ? "Serviço" : t === "peca" ? "Peça" : "Manual"}
                 </button>
               ))}
             </div>
           </div>
 
-          {showNewForm ? (
+          {tipo === "manual" ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do Item *</label>
+                <input
+                  type="text"
+                  value={manualNome}
+                  onChange={(e) => setManualNome(e.target.value)}
+                  placeholder="Ex: Diagnóstico, Cabo especial, etc"
+                  className="input-base w-full"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor *</label>
+                <input
+                  type="number"
+                  value={manualPreco}
+                  onChange={(e) => setManualPreco(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  className="input-base w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
+                <input
+                  type="number"
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
+                  min="1"
+                  step="0.5"
+                  className="input-base w-full"
+                />
+              </div>
+              <div className="rounded-lg p-3 bg-brand/5 border border-brand/20">
+                <div className="text-xs text-muted-foreground mb-1">Subtotal: {quantidade} × R$ {manualPreco.toFixed(2)}</div>
+                <div className="text-lg font-bold text-brand">R$ {(quantidade * manualPreco).toFixed(2)}</div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddManual}
+                  className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          ) : showNewForm ? (
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
@@ -163,39 +250,79 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 </button>
               </div>
             </div>
-          ) : listaItens.length === 0 ? (
-            <button type="button" onClick={() => setShowNewForm(true)}
-              className="w-full py-3 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 transition-colors flex items-center justify-center gap-2">
-              <Plus className="size-4" /> Criar {tipo === "servico" ? "Novo Serviço" : "Nova Peça"}
-            </button>
           ) : (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">
-                  {tipo === "servico" ? "Serviço" : "Peça/Material"} *
-                </label>
-                <button type="button" onClick={() => setShowNewForm(true)}
-                  className="text-xs font-semibold text-select hover:text-select/80 flex items-center gap-1">
-                  <Plus className="size-3" /> Novo
-                </button>
+            <>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    📚 Catálogo de {tipo === "servico" ? "Serviços" : "Peças"}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewForm(true)}
+                    className="text-xs font-semibold text-brand hover:text-brand/80 flex items-center gap-1"
+                  >
+                    <Plus className="size-3" /> Criar Novo
+                  </button>
+                </div>
+
+                {/* SEARCH */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder={tipo === "servico" ? "Buscar por nome..." : "Buscar por SKU ou descrição..."}
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    className="input-base w-full pl-9 text-xs"
+                  />
+                </div>
+
+                {/* CATALOG CARDS */}
+                {listaItens.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowNewForm(true)}
+                    className="w-full py-3 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="size-4" /> Criar {tipo === "servico" ? "Novo Serviço" : "Nova Peça"}
+                  </button>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {itensFiltrados.length === 0 ? (
+                      <div className="text-center py-6 text-sm text-muted-foreground">Nenhum item encontrado</div>
+                    ) : (
+                      itensFiltrados.map((item: any) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setSelecionado(item);
+                            setPreco(tipo === "servico" ? item.valor_padrao : item.valor_venda);
+                            setPrecoCustomizado(false);
+                          }}
+                          className={cn(
+                            "w-full p-2.5 rounded-lg border transition-all text-left text-xs",
+                            selecionado?.id === item.id
+                              ? "bg-brand/10 border-brand text-foreground"
+                              : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
+                          )}
+                        >
+                          <div className="font-semibold text-foreground">
+                            {tipo === "servico" ? item.nome : `[${item.codigo}] ${item.descricao}`}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground/70 mt-0.5">
+                            {tipo === "servico"
+                              ? `${item.categoria} · R$ ${item.valor_padrao.toFixed(2)}`
+                              : `${item.categoria} · R$ ${item.valor_venda.toFixed(2)} ${item.estoque ? `· Estoque: ${item.estoque}` : ""}`}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
-              <select
-                value={selecionado?.id || ""}
-                onChange={(e) => {
-                  const item: any = (listaItens as any[]).find((i) => i.id === e.target.value);
-                  setSelecionado(item);
-                  if (item) { setPreco(tipo === "servico" ? item.valor_padrao : item.valor_venda); setPrecoCustomizado(false); }
-                }}
-                className="input-base w-full"
-              >
-                <option value="">Selecione...</option>
-                {(listaItens as any[]).map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {tipo === "servico" ? item.nome : `[${item.codigo}] ${item.descricao}`}
-                  </option>
-                ))}
-              </select>
-            </div>
+            </>
           )}
 
           {selecionado && (
@@ -242,8 +369,8 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                   className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
                   Cancelar
                 </button>
-                <button type="button" onClick={handleAdd}
-                  className="flex-1 py-2.5 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 transition-colors">
+                <button type="button" onClick={handleAddCatalogo}
+                  className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors">
                   Adicionar
                 </button>
               </div>
