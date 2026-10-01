@@ -53,22 +53,35 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
   async function loadFaseData() {
     if (!atendimento) return;
 
+    // Try to load by orcamento_id first, or search by atendimento_id
+    let orc = null;
     if (atendimento.orcamento_id) {
-      const { data: orc } = await (supabase as any)
+      const { data } = await (supabase as any)
         .from("orcamentos")
         .select("*")
         .eq("id", atendimento.orcamento_id)
         .single();
-      setOrcamento(orc);
+      orc = data;
+    } else {
+      // Fallback: search by atendimento_id (for newly created orçamentos)
+      const { data } = await (supabase as any)
+        .from("orcamentos")
+        .select("*")
+        .eq("atendimento_id", atendimento.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      orc = data;
+    }
 
-      if (orc) {
-        const { data: itens } = await (supabase as any)
-          .from("orcamento_itens")
-          .select("*")
-          .eq("orcamento_id", orc.id)
-          .order("ordem", { ascending: true });
-        setOrcamentoItens(itens || []);
-      }
+    if (orc) {
+      setOrcamento(orc);
+      const { data: itens } = await (supabase as any)
+        .from("orcamento_itens")
+        .select("*")
+        .eq("orcamento_id", orc.id)
+        .order("ordem", { ascending: true });
+      setOrcamentoItens(itens || []);
     }
 
     if (atendimento.ordem_servico_id) {
