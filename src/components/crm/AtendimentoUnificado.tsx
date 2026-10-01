@@ -55,23 +55,30 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
 
     // Try to load by orcamento_id first, or search by atendimento_id
     let orc = null;
-    if (atendimento.orcamento_id) {
-      const { data } = await (supabase as any)
-        .from("orcamentos")
-        .select("*")
-        .eq("id", atendimento.orcamento_id)
-        .single();
-      orc = data;
-    } else {
-      // Fallback: search by atendimento_id (for newly created orçamentos)
-      const { data } = await (supabase as any)
-        .from("orcamentos")
-        .select("*")
-        .eq("atendimento_id", atendimento.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-      orc = data;
+    try {
+      if (atendimento.orcamento_id) {
+        const { data, error } = await (supabase as any)
+          .from("orcamentos")
+          .select("*")
+          .eq("id", atendimento.orcamento_id)
+          .single();
+        if (error) console.error("Load by orcamento_id error:", error);
+        orc = data;
+      } else {
+        // Fallback: search by atendimento_id (for newly created orçamentos)
+        const { data, error } = await (supabase as any)
+          .from("orcamentos")
+          .select("*")
+          .eq("atendimento_id", atendimento.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (error) console.error("Load by atendimento_id error:", error);
+        console.log("Loaded orçamento:", data, "for atendimento:", atendimento.id);
+        orc = data;
+      }
+    } catch (err) {
+      console.error("loadFaseData error:", err);
     }
 
     if (orc) {
