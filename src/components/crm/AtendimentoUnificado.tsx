@@ -47,6 +47,7 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
 
   useEffect(() => {
     if (!atendimento) return;
+    console.log("AtendimentoUnificado: useEffect triggered, loading data for:", atendimento.id);
     loadFaseData();
   }, [atendimento]);
 
