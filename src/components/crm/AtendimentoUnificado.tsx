@@ -351,18 +351,17 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
 
       {/* MODAL ADICIONAR ITEM */}
       {isItemFormOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg border border-border max-h-[90vh] overflow-y-auto w-full max-w-2xl">
-            <div className="p-4">
-              <OrcamentoItemForm
-                onAdd={handleAddItem}
-                onClose={() => {
-                  console.log("onClose called, setting isItemFormOpen to false");
-                  setIsItemFormOpen(false);
-                }}
-              />
-            </div>
-          </div>
+        <div className="card-graphite p-6 space-y-4 mb-6">
+          <OrcamentoItemForm
+            onAdd={(item) => {
+              console.log("Form item added:", item);
+              handleAddItem(item);
+            }}
+            onClose={() => {
+              console.log("Form closed");
+              setIsItemFormOpen(false);
+            }}
+          />
         </div>
       )}
     </div>
