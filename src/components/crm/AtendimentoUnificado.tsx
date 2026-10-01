@@ -43,7 +43,9 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
   const [os, setOs] = useState<any>(null);
   const [pagamento, setPagamento] = useState<any>(null);
   const [isOrcamentoFormOpen, setIsOrcamentoFormOpen] = useState(false);
+  const [isItemFormOpen, setIsItemFormOpen] = useState(false);
   const [orcamentoItens, setOrcamentoItens] = useState<any[]>([]);
+  const [novoItem, setNovoItem] = useState({ descricao: "", quantidade: 1, preco_unitario: 0 });
 
   useEffect(() => {
     if (!atendimento) return;
@@ -116,6 +118,29 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
     if (os) return 2;
     if (orcamento) return 1;
     return 0;
+  }
+
+  async function handleAddItem() {
+    if (!orcamento || !novoItem.descricao) return;
+
+    const subtotal = novoItem.quantidade * novoItem.preco_unitario;
+    const { error } = await (supabase as any)
+      .from("orcamento_itens")
+      .insert({
+        orcamento_id: orcamento.id,
+        descricao: novoItem.descricao,
+        quantidade: novoItem.quantidade,
+        preco_unitario: novoItem.preco_unitario,
+        subtotal: subtotal,
+        tipo: "manual",
+        ordem: orcamentoItens.length + 1,
+      });
+
+    if (!error) {
+      setNovoItem({ descricao: "", quantidade: 1, preco_unitario: 0 });
+      setIsItemFormOpen(false);
+      loadFaseData();
+    }
   }
 
   const faseIdx = getFaseAtivaIndex();
@@ -235,7 +260,7 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
             <div className="space-y-4">
               <OrcamentoItensTable
                 itens={orcamentoItens}
-                onAddItem={() => {}}
+                onAddItem={() => setIsItemFormOpen(true)}
                 onUpdateItem={() => {}}
                 onRemoveItem={() => {}}
               />
@@ -312,6 +337,69 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
           )}
         </div>
       )}
+
+      {/* MODAL ADICIONAR ITEM */}
+      <InlineFormPanel open={isItemFormOpen}>
+        <div className="space-y-4 p-6 bg-card rounded-lg border border-border">
+          <h3 className="text-base font-semibold text-brand">Adicionar Item ao Orçamento</h3>
+
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground">Descrição</label>
+            <input
+              type="text"
+              value={novoItem.descricao}
+              onChange={(e) => setNovoItem({ ...novoItem, descricao: e.target.value })}
+              placeholder="Ex: Diagnóstico técnico, Peça XYZ, etc"
+              className="input-base w-full mt-1 text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Quantidade</label>
+              <input
+                type="number"
+                value={novoItem.quantidade}
+                onChange={(e) => setNovoItem({ ...novoItem, quantidade: parseFloat(e.target.value) || 0 })}
+                className="input-base w-full mt-1 text-sm"
+                step="0.1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Preço Unit.</label>
+              <input
+                type="number"
+                value={novoItem.preco_unitario}
+                onChange={(e) => setNovoItem({ ...novoItem, preco_unitario: parseFloat(e.target.value) || 0 })}
+                className="input-base w-full mt-1 text-sm"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Subtotal</label>
+              <div className="text-sm font-semibold text-brand mt-2">
+                R$ {(novoItem.quantidade * novoItem.preco_unitario).toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleAddItem}
+              disabled={!novoItem.descricao}
+              className="flex-1 px-4 py-2 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              ✓ Adicionar
+            </button>
+            <button
+              onClick={() => setIsItemFormOpen(false)}
+              className="flex-1 px-4 py-2 bg-surface border border-border rounded-lg text-sm font-semibold hover:bg-surface/80 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </InlineFormPanel>
     </div>
   );
 }
