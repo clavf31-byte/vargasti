@@ -121,25 +121,36 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
   }
 
   async function handleAddItem(item: any) {
-    if (!orcamento) return;
+    console.log("handleAddItem called with:", item);
+    if (!orcamento) {
+      console.log("No orcamento found");
+      return;
+    }
 
-    const { error } = await (supabase as any)
-      .from("orcamento_itens")
-      .insert({
-        orcamento_id: orcamento.id,
-        descricao: item.descricao,
-        quantidade: item.quantidade,
-        preco_unitario: item.preco_unitario,
-        subtotal: item.subtotal,
-        tipo: item.tipo || "manual",
-        servico_id: item.servico_id,
-        peca_id: item.peca_id,
-        ordem: orcamentoItens.length + 1,
-      });
+    try {
+      const { error } = await (supabase as any)
+        .from("orcamento_itens")
+        .insert({
+          orcamento_id: orcamento.id,
+          descricao: item.descricao,
+          quantidade: item.quantidade,
+          preco_unitario: item.preco_unitario,
+          subtotal: item.subtotal,
+          tipo: item.tipo || "manual",
+          servico_id: item.servico_id,
+          peca_id: item.peca_id,
+          ordem: orcamentoItens.length + 1,
+        });
 
-    if (!error) {
-      setIsItemFormOpen(false);
-      loadFaseData();
+      if (error) {
+        console.error("Error adding item:", error);
+      } else {
+        console.log("Item added successfully");
+        setIsItemFormOpen(false);
+        loadFaseData();
+      }
+    } catch (err) {
+      console.error("Exception in handleAddItem:", err);
     }
   }
 
