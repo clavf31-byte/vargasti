@@ -353,7 +353,10 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
       <InlineFormPanel open={isItemFormOpen}>
         <OrcamentoItemForm
           onAdd={handleAddItem}
-          onClose={() => setIsItemFormOpen(false)}
+          onClose={() => {
+            console.log("onClose called, setting isItemFormOpen to false");
+            setIsItemFormOpen(false);
+          }}
         />
       </InlineFormPanel>
     </div>
