@@ -350,15 +350,21 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
       )}
 
       {/* MODAL ADICIONAR ITEM */}
-      <InlineFormPanel open={isItemFormOpen}>
-        <OrcamentoItemForm
-          onAdd={handleAddItem}
-          onClose={() => {
-            console.log("onClose called, setting isItemFormOpen to false");
-            setIsItemFormOpen(false);
-          }}
-        />
-      </InlineFormPanel>
+      {isItemFormOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg border border-border max-h-[90vh] overflow-y-auto w-full max-w-2xl">
+            <div className="p-4">
+              <OrcamentoItemForm
+                onAdd={handleAddItem}
+                onClose={() => {
+                  console.log("onClose called, setting isItemFormOpen to false");
+                  setIsItemFormOpen(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
