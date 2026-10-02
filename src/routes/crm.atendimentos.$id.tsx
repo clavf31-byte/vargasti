@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAtendimento, type AtendimentoStatus, type AtendimentoPrioridade } from "@/hooks/useChamados";
-import { AtendimentoVisaoCentralizada } from "@/components/crm/AtendimentoVisaoCentralizada";
 import { AtendimentoUnificado } from "@/components/crm/AtendimentoUnificado";
 import { AtendimentoProximosEventos } from "@/components/crm/AtendimentoProximosEventos";
 import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
@@ -13,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MessageCircle, Search, Wrench, CheckCircle2,
   Circle, Clock, AlertTriangle, Calendar, User, Save, Loader2,
-  Send, Info, Eye, FileSpreadsheet, Grid3x3,
+  Send, Info, FileSpreadsheet,
 } from "lucide-react";
 
 export const Route = createFileRoute("/crm/atendimentos/$id")({
@@ -65,7 +64,6 @@ function AtendimentoPage() {
   const [saving, setSaving] = useState(false);
   const [novoComentario, setNovoComentario] = useState("");
   const [sendingComent, setSendingComent] = useState(false);
-  const [viewMode, setViewMode] = useState<'detalhes' | 'centralizado' | 'unificado'>('centralizado');
   const [isOrcamentoFormOpen, setIsOrcamentoFormOpen] = useState(false);
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([]);
   const comentariosEndRef = useRef<HTMLDivElement>(null);
@@ -207,259 +205,12 @@ function AtendimentoPage() {
           />
         </InlineFormPanel>
 
-        {/* VIEW MODE TOGGLE */}
-        <div className="flex gap-2 border-b border-border">
-          <button
-            onClick={() => setViewMode('unificado')}
-            className={`px-4 py-2 text-sm font-semibold transition-colors ${
-              viewMode === 'unificado'
-                ? 'text-brand border-b-2 border-brand'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Grid3x3 className="inline size-4 mr-1.5" /> Visão Unificada
-          </button>
-          <button
-            onClick={() => setViewMode('centralizado')}
-            className={`px-4 py-2 text-sm font-semibold transition-colors ${
-              viewMode === 'centralizado'
-                ? 'text-brand border-b-2 border-brand'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Eye className="inline size-4 mr-1.5" /> Visão Centralizada
-          </button>
-          <button
-            onClick={() => setViewMode('detalhes')}
-            className={`px-4 py-2 text-sm font-semibold transition-colors ${
-              viewMode === 'detalhes'
-                ? 'text-brand border-b-2 border-brand'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Detalhes Completos
-          </button>
-        </div>
-
-        {viewMode === 'unificado' ? (
-          <AtendimentoUnificado
-            atendimento={atendimento}
-            clientes={clientes}
-            onNavigateBack={() => navigate({ to: "/crm/atendimentos" })}
-          />
-        ) : viewMode === 'centralizado' ? (
-          <AtendimentoVisaoCentralizada atendimento={atendimento} />
-        ) : (
-        <>
-
-        {/* PROGRESS STEPS */}
-        <div className="card-selectable p-6">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-6">Progresso</p>
-          <div className="relative">
-            <div className="absolute top-6 left-6 right-6 h-px bg-border" />
-            <div
-              className="absolute top-6 left-6 h-px bg-gradient-to-r from-brand to-cyan-400 transition-all duration-500"
-              style={{ width: `${(currentStepIdx / (STEPS.length - 1)) * (100 - 12)}%` }}
-            />
-            <div className="relative grid grid-cols-4 gap-2">
-              {STEPS.map((step, idx) => {
-                const Icon = step.icon;
-                const done = idx <= currentStepIdx;
-                const current = idx === currentStepIdx;
-                return (
-                  <button
-                    key={step.key}
-                    onClick={() => handleStatusChange(step.key)}
-                    disabled={idx === currentStepIdx}
-                    className="flex flex-col items-center gap-2 text-center group"
-                  >
-                    <div className={`relative z-10 grid place-items-center size-12 rounded-full border-2 transition-all ${
-                      current
-                        ? "bg-brand border-brand shadow-[0_0_20px_rgba(0,213,230,0.4)] scale-110"
-                        : done
-                          ? "bg-brand/20 border-brand/60 text-brand"
-                          : "bg-surface-2 border-border text-muted-foreground/40 group-hover:border-brand/30 group-hover:text-muted-foreground"
-                    }`}>
-                      <Icon className="size-5" />
-                    </div>
-                    <div>
-                      <p className={`text-[11px] font-bold ${done ? "text-foreground" : "text-muted-foreground/50"}`}>
-                        {step.label}
-                      </p>
-                      <p className="text-[9px] text-muted-foreground/40 hidden sm:block">{step.sublabel}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* BODY */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-5">
-
-          {/* Left: descrição + anotações + comentários */}
-          <div className="space-y-5">
-
-            {atendimento.descricao && (
-              <div className="card-selectable p-5 space-y-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Descrição</p>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{atendimento.descricao}</p>
-              </div>
-            )}
-
-            {/* Anotações internas */}
-            <div className="card-selectable p-5 space-y-3">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Anotações internas</p>
-              <textarea
-                value={anotacoesValue}
-                onChange={(e) => setAnotacoes(e.target.value)}
-                rows={4}
-                placeholder="Diagnósticos, ações realizadas, observações..."
-                className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-brand/50 resize-none placeholder:text-muted-foreground/30"
-              />
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSaveAnotacoes}
-                  disabled={saving || anotacoesValue === (atendimento.anotacoes ?? "")}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand text-white text-xs font-semibold rounded-lg hover:bg-brand/90 transition-colors disabled:opacity-40"
-                >
-                  {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-                  Salvar
-                </button>
-              </div>
-            </div>
-
-            {/* Timeline de comentários */}
-            <div className="card-selectable p-5 space-y-4">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Histórico e comentários</p>
-
-              {loadingComentarios ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                </div>
-              ) : comentarios.length === 0 ? (
-                <p className="text-xs text-muted-foreground/50 text-center py-4">Nenhum comentário ainda.</p>
-              ) : (
-                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                  {comentarios.map((c) => (
-                    <div key={c.id} className={`flex gap-2.5 ${c.tipo === "sistema" ? "opacity-70" : ""}`}>
-                      <div className={`shrink-0 size-6 rounded-full grid place-items-center mt-0.5 ${
-                        c.tipo === "sistema" ? "bg-surface-2" : "bg-brand/20"
-                      }`}>
-                        {c.tipo === "sistema"
-                          ? <Info className="size-3 text-muted-foreground" />
-                          : <User className="size-3 text-brand" />
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-[10px] font-semibold text-foreground">
-                            {c.tipo === "sistema" ? "Sistema" : c.autor_nome}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground/50">
-                            {fmtDate(c.created_at)}
-                          </span>
-                        </div>
-                        <p className={`text-xs leading-relaxed ${c.tipo === "sistema" ? "text-muted-foreground italic" : "text-foreground"}`}>
-                          {c.conteudo}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={comentariosEndRef} />
-                </div>
-              )}
-
-              {/* Input novo comentário */}
-              <div className="flex gap-2 pt-2 border-t border-border">
-                <input
-                  value={novoComentario}
-                  onChange={(e) => setNovoComentario(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendComentario(); } }}
-                  placeholder="Adicionar comentário..."
-                  className="flex-1 bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-brand/50 placeholder:text-muted-foreground/30"
-                />
-                <button
-                  onClick={handleSendComentario}
-                  disabled={!novoComentario.trim() || sendingComent}
-                  className="px-3 py-2 bg-brand text-white rounded-xl hover:bg-brand/90 transition-colors disabled:opacity-40"
-                >
-                  {sendingComent ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4">
-            <div className="card-selectable p-5 space-y-4">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Detalhes</p>
-              <div className="space-y-3 text-xs">
-                {atendimento.cliente_nome && atendimento.cliente_nome !== "—" && (
-                  <div className="flex items-start gap-2">
-                    <User className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-muted-foreground">Cliente</p>
-                      <p className="font-semibold text-foreground">{atendimento.cliente_nome}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-2">
-                  <Clock className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-muted-foreground">Abertura</p>
-                    <p className="font-semibold text-foreground">{fmtDate(atendimento.created_at)}</p>
-                  </div>
-                </div>
-                {atendimento.data_inicio && (
-                  <div className="flex items-start gap-2">
-                    <Wrench className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-muted-foreground">Início atendimento</p>
-                      <p className="font-semibold text-foreground">{fmtDate(atendimento.data_inicio, false)}</p>
-                    </div>
-                  </div>
-                )}
-                {atendimento.data_conclusao && (
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="size-3.5 text-success mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-muted-foreground">Conclusão</p>
-                      <p className="font-semibold text-foreground">{fmtDate(atendimento.data_conclusao, false)}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="pt-2 border-t border-border">
-                  <p className="text-muted-foreground mb-1">Tempo total</p>
-                  <p className="text-lg font-bold text-brand">{slaElapsed(atendimento.created_at, atendimento.data_conclusao)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Prioridade */}
-            <div className="card-selectable p-5 space-y-3">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Prioridade</p>
-              <div className="space-y-1.5">
-                {(["alta", "normal", "baixa"] as AtendimentoPrioridade[]).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => update({ prioridade: p }, `Prioridade alterada para "${PRIO_CFG[p].label}"`)}
-                    className={`w-full py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
-                      atendimento.prioridade === p
-                        ? PRIO_CFG[p].cls
-                        : "border-border text-muted-foreground/50 hover:border-brand/30 hover:text-muted-foreground"
-                    }`}
-                  >
-                    {PRIO_CFG[p].label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        </>
-        )}
+        {/* UNIFIED VIEW - SINGLE MODE */}
+        <AtendimentoUnificado
+          atendimento={atendimento}
+          clientes={clientes}
+          onNavigateBack={() => navigate({ to: "/crm/atendimentos" })}
+        />
       </div>
     </AppShell>
   );
