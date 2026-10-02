@@ -21,6 +21,9 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     numero_formatado: "",
     cliente_id: "",
     descricao: "",
+    observacoes: "",
+    local: "",
+    data_agendamento: "",
     resumo_executivo: "",
     desconto: 0,
     impostos: 0,
@@ -53,6 +56,10 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         numero,
         numero_formatado: numero,
         cliente_id: formData.cliente_id,
+        descricao: formData.descricao,
+        observacoes: formData.observacoes,
+        local: formData.local,
+        data_agendamento: formData.data_agendamento || null,
         notas: formData.descricao,
         resumo_executivo: formData.resumo_executivo,
         total: totalComDescontoEImpostos,
@@ -72,7 +79,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
 
       if (itens.length > 0) await saveItens(createdOrc.id);
 
-      setFormData({ numero_formatado: "", cliente_id: "", descricao: "", resumo_executivo: "", desconto: 0, impostos: 0, status_enum: "rascunho", data_vencimento: "" });
+      setFormData({ numero_formatado: "", cliente_id: "", descricao: "", observacoes: "", local: "", data_agendamento: "", resumo_executivo: "", desconto: 0, impostos: 0, status_enum: "rascunho", data_vencimento: "" });
       onSuccess();
       onClose();
     } catch (err) {
@@ -123,14 +130,48 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição / Observações</label>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do Problema *</label>
           <textarea
             value={formData.descricao}
             onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
             rows={3}
             className="input-base w-full resize-y"
-            placeholder="Contexto do serviço, problema do cliente, observações..."
+            placeholder="Descreva o problema, defeito ou necessidade..."
+            required
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Observações Adicionais</label>
+          <textarea
+            value={formData.observacoes}
+            onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+            rows={2}
+            className="input-base w-full resize-y"
+            placeholder="Notas técnicas, histórico, limitações, etc..."
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Local</label>
+            <input
+              type="text"
+              value={formData.local}
+              onChange={(e) => setFormData({ ...formData, local: e.target.value })}
+              placeholder="Ex: Escritório, Casa do cliente, etc..."
+              className="input-base w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Data de Agendamento</label>
+            <input
+              type="date"
+              value={formData.data_agendamento}
+              onChange={(e) => setFormData({ ...formData, data_agendamento: e.target.value })}
+              className="input-base w-full"
+            />
+          </div>
         </div>
 
         <div>
