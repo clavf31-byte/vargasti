@@ -121,7 +121,7 @@ function OrdensServicoPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editing, setEditing] = useState<OS | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
-  const [viewing, setViewing] = useState<OSDetailed | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadOrdens = async () => {
     if (!user) return;
@@ -182,8 +182,19 @@ function OrdensServicoPage() {
     }
   }
 
-  async function handleViewDetails(os: OS) {
-    if (!user || !os.orcamento_id) return;
+  const [expandedData, setExpandedData] = useState<Record<string, OSDetailed>>({});
+
+  async function toggleViewDetails(os: OS) {
+    if (expandedId === os.id) {
+      setExpandedId(null);
+      return;
+    }
+
+    if (!user || !os.orcamento_id) {
+      setExpandedId(os.id);
+      return;
+    }
+
     const { data: orcData } = await supabase
       .from("orcamentos")
       .select("numero_formatado, status_enum, data_criacao, total")
@@ -198,11 +209,16 @@ function OrdensServicoPage() {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    setViewing({
-      ...os,
-      orcamento_data: orcData,
-      pagamento: pagData,
-    } as OSDetailed);
+    setExpandedData(prev => ({
+      ...prev,
+      [os.id]: {
+        ...os,
+        orcamento_data: orcData,
+        pagamento: pagData,
+      } as OSDetailed
+    }));
+
+    setExpandedId(os.id);
   }
 
   function buildTimelineEtapas(detailed: OSDetailed) {
@@ -295,54 +311,6 @@ function OrdensServicoPage() {
           )}
         </InlineFormPanel>
 
-        <InlineFormPanel open={!!viewing}>
-          {viewing && (() => {
-            const { etapas, etapaAtual } = buildTimelineEtapas(viewing);
-            return (
-              <div className="card-graphite p-6 space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-border">
-                  <h2 className="text-base font-semibold text-foreground">
-                    {viewing.numero_formatado || "OS"}
-                  </h2>
-                  <button onClick={() => setViewing(null)} className="text-muted-foreground hover:text-foreground transition-colors"><X className="size-5" /></button>
-                </div>
-
-                <TimelineStatus etapas={etapas} etapaAtual={etapaAtual} />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Cliente</p>
-                    <p className="text-sm text-foreground">{viewing.cliente?.nome || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
-                    <StatusBadge status={viewing.status} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Prioridade</p>
-                    <p className={cn("text-sm font-semibold capitalize", PRIORIDADE_CLS[viewing.prioridade])}>{viewing.prioridade}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Técnico</p>
-                    <p className="text-sm text-foreground">{viewing.tecnico || "—"}</p>
-                  </div>
-                  {viewing.descricao && (
-                    <div className="sm:col-span-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Descrição</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{viewing.descricao}</p>
-                    </div>
-                  )}
-                  {viewing.solucao && (
-                    <div className="sm:col-span-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Solução</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{viewing.solucao}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-        </InlineFormPanel>
 
         <div className={`space-y-5 transition-opacity duration-300 ${isFormOpen || editing ? "opacity-40 pointer-events-none select-none" : ""}`}>
 
@@ -399,48 +367,96 @@ function OrdensServicoPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtradas.map((os) => (
-                  <tr key={os.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
-                    <td className="px-4 py-3 font-bold text-select">{os.numero_formatado || os.id.slice(0, 8)}</td>
-                    <td className="px-4 py-3 text-foreground">{os.cliente?.nome || "—"}</td>
-                    <td className="px-4 py-3"><StatusBadge status={os.status} /></td>
-                    <td className={cn("px-4 py-3 text-xs font-semibold capitalize", PRIORIDADE_CLS[os.prioridade])}>
-                      {os.prioridade}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{os.orcamento?.numero_formatado || "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{new Date(os.data_inicio).toLocaleDateString("pt-BR")}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{os.tecnico || "—"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        {os.status === "aberta" && (
-                          <button onClick={() => handleStatus(os.id, "em_andamento")}
-                            className="px-2 py-1 text-xs font-semibold border border-warning/30 text-warning bg-warning/10 rounded-lg hover:bg-warning/20 transition-colors">
-                            Iniciar
-                          </button>
-                        )}
-                        {os.status === "em_andamento" && (
-                          <button onClick={() => handleStatus(os.id, "concluida")}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold border border-brand/30 text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors">
-                            <CheckCircle2 className="size-3" /> Concluir
-                          </button>
-                        )}
-                        <button onClick={() => handleViewDetails(os)}
-                          className="inline-flex items-center justify-center p-1.5 border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
-                          title="Ver detalhes">
-                          <Eye className="size-3.5" />
-                        </button>
-                        <button onClick={() => setEditing(os)}
-                          className="inline-flex items-center justify-center p-1.5 border border-border text-muted-foreground bg-surface-2/40 rounded-lg hover:text-foreground hover:border-muted-foreground/40 transition-colors">
-                          <Pencil className="size-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(os.id)}
-                          className="inline-flex items-center justify-center p-1.5 border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors">
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filtradas.map((os) => {
+                  const detailed = expandedData[os.id];
+                  const isExpanded = expandedId === os.id;
+                  const { etapas, etapaAtual } = detailed ? buildTimelineEtapas(detailed) : { etapas: [], etapaAtual: 0 };
+
+                  return (
+                    <>
+                      <tr key={os.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
+                        <td className="px-4 py-3 font-bold text-select">{os.numero_formatado || os.id.slice(0, 8)}</td>
+                        <td className="px-4 py-3 text-foreground">{os.cliente?.nome || "—"}</td>
+                        <td className="px-4 py-3"><StatusBadge status={os.status} /></td>
+                        <td className={cn("px-4 py-3 text-xs font-semibold capitalize", PRIORIDADE_CLS[os.prioridade])}>
+                          {os.prioridade}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{os.orcamento?.numero_formatado || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{new Date(os.data_inicio).toLocaleDateString("pt-BR")}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{os.tecnico || "—"}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                            {os.status === "aberta" && (
+                              <button onClick={() => handleStatus(os.id, "em_andamento")}
+                                className="px-2 py-1 text-xs font-semibold border border-warning/30 text-warning bg-warning/10 rounded-lg hover:bg-warning/20 transition-colors">
+                                Iniciar
+                              </button>
+                            )}
+                            {os.status === "em_andamento" && (
+                              <button onClick={() => handleStatus(os.id, "concluida")}
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold border border-brand/30 text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors">
+                                <CheckCircle2 className="size-3" /> Concluir
+                              </button>
+                            )}
+                            <button onClick={() => toggleViewDetails(os)}
+                              className={cn("inline-flex items-center justify-center p-1.5 border rounded-lg transition-colors", isExpanded ? "border-select/60 text-select bg-select/20" : "border-select/30 text-select bg-select/10 hover:bg-select/20")}
+                              title={isExpanded ? "Recolher" : "Expandir detalhes"}>
+                              <Eye className="size-3.5" />
+                            </button>
+                            <button onClick={() => setEditing(os)}
+                              className="inline-flex items-center justify-center p-1.5 border border-border text-muted-foreground bg-surface-2/40 rounded-lg hover:text-foreground hover:border-muted-foreground/40 transition-colors">
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button onClick={() => handleDelete(os.id)}
+                              className="inline-flex items-center justify-center p-1.5 border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {isExpanded && detailed && (
+                        <tr className="border-b border-border/50 bg-surface/30">
+                          <td colSpan={8} className="px-4 py-4">
+                            <div className="space-y-4">
+                              <TimelineStatus etapas={etapas} etapaAtual={etapaAtual} />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Cliente</p>
+                                  <p className="text-sm text-foreground">{detailed.cliente?.nome || "—"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                                  <StatusBadge status={detailed.status} />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Prioridade</p>
+                                  <p className={cn("text-sm font-semibold capitalize", PRIORIDADE_CLS[detailed.prioridade])}>{detailed.prioridade}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Técnico</p>
+                                  <p className="text-sm text-foreground">{detailed.tecnico || "—"}</p>
+                                </div>
+                                {detailed.descricao && (
+                                  <div className="sm:col-span-2">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Descrição</p>
+                                    <p className="text-sm text-foreground whitespace-pre-wrap">{detailed.descricao}</p>
+                                  </div>
+                                )}
+                                {detailed.solucao && (
+                                  <div className="sm:col-span-2">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Solução</p>
+                                    <p className="text-sm text-foreground whitespace-pre-wrap">{detailed.solucao}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
               </tbody>
             </table>
           </div>
