@@ -125,15 +125,15 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="card-graphite w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-5">
+      <div className="card-graphite w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-foreground">Adicionar Item</h3>
           <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="size-5" />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Como deseja adicionar?</label>
             <div className="flex gap-2">
@@ -171,45 +171,47 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                   autoFocus
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor *</label>
-                <input
-                  type="number"
-                  value={manualPreco}
-                  onChange={(e) => setManualPreco(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  className="input-base w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
-                <input
-                  type="number"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
-                  min="1"
-                  step="0.5"
-                  className="input-base w-full"
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor *</label>
+                  <input
+                    type="number"
+                    value={manualPreco}
+                    onChange={(e) => setManualPreco(parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    className="input-base w-full"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
+                  <input
+                    type="number"
+                    value={quantidade}
+                    onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
+                    min="1"
+                    step="0.5"
+                    className="input-base w-full"
+                  />
+                </div>
               </div>
               <div className="rounded-lg p-3 bg-brand/5 border border-brand/20">
                 <div className="text-xs text-muted-foreground mb-1">Subtotal: {quantidade} × R$ {manualPreco.toFixed(2)}</div>
                 <div className="text-lg font-bold text-brand">R$ {(quantidade * manualPreco).toFixed(2)}</div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors"
+                  className="flex-1 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleAddManual}
-                  className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors"
+                  className="flex-1 py-2 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors"
                 >
                   Adicionar
                 </button>
@@ -225,28 +227,30 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                   placeholder={tipo === "servico" ? "Ex: Suporte Técnico" : "Ex: Memória RAM 8GB"}
                   className="input-base w-full" autoFocus />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  {tipo === "servico" ? "Valor Padrão" : "Valor de Venda"} *
-                </label>
-                <input type="number" value={novoPreco} onChange={(e) => setNovoPreco(parseFloat(e.target.value) || 0)}
-                  min="0" step="0.01" className="input-base w-full" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    {tipo === "servico" ? "Valor Padrão" : "Valor Venda"} *
+                  </label>
+                  <input type="number" value={novoPreco} onChange={(e) => setNovoPreco(parseFloat(e.target.value) || 0)}
+                    min="0" step="0.01" className="input-base w-full" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    {tipo === "servico" ? "Descrição" : "Categoria"}
+                  </label>
+                  <input type="text" value={novoDescricao} onChange={(e) => setNovoDescricao(e.target.value)}
+                    placeholder={tipo === "servico" ? "Breve desc..." : "Ex: Hardware"}
+                    className="input-base w-full" />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  {tipo === "servico" ? "Descrição" : "Categoria"}
-                </label>
-                <input type="text" value={novoDescricao} onChange={(e) => setNovoDescricao(e.target.value)}
-                  placeholder={tipo === "servico" ? "Descrição do serviço" : "Ex: Hardware"}
-                  className="input-base w-full" />
-              </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-1">
                 <button type="button" onClick={() => { setShowNewForm(false); setNovoNome(""); setNovoPreco(0); setNovoDescricao(""); }}
-                  className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
+                  className="flex-1 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
                   Cancelar
                 </button>
                 <button type="button" onClick={handleCreateNew} disabled={creatingNew}
-                  className="flex-1 py-2.5 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 disabled:opacity-50 transition-colors">
                   {creatingNew ? "Criando..." : "Criar e Usar"}
                 </button>
               </div>
@@ -289,9 +293,9 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                     <Plus className="size-4" /> Criar {tipo === "servico" ? "Novo Serviço" : "Nova Peça"}
                   </button>
                 ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pb-2">
                     {itensFiltrados.length === 0 ? (
-                      <div className="text-center py-6 text-sm text-muted-foreground">Nenhum item encontrado</div>
+                      <div className="col-span-2 text-center py-6 text-sm text-muted-foreground">Nenhum item encontrado</div>
                     ) : (
                       itensFiltrados.map((item: any) => (
                         <button
@@ -303,19 +307,22 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                             setPrecoCustomizado(false);
                           }}
                           className={cn(
-                            "w-full p-2.5 rounded-lg border transition-all text-left text-xs",
+                            "p-2 rounded-lg border transition-all text-left text-xs",
                             selecionado?.id === item.id
                               ? "bg-brand/10 border-brand text-foreground"
                               : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
                           )}
                         >
-                          <div className="font-semibold text-foreground">
-                            {tipo === "servico" ? item.nome : `[${item.codigo}] ${item.descricao}`}
+                          <div className="font-semibold text-foreground text-[11px] truncate">
+                            {tipo === "servico" ? item.nome : `[${item.codigo}]`}
                           </div>
-                          <div className="text-[10px] text-muted-foreground/70 mt-0.5">
+                          <div className="text-[9px] text-muted-foreground/70 mt-0.5 truncate">
                             {tipo === "servico"
-                              ? `${item.categoria} · R$ ${item.valor_padrao.toFixed(2)}`
-                              : `${item.categoria} · R$ ${item.valor_venda.toFixed(2)} ${item.estoque ? `· Estoque: ${item.estoque}` : ""}`}
+                              ? `${item.categoria}`
+                              : `${item.categoria}`}
+                          </div>
+                          <div className="text-[10px] font-semibold text-brand mt-1">
+                            R$ {(tipo === "servico" ? item.valor_padrao : item.valor_venda).toFixed(2)}
                           </div>
                         </button>
                       ))
@@ -337,41 +344,43 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
-                <input type="number" value={quantidade}
-                  onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
-                  min="1" step={tipo === "servico" ? "0.5" : "1"} className="input-base w-full" />
-                {tipo === "servico" && (
-                  <p className="text-[11px] text-muted-foreground mt-1">Unidade: {selecionado.unidade}</p>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">{precoFieldLabel}</label>
-                  <button type="button" onClick={() => setPrecoCustomizado(!precoCustomizado)}
-                    className="text-xs font-semibold text-select hover:text-select/80">
-                    {precoCustomizado ? "Usar Padrão" : "Customizar"}
-                  </button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
+                  <input type="number" value={quantidade}
+                    onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
+                    min="1" step={tipo === "servico" ? "0.5" : "1"} className="input-base w-full" />
+                  {tipo === "servico" && (
+                    <p className="text-[11px] text-muted-foreground mt-1">Unidade: {selecionado.unidade}</p>
+                  )}
                 </div>
-                <input type="number" value={preco} onChange={(e) => setPreco(parseFloat(e.target.value) || 0)}
-                  step="0.01" disabled={!precoCustomizado}
-                  className={cn("input-base w-full", !precoCustomizado && "opacity-50 cursor-not-allowed")} />
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">{precoFieldLabel}</label>
+                    <button type="button" onClick={() => setPrecoCustomizado(!precoCustomizado)}
+                      className="text-xs font-semibold text-select hover:text-select/80">
+                      {precoCustomizado ? "Padrão" : "Customizar"}
+                    </button>
+                  </div>
+                  <input type="number" value={preco} onChange={(e) => setPreco(parseFloat(e.target.value) || 0)}
+                    step="0.01" disabled={!precoCustomizado}
+                    className={cn("input-base w-full", !precoCustomizado && "opacity-50 cursor-not-allowed")} />
+                </div>
               </div>
 
-              <div className="rounded-lg p-4 bg-select/5 border border-select/20">
+              <div className="rounded-lg p-3 bg-select/5 border border-select/20">
                 <div className="text-xs text-muted-foreground mb-1">Subtotal: {quantidade} × R$ {preco.toFixed(2)}</div>
-                <div className="text-xl font-bold text-select">R$ {(quantidade * preco).toFixed(2)}</div>
+                <div className="text-lg font-bold text-select">R$ {(quantidade * preco).toFixed(2)}</div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
-                  className="flex-1 py-2.5 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
+                  className="flex-1 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
                   Cancelar
                 </button>
                 <button type="button" onClick={handleAddCatalogo}
-                  className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors">
+                  className="flex-1 py-2 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors">
                   Adicionar
                 </button>
               </div>
