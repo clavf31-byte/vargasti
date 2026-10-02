@@ -167,12 +167,12 @@ function PagamentosPage() {
     if (!user) return;
     const { data } = await supabase
       .from("pagamentos")
-      .select("*, clientes(nome)")
+      .select("*, orcamentos(cliente_id, clientes(nome))")
       .eq("user_id", user.id)
       .order("data_pagamento", { ascending: false });
     setPagamentos((data as any[])?.map((p: any) => ({
       ...p,
-      cliente_nome: p.clientes?.nome || p.referencia,
+      cliente_nome: p.orcamentos?.clientes?.nome || p.referencia,
     })) || []);
   };
 
