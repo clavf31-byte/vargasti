@@ -152,7 +152,7 @@ function OrcamentosPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id: o.id } })}
+                              onClick={() => navigate({ to: "/crm/orcamentos/unificado/$id", params: { id: o.id } })}
                               className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
                             >
                               <Eye className="size-3" /> Ver
