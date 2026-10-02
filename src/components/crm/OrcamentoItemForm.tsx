@@ -33,6 +33,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const [precoCustomizado, setPrecoCustomizado] = useState(false);
   const [preco, setPreco] = useState(0);
   const [busca, setBusca] = useState("");
+  const [colapsado, setColapsado] = useState(false);
 
   const [manualNome, setManualNome] = useState("");
   const [manualPreco, setManualPreco] = useState(0);

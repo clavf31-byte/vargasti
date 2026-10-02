@@ -17,12 +17,14 @@ export const Route = createFileRoute("/crm/pagamentos")({
 type Pagamento = {
   id: string;
   orcamento_id: string;
+  cliente_id: string;
   valor: number;
   data_pagamento: string;
   metodo?: string | null;
   referencia?: string | null;
   status: "pendente" | "pago" | "cancelado";
   agenda_evento_id?: string | null;
+  cliente_nome?: string | null;
 };
 
 function ModalAgendarPagamento({ pag, onClose, onConfirm }: {
@@ -165,10 +167,13 @@ function PagamentosPage() {
     if (!user) return;
     const { data } = await supabase
       .from("pagamentos")
-      .select("*")
+      .select("*, clientes(nome)")
       .eq("user_id", user.id)
       .order("data_pagamento", { ascending: false });
-    setPagamentos((data as Pagamento[]) || []);
+    setPagamentos((data as any[])?.map((p: any) => ({
+      ...p,
+      cliente_nome: p.clientes?.nome || p.referencia,
+    })) || []);
   };
 
   useEffect(() => {
@@ -370,8 +375,9 @@ function PagamentosPage() {
               <tbody>
                 {filtrados.map((pag) => (
                   <tr key={pag.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-select">
-                      {pag.referencia || pag.orcamento_id.slice(0, 8) + "..."}
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-select">{pag.referencia || pag.orcamento_id.slice(0, 8) + "..."}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{pag.cliente_nome || "—"}</div>
                     </td>
                     <td className={cn("px-4 py-3 font-semibold", pag.status === "pago" ? "text-brand" : "text-warning")}>
                       R$ {pag.valor.toFixed(2)}
