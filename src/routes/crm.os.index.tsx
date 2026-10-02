@@ -127,7 +127,7 @@ function OrdensServicoPage() {
     if (!user) return;
     const { data } = await supabase
       .from("ordens_servico")
-      .select("*, cliente:cliente_id(id, nome), orcamento:orcamento_id(numero_formatado)")
+      .select("*, cliente:cliente_id(id, nome), orcamento:orcamento_id(numero_formatado, total)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     setOrdens((data as OS[]) || []);
@@ -361,7 +361,7 @@ function OrdensServicoPage() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b-2 border-border">
-                  {["Número", "Cliente", "Status", "Prioridade", "Orçamento", "Data", "Técnico", "Ações"].map((h, i) => (
+                  {["Número", "Cliente", "Status", "Prioridade", "Valor", "Data", "Técnico", "Ações"].map((h, i) => (
                     <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 7 ? "text-center" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
@@ -381,7 +381,9 @@ function OrdensServicoPage() {
                         <td className={cn("px-4 py-3 text-xs font-semibold capitalize", PRIORIDADE_CLS[os.prioridade])}>
                           {os.prioridade}
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{os.orcamento?.numero_formatado || "—"}</td>
+                        <td className="px-4 py-3 font-semibold text-brand">
+                          R$ {(os.orcamento?.total || 0).toFixed(2)}
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground">{new Date(os.data_inicio).toLocaleDateString("pt-BR")}</td>
                         <td className="px-4 py-3 text-muted-foreground">{os.tecnico || "—"}</td>
                         <td className="px-4 py-3">

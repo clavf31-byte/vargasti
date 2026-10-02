@@ -35,7 +35,7 @@ function OrcamentosPage() {
   const loadData = async () => {
     if (!user) return;
     const [orcRes, clientRes] = await Promise.all([
-      supabase.from("orcamentos").select("*").eq("user_id", user.id).order("data_criacao", { ascending: false }),
+      supabase.from("orcamentos").select("*, clientes(nome)").eq("user_id", user.id).order("data_criacao", { ascending: false }),
       supabase.from("clientes").select("id, nome").eq("user_id", user.id),
     ]);
     setOrcamentos(orcRes.data || []);
@@ -130,8 +130,8 @@ function OrcamentosPage() {
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="border-b-2 border-border">
-                      {["Número", "Status", "Valor", "Data", "Ações"].map((h, i) => (
-                        <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 4 ? "text-center" : "text-left"}`}>{h}</th>
+                      {["Número", "Cliente", "Status", "Valor", "Data", "Ações"].map((h, i) => (
+                        <th key={h} className={`px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${i === 5 ? "text-center" : "text-left"}`}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -139,6 +139,7 @@ function OrcamentosPage() {
                     {filtrados.map((o) => (
                       <tr key={o.id} className="border-b border-border/50 hover:bg-surface-2/40 transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{o.numero_formatado || o.numero}</td>
+                        <td className="px-4 py-3 text-foreground">{o.clientes?.nome || "—"}</td>
                         <td className="px-4 py-3">
                           <StatusBadge status={o.status_enum ?? o.status} />
                         </td>
