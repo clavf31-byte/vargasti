@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
+import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ function OrcamentoUnificadoPage() {
   const [loading, setLoading] = useState(true);
   const [expandedFase, setExpandedFase] = useState<Fase>("orcamento");
   const [showItemForm, setShowItemForm] = useState(false);
+  const [showCompartilhamento, setShowCompartilhamento] = useState(false);
 
   useEffect(() => {
     if (user) loadData();
@@ -221,6 +223,7 @@ function OrcamentoUnificadoPage() {
           )}
 
           <button
+            onClick={() => setShowCompartilhamento(true)}
             className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-surface-2 transition"
           >
             <Share2 className="size-4" /> Compartilhar
@@ -387,6 +390,14 @@ function OrcamentoUnificadoPage() {
         <OrcamentoItemForm
           onAdd={handleAddItem}
           onClose={() => setShowItemForm(false)}
+        />
+      )}
+
+      {showCompartilhamento && orcamento && (
+        <OrcamentoCompartilhamento
+          orcamento={orcamento}
+          cliente={cliente}
+          onClose={() => setShowCompartilhamento(false)}
         />
       )}
     </AppShell>
