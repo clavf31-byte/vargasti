@@ -41,6 +41,7 @@ function OrcamentoUnificadoPage() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [showCompartilhamento, setShowCompartilhamento] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState<string>("");
+  const [editandoResumo, setEditandoResumo] = useState(false);
 
   useEffect(() => {
     if (user) loadData();
@@ -247,6 +248,22 @@ function OrcamentoUnificadoPage() {
     }
   }
 
+  async function handleSalvarResumo(novoResumo: string) {
+    try {
+      await supabase
+        .from("orcamentos")
+        .update({ resumo_executivo: novoResumo })
+        .eq("id", id);
+
+      setOrcamento({ ...orcamento, resumo_executivo: novoResumo });
+      setEditandoResumo(false);
+      console.log("Resumo salvo com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar resumo:", err);
+      alert("Erro ao salvar resumo");
+    }
+  }
+
   if (loading)
     return (
       <AppShell>
@@ -407,6 +424,42 @@ function OrcamentoUnificadoPage() {
                           <p className="text-sm">{new Date(orcamento.data_agendamento).toLocaleDateString("pt-BR")}</p>
                         </div>
                       )}
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-xs font-semibold text-muted-foreground">Resumo Executivo (tela de aprovação)</p>
+                          <button
+                            onClick={() => setEditandoResumo(!editandoResumo)}
+                            className="text-xs font-semibold text-brand hover:text-brand/80"
+                          >
+                            {editandoResumo ? "Cancelar" : "Editar"}
+                          </button>
+                        </div>
+                        {editandoResumo ? (
+                          <div className="space-y-2">
+                            <textarea
+                              defaultValue={orcamento.resumo_executivo || ""}
+                              placeholder="Ex: Seu notebook vai funcionar novamente. Vamos reparar o carregador danificado e fazer testes."
+                              rows={2}
+                              className="input-base w-full resize-y text-xs"
+                              id="resumoInput"
+                            />
+                            <button
+                              onClick={() => {
+                                const input = document.getElementById("resumoInput") as HTMLTextAreaElement;
+                                if (input) handleSalvarResumo(input.value);
+                              }}
+                              className="text-xs font-semibold text-brand bg-brand/10 px-3 py-1.5 rounded hover:bg-brand/20 transition"
+                            >
+                              Salvar
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground bg-surface/50 p-2 rounded">
+                            {orcamento.resumo_executivo || "Vazio"}
+                          </p>
+                        )}
+                      </div>
 
                       <div className="mt-4 pt-4 border-t border-current/20">
                         <div className="flex items-center justify-between mb-3">
