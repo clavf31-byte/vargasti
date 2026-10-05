@@ -62,8 +62,10 @@ function OrcamentoUnificadoPage() {
 
       if (orc) {
         try {
-          const url = await gerarLinkAprovacao(orc.id);
+          const result = await gerarLinkAprovacao(orc.id);
+          const url = result?.approval_url || result;
           setApprovalUrl(url);
+          console.log("ApprovalUrl gerada:", url);
         } catch (err) {
           console.error("Erro ao gerar link de aprovação:", err);
         }
@@ -156,18 +158,25 @@ function OrcamentoUnificadoPage() {
   }
 
   async function handleEnviarEmail() {
-    if (!orcamento || !cliente || !user) return;
+    console.log("🔴 handleEnviarEmail iniciado", { orcamento: orcamento?.id, cliente: cliente?.email });
+
+    if (!orcamento || !cliente || !user) {
+      console.error("Dados faltando:", { orcamento: !!orcamento, cliente: !!cliente, user: !!user });
+      return;
+    }
     if (!cliente?.email) {
       alert("Cliente não possui email cadastrado");
       return;
     }
 
     try {
-      // Gerar link de aprovação
+      console.log("Gerando link de aprovação para:", orcamento.id);
       const linkResult = await gerarLinkAprovacao(orcamento.id);
+      console.log("Link resultado:", linkResult);
+
       if (!linkResult.success) throw new Error("Erro ao gerar link");
 
-      // Enviar email com os parâmetros corretos
+      console.log("Enviando email...");
       const emailResult = await enviarOrcamentoPorEmail({
         cliente_email: cliente.email,
         cliente_nome: cliente.nome,
@@ -178,9 +187,9 @@ function OrcamentoUnificadoPage() {
         user_email: user.email,
       });
 
+      console.log("Email resultado:", emailResult);
       if (!emailResult.success) throw new Error(emailResult.error || "Erro ao enviar email");
 
-      // Atualizar status
       await supabase
         .from("orcamentos")
         .update({
@@ -192,7 +201,7 @@ function OrcamentoUnificadoPage() {
       await loadData();
       alert("Orçamento enviado com sucesso!");
     } catch (err) {
-      console.error("Erro ao enviar email:", err);
+      console.error("❌ Erro completo:", err);
       alert("Erro ao enviar email: " + (err instanceof Error ? err.message : "Desconhecido"));
     }
   }
@@ -288,7 +297,10 @@ function OrcamentoUnificadoPage() {
           )}
 
           <button
-            onClick={() => setShowCompartilhamento(true)}
+            onClick={() => {
+              console.log("Compartilhar clicado", { orcamento: orcamento?.id, cliente: cliente?.id, approvalUrl });
+              setShowCompartilhamento(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 border border-select/30 text-select bg-select/10 rounded-lg text-sm font-semibold hover:bg-select/20 transition"
           >
             <Share2 className="size-4" /> Compartilhar
