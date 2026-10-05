@@ -313,7 +313,7 @@ export function AtendimentoUnificado({ atendimento, clientes, onNavigateBack }: 
               isOpen={isOrcamentoFormOpen}
               onClose={() => setIsOrcamentoFormOpen(false)}
               atendimento_id={atendimento.id}
-              cliente_id_pre={atendimento.cliente_id}
+              cliente_id_pre={atendimento.cliente_id ?? undefined}
             />
           </InlineFormPanel>
         </div>

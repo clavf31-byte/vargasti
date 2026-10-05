@@ -1170,20 +1170,25 @@ export type Database = {
           approval_status: string | null
           approval_token: string | null
           approved_at: string | null
+          atendimento_id: string | null
           cliente_id: string
           created_at: string
+          data_agendamento: string | null
           data_aprovacao: string | null
           data_criacao: string
           data_rejeicao: string | null
           data_vencimento: string | null
           data_visualizacao: string | null
           desconto: number | null
+          descricao: string | null
           id: string
           impostos: number | null
+          local: string | null
           motivo_rejeicao: string | null
           notas: string | null
           numero: string
           numero_formatado: string | null
+          observacoes: string | null
           rejected_at: string | null
           resumo_executivo: string | null
           status: string
@@ -1197,20 +1202,25 @@ export type Database = {
           approval_status?: string | null
           approval_token?: string | null
           approved_at?: string | null
+          atendimento_id?: string | null
           cliente_id: string
           created_at?: string
+          data_agendamento?: string | null
           data_aprovacao?: string | null
           data_criacao?: string
           data_rejeicao?: string | null
           data_vencimento?: string | null
           data_visualizacao?: string | null
           desconto?: number | null
+          descricao?: string | null
           id?: string
           impostos?: number | null
+          local?: string | null
           motivo_rejeicao?: string | null
           notas?: string | null
           numero: string
           numero_formatado?: string | null
+          observacoes?: string | null
           rejected_at?: string | null
           resumo_executivo?: string | null
           status?: string
@@ -1224,20 +1234,25 @@ export type Database = {
           approval_status?: string | null
           approval_token?: string | null
           approved_at?: string | null
+          atendimento_id?: string | null
           cliente_id?: string
           created_at?: string
+          data_agendamento?: string | null
           data_aprovacao?: string | null
           data_criacao?: string
           data_rejeicao?: string | null
           data_vencimento?: string | null
           data_visualizacao?: string | null
           desconto?: number | null
+          descricao?: string | null
           id?: string
           impostos?: number | null
+          local?: string | null
           motivo_rejeicao?: string | null
           notas?: string | null
           numero?: string
           numero_formatado?: string | null
+          observacoes?: string | null
           rejected_at?: string | null
           resumo_executivo?: string | null
           status?: string
@@ -1247,6 +1262,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orcamentos_atendimento_id_fkey"
+            columns: ["atendimento_id"]
+            isOneToOne: false
+            referencedRelation: "atendimentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orcamentos_cliente_id_fkey"
             columns: ["cliente_id"]
@@ -1999,6 +2021,7 @@ export type Database = {
         | "tecnico"
         | "operador"
         | "cliente"
+      orcamento_status: "rascunho" | "enviado" | "aprovado" | "rejeitado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2136,6 +2159,7 @@ export const Constants = {
         "operador",
         "cliente",
       ],
+      orcamento_status: ["rascunho", "enviado", "aprovado", "rejeitado"],
     },
   },
 } as const
