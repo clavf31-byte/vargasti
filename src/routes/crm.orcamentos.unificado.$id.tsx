@@ -217,11 +217,33 @@ function OrcamentoUnificadoPage() {
   }
 
   async function handleGerarPDF() {
+    if (!orcamento || !cliente || !itens) {
+      alert("Dados incompletos para gerar PDF");
+      return;
+    }
+
     try {
-      await baixarPDFOrcamento(orcamento.id);
+      const pdfData = {
+        numero: orcamento.numero_formatado || orcamento.numero,
+        cliente_nome: cliente.nome,
+        cliente_telefone: cliente.telefone,
+        cliente_endereco: cliente.endereco,
+        data_criacao: orcamento.data_criacao,
+        data_vencimento: orcamento.data_vencimento,
+        itens: itens,
+        total: orcamento.total,
+        status: orcamento.status_enum || orcamento.status,
+        desconto: orcamento.desconto,
+        impostos: orcamento.impostos,
+        approval_url: approvalUrl,
+      };
+
+      console.log("Gerando PDF com dados:", pdfData);
+      await baixarPDFOrcamento(pdfData);
+      console.log("PDF gerado com sucesso!");
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
-      alert("Erro ao gerar PDF");
+      alert("Erro ao gerar PDF: " + (err instanceof Error ? err.message : "Desconhecido"));
     }
   }
 
