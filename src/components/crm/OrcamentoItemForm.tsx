@@ -79,7 +79,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   }
 
   function handleAddCatalogo() {
-    if (!selecionado) return;
+    if (!selecionado || tipo === "manual") return;
     const precoFinal = precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda);
     onAdd({
       descricao: selecionado.nome || selecionado.descricao,
@@ -109,15 +109,14 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     onClose();
   }
 
-  const listaItens = tipo === "servico" ? servicos : pecas;
-  const itensFiltrados = listaItens.filter(item => {
-    const termo = busca.toLowerCase();
-    if (tipo === "servico") {
-      return (item.nome?.toLowerCase().includes(termo) || item.descricao?.toLowerCase().includes(termo));
-    } else {
-      return (item.codigo?.toLowerCase().includes(termo) || item.descricao?.toLowerCase().includes(termo));
-    }
-  });
+  const termoBusca = busca.toLowerCase();
+  const itensFiltrados = tipo === "servico"
+    ? servicos.filter((item) =>
+        item.nome.toLowerCase().includes(termoBusca) || item.descricao?.toLowerCase().includes(termoBusca),
+      )
+    : pecas.filter((item) =>
+        item.codigo.toLowerCase().includes(termoBusca) || item.descricao.toLowerCase().includes(termoBusca),
+      );
   const precoFieldLabel = tipo === "servico" ? "Valor Padrão" : "Valor de Venda";
 
   return (
