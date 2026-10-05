@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
-import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Mail, Check, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/orcamentos/unificado/$id")({
@@ -223,7 +223,7 @@ function OrcamentoUnificadoPage() {
           <button
             className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-surface-2 transition"
           >
-            <Mail className="size-4" /> Enviar
+            <Share2 className="size-4" /> Compartilhar
           </button>
 
           <button
