@@ -58,8 +58,12 @@ function OrcamentoUnificadoPage() {
       setOrcamento(orc);
 
       if (orc) {
-        const url = await gerarLinkAprovacao(orc.id);
-        setApprovalUrl(url);
+        try {
+          const url = await gerarLinkAprovacao(orc.id);
+          setApprovalUrl(url);
+        } catch (err) {
+          console.error("Erro ao gerar link de aprovação:", err);
+        }
       }
 
       if (orc?.cliente_id) {
