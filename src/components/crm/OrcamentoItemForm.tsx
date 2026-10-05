@@ -283,7 +283,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 </div>
 
                 {/* CATALOG CARDS */}
-                {listaItens.length === 0 ? (
+                {(tipo === "servico" ? servicos : pecas).length === 0 ? (
                   <button
                     type="button"
                     onClick={() => setShowNewForm(true)}
