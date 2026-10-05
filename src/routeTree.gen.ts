@@ -9,112 +9,69 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProjetosRouteImport } from './routes/projetos'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as FerramentasRouteImport } from './routes/ferramentas'
-import { Route as DebugUserIdRouteImport } from './routes/debug-user-id'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CrmRouteImport } from './routes/crm'
-import { Route as ConfigRouteImport } from './routes/config'
-import { Route as ArquivosRouteImport } from './routes/arquivos'
-import { Route as AnotacoesRouteImport } from './routes/anotacoes'
-import { Route as AgendaRouteImport } from './routes/agenda'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
-import { Route as ConfigIndexRouteImport } from './routes/config.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AgendaRouteImport } from './routes/agenda'
+import { Route as AnotacoesRouteImport } from './routes/anotacoes'
+import { Route as ArquivosRouteImport } from './routes/arquivos'
+import { Route as ConfigRouteImport } from './routes/config'
+import { Route as CrmRouteImport } from './routes/crm'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DebugUserIdRouteImport } from './routes/debug-user-id'
+import { Route as FerramentasRouteImport } from './routes/ferramentas'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
-import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
-import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
-import { Route as CrmTarefasRouteImport } from './routes/crm.tarefas'
-import { Route as CrmServicosRouteImport } from './routes/crm.servicos'
-import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
-import { Route as CrmPecasRouteImport } from './routes/crm.pecas'
-import { Route as CrmPagamentosRouteImport } from './routes/crm.pagamentos'
-import { Route as CrmOsRouteImport } from './routes/crm.os'
-import { Route as CrmOrcamentosRouteImport } from './routes/crm.orcamentos'
-import { Route as CrmContratosRouteImport } from './routes/crm.contratos'
-import { Route as CrmClientesRouteImport } from './routes/crm.clientes'
-import { Route as CrmAtendimentosRouteImport } from './routes/crm.atendimentos'
-import { Route as ConfigPermissionsRouteImport } from './routes/config.permissions'
-import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
-import { Route as ApiVersionRouteImport } from './routes/api/version'
-import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
-import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callback'
-import { Route as ApiDeleteGmailTokenRouteImport } from './routes/api/delete-gmail-token'
-import { Route as ApiDebugProcessPipelineRouteImport } from './routes/api/debug-process-pipeline'
-import { Route as ApiDebugProcessEmailRouteImport } from './routes/api/debug-process-email'
-import { Route as ApiDebugInterpretEmailRouteImport } from './routes/api/debug-interpret-email'
-import { Route as ApiDebugGmailTokenRouteImport } from './routes/api/debug-gmail-token'
-import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetch-emails'
-import { Route as AdminSetupRouteImport } from './routes/admin.setup'
 import { Route as AdminOperatorIdRouteImport } from './routes/admin.$operatorId'
-import { Route as CrmOsIndexRouteImport } from './routes/crm.os.index'
-import { Route as CrmOrcamentosIndexRouteImport } from './routes/crm.orcamentos.index'
-import { Route as CrmContratosIndexRouteImport } from './routes/crm.contratos.index'
-import { Route as CrmClientesIndexRouteImport } from './routes/crm.clientes.index'
-import { Route as CrmAtendimentosIndexRouteImport } from './routes/crm.atendimentos.index'
-import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.approve.$token'
-import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
-import { Route as CrmContratosNovoRouteImport } from './routes/crm.contratos.novo'
-import { Route as CrmContratosModelosRouteImport } from './routes/crm.contratos.modelos'
-import { Route as CrmContratosIdRouteImport } from './routes/crm.contratos.$id'
-import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
-import { Route as CrmAtendimentosIdRouteImport } from './routes/crm.atendimentos.$id'
+import { Route as AdminSetupRouteImport } from './routes/admin.setup'
+import { Route as ApiDebugFetchEmailsRouteImport } from './routes/api/debug-fetch-emails'
+import { Route as ApiDebugGmailTokenRouteImport } from './routes/api/debug-gmail-token'
+import { Route as ApiDebugInterpretEmailRouteImport } from './routes/api/debug-interpret-email'
+import { Route as ApiDebugProcessEmailRouteImport } from './routes/api/debug-process-email'
+import { Route as ApiDebugProcessPipelineRouteImport } from './routes/api/debug-process-pipeline'
+import { Route as ApiDeleteGmailTokenRouteImport } from './routes/api/delete-gmail-token'
+import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callback'
+import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
+import { Route as ApiVersionRouteImport } from './routes/api/version'
+import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
+import { Route as ConfigIndexRouteImport } from './routes/config.index'
+import { Route as ConfigPermissionsRouteImport } from './routes/config.permissions'
+import { Route as CrmAtendimentosRouteImport } from './routes/crm.atendimentos'
+import { Route as CrmClientesRouteImport } from './routes/crm.clientes'
+import { Route as CrmContratosRouteImport } from './routes/crm.contratos'
+import { Route as CrmOrcamentosRouteImport } from './routes/crm.orcamentos'
+import { Route as CrmOsRouteImport } from './routes/crm.os'
+import { Route as CrmPagamentosRouteImport } from './routes/crm.pagamentos'
+import { Route as CrmPecasRouteImport } from './routes/crm.pecas'
+import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
+import { Route as CrmServicosRouteImport } from './routes/crm.servicos'
+import { Route as CrmTarefasRouteImport } from './routes/crm.tarefas'
+import { Route as FerramentasIndexRouteImport } from './routes/ferramentas.index'
+import { Route as FerramentasEmailsRouteImport } from './routes/ferramentas.emails'
+import { Route as FerramentasExcelRouteImport } from './routes/ferramentas.excel'
+import { Route as FerramentasWhatsappRouteImport } from './routes/ferramentas.whatsapp'
 import { Route as ApiCronAgendaResumoRouteImport } from './routes/api.cron.agenda-resumo'
-import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
-import { Route as CrmContratosReceberIdRouteImport } from './routes/crm.contratos.receber.$id'
+import { Route as CrmAtendimentosIndexRouteImport } from './routes/crm.atendimentos.index'
+import { Route as CrmAtendimentosIdRouteImport } from './routes/crm.atendimentos.$id'
+import { Route as CrmClientesIndexRouteImport } from './routes/crm.clientes.index'
+import { Route as CrmClientesIdRouteImport } from './routes/crm.clientes.$id'
+import { Route as CrmContratosIndexRouteImport } from './routes/crm.contratos.index'
+import { Route as CrmContratosIdRouteImport } from './routes/crm.contratos.$id'
+import { Route as CrmContratosModelosRouteImport } from './routes/crm.contratos.modelos'
+import { Route as CrmContratosNovoRouteImport } from './routes/crm.contratos.novo'
+import { Route as CrmOrcamentosIndexRouteImport } from './routes/crm.orcamentos.index'
+import { Route as CrmOrcamentosIdRouteImport } from './routes/crm.orcamentos.$id'
+import { Route as CrmOsIndexRouteImport } from './routes/crm.os.index'
+import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.approve.$token'
+import { Route as CrmAtendimentosUnificadoIdRouteImport } from './routes/crm.atendimentos.unificado.$id'
 import { Route as CrmContratosEnviarIdRouteImport } from './routes/crm.contratos.enviar.$id'
+import { Route as CrmContratosReceberIdRouteImport } from './routes/crm.contratos.receber.$id'
+import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
+import { Route as CrmOrcamentosUnificadoIdRouteImport } from './routes/crm.orcamentos.unificado.$id'
 
-const ProjetosRoute = ProjetosRouteImport.update({
-  id: '/projetos',
-  path: '/projetos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FerramentasRoute = FerramentasRouteImport.update({
-  id: '/ferramentas',
-  path: '/ferramentas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebugUserIdRoute = DebugUserIdRouteImport.update({
-  id: '/debug-user-id',
-  path: '/debug-user-id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmRoute = CrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfigRoute = ConfigRouteImport.update({
-  id: '/config',
-  path: '/config',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArquivosRoute = ArquivosRouteImport.update({
-  id: '/arquivos',
-  path: '/arquivos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnotacoesRoute = AnotacoesRouteImport.update({
-  id: '/anotacoes',
-  path: '/anotacoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgendaRoute = AgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -122,149 +79,59 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => FerramentasRoute,
+const AnotacoesRoute = AnotacoesRouteImport.update({
+  id: '/anotacoes',
+  path: '/anotacoes',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ConfigIndexRoute = ConfigIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ConfigRoute,
+const ArquivosRoute = ArquivosRouteImport.update({
+  id: '/arquivos',
+  path: '/arquivos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfigRoute = ConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmRoute = CrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebugUserIdRoute = DebugUserIdRouteImport.update({
+  id: '/debug-user-id',
+  path: '/debug-user-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FerramentasRoute = FerramentasRouteImport.update({
+  id: '/ferramentas',
+  path: '/ferramentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const FerramentasWhatsappRoute = FerramentasWhatsappRouteImport.update({
-  id: '/whatsapp',
-  path: '/whatsapp',
-  getParentRoute: () => FerramentasRoute,
-} as any)
-const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
-  id: '/excel',
-  path: '/excel',
-  getParentRoute: () => FerramentasRoute,
-} as any)
-const FerramentasEmailsRoute = FerramentasEmailsRouteImport.update({
-  id: '/emails',
-  path: '/emails',
-  getParentRoute: () => FerramentasRoute,
-} as any)
-const CrmTarefasRoute = CrmTarefasRouteImport.update({
-  id: '/tarefas',
-  path: '/tarefas',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmServicosRoute = CrmServicosRouteImport.update({
-  id: '/servicos',
-  path: '/servicos',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmPipelineRoute = CrmPipelineRouteImport.update({
-  id: '/pipeline',
-  path: '/pipeline',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmPecasRoute = CrmPecasRouteImport.update({
-  id: '/pecas',
-  path: '/pecas',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmPagamentosRoute = CrmPagamentosRouteImport.update({
-  id: '/pagamentos',
-  path: '/pagamentos',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmOsRoute = CrmOsRouteImport.update({
-  id: '/os',
-  path: '/os',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmOrcamentosRoute = CrmOrcamentosRouteImport.update({
-  id: '/orcamentos',
-  path: '/orcamentos',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmContratosRoute = CrmContratosRouteImport.update({
-  id: '/contratos',
-  path: '/contratos',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmClientesRoute = CrmClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmAtendimentosRoute = CrmAtendimentosRouteImport.update({
-  id: '/atendimentos',
-  path: '/atendimentos',
-  getParentRoute: () => CrmRoute,
-} as any)
-const ConfigPermissionsRoute = ConfigPermissionsRouteImport.update({
-  id: '/permissions',
-  path: '/permissions',
-  getParentRoute: () => ConfigRoute,
-} as any)
-const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
-  id: '/api/whatsapp-webhook',
-  path: '/api/whatsapp-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiVersionRoute = ApiVersionRouteImport.update({
-  id: '/api/version',
-  path: '/api/version',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGmailWebhookRoute = ApiGmailWebhookRouteImport.update({
-  id: '/api/gmail-webhook',
-  path: '/api/gmail-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGmailCallbackRoute = ApiGmailCallbackRouteImport.update({
-  id: '/api/gmail-callback',
-  path: '/api/gmail-callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDeleteGmailTokenRoute = ApiDeleteGmailTokenRouteImport.update({
-  id: '/api/delete-gmail-token',
-  path: '/api/delete-gmail-token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDebugProcessPipelineRoute = ApiDebugProcessPipelineRouteImport.update({
-  id: '/api/debug-process-pipeline',
-  path: '/api/debug-process-pipeline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDebugProcessEmailRoute = ApiDebugProcessEmailRouteImport.update({
-  id: '/api/debug-process-email',
-  path: '/api/debug-process-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDebugInterpretEmailRoute = ApiDebugInterpretEmailRouteImport.update({
-  id: '/api/debug-interpret-email',
-  path: '/api/debug-interpret-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDebugGmailTokenRoute = ApiDebugGmailTokenRouteImport.update({
-  id: '/api/debug-gmail-token',
-  path: '/api/debug-gmail-token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDebugFetchEmailsRoute = ApiDebugFetchEmailsRouteImport.update({
-  id: '/api/debug-fetch-emails',
-  path: '/api/debug-fetch-emails',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminSetupRoute = AdminSetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOperatorIdRoute = AdminOperatorIdRouteImport.update({
@@ -272,49 +139,169 @@ const AdminOperatorIdRoute = AdminOperatorIdRouteImport.update({
   path: '/$operatorId',
   getParentRoute: () => AdminRoute,
 } as any)
-const CrmOsIndexRoute = CrmOsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CrmOsRoute,
+const AdminSetupRoute = AdminSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AdminRoute,
 } as any)
-const CrmOrcamentosIndexRoute = CrmOrcamentosIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CrmOrcamentosRoute,
+const ApiDebugFetchEmailsRoute = ApiDebugFetchEmailsRouteImport.update({
+  id: '/api/debug-fetch-emails',
+  path: '/api/debug-fetch-emails',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CrmContratosIndexRoute = CrmContratosIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CrmContratosRoute,
+const ApiDebugGmailTokenRoute = ApiDebugGmailTokenRouteImport.update({
+  id: '/api/debug-gmail-token',
+  path: '/api/debug-gmail-token',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CrmClientesIndexRoute = CrmClientesIndexRouteImport.update({
+const ApiDebugInterpretEmailRoute = ApiDebugInterpretEmailRouteImport.update({
+  id: '/api/debug-interpret-email',
+  path: '/api/debug-interpret-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDebugProcessEmailRoute = ApiDebugProcessEmailRouteImport.update({
+  id: '/api/debug-process-email',
+  path: '/api/debug-process-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDebugProcessPipelineRoute = ApiDebugProcessPipelineRouteImport.update({
+  id: '/api/debug-process-pipeline',
+  path: '/api/debug-process-pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDeleteGmailTokenRoute = ApiDeleteGmailTokenRouteImport.update({
+  id: '/api/delete-gmail-token',
+  path: '/api/delete-gmail-token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGmailCallbackRoute = ApiGmailCallbackRouteImport.update({
+  id: '/api/gmail-callback',
+  path: '/api/gmail-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGmailWebhookRoute = ApiGmailWebhookRouteImport.update({
+  id: '/api/gmail-webhook',
+  path: '/api/gmail-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
+  id: '/api/whatsapp-webhook',
+  path: '/api/whatsapp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfigIndexRoute = ConfigIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => CrmClientesRoute,
+  getParentRoute: () => ConfigRoute,
+} as any)
+const ConfigPermissionsRoute = ConfigPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => ConfigRoute,
+} as any)
+const CrmAtendimentosRoute = CrmAtendimentosRouteImport.update({
+  id: '/atendimentos',
+  path: '/atendimentos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmClientesRoute = CrmClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmContratosRoute = CrmContratosRouteImport.update({
+  id: '/contratos',
+  path: '/contratos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmOrcamentosRoute = CrmOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmOsRoute = CrmOsRouteImport.update({
+  id: '/os',
+  path: '/os',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPagamentosRoute = CrmPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPecasRoute = CrmPecasRouteImport.update({
+  id: '/pecas',
+  path: '/pecas',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPipelineRoute = CrmPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmServicosRoute = CrmServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmTarefasRoute = CrmTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => CrmRoute,
+} as any)
+const FerramentasIndexRoute = FerramentasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FerramentasRoute,
+} as any)
+const FerramentasEmailsRoute = FerramentasEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => FerramentasRoute,
+} as any)
+const FerramentasExcelRoute = FerramentasExcelRouteImport.update({
+  id: '/excel',
+  path: '/excel',
+  getParentRoute: () => FerramentasRoute,
+} as any)
+const FerramentasWhatsappRoute = FerramentasWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => FerramentasRoute,
+} as any)
+const ApiCronAgendaResumoRoute = ApiCronAgendaResumoRouteImport.update({
+  id: '/api/cron/agenda-resumo',
+  path: '/api/cron/agenda-resumo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CrmAtendimentosIndexRoute = CrmAtendimentosIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CrmAtendimentosRoute,
 } as any)
-const OrcamentoApproveTokenRoute = OrcamentoApproveTokenRouteImport.update({
-  id: '/orcamento/approve/$token',
-  path: '/orcamento/approve/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
+const CrmAtendimentosIdRoute = CrmAtendimentosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => CrmOrcamentosRoute,
+  getParentRoute: () => CrmAtendimentosRoute,
 } as any)
-const CrmContratosNovoRoute = CrmContratosNovoRouteImport.update({
-  id: '/novo',
-  path: '/novo',
-  getParentRoute: () => CrmContratosRoute,
+const CrmClientesIndexRoute = CrmClientesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrmClientesRoute,
 } as any)
-const CrmContratosModelosRoute = CrmContratosModelosRouteImport.update({
-  id: '/modelos',
-  path: '/modelos',
+const CrmClientesIdRoute = CrmClientesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmClientesRoute,
+} as any)
+const CrmContratosIndexRoute = CrmContratosIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => CrmContratosRoute,
 } as any)
 const CrmContratosIdRoute = CrmContratosIdRouteImport.update({
@@ -322,36 +309,63 @@ const CrmContratosIdRoute = CrmContratosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => CrmContratosRoute,
 } as any)
-const CrmClientesIdRoute = CrmClientesIdRouteImport.update({
+const CrmContratosModelosRoute = CrmContratosModelosRouteImport.update({
+  id: '/modelos',
+  path: '/modelos',
+  getParentRoute: () => CrmContratosRoute,
+} as any)
+const CrmContratosNovoRoute = CrmContratosNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => CrmContratosRoute,
+} as any)
+const CrmOrcamentosIndexRoute = CrmOrcamentosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrmOrcamentosRoute,
+} as any)
+const CrmOrcamentosIdRoute = CrmOrcamentosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => CrmClientesRoute,
+  getParentRoute: () => CrmOrcamentosRoute,
 } as any)
-const CrmAtendimentosIdRoute = CrmAtendimentosIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CrmAtendimentosRoute,
+const CrmOsIndexRoute = CrmOsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrmOsRoute,
 } as any)
-const ApiCronAgendaResumoRoute = ApiCronAgendaResumoRouteImport.update({
-  id: '/api/cron/agenda-resumo',
-  path: '/api/cron/agenda-resumo',
+const OrcamentoApproveTokenRoute = OrcamentoApproveTokenRouteImport.update({
+  id: '/orcamento/approve/$token',
+  path: '/orcamento/approve/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
-  id: '/editar/$id',
-  path: '/editar/$id',
-  getParentRoute: () => CrmOrcamentosRoute,
+const CrmAtendimentosUnificadoIdRoute =
+  CrmAtendimentosUnificadoIdRouteImport.update({
+    id: '/unificado/$id',
+    path: '/unificado/$id',
+    getParentRoute: () => CrmAtendimentosRoute,
+  } as any)
+const CrmContratosEnviarIdRoute = CrmContratosEnviarIdRouteImport.update({
+  id: '/enviar/$id',
+  path: '/enviar/$id',
+  getParentRoute: () => CrmContratosRoute,
 } as any)
 const CrmContratosReceberIdRoute = CrmContratosReceberIdRouteImport.update({
   id: '/receber/$id',
   path: '/receber/$id',
   getParentRoute: () => CrmContratosRoute,
 } as any)
-const CrmContratosEnviarIdRoute = CrmContratosEnviarIdRouteImport.update({
-  id: '/enviar/$id',
-  path: '/enviar/$id',
-  getParentRoute: () => CrmContratosRoute,
+const CrmOrcamentosEditarIdRoute = CrmOrcamentosEditarIdRouteImport.update({
+  id: '/editar/$id',
+  path: '/editar/$id',
+  getParentRoute: () => CrmOrcamentosRoute,
 } as any)
+const CrmOrcamentosUnificadoIdRoute =
+  CrmOrcamentosUnificadoIdRouteImport.update({
+    id: '/unificado/$id',
+    path: '/unificado/$id',
+    getParentRoute: () => CrmOrcamentosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -408,9 +422,11 @@ export interface FileRoutesByFullPath {
   '/crm/contratos/': typeof CrmContratosIndexRoute
   '/crm/orcamentos/': typeof CrmOrcamentosIndexRoute
   '/crm/os/': typeof CrmOsIndexRoute
+  '/crm/atendimentos/unificado/$id': typeof CrmAtendimentosUnificadoIdRoute
   '/crm/contratos/enviar/$id': typeof CrmContratosEnviarIdRoute
   '/crm/contratos/receber/$id': typeof CrmContratosReceberIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
+  '/crm/orcamentos/unificado/$id': typeof CrmOrcamentosUnificadoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -459,9 +475,11 @@ export interface FileRoutesByTo {
   '/crm/contratos': typeof CrmContratosIndexRoute
   '/crm/orcamentos': typeof CrmOrcamentosIndexRoute
   '/crm/os': typeof CrmOsIndexRoute
+  '/crm/atendimentos/unificado/$id': typeof CrmAtendimentosUnificadoIdRoute
   '/crm/contratos/enviar/$id': typeof CrmContratosEnviarIdRoute
   '/crm/contratos/receber/$id': typeof CrmContratosReceberIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
+  '/crm/orcamentos/unificado/$id': typeof CrmOrcamentosUnificadoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -519,9 +537,11 @@ export interface FileRoutesById {
   '/crm/contratos/': typeof CrmContratosIndexRoute
   '/crm/orcamentos/': typeof CrmOrcamentosIndexRoute
   '/crm/os/': typeof CrmOsIndexRoute
+  '/crm/atendimentos/unificado/$id': typeof CrmAtendimentosUnificadoIdRoute
   '/crm/contratos/enviar/$id': typeof CrmContratosEnviarIdRoute
   '/crm/contratos/receber/$id': typeof CrmContratosReceberIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
+  '/crm/orcamentos/unificado/$id': typeof CrmOrcamentosUnificadoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -580,9 +600,11 @@ export interface FileRouteTypes {
     | '/crm/contratos/'
     | '/crm/orcamentos/'
     | '/crm/os/'
+    | '/crm/atendimentos/unificado/$id'
     | '/crm/contratos/enviar/$id'
     | '/crm/contratos/receber/$id'
     | '/crm/orcamentos/editar/$id'
+    | '/crm/orcamentos/unificado/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -631,9 +653,11 @@ export interface FileRouteTypes {
     | '/crm/contratos'
     | '/crm/orcamentos'
     | '/crm/os'
+    | '/crm/atendimentos/unificado/$id'
     | '/crm/contratos/enviar/$id'
     | '/crm/contratos/receber/$id'
     | '/crm/orcamentos/editar/$id'
+    | '/crm/orcamentos/unificado/$id'
   id:
     | '__root__'
     | '/'
@@ -690,9 +714,11 @@ export interface FileRouteTypes {
     | '/crm/contratos/'
     | '/crm/orcamentos/'
     | '/crm/os/'
+    | '/crm/atendimentos/unificado/$id'
     | '/crm/contratos/enviar/$id'
     | '/crm/contratos/receber/$id'
     | '/crm/orcamentos/editar/$id'
+    | '/crm/orcamentos/unificado/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -724,74 +750,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/projetos': {
-      id: '/projetos'
-      path: '/projetos'
-      fullPath: '/projetos'
-      preLoaderRoute: typeof ProjetosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ferramentas': {
-      id: '/ferramentas'
-      path: '/ferramentas'
-      fullPath: '/ferramentas'
-      preLoaderRoute: typeof FerramentasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug-user-id': {
-      id: '/debug-user-id'
-      path: '/debug-user-id'
-      fullPath: '/debug-user-id'
-      preLoaderRoute: typeof DebugUserIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm': {
-      id: '/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof CrmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/config': {
-      id: '/config'
-      path: '/config'
-      fullPath: '/config'
-      preLoaderRoute: typeof ConfigRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/arquivos': {
-      id: '/arquivos'
-      path: '/arquivos'
-      fullPath: '/arquivos'
-      preLoaderRoute: typeof ArquivosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/anotacoes': {
-      id: '/anotacoes'
-      path: '/anotacoes'
-      fullPath: '/anotacoes'
-      preLoaderRoute: typeof AnotacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agenda': {
-      id: '/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AgendaRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -801,207 +764,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ferramentas/': {
-      id: '/ferramentas/'
-      path: '/'
-      fullPath: '/ferramentas/'
-      preLoaderRoute: typeof FerramentasIndexRouteImport
-      parentRoute: typeof FerramentasRoute
+    '/anotacoes': {
+      id: '/anotacoes'
+      path: '/anotacoes'
+      fullPath: '/anotacoes'
+      preLoaderRoute: typeof AnotacoesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/config/': {
-      id: '/config/'
-      path: '/'
-      fullPath: '/config/'
-      preLoaderRoute: typeof ConfigIndexRouteImport
-      parentRoute: typeof ConfigRoute
+    '/arquivos': {
+      id: '/arquivos'
+      path: '/arquivos'
+      fullPath: '/arquivos'
+      preLoaderRoute: typeof ArquivosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/config': {
+      id: '/config'
+      path: '/config'
+      fullPath: '/config'
+      preLoaderRoute: typeof ConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm': {
+      id: '/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof CrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug-user-id': {
+      id: '/debug-user-id'
+      path: '/debug-user-id'
+      fullPath: '/debug-user-id'
+      preLoaderRoute: typeof DebugUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ferramentas': {
+      id: '/ferramentas'
+      path: '/ferramentas'
+      fullPath: '/ferramentas'
+      preLoaderRoute: typeof FerramentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/ferramentas/whatsapp': {
-      id: '/ferramentas/whatsapp'
-      path: '/whatsapp'
-      fullPath: '/ferramentas/whatsapp'
-      preLoaderRoute: typeof FerramentasWhatsappRouteImport
-      parentRoute: typeof FerramentasRoute
-    }
-    '/ferramentas/excel': {
-      id: '/ferramentas/excel'
-      path: '/excel'
-      fullPath: '/ferramentas/excel'
-      preLoaderRoute: typeof FerramentasExcelRouteImport
-      parentRoute: typeof FerramentasRoute
-    }
-    '/ferramentas/emails': {
-      id: '/ferramentas/emails'
-      path: '/emails'
-      fullPath: '/ferramentas/emails'
-      preLoaderRoute: typeof FerramentasEmailsRouteImport
-      parentRoute: typeof FerramentasRoute
-    }
-    '/crm/tarefas': {
-      id: '/crm/tarefas'
-      path: '/tarefas'
-      fullPath: '/crm/tarefas'
-      preLoaderRoute: typeof CrmTarefasRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/servicos': {
-      id: '/crm/servicos'
-      path: '/servicos'
-      fullPath: '/crm/servicos'
-      preLoaderRoute: typeof CrmServicosRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/pipeline': {
-      id: '/crm/pipeline'
-      path: '/pipeline'
-      fullPath: '/crm/pipeline'
-      preLoaderRoute: typeof CrmPipelineRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/pecas': {
-      id: '/crm/pecas'
-      path: '/pecas'
-      fullPath: '/crm/pecas'
-      preLoaderRoute: typeof CrmPecasRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/pagamentos': {
-      id: '/crm/pagamentos'
-      path: '/pagamentos'
-      fullPath: '/crm/pagamentos'
-      preLoaderRoute: typeof CrmPagamentosRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/os': {
-      id: '/crm/os'
-      path: '/os'
-      fullPath: '/crm/os'
-      preLoaderRoute: typeof CrmOsRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/orcamentos': {
-      id: '/crm/orcamentos'
-      path: '/orcamentos'
-      fullPath: '/crm/orcamentos'
-      preLoaderRoute: typeof CrmOrcamentosRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/contratos': {
-      id: '/crm/contratos'
-      path: '/contratos'
-      fullPath: '/crm/contratos'
-      preLoaderRoute: typeof CrmContratosRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/clientes': {
-      id: '/crm/clientes'
-      path: '/clientes'
-      fullPath: '/crm/clientes'
-      preLoaderRoute: typeof CrmClientesRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/atendimentos': {
-      id: '/crm/atendimentos'
-      path: '/atendimentos'
-      fullPath: '/crm/atendimentos'
-      preLoaderRoute: typeof CrmAtendimentosRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/config/permissions': {
-      id: '/config/permissions'
-      path: '/permissions'
-      fullPath: '/config/permissions'
-      preLoaderRoute: typeof ConfigPermissionsRouteImport
-      parentRoute: typeof ConfigRoute
-    }
-    '/api/whatsapp-webhook': {
-      id: '/api/whatsapp-webhook'
-      path: '/api/whatsapp-webhook'
-      fullPath: '/api/whatsapp-webhook'
-      preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/version': {
-      id: '/api/version'
-      path: '/api/version'
-      fullPath: '/api/version'
-      preLoaderRoute: typeof ApiVersionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/gmail-webhook': {
-      id: '/api/gmail-webhook'
-      path: '/api/gmail-webhook'
-      fullPath: '/api/gmail-webhook'
-      preLoaderRoute: typeof ApiGmailWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/gmail-callback': {
-      id: '/api/gmail-callback'
-      path: '/api/gmail-callback'
-      fullPath: '/api/gmail-callback'
-      preLoaderRoute: typeof ApiGmailCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/delete-gmail-token': {
-      id: '/api/delete-gmail-token'
-      path: '/api/delete-gmail-token'
-      fullPath: '/api/delete-gmail-token'
-      preLoaderRoute: typeof ApiDeleteGmailTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/debug-process-pipeline': {
-      id: '/api/debug-process-pipeline'
-      path: '/api/debug-process-pipeline'
-      fullPath: '/api/debug-process-pipeline'
-      preLoaderRoute: typeof ApiDebugProcessPipelineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/debug-process-email': {
-      id: '/api/debug-process-email'
-      path: '/api/debug-process-email'
-      fullPath: '/api/debug-process-email'
-      preLoaderRoute: typeof ApiDebugProcessEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/debug-interpret-email': {
-      id: '/api/debug-interpret-email'
-      path: '/api/debug-interpret-email'
-      fullPath: '/api/debug-interpret-email'
-      preLoaderRoute: typeof ApiDebugInterpretEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/debug-gmail-token': {
-      id: '/api/debug-gmail-token'
-      path: '/api/debug-gmail-token'
-      fullPath: '/api/debug-gmail-token'
-      preLoaderRoute: typeof ApiDebugGmailTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/debug-fetch-emails': {
-      id: '/api/debug-fetch-emails'
-      path: '/api/debug-fetch-emails'
-      fullPath: '/api/debug-fetch-emails'
-      preLoaderRoute: typeof ApiDebugFetchEmailsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/setup': {
-      id: '/admin/setup'
-      path: '/setup'
-      fullPath: '/admin/setup'
-      preLoaderRoute: typeof AdminSetupRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/$operatorId': {
@@ -1011,33 +848,201 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOperatorIdRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/crm/os/': {
-      id: '/crm/os/'
-      path: '/'
-      fullPath: '/crm/os/'
-      preLoaderRoute: typeof CrmOsIndexRouteImport
-      parentRoute: typeof CrmOsRoute
+    '/admin/setup': {
+      id: '/admin/setup'
+      path: '/setup'
+      fullPath: '/admin/setup'
+      preLoaderRoute: typeof AdminSetupRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/crm/orcamentos/': {
-      id: '/crm/orcamentos/'
-      path: '/'
-      fullPath: '/crm/orcamentos/'
-      preLoaderRoute: typeof CrmOrcamentosIndexRouteImport
-      parentRoute: typeof CrmOrcamentosRoute
+    '/api/debug-fetch-emails': {
+      id: '/api/debug-fetch-emails'
+      path: '/api/debug-fetch-emails'
+      fullPath: '/api/debug-fetch-emails'
+      preLoaderRoute: typeof ApiDebugFetchEmailsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/crm/contratos/': {
-      id: '/crm/contratos/'
-      path: '/'
-      fullPath: '/crm/contratos/'
-      preLoaderRoute: typeof CrmContratosIndexRouteImport
-      parentRoute: typeof CrmContratosRoute
+    '/api/debug-gmail-token': {
+      id: '/api/debug-gmail-token'
+      path: '/api/debug-gmail-token'
+      fullPath: '/api/debug-gmail-token'
+      preLoaderRoute: typeof ApiDebugGmailTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/crm/clientes/': {
-      id: '/crm/clientes/'
+    '/api/debug-interpret-email': {
+      id: '/api/debug-interpret-email'
+      path: '/api/debug-interpret-email'
+      fullPath: '/api/debug-interpret-email'
+      preLoaderRoute: typeof ApiDebugInterpretEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/debug-process-email': {
+      id: '/api/debug-process-email'
+      path: '/api/debug-process-email'
+      fullPath: '/api/debug-process-email'
+      preLoaderRoute: typeof ApiDebugProcessEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/debug-process-pipeline': {
+      id: '/api/debug-process-pipeline'
+      path: '/api/debug-process-pipeline'
+      fullPath: '/api/debug-process-pipeline'
+      preLoaderRoute: typeof ApiDebugProcessPipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/delete-gmail-token': {
+      id: '/api/delete-gmail-token'
+      path: '/api/delete-gmail-token'
+      fullPath: '/api/delete-gmail-token'
+      preLoaderRoute: typeof ApiDeleteGmailTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gmail-callback': {
+      id: '/api/gmail-callback'
+      path: '/api/gmail-callback'
+      fullPath: '/api/gmail-callback'
+      preLoaderRoute: typeof ApiGmailCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gmail-webhook': {
+      id: '/api/gmail-webhook'
+      path: '/api/gmail-webhook'
+      fullPath: '/api/gmail-webhook'
+      preLoaderRoute: typeof ApiGmailWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-webhook': {
+      id: '/api/whatsapp-webhook'
+      path: '/api/whatsapp-webhook'
+      fullPath: '/api/whatsapp-webhook'
+      preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/config/': {
+      id: '/config/'
       path: '/'
-      fullPath: '/crm/clientes/'
-      preLoaderRoute: typeof CrmClientesIndexRouteImport
-      parentRoute: typeof CrmClientesRoute
+      fullPath: '/config/'
+      preLoaderRoute: typeof ConfigIndexRouteImport
+      parentRoute: typeof ConfigRoute
+    }
+    '/config/permissions': {
+      id: '/config/permissions'
+      path: '/permissions'
+      fullPath: '/config/permissions'
+      preLoaderRoute: typeof ConfigPermissionsRouteImport
+      parentRoute: typeof ConfigRoute
+    }
+    '/crm/atendimentos': {
+      id: '/crm/atendimentos'
+      path: '/atendimentos'
+      fullPath: '/crm/atendimentos'
+      preLoaderRoute: typeof CrmAtendimentosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/clientes': {
+      id: '/crm/clientes'
+      path: '/clientes'
+      fullPath: '/crm/clientes'
+      preLoaderRoute: typeof CrmClientesRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/contratos': {
+      id: '/crm/contratos'
+      path: '/contratos'
+      fullPath: '/crm/contratos'
+      preLoaderRoute: typeof CrmContratosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/orcamentos': {
+      id: '/crm/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/crm/orcamentos'
+      preLoaderRoute: typeof CrmOrcamentosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/os': {
+      id: '/crm/os'
+      path: '/os'
+      fullPath: '/crm/os'
+      preLoaderRoute: typeof CrmOsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/pagamentos': {
+      id: '/crm/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/crm/pagamentos'
+      preLoaderRoute: typeof CrmPagamentosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/pecas': {
+      id: '/crm/pecas'
+      path: '/pecas'
+      fullPath: '/crm/pecas'
+      preLoaderRoute: typeof CrmPecasRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/pipeline': {
+      id: '/crm/pipeline'
+      path: '/pipeline'
+      fullPath: '/crm/pipeline'
+      preLoaderRoute: typeof CrmPipelineRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/servicos': {
+      id: '/crm/servicos'
+      path: '/servicos'
+      fullPath: '/crm/servicos'
+      preLoaderRoute: typeof CrmServicosRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/tarefas': {
+      id: '/crm/tarefas'
+      path: '/tarefas'
+      fullPath: '/crm/tarefas'
+      preLoaderRoute: typeof CrmTarefasRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/ferramentas/': {
+      id: '/ferramentas/'
+      path: '/'
+      fullPath: '/ferramentas/'
+      preLoaderRoute: typeof FerramentasIndexRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
+    '/ferramentas/emails': {
+      id: '/ferramentas/emails'
+      path: '/emails'
+      fullPath: '/ferramentas/emails'
+      preLoaderRoute: typeof FerramentasEmailsRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
+    '/ferramentas/excel': {
+      id: '/ferramentas/excel'
+      path: '/excel'
+      fullPath: '/ferramentas/excel'
+      preLoaderRoute: typeof FerramentasExcelRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
+    '/ferramentas/whatsapp': {
+      id: '/ferramentas/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/ferramentas/whatsapp'
+      preLoaderRoute: typeof FerramentasWhatsappRouteImport
+      parentRoute: typeof FerramentasRoute
+    }
+    '/api/cron/agenda-resumo': {
+      id: '/api/cron/agenda-resumo'
+      path: '/api/cron/agenda-resumo'
+      fullPath: '/api/cron/agenda-resumo'
+      preLoaderRoute: typeof ApiCronAgendaResumoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/crm/atendimentos/': {
       id: '/crm/atendimentos/'
@@ -1046,32 +1051,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmAtendimentosIndexRouteImport
       parentRoute: typeof CrmAtendimentosRoute
     }
-    '/orcamento/approve/$token': {
-      id: '/orcamento/approve/$token'
-      path: '/orcamento/approve/$token'
-      fullPath: '/orcamento/approve/$token'
-      preLoaderRoute: typeof OrcamentoApproveTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/orcamentos/$id': {
-      id: '/crm/orcamentos/$id'
+    '/crm/atendimentos/$id': {
+      id: '/crm/atendimentos/$id'
       path: '/$id'
-      fullPath: '/crm/orcamentos/$id'
-      preLoaderRoute: typeof CrmOrcamentosIdRouteImport
-      parentRoute: typeof CrmOrcamentosRoute
+      fullPath: '/crm/atendimentos/$id'
+      preLoaderRoute: typeof CrmAtendimentosIdRouteImport
+      parentRoute: typeof CrmAtendimentosRoute
     }
-    '/crm/contratos/novo': {
-      id: '/crm/contratos/novo'
-      path: '/novo'
-      fullPath: '/crm/contratos/novo'
-      preLoaderRoute: typeof CrmContratosNovoRouteImport
-      parentRoute: typeof CrmContratosRoute
+    '/crm/clientes/': {
+      id: '/crm/clientes/'
+      path: '/'
+      fullPath: '/crm/clientes/'
+      preLoaderRoute: typeof CrmClientesIndexRouteImport
+      parentRoute: typeof CrmClientesRoute
     }
-    '/crm/contratos/modelos': {
-      id: '/crm/contratos/modelos'
-      path: '/modelos'
-      fullPath: '/crm/contratos/modelos'
-      preLoaderRoute: typeof CrmContratosModelosRouteImport
+    '/crm/clientes/$id': {
+      id: '/crm/clientes/$id'
+      path: '/$id'
+      fullPath: '/crm/clientes/$id'
+      preLoaderRoute: typeof CrmClientesIdRouteImport
+      parentRoute: typeof CrmClientesRoute
+    }
+    '/crm/contratos/': {
+      id: '/crm/contratos/'
+      path: '/'
+      fullPath: '/crm/contratos/'
+      preLoaderRoute: typeof CrmContratosIndexRouteImport
       parentRoute: typeof CrmContratosRoute
     }
     '/crm/contratos/$id': {
@@ -1081,33 +1086,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContratosIdRouteImport
       parentRoute: typeof CrmContratosRoute
     }
-    '/crm/clientes/$id': {
-      id: '/crm/clientes/$id'
-      path: '/$id'
-      fullPath: '/crm/clientes/$id'
-      preLoaderRoute: typeof CrmClientesIdRouteImport
-      parentRoute: typeof CrmClientesRoute
+    '/crm/contratos/modelos': {
+      id: '/crm/contratos/modelos'
+      path: '/modelos'
+      fullPath: '/crm/contratos/modelos'
+      preLoaderRoute: typeof CrmContratosModelosRouteImport
+      parentRoute: typeof CrmContratosRoute
     }
-    '/crm/atendimentos/$id': {
-      id: '/crm/atendimentos/$id'
-      path: '/$id'
-      fullPath: '/crm/atendimentos/$id'
-      preLoaderRoute: typeof CrmAtendimentosIdRouteImport
-      parentRoute: typeof CrmAtendimentosRoute
+    '/crm/contratos/novo': {
+      id: '/crm/contratos/novo'
+      path: '/novo'
+      fullPath: '/crm/contratos/novo'
+      preLoaderRoute: typeof CrmContratosNovoRouteImport
+      parentRoute: typeof CrmContratosRoute
     }
-    '/api/cron/agenda-resumo': {
-      id: '/api/cron/agenda-resumo'
-      path: '/api/cron/agenda-resumo'
-      fullPath: '/api/cron/agenda-resumo'
-      preLoaderRoute: typeof ApiCronAgendaResumoRouteImport
+    '/crm/orcamentos/': {
+      id: '/crm/orcamentos/'
+      path: '/'
+      fullPath: '/crm/orcamentos/'
+      preLoaderRoute: typeof CrmOrcamentosIndexRouteImport
+      parentRoute: typeof CrmOrcamentosRoute
+    }
+    '/crm/orcamentos/$id': {
+      id: '/crm/orcamentos/$id'
+      path: '/$id'
+      fullPath: '/crm/orcamentos/$id'
+      preLoaderRoute: typeof CrmOrcamentosIdRouteImport
+      parentRoute: typeof CrmOrcamentosRoute
+    }
+    '/crm/os/': {
+      id: '/crm/os/'
+      path: '/'
+      fullPath: '/crm/os/'
+      preLoaderRoute: typeof CrmOsIndexRouteImport
+      parentRoute: typeof CrmOsRoute
+    }
+    '/orcamento/approve/$token': {
+      id: '/orcamento/approve/$token'
+      path: '/orcamento/approve/$token'
+      fullPath: '/orcamento/approve/$token'
+      preLoaderRoute: typeof OrcamentoApproveTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/orcamentos/editar/$id': {
-      id: '/crm/orcamentos/editar/$id'
-      path: '/editar/$id'
-      fullPath: '/crm/orcamentos/editar/$id'
-      preLoaderRoute: typeof CrmOrcamentosEditarIdRouteImport
-      parentRoute: typeof CrmOrcamentosRoute
+    '/crm/atendimentos/unificado/$id': {
+      id: '/crm/atendimentos/unificado/$id'
+      path: '/unificado/$id'
+      fullPath: '/crm/atendimentos/unificado/$id'
+      preLoaderRoute: typeof CrmAtendimentosUnificadoIdRouteImport
+      parentRoute: typeof CrmAtendimentosRoute
+    }
+    '/crm/contratos/enviar/$id': {
+      id: '/crm/contratos/enviar/$id'
+      path: '/enviar/$id'
+      fullPath: '/crm/contratos/enviar/$id'
+      preLoaderRoute: typeof CrmContratosEnviarIdRouteImport
+      parentRoute: typeof CrmContratosRoute
     }
     '/crm/contratos/receber/$id': {
       id: '/crm/contratos/receber/$id'
@@ -1116,12 +1149,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContratosReceberIdRouteImport
       parentRoute: typeof CrmContratosRoute
     }
-    '/crm/contratos/enviar/$id': {
-      id: '/crm/contratos/enviar/$id'
-      path: '/enviar/$id'
-      fullPath: '/crm/contratos/enviar/$id'
-      preLoaderRoute: typeof CrmContratosEnviarIdRouteImport
-      parentRoute: typeof CrmContratosRoute
+    '/crm/orcamentos/editar/$id': {
+      id: '/crm/orcamentos/editar/$id'
+      path: '/editar/$id'
+      fullPath: '/crm/orcamentos/editar/$id'
+      preLoaderRoute: typeof CrmOrcamentosEditarIdRouteImport
+      parentRoute: typeof CrmOrcamentosRoute
+    }
+    '/crm/orcamentos/unificado/$id': {
+      id: '/crm/orcamentos/unificado/$id'
+      path: '/unificado/$id'
+      fullPath: '/crm/orcamentos/unificado/$id'
+      preLoaderRoute: typeof CrmOrcamentosUnificadoIdRouteImport
+      parentRoute: typeof CrmOrcamentosRoute
     }
   }
 }
@@ -1156,11 +1196,13 @@ const ConfigRouteWithChildren =
 interface CrmAtendimentosRouteChildren {
   CrmAtendimentosIdRoute: typeof CrmAtendimentosIdRoute
   CrmAtendimentosIndexRoute: typeof CrmAtendimentosIndexRoute
+  CrmAtendimentosUnificadoIdRoute: typeof CrmAtendimentosUnificadoIdRoute
 }
 
 const CrmAtendimentosRouteChildren: CrmAtendimentosRouteChildren = {
   CrmAtendimentosIdRoute: CrmAtendimentosIdRoute,
   CrmAtendimentosIndexRoute: CrmAtendimentosIndexRoute,
+  CrmAtendimentosUnificadoIdRoute: CrmAtendimentosUnificadoIdRoute,
 }
 
 const CrmAtendimentosRouteWithChildren = CrmAtendimentosRoute._addFileChildren(
@@ -1207,12 +1249,14 @@ interface CrmOrcamentosRouteChildren {
   CrmOrcamentosIdRoute: typeof CrmOrcamentosIdRoute
   CrmOrcamentosIndexRoute: typeof CrmOrcamentosIndexRoute
   CrmOrcamentosEditarIdRoute: typeof CrmOrcamentosEditarIdRoute
+  CrmOrcamentosUnificadoIdRoute: typeof CrmOrcamentosUnificadoIdRoute
 }
 
 const CrmOrcamentosRouteChildren: CrmOrcamentosRouteChildren = {
   CrmOrcamentosIdRoute: CrmOrcamentosIdRoute,
   CrmOrcamentosIndexRoute: CrmOrcamentosIndexRoute,
   CrmOrcamentosEditarIdRoute: CrmOrcamentosEditarIdRoute,
+  CrmOrcamentosUnificadoIdRoute: CrmOrcamentosUnificadoIdRoute,
 }
 
 const CrmOrcamentosRouteWithChildren = CrmOrcamentosRoute._addFileChildren(
