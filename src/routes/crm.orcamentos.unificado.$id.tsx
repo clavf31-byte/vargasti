@@ -10,6 +10,7 @@ import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilha
 import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
+import client from "@/config/client";
 import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -155,14 +156,44 @@ function OrcamentoUnificadoPage() {
   }
 
   async function handleEnviarEmail() {
+    if (!orcamento || !cliente || !user) return;
     if (!cliente?.email) {
       alert("Cliente não possui email cadastrado");
       return;
     }
+
     try {
-      await enviarOrcamentoPorEmail(orcamento.id, cliente.email, cliente.nome);
+      // Gerar link de aprovação
+      const linkResult = await gerarLinkAprovacao(orcamento.id);
+      if (!linkResult.success) throw new Error("Erro ao gerar link");
+
+      // Enviar email com os parâmetros corretos
+      const emailResult = await enviarOrcamentoPorEmail({
+        cliente_email: cliente.email,
+        cliente_nome: cliente.nome,
+        orcamento_numero: orcamento.numero_formatado,
+        orcamento_total: orcamento.total,
+        approval_url: linkResult.approval_url,
+        user_name: user.user_metadata?.name || client.name,
+        user_email: user.email,
+      });
+
+      if (!emailResult.success) throw new Error(emailResult.error || "Erro ao enviar email");
+
+      // Atualizar status
+      await supabase
+        .from("orcamentos")
+        .update({
+          status_enum: "enviado",
+          approval_token: linkResult.token,
+        })
+        .eq("id", orcamento.id);
+
+      await loadData();
+      alert("Orçamento enviado com sucesso!");
     } catch (err) {
       console.error("Erro ao enviar email:", err);
+      alert("Erro ao enviar email: " + (err instanceof Error ? err.message : "Desconhecido"));
     }
   }
 
@@ -171,6 +202,7 @@ function OrcamentoUnificadoPage() {
       await baixarPDFOrcamento(orcamento.id);
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
+      alert("Erro ao gerar PDF");
     }
   }
 
