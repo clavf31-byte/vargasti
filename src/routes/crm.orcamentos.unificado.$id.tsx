@@ -6,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
+import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
+import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +37,8 @@ function OrcamentoUnificadoPage() {
   const [loading, setLoading] = useState(true);
   const [expandedFase, setExpandedFase] = useState<Fase>("orcamento");
   const [showItemForm, setShowItemForm] = useState(false);
+  const [showCompartilhamento, setShowCompartilhamento] = useState(false);
+  const [approvalUrl, setApprovalUrl] = useState<string>("");
 
   useEffect(() => {
     if (user) loadData();
@@ -52,6 +56,11 @@ function OrcamentoUnificadoPage() {
         .single();
 
       setOrcamento(orc);
+
+      if (orc) {
+        const url = await gerarLinkAprovacao(orc.id);
+        setApprovalUrl(url);
+      }
 
       if (orc?.cliente_id) {
         const { data: cli } = await supabase
@@ -221,7 +230,7 @@ function OrcamentoUnificadoPage() {
           )}
 
           <button
-            onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id } })}
+            onClick={() => setShowCompartilhamento(true)}
             className="flex items-center gap-2 px-4 py-2 border border-select/30 text-select bg-select/10 rounded-lg text-sm font-semibold hover:bg-select/20 transition"
           >
             <Share2 className="size-4" /> Compartilhar
@@ -388,6 +397,15 @@ function OrcamentoUnificadoPage() {
         <OrcamentoItemForm
           onAdd={handleAddItem}
           onClose={() => setShowItemForm(false)}
+        />
+      )}
+
+      {showCompartilhamento && orcamento && cliente && approvalUrl && (
+        <OrcamentoCompartilhamento
+          orcamento={orcamento}
+          cliente={cliente}
+          approvalUrl={approvalUrl}
+          onClose={() => setShowCompartilhamento(false)}
         />
       )}
     </AppShell>
