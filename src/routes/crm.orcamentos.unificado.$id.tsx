@@ -8,7 +8,9 @@ import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
 import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
-import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X } from "lucide-react";
+import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
+import { baixarPDFOrcamento } from "@/lib/pdf-generator";
+import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/orcamentos/unificado/$id")({
@@ -152,6 +154,26 @@ function OrcamentoUnificadoPage() {
     }
   }
 
+  async function handleEnviarEmail() {
+    if (!cliente?.email) {
+      alert("Cliente não possui email cadastrado");
+      return;
+    }
+    try {
+      await enviarOrcamentoPorEmail(orcamento.id, cliente.email, cliente.nome);
+    } catch (err) {
+      console.error("Erro ao enviar email:", err);
+    }
+  }
+
+  async function handleGerarPDF() {
+    try {
+      await baixarPDFOrcamento(orcamento.id);
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+    }
+  }
+
   if (loading)
     return (
       <AppShell>
@@ -241,7 +263,15 @@ function OrcamentoUnificadoPage() {
           </button>
 
           <button
-            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-surface-2 transition"
+            onClick={handleEnviarEmail}
+            className="flex items-center gap-2 px-4 py-2 border border-info/30 text-info bg-info/10 rounded-lg text-sm font-semibold hover:bg-info/20 transition"
+          >
+            <Mail className="size-4" /> Email
+          </button>
+
+          <button
+            onClick={handleGerarPDF}
+            className="flex items-center gap-2 px-4 py-2 border border-brand/30 text-brand bg-brand/10 rounded-lg text-sm font-semibold hover:bg-brand/20 transition"
           >
             <Download className="size-4" /> PDF
           </button>
