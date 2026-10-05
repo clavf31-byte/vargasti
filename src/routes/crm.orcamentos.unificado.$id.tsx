@@ -10,7 +10,6 @@ import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilha
 import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
-import client from "@/config/client";
 import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +37,7 @@ function OrcamentoUnificadoPage() {
   const [cliente, setCliente] = useState<any>(null);
   const [itens, setItens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedFase, setExpandedFase] = useState<Fase>("orcamento");
+  const [expandedFase, setExpandedFase] = useState<Fase | null>("orcamento");
   const [showItemForm, setShowItemForm] = useState(false);
   const [showCompartilhamento, setShowCompartilhamento] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState<string>("");
@@ -48,6 +47,7 @@ function OrcamentoUnificadoPage() {
   }, [user]);
 
   async function loadData() {
+    if (!user) return;
     try {
       setLoading(true);
 
@@ -55,7 +55,7 @@ function OrcamentoUnificadoPage() {
         .from("orcamentos")
         .select("*")
         .eq("id", id)
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .single();
 
       setOrcamento(orc);
@@ -120,12 +120,13 @@ function OrcamentoUnificadoPage() {
   }
 
   async function handleAddItem(item: any) {
+    if (!user) return;
     try {
       const { data } = await supabase
         .from("orcamento_itens")
         .insert([{
           orcamento_id: id,
-          user_id: user!.id,
+          user_id: user.id,
           ...item,
         }])
         .select();
@@ -133,7 +134,7 @@ function OrcamentoUnificadoPage() {
       if (data) {
         setItens([...itens, data[0]]);
 
-        const total = items.reduce((sum, i) => sum + (i.subtotal || 0), 0) + item.subtotal;
+        const total = itens.reduce((sum, currentItem) => sum + (currentItem.subtotal || 0), 0) + item.subtotal;
         await supabase.from("orcamentos").update({ total }).eq("id", id);
         await loadData();
       }
@@ -249,7 +250,7 @@ function OrcamentoUnificadoPage() {
     <AppShell>
       <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate({ to: "/crm/orcamentos/" })} className="p-2 hover:bg-surface-2 rounded-lg transition">
+          <button onClick={() => navigate({ to: "/crm/orcamentos" })} className="p-2 hover:bg-surface-2 rounded-lg transition">
             <ArrowLeft className="size-5" />
           </button>
           <div>
@@ -257,8 +258,8 @@ function OrcamentoUnificadoPage() {
             <p className="text-sm text-muted-foreground">{cliente?.nome}</p>
           </div>
           <div className="ml-auto">
-            <span className={cn("text-sm font-semibold", statusCor[orcamento.status_enum || orcamento.status])}>
-              {(orcamento.status_enum || orcamento.status).toUpperCase()}
+            <span className={cn("text-sm font-semibold", statusCor[(orcamento.status_enum || orcamento.status) as keyof typeof statusCor] ?? "text-muted-foreground")}>
+              {String(orcamento.status_enum || orcamento.status || "rascunho").toUpperCase()}
             </span>
           </div>
         </div>

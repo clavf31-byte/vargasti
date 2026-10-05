@@ -27,7 +27,7 @@ type OS = {
   data_conclusao?: string;
   tecnico?: string;
   cliente?: { id: string; nome: string } | null;
-  orcamento?: { numero_formatado: string } | null;
+  orcamento?: { numero_formatado: string; total: number | null } | null;
   orcamento_id?: string;
 };
 
