@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
-import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Mail, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/orcamentos/unificado/$id")({
@@ -115,6 +115,30 @@ function OrcamentoUnificadoPage() {
     }
   }
 
+  async function handleApprovar() {
+    try {
+      await supabase
+        .from("orcamentos")
+        .update({ status: "aprovado", status_enum: "aprovado" })
+        .eq("id", id);
+      await loadData();
+    } catch (err) {
+      console.error("Erro ao aprovar:", err);
+    }
+  }
+
+  async function handleRejeitarRevert() {
+    try {
+      await supabase
+        .from("orcamentos")
+        .update({ status: "rascunho", status_enum: "rascunho" })
+        .eq("id", id);
+      await loadData();
+    } catch (err) {
+      console.error("Erro ao reverter:", err);
+    }
+  }
+
   if (loading)
     return (
       <AppShell>
@@ -167,6 +191,46 @@ function OrcamentoUnificadoPage() {
             <p className="text-xs text-muted-foreground mb-1">Criado em</p>
             <p className="text-sm">{new Date(orcamento.data_criacao).toLocaleDateString("pt-BR")}</p>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {orcamento.status_enum === "rascunho" && (
+            <>
+              <button
+                onClick={handleApprovar}
+                className="flex items-center gap-2 px-4 py-2 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition"
+              >
+                <Check className="size-4" /> Aprovar
+              </button>
+              <button
+                onClick={() => navigate({ to: "/crm/orcamentos/$id", params: { id } })}
+                className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-surface-2 transition"
+              >
+                Editar
+              </button>
+            </>
+          )}
+
+          {orcamento.status_enum !== "rascunho" && (
+            <button
+              onClick={handleRejeitarRevert}
+              className="flex items-center gap-2 px-4 py-2 border border-destructive/30 text-destructive rounded-lg text-sm font-semibold hover:bg-destructive/5 transition"
+            >
+              <X className="size-4" /> Reverter
+            </button>
+          )}
+
+          <button
+            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-surface-2 transition"
+          >
+            <Mail className="size-4" /> Enviar
+          </button>
+
+          <button
+            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-surface-2 transition"
+          >
+            <Download className="size-4" /> PDF
+          </button>
         </div>
 
         <div className="space-y-3">
