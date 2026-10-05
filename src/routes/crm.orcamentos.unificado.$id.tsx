@@ -63,9 +63,20 @@ function OrcamentoUnificadoPage() {
       if (orc) {
         try {
           const result = await gerarLinkAprovacao(orc.id);
-          const url = result?.approval_url || result;
-          setApprovalUrl(url);
-          console.log("ApprovalUrl gerada:", url);
+          console.log("gerarLinkAprovacao result:", result);
+
+          // Extrair URL corretamente - pode ser string ou objeto
+          let url = "";
+          if (typeof result === "string") {
+            url = result;
+          } else if (result?.approval_url) {
+            url = result.approval_url;
+          }
+
+          if (url) {
+            setApprovalUrl(url);
+            console.log("ApprovalUrl gerada:", url);
+          }
         } catch (err) {
           console.error("Erro ao gerar link de aprovação:", err);
         }
@@ -91,18 +102,16 @@ function OrcamentoUnificadoPage() {
       const { data: osData } = await supabase
         .from("ordens_servico")
         .select("*")
-        .eq("orcamento_id", id)
-        .single();
+        .eq("orcamento_id", id);
 
-      if (osData) setOs(osData);
+      if (osData && osData.length > 0) setOs(osData[0]);
 
       const { data: pgto } = await supabase
         .from("pagamentos")
         .select("*")
-        .eq("orcamento_id", id)
-        .single();
+        .eq("orcamento_id", id);
 
-      if (pgto) setPagamento(pgto);
+      if (pgto && pgto.length > 0) setPagamento(pgto[0]);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
