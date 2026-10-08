@@ -1,5 +1,5 @@
 ﻿import client from "@/config/client";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { obterOrcamentoPorToken, aprovarOrcamento, rejeitarOrcamento } from "@/hooks/useOrcamentoApproval";
 import { gerarResumoExecutivo } from "@/hooks/useOrcamentoCompartilhamento";
@@ -30,6 +30,7 @@ function fmtDate(iso: string) {
 
 function ApproveOrcamentoPage() {
   const { token } = Route.useParams();
+  const navigate = useNavigate();
   const [orcamento, setOrcamento] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -56,6 +57,16 @@ function ApproveOrcamentoPage() {
       setLoading(false);
     });
   }, [token]);
+
+  // Redirecionar para página de acompanhamento após aprovação
+  useEffect(() => {
+    if (status === "approved" && orcamento?.id) {
+      const timeout = setTimeout(() => {
+        navigate({ to: `/orcamento/acompanhamento/${orcamento.id}` });
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [status, orcamento?.id, navigate]);
 
   const updateMetaTag = (name: string, content: string) => {
     let element = document.querySelector(`meta[property="${name}"]`);
