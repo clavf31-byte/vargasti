@@ -1688,6 +1688,41 @@ export type Database = {
         }
         Relationships: []
       }
+      servico_tarefas: {
+        Row: {
+          created_at: string | null
+          descricao: string
+          id: string
+          ordem: number
+          servico_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao: string
+          id?: string
+          ordem?: number
+          servico_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string
+          id?: string
+          ordem?: number
+          servico_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servico_tarefas_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       servicos: {
         Row: {
           ativo: boolean
