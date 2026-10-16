@@ -1,4 +1,5 @@
 import { Trash2, Plus, Wrench, Package } from "lucide-react";
+import { OrcamentoItemTarefas } from "./OrcamentoItemTarefas";
 
 interface OrcamentoItem {
   id?: string;
@@ -118,6 +119,11 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
                     </td>
                   </tr>
                 ))}
+                {itens.map((item, idx) =>
+                  item.tipo === 'servico' && item.servico_id ? (
+                    <OrcamentoItemTarefas key={`tarefas-${idx}`} servicoId={item.servico_id} />
+                  ) : null
+                )}
               </tbody>
             </table>
           </div>
