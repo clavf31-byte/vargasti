@@ -116,19 +116,21 @@ function AcompanhamentoPage() {
   }
 
   const statusOs: string = os?.status || "pendente";
-  const statusLabel: Record<string, string> = {
+  const statusLabels: Record<string, string> = {
     aberta: "👷 Em Andamento",
     concluida: "✅ Concluída",
     cancelada: "❌ Cancelada",
     pendente: "⏳ Aguardando Início",
-  }[statusOs] || "? Status Desconhecido";
+  };
+  const statusLabel = statusLabels[statusOs] || "? Status Desconhecido";
 
-  const statusColor: Record<string, string> = {
+  const statusColors: Record<string, string> = {
     aberta: "#3b82f6",
     concluida: "#22c55e",
     cancelada: "#ef4444",
     pendente: "#f59e0b",
-  }[statusOs] || "#6b7280";
+  };
+  const statusColor = statusColors[statusOs] || "#6b7280";
 
   if (loading) {
     return (
