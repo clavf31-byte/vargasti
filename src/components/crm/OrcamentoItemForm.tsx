@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServicos } from "@/hooks/useServicos";
 import { usePecas } from "@/hooks/usePecas";
-import { X, Plus, Search, Wrench, Package } from "lucide-react";
+import { obterItemModelos } from "@/hooks/useItemModelos";
+import { X, Plus, Search, Wrench, Package, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrcamentoItem {
@@ -27,7 +28,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const { servicos, loadServicos: refetchServicos } = useServicos(user?.id);
   const { pecas, loadPecas: refetchPecas } = usePecas(user?.id);
 
-  const [tipo, setTipo] = useState<"servico" | "peca" | "manual">("servico");
+  const [tipo, setTipo] = useState<"servico" | "peca" | "manual" | "modelos">("servico");
   const [selecionado, setSelecionado] = useState<any>(null);
   const [quantidade, setQuantidade] = useState(1);
   const [precoCustomizado, setPrecoCustomizado] = useState(false);
@@ -44,6 +45,9 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const [novoDescricao, setNovoDescricao] = useState("");
   const [creatingNew, setCreatingNew] = useState(false);
 
+  const [modelos, setModelos] = useState<any[]>([]);
+  const [modelosLoading, setModelosLoading] = useState(false);
+
   useEffect(() => {
     if (tipo === "servico" && servicos.length > 0) {
       setSelecionado(servicos[0]);
@@ -51,8 +55,23 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     } else if (tipo === "peca" && pecas.length > 0) {
       setSelecionado(pecas[0]);
       setPreco(pecas[0].valor_venda);
+    } else if (tipo === "modelos") {
+      carregarModelos();
     }
   }, [tipo, servicos, pecas]);
+
+  async function carregarModelos() {
+    if (!user) return;
+    setModelosLoading(true);
+    try {
+      const dados = await obterItemModelos(user.id);
+      setModelos(dados);
+    } catch (err) {
+      console.error("Erro ao carregar modelos:", err);
+    } finally {
+      setModelosLoading(false);
+    }
+  }
 
   async function handleCreateNew() {
     if (!novoNome.trim() || novoPreco <= 0) { alert("Preencha todos os campos"); return; }
@@ -109,6 +128,20 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     onClose();
   }
 
+  function handleAddModelo() {
+    if (!selecionado) return;
+    const precoFinal = precoCustomizado ? preco : selecionado.preco_unitario;
+    onAdd({
+      descricao: selecionado.nome,
+      quantidade,
+      preco_unitario: precoFinal,
+      subtotal: quantidade * precoFinal,
+      categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
+      tipo: selecionado.tipo,
+    });
+    onClose();
+  }
+
   const termoBusca = busca.toLowerCase();
   const itensFiltrados = tipo === "servico"
     ? servicos.filter((item) =>
@@ -136,7 +169,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Como deseja adicionar?</label>
             <div className="flex gap-2">
-              {(["servico", "peca", "manual"] as const).map((t) => (
+              {(["servico", "peca", "modelos", "manual"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -150,14 +183,78 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 >
                   {t === "servico" && <Wrench className="size-4" />}
                   {t === "peca" && <Package className="size-4" />}
+                  {t === "modelos" && <Zap className="size-4" />}
                   {t === "manual" && <Plus className="size-4" />}
-                  {t === "servico" ? "Serviço" : t === "peca" ? "Peça" : "Manual"}
+                  {t === "servico" ? "Serviço" : t === "peca" ? "Peça" : t === "modelos" ? "Meus Modelos" : "Manual"}
                 </button>
               ))}
             </div>
           </div>
 
-          {tipo === "manual" ? (
+          {tipo === "modelos" ? (
+            <>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    💾 Seus Modelos Salvos
+                  </label>
+                </div>
+
+                {/* SEARCH */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar modelo..."
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    className="input-base w-full pl-9 text-xs"
+                  />
+                </div>
+
+                {/* MODELOS CARDS */}
+                {modelosLoading ? (
+                  <div className="text-center py-6 text-sm text-muted-foreground">Carregando modelos...</div>
+                ) : modelos.length === 0 ? (
+                  <div className="w-full py-3 text-center text-sm text-muted-foreground">
+                    Nenhum modelo criado ainda. Crie em "Modelos de Itens"
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pb-2">
+                    {modelos
+                      .filter((m) => m.nome.toLowerCase().includes(busca.toLowerCase()) || m.descricao?.toLowerCase().includes(busca.toLowerCase()))
+                      .map((modelo: any) => (
+                        <button
+                          key={modelo.id}
+                          type="button"
+                          onClick={() => {
+                            setSelecionado(modelo);
+                            setPreco(modelo.preco_unitario);
+                            setPrecoCustomizado(false);
+                          }}
+                          className={cn(
+                            "p-2 rounded-lg border transition-all text-left text-xs",
+                            selecionado?.id === modelo.id
+                              ? "bg-brand/10 border-brand text-foreground"
+                              : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
+                          )}
+                        >
+                          <div className="font-semibold text-foreground text-[11px] truncate">
+                            {modelo.tipo === "servico" ? "🔧" : "📦"} {modelo.nome}
+                          </div>
+                          <div className="text-[9px] text-muted-foreground/70 mt-0.5 truncate">
+                            {modelo.tipo === "servico" ? "Serviço" : "Peça"}
+                          </div>
+                          <div className="text-[10px] font-semibold text-brand mt-1">
+                            R$ {modelo.preco_unitario.toFixed(2)}
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : tipo === "manual" ? (
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do Item *</label>
@@ -332,12 +429,14 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
             </>
           )}
 
-          {selecionado && (
+          {selecionado && tipo !== "manual" && (
             <>
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
                 <div className="input-base w-full text-foreground text-sm opacity-70 cursor-default">
-                  {tipo === "servico"
+                  {tipo === "modelos"
+                    ? selecionado.descricao || "Sem descrição"
+                    : tipo === "servico"
                     ? selecionado.descricao || "Sem descrição"
                     : `${selecionado.categoria} - ${selecionado.fabricante || "S/M"}`}
                 </div>
@@ -348,15 +447,17 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
                   <input type="number" value={quantidade}
                     onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
-                    min="1" step={tipo === "servico" ? "0.5" : "1"} className="input-base w-full" />
-                  {tipo === "servico" && (
+                    min="1" step={tipo === "servico" || (tipo === "modelos" && selecionado.tipo === "servico") ? "0.5" : "1"} className="input-base w-full" />
+                  {(tipo === "servico" || (tipo === "modelos" && selecionado.tipo === "servico")) && (
                     <p className="text-[11px] text-muted-foreground mt-1">Unidade: {selecionado.unidade}</p>
                   )}
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">{precoFieldLabel}</label>
+                    <label className="text-xs font-semibold text-muted-foreground">
+                      {tipo === "modelos" ? "Preço" : precoFieldLabel}
+                    </label>
                     <button type="button" onClick={() => setPrecoCustomizado(!precoCustomizado)}
                       className="text-xs font-semibold text-select hover:text-select/80">
                       {precoCustomizado ? "Padrão" : "Customizar"}
@@ -378,7 +479,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                   className="flex-1 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
                   Cancelar
                 </button>
-                <button type="button" onClick={handleAddCatalogo}
+                <button type="button" onClick={tipo === "modelos" ? handleAddModelo : handleAddCatalogo}
                   className="flex-1 py-2 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors">
                   Adicionar
                 </button>
