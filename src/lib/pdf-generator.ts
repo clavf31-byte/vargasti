@@ -6,6 +6,8 @@ interface OrcamentoItem {
   preco_unitario: number;
   subtotal: number;
   categoria?: string;
+  tipo?: "servico" | "peca";
+  tarefas?: Array<{ descricao: string }>;
 }
 
 interface OrcamentoPDF {
@@ -194,7 +196,14 @@ export function gerarPDFOrcamento(orcamento: OrcamentoPDF) {
   } else {
     for (const item of orcamento.itens) {
       const descLines = doc.splitTextToSize(item.descricao, colW.desc - 6);
-      const rowH = Math.max(9, descLines.length * 4.8 + 4);
+      let rowH = Math.max(9, descLines.length * 4.8 + 4);
+
+      // Add extra height for tasks if it's a service
+      let tarefasHeight = 0;
+      if (item.tipo === "servico" && item.tarefas && item.tarefas.length > 0) {
+        tarefasHeight = 2 + item.tarefas.length * 4;
+        rowH += tarefasHeight;
+      }
 
       y = addPageIfNeeded(doc, y, rowH + 2, ml);
 
@@ -220,6 +229,23 @@ export function gerarPDFOrcamento(orcamento: OrcamentoPDF) {
         { align: "right" }
       );
       doc.setFont("helvetica", "normal");
+
+      // Render tasks if service
+      if (item.tipo === "servico" && item.tarefas && item.tarefas.length > 0) {
+        let taskY = y + descLines.length * 4.8 + 4;
+        doc.setFontSize(7);
+        doc.setTextColor(...C.primary);
+        doc.setFont("helvetica", "bold");
+        doc.text("Tarefas incluídas:", colX.desc + 3, taskY);
+
+        taskY += 3;
+        doc.setTextColor(...C.gray);
+        doc.setFont("helvetica", "normal");
+        for (const tarefa of item.tarefas) {
+          doc.text(`• ${tarefa.descricao}`, colX.desc + 5, taskY);
+          taskY += 4;
+        }
+      }
 
       subtotalCalc += item.subtotal;
       y += rowH;

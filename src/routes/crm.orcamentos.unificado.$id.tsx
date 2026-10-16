@@ -224,6 +224,21 @@ function OrcamentoUnificadoPage() {
     }
 
     try {
+      // Carregar tarefas para cada item de serviço
+      const itensComTarefas = await Promise.all(
+        itens.map(async (item) => {
+          if (item.tipo === "servico" && item.servico_id) {
+            const { data: tarefas } = await supabase
+              .from("servico_tarefas")
+              .select("descricao")
+              .eq("servico_id", item.servico_id)
+              .order("ordem", { ascending: true });
+            return { ...item, tarefas: tarefas || [] };
+          }
+          return item;
+        })
+      );
+
       const pdfData = {
         numero: orcamento.numero_formatado || orcamento.numero,
         cliente_nome: cliente.nome,
@@ -231,7 +246,7 @@ function OrcamentoUnificadoPage() {
         cliente_endereco: cliente.endereco,
         data_criacao: orcamento.data_criacao,
         data_vencimento: orcamento.data_vencimento,
-        itens: itens,
+        itens: itensComTarefas,
         total: orcamento.total,
         status: orcamento.status_enum || orcamento.status,
         desconto: orcamento.desconto,
