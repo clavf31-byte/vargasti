@@ -115,15 +115,15 @@ function AcompanhamentoPage() {
     }
   }
 
-  const statusOs = os?.status || "pendente";
-  const statusLabel = {
+  const statusOs: string = os?.status || "pendente";
+  const statusLabel: Record<string, string> = {
     aberta: "👷 Em Andamento",
     concluida: "✅ Concluída",
     cancelada: "❌ Cancelada",
     pendente: "⏳ Aguardando Início",
   }[statusOs] || "? Status Desconhecido";
 
-  const statusColor = {
+  const statusColor: Record<string, string> = {
     aberta: "#3b82f6",
     concluida: "#22c55e",
     cancelada: "#ef4444",
