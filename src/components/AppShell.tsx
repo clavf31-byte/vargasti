@@ -35,14 +35,6 @@ const NAV_MODULES = [
     ],
   },
   {
-    group: "Modelos",
-    groupIcon: ClipboardList,
-    items: [
-      { to: "/crm/contratos/modelos", label: "Modelos de Contrato", icon: ScrollText, permKey: "can_access_crm" as keyof ModulePermissions },
-      { to: "/crm/orcamentos/modelos", label: "Modelos de Orçamento", icon: FileSpreadsheet, permKey: "can_access_crm" as keyof ModulePermissions },
-    ],
-  },
-  {
     group: "Ferramentas",
     groupIcon: Wrench,
     items: [
