@@ -10,11 +10,14 @@ export const Route = createFileRoute("/orcamento/approve/$token")({
   head: () => ({
     meta: [
       { title: `Aprovar Orçamento · ${client.name}` },
-      { name: "og:title", content: `Orçamento para Aprovação · ${client.name}` },
-      { name: "og:description", content: "Clique para revisar e aprovar seu orçamento" },
-      { name: "og:type", content: "website" },
-      { name: "og:image", content: "https://vargasti.com.br/assets/vargasti-og.png" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:title", content: `Orçamento para Aprovação · ${client.name}` },
+      { property: "og:description", content: "Clique para revisar e aprovar seu orçamento" },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://vargasti.com.br/assets/vargasti-og.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://vargasti.com.br/assets/vargasti-og.png" },
     ]
   }),
   component: ApproveOrcamentoPage,
@@ -53,6 +56,8 @@ function ApproveOrcamentoPage() {
         document.title = ogTitle;
         updateMetaTag("og:title", ogTitle);
         updateMetaTag("og:description", ogDesc);
+        updateMetaTag("twitter:title", ogTitle);
+        updateMetaTag("twitter:description", ogDesc);
       }
       setLoading(false);
     });
