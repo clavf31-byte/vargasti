@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useServicos } from "@/hooks/useServicos";
-import { usePecas } from "@/hooks/usePecas";
 import { obterItemModelos } from "@/hooks/useItemModelos";
-import { X, Plus, Search, Wrench, Package, Zap } from "lucide-react";
+import { X, Search, Zap, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrcamentoItem {
@@ -26,40 +23,26 @@ interface OrcamentoItemFormProps {
 
 export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
   const { user } = useAuth();
-  const { servicos, loadServicos: refetchServicos } = useServicos(user?.id);
-  const { pecas, loadPecas: refetchPecas } = usePecas(user?.id);
 
-  const [tipo, setTipo] = useState<"servico" | "peca" | "manual" | "modelos">("servico");
+  const [tipo, setTipo] = useState<"modelos" | "manual">("modelos");
   const [selecionado, setSelecionado] = useState<any>(null);
   const [quantidade, setQuantidade] = useState(1);
   const [precoCustomizado, setPrecoCustomizado] = useState(false);
   const [preco, setPreco] = useState(0);
   const [busca, setBusca] = useState("");
-  const [colapsado, setColapsado] = useState(false);
 
   const [manualNome, setManualNome] = useState("");
   const [manualPreco, setManualPreco] = useState(0);
 
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [novoNome, setNovoNome] = useState("");
-  const [novoPreco, setNovoPreco] = useState(0);
-  const [novoDescricao, setNovoDescricao] = useState("");
-  const [creatingNew, setCreatingNew] = useState(false);
 
   const [modelos, setModelos] = useState<any[]>([]);
   const [modelosLoading, setModelosLoading] = useState(false);
 
   useEffect(() => {
-    if (tipo === "servico" && servicos.length > 0) {
-      setSelecionado(servicos[0]);
-      setPreco(servicos[0].valor_padrao);
-    } else if (tipo === "peca" && pecas.length > 0) {
-      setSelecionado(pecas[0]);
-      setPreco(pecas[0].valor_venda);
-    } else if (tipo === "modelos") {
+    if (tipo === "modelos") {
       carregarModelos();
     }
-  }, [tipo, servicos, pecas]);
+  }, [tipo]);
 
   async function carregarModelos() {
     if (!user) return;
@@ -74,31 +57,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     }
   }
 
-  async function handleCreateNew() {
-    if (!novoNome.trim() || novoPreco <= 0) { alert("Preencha todos os campos"); return; }
-    setCreatingNew(true);
-    try {
-      if (tipo === "servico") {
-        const { data } = await supabase.from("servicos").insert([{
-          user_id: user!.id, nome: novoNome, valor_padrao: novoPreco, descricao: novoDescricao, ativo: true, unidade: "h", categoria: "Geral",
-        }]).select();
-        if (data?.[0]) { setSelecionado(data[0]); setPreco(data[0].valor_padrao); setShowNewForm(false); await refetchServicos?.(); }
-      } else {
-        const { data } = await supabase.from("pecas").insert([{
-          user_id: user!.id, codigo: `PEC-${Date.now()}`, descricao: novoNome, categoria: novoDescricao || "Geral",
-          valor_venda: novoPreco, valor_custo: novoPreco * 0.6, ativo: true,
-        }]).select();
-        if (data?.[0]) { setSelecionado(data[0]); setPreco(data[0].valor_venda); setShowNewForm(false); await refetchPecas?.(); }
-      }
-      setNovoNome(""); setNovoPreco(0); setNovoDescricao("");
-    } catch (err) {
-      alert("Erro ao criar: " + (err instanceof Error ? err.message : "Desconhecido"));
-    } finally {
-      setCreatingNew(false);
-    }
-  }
-
-  function handleAddCatalogo() {
+function handleAddCatalogo() {
     if (!selecionado || tipo === "manual") return;
     const precoFinal = precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda);
     onAdd({
@@ -144,15 +103,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     onClose();
   }
 
-  const termoBusca = busca.toLowerCase();
-  const itensFiltrados = tipo === "servico"
-    ? servicos.filter((item) =>
-        item.nome.toLowerCase().includes(termoBusca) || item.descricao?.toLowerCase().includes(termoBusca),
-      )
-    : pecas.filter((item) =>
-        item.codigo.toLowerCase().includes(termoBusca) || item.descricao.toLowerCase().includes(termoBusca),
-      );
-  const precoFieldLabel = tipo === "servico" ? "Valor Padrão" : "Valor de Venda";
 
   return (
     <div
@@ -171,7 +121,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Como deseja adicionar?</label>
             <div className="flex gap-2">
-              {(["servico", "peca", "modelos", "manual"] as const).map((t) => (
+              {(["modelos", "manual"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -183,11 +133,9 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                       : "bg-transparent text-foreground border-border hover:border-brand/40"
                   )}
                 >
-                  {t === "servico" && <Wrench className="size-4" />}
-                  {t === "peca" && <Package className="size-4" />}
                   {t === "modelos" && <Zap className="size-4" />}
                   {t === "manual" && <Plus className="size-4" />}
-                  {t === "servico" ? "Serviço" : t === "peca" ? "Peça" : t === "modelos" ? "Meus Modelos" : "Manual"}
+                  {t === "modelos" ? "Meus Modelos" : "Manual"}
                 </button>
               ))}
             </div>
@@ -196,12 +144,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
           {tipo === "modelos" ? (
             <>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    💾 Seus Modelos Salvos
-                  </label>
-                </div>
-
                 {/* SEARCH */}
                 <div className="relative mb-3">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
@@ -222,41 +164,85 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                     Nenhum modelo criado ainda. Crie em "Modelos de Itens"
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pb-2">
-                    {modelos
-                      .filter((m) => m.nome.toLowerCase().includes(busca.toLowerCase()) || m.descricao?.toLowerCase().includes(busca.toLowerCase()))
-                      .map((modelo: any) => (
-                        <button
-                          key={modelo.id}
-                          type="button"
-                          onClick={() => {
-                            setSelecionado(modelo);
-                            setPreco(modelo.preco_unitario);
-                            setPrecoCustomizado(false);
-                          }}
-                          className={cn(
-                            "p-2 rounded-lg border transition-all text-left text-xs",
-                            selecionado?.id === modelo.id
-                              ? "bg-brand/10 border-brand text-foreground"
-                              : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
-                          )}
-                        >
-                          <div className="font-semibold text-foreground text-[11px] truncate">
-                            {modelo.tipo === "servico" ? "🔧" : "📦"} {modelo.nome}
-                          </div>
-                          <div className="text-[9px] text-muted-foreground/70 mt-0.5 truncate">
-                            {modelo.tipo === "servico" ? "Serviço" : "Peça"}
-                          </div>
-                          <div className="text-[10px] font-semibold text-brand mt-1">
-                            R$ {modelo.preco_unitario.toFixed(2)}
-                          </div>
-                        </button>
-                      ))}
+                  <div className="space-y-3">
+                    {/* SERVIÇOS */}
+                    {modelos.filter(m => m.tipo === "servico" && (m.nome.toLowerCase().includes(busca.toLowerCase()) || m.descricao?.toLowerCase().includes(busca.toLowerCase()))).length > 0 && (
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                          🔧 Serviços
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {modelos
+                            .filter((m) => m.tipo === "servico" && (m.nome.toLowerCase().includes(busca.toLowerCase()) || m.descricao?.toLowerCase().includes(busca.toLowerCase())))
+                            .map((modelo: any) => (
+                              <button
+                                key={modelo.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelecionado(modelo);
+                                  setPreco(modelo.preco_unitario);
+                                  setPrecoCustomizado(false);
+                                }}
+                                className={cn(
+                                  "p-2 rounded-lg border transition-all text-left text-xs",
+                                  selecionado?.id === modelo.id
+                                    ? "bg-brand/10 border-brand text-foreground"
+                                    : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
+                                )}
+                              >
+                                <div className="font-semibold text-foreground text-[11px] truncate">
+                                  {modelo.nome}
+                                </div>
+                                <div className="text-[10px] font-semibold text-brand mt-1">
+                                  R$ {modelo.preco_unitario.toFixed(2)}
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* PEÇAS */}
+                    {modelos.filter(m => m.tipo === "peca" && (m.nome.toLowerCase().includes(busca.toLowerCase()) || m.descricao?.toLowerCase().includes(busca.toLowerCase()))).length > 0 && (
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                          📦 Peças
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {modelos
+                            .filter((m) => m.tipo === "peca" && (m.nome.toLowerCase().includes(busca.toLowerCase()) || m.descricao?.toLowerCase().includes(busca.toLowerCase())))
+                            .map((modelo: any) => (
+                              <button
+                                key={modelo.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelecionado(modelo);
+                                  setPreco(modelo.preco_unitario);
+                                  setPrecoCustomizado(false);
+                                }}
+                                className={cn(
+                                  "p-2 rounded-lg border transition-all text-left text-xs",
+                                  selecionado?.id === modelo.id
+                                    ? "bg-brand/10 border-brand text-foreground"
+                                    : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
+                                )}
+                              >
+                                <div className="font-semibold text-foreground text-[11px] truncate">
+                                  {modelo.nome}
+                                </div>
+                                <div className="text-[10px] font-semibold text-brand mt-1">
+                                  R$ {modelo.preco_unitario.toFixed(2)}
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </>
-          ) : tipo === "manual" ? (
+          ) : tipo === "manual" && (
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do Item *</label>
@@ -315,120 +301,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                 </button>
               </div>
             </div>
-          ) : showNewForm ? (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  {tipo === "servico" ? "Nome do Serviço" : "Descrição da Peça"} *
-                </label>
-                <input type="text" value={novoNome} onChange={(e) => setNovoNome(e.target.value)}
-                  placeholder={tipo === "servico" ? "Ex: Suporte Técnico" : "Ex: Memória RAM 8GB"}
-                  className="input-base w-full" autoFocus />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    {tipo === "servico" ? "Valor Padrão" : "Valor Venda"} *
-                  </label>
-                  <input type="number" value={novoPreco} onChange={(e) => setNovoPreco(parseFloat(e.target.value) || 0)}
-                    min="0" step="0.01" className="input-base w-full" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    {tipo === "servico" ? "Descrição" : "Categoria"}
-                  </label>
-                  <input type="text" value={novoDescricao} onChange={(e) => setNovoDescricao(e.target.value)}
-                    placeholder={tipo === "servico" ? "Breve desc..." : "Ex: Hardware"}
-                    className="input-base w-full" />
-                </div>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => { setShowNewForm(false); setNovoNome(""); setNovoPreco(0); setNovoDescricao(""); }}
-                  className="flex-1 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
-                  Cancelar
-                </button>
-                <button type="button" onClick={handleCreateNew} disabled={creatingNew}
-                  className="flex-1 py-2 bg-select text-white rounded-lg text-sm font-semibold hover:bg-select/90 disabled:opacity-50 transition-colors">
-                  {creatingNew ? "Criando..." : "Criar e Usar"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    📚 Catálogo de {tipo === "servico" ? "Serviços" : "Peças"}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewForm(true)}
-                    className="text-xs font-semibold text-brand hover:text-brand/80 flex items-center gap-1"
-                  >
-                    <Plus className="size-3" /> Criar Novo
-                  </button>
-                </div>
-
-                {/* SEARCH */}
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder={tipo === "servico" ? "Buscar por nome..." : "Buscar por SKU ou descrição..."}
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    className="input-base w-full pl-9 text-xs"
-                  />
-                </div>
-
-                {/* CATALOG CARDS */}
-                {(tipo === "servico" ? servicos : pecas).length === 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowNewForm(true)}
-                    className="w-full py-3 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Plus className="size-4" /> Criar {tipo === "servico" ? "Novo Serviço" : "Nova Peça"}
-                  </button>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pb-2">
-                    {itensFiltrados.length === 0 ? (
-                      <div className="col-span-2 text-center py-6 text-sm text-muted-foreground">Nenhum item encontrado</div>
-                    ) : (
-                      itensFiltrados.map((item: any) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setSelecionado(item);
-                            setPreco(tipo === "servico" ? item.valor_padrao : item.valor_venda);
-                            setPrecoCustomizado(false);
-                          }}
-                          className={cn(
-                            "p-2 rounded-lg border transition-all text-left text-xs",
-                            selecionado?.id === item.id
-                              ? "bg-brand/10 border-brand text-foreground"
-                              : "bg-surface/50 border-border hover:border-brand/40 text-muted-foreground"
-                          )}
-                        >
-                          <div className="font-semibold text-foreground text-[11px] truncate">
-                            {tipo === "servico" ? item.nome : `[${item.codigo}]`}
-                          </div>
-                          <div className="text-[9px] text-muted-foreground/70 mt-0.5 truncate">
-                            {tipo === "servico"
-                              ? `${item.categoria}`
-                              : `${item.categoria}`}
-                          </div>
-                          <div className="text-[10px] font-semibold text-brand mt-1">
-                            R$ {(tipo === "servico" ? item.valor_padrao : item.valor_venda).toFixed(2)}
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
           )}
 
           {selecionado && tipo !== "manual" && (
@@ -436,11 +308,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição</label>
                 <div className="input-base w-full text-foreground text-sm opacity-70 cursor-default">
-                  {tipo === "modelos"
-                    ? selecionado.descricao || "Sem descrição"
-                    : tipo === "servico"
-                    ? selecionado.descricao || "Sem descrição"
-                    : `${selecionado.categoria} - ${selecionado.fabricante || "S/M"}`}
+                  {selecionado.descricao || "Sem descrição"}
                 </div>
               </div>
 
@@ -449,17 +317,15 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantidade *</label>
                   <input type="number" value={quantidade}
                     onChange={(e) => setQuantidade(parseFloat(e.target.value) || 1)}
-                    min="1" step={tipo === "servico" || (tipo === "modelos" && selecionado.tipo === "servico") ? "0.5" : "1"} className="input-base w-full" />
-                  {(tipo === "servico" || (tipo === "modelos" && selecionado.tipo === "servico")) && (
+                    min="1" step={selecionado?.tipo === "servico" ? "0.5" : "1"} className="input-base w-full" />
+                  {selecionado?.tipo === "servico" && (
                     <p className="text-[11px] text-muted-foreground mt-1">Unidade: {selecionado.unidade}</p>
                   )}
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">
-                      {tipo === "modelos" ? "Preço" : precoFieldLabel}
-                    </label>
+                    <label className="text-xs font-semibold text-muted-foreground">Preço</label>
                     <button type="button" onClick={() => setPrecoCustomizado(!precoCustomizado)}
                       className="text-xs font-semibold text-select hover:text-select/80">
                       {precoCustomizado ? "Padrão" : "Customizar"}
