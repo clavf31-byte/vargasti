@@ -28,6 +28,7 @@ const NAV_MODULES = [
       { to: "/crm/clientes", label: "Clientes", icon: Users, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/contratos", label: "Contratos", icon: ScrollText, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/orcamentos", label: "Orçamentos", icon: FileSpreadsheet, permKey: "can_access_crm" as keyof ModulePermissions },
+      { to: "/crm/item-modelos", label: "Modelos de Itens", icon: ClipboardList, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/os", label: "Ordens de Serviço", icon: Wrench, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/pagamentos", label: "Pagamentos", icon: Mail, permKey: "can_access_crm" as keyof ModulePermissions },
       { to: "/crm/tarefas", label: "Tarefas", icon: ListTodo, permKey: "can_access_crm" as keyof ModulePermissions },
