@@ -26,6 +26,7 @@ function ModelosPage() {
   const [modelos, setModelos] = useState<Modelo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [migrando, setMigrando] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -91,6 +92,56 @@ function ModelosPage() {
     }
   }
 
+  async function handleMigrarOrcamentos() {
+    if (!user || !confirm("Isso vai importar todos os orçamentos existentes como modelos. Continuar?")) return;
+
+    setMigrando(true);
+    try {
+      // Buscar todos os orçamentos do usuário
+      const { data: orcamentos, error: orcErr } = await supabase
+        .from("orcamentos")
+        .select("id, numero_formatado, descricao, resumo_executivo")
+        .eq("user_id", user.id);
+
+      if (orcErr) throw orcErr;
+      if (!orcamentos || orcamentos.length === 0) {
+        alert("Nenhum orçamento encontrado para migrar");
+        setMigrando(false);
+        return;
+      }
+
+      let migratedCount = 0;
+
+      // Para cada orçamento, buscar itens e criar modelo
+      for (const orc of orcamentos) {
+        const { data: itens, error: itemErr } = await supabase
+          .from("orcamento_itens")
+          .select("descricao")
+          .eq("orcamento_id", orc.id);
+
+        if (itemErr) continue;
+
+        const modeloItens = (itens || []).map(item => ({ descricao: item.descricao }));
+
+        const result = await criarModelo(
+          user.id,
+          `${orc.numero_formatado}`,
+          orc.resumo_executivo || orc.descricao || "",
+          modeloItens
+        );
+
+        if (result.success) migratedCount++;
+      }
+
+      alert(`✅ ${migratedCount} orçamento(s) importado(s) como modelo(s)!`);
+      carregarModelos();
+    } catch (err) {
+      alert("Erro ao migrar: " + (err instanceof Error ? err.message : "Desconhecido"));
+    } finally {
+      setMigrando(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
@@ -100,12 +151,21 @@ function ModelosPage() {
           icon={Package}
           subtitle={`${modelos.length} modelo(s) criado(s)`}
           actions={
-            <button
-              onClick={abrirNovoModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition-colors"
-            >
-              <Plus className="size-3.5" /> Novo Modelo
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleMigrarOrcamentos}
+                disabled={migrando}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 disabled:opacity-50 transition-colors"
+              >
+                {migrando ? "Importando..." : "📥 Importar de Orçamentos"}
+              </button>
+              <button
+                onClick={abrirNovoModal}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-brand-foreground rounded-lg hover:bg-brand/90 transition-colors"
+              >
+                <Plus className="size-3.5" /> Novo Modelo
+              </button>
+            </div>
           }
         />
 
