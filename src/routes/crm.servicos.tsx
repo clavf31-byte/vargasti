@@ -5,6 +5,7 @@ import { Wrench } from "lucide-react";
 import { useServicos } from "@/hooks/useServicos";
 import { AppShell } from "@/components/AppShell";
 import { ServicosTable } from "@/components/crm/ServicosTable";
+import { ServicoTarefasModal } from "@/components/crm/ServicoTarefasModal";
 import { PageHeader } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ function ServicosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [servicoSelecionadoTarefas, setServicoSelecionadoTarefas] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     categoria: "ServiÃ§os TÃ©cnicos",
@@ -173,7 +175,16 @@ function ServicosPage() {
           onAddServico={handleAddNew}
           onEditServico={handleEdit}
           onDeleteServico={deleteServico}
+          onEditTarefas={(servico) => setServicoSelecionadoTarefas(servico)}
         />
+
+        {servicoSelecionadoTarefas && (
+          <ServicoTarefasModal
+            servicoId={servicoSelecionadoTarefas.id}
+            servicoNome={servicoSelecionadoTarefas.nome}
+            onClose={() => setServicoSelecionadoTarefas(null)}
+          />
+        )}
       </div>
     </AppShell>
   );

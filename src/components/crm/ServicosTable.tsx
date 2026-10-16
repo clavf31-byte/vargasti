@@ -1,4 +1,4 @@
-import { Trash2, Plus, Edit2 } from "lucide-react";
+import { Trash2, Plus, Edit2, ListTodo } from "lucide-react";
 
 interface Servico {
   id?: string;
@@ -15,9 +15,10 @@ interface ServicosTableProps {
   onAddServico: () => void;
   onEditServico: (servico: Servico) => void;
   onDeleteServico: (id: string) => void;
+  onEditTarefas?: (servico: Servico) => void;
 }
 
-export function ServicosTable({ servicos, onAddServico, onEditServico, onDeleteServico }: ServicosTableProps) {
+export function ServicosTable({ servicos, onAddServico, onEditServico, onDeleteServico, onEditTarefas }: ServicosTableProps) {
   return (
     <div className="mt-4 space-y-3">
       <div className="flex justify-between items-center">
@@ -61,6 +62,11 @@ export function ServicosTable({ servicos, onAddServico, onEditServico, onDeleteS
                       <button onClick={() => onEditServico(s)} className="text-select hover:text-select/80 transition-colors" title="Editar">
                         <Edit2 className="size-3.5" />
                       </button>
+                      {onEditTarefas && (
+                        <button onClick={() => onEditTarefas(s)} className="text-brand hover:text-brand/80 transition-colors" title="Editar Tarefas">
+                          <ListTodo className="size-3.5" />
+                        </button>
+                      )}
                       <button onClick={() => s.id && onDeleteServico(s.id)} className="text-destructive hover:text-destructive/80 transition-colors" title="Remover">
                         <Trash2 className="size-3.5" />
                       </button>
