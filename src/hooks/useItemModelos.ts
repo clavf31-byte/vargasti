@@ -22,7 +22,8 @@ export async function criarItemModelo(
   descricao: string,
   tipo: "servico" | "peca",
   preco_unitario: number,
-  unidade: string = "Unidade"
+  unidade: string = "Unidade",
+  tarefas: string[] = []
 ) {
   try {
     const { data, error } = await supabase
@@ -34,6 +35,7 @@ export async function criarItemModelo(
         tipo,
         preco_unitario,
         unidade,
+        tarefas,
       })
       .select();
 
@@ -51,7 +53,8 @@ export async function atualizarItemModelo(
   descricao: string,
   tipo: "servico" | "peca",
   preco_unitario: number,
-  unidade: string
+  unidade: string,
+  tarefas: string[] = []
 ) {
   try {
     const { data, error } = await supabase
@@ -62,6 +65,7 @@ export async function atualizarItemModelo(
         tipo,
         preco_unitario,
         unidade,
+        tarefas,
         updated_at: new Date().toISOString(),
       })
       .eq("id", modelo_id)

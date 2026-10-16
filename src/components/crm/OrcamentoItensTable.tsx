@@ -11,6 +11,7 @@ interface OrcamentoItem {
   tipo?: "servico" | "peca";
   servico_id?: string;
   peca_id?: string;
+  tarefas?: string[];
 }
 
 interface OrcamentoItensTableProps {
@@ -119,11 +120,35 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
                     </td>
                   </tr>
                 ))}
-                {itens.map((item, idx) =>
-                  item.tipo === 'servico' && item.servico_id ? (
-                    <OrcamentoItemTarefas key={`tarefas-${idx}`} servicoId={item.servico_id} />
-                  ) : null
-                )}
+                {itens.map((item, idx) => {
+                  // Mostrar tarefas do modelo ou do serviço
+                  const temTarefasModelo = item.tarefas && item.tarefas.length > 0;
+                  const temTarefasServico = item.tipo === 'servico' && item.servico_id;
+
+                  if (temTarefasModelo) {
+                    return (
+                      <tr key={`tarefas-${idx}`} className="border-b border-border/50 bg-surface/30">
+                        <td colSpan={5} className="px-6 py-3">
+                          <div className="space-y-1">
+                            <div className="text-xs font-semibold text-select uppercase tracking-wider mb-1.5">
+                              O que inclui:
+                            </div>
+                            <div className="space-y-1">
+                              {item.tarefas.map((tarefa, tidx) => (
+                                <div key={tidx} className="text-xs text-muted-foreground flex items-center gap-2">
+                                  <span className="text-select">✓</span> {tarefa}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  } else if (temTarefasServico) {
+                    return <OrcamentoItemTarefas key={`tarefas-${idx}`} servicoId={item.servico_id!} />;
+                  }
+                  return null;
+                })}
               </tbody>
             </table>
           </div>

@@ -16,6 +16,7 @@ interface OrcamentoItem {
   tipo?: "servico" | "peca";
   servico_id?: string;
   peca_id?: string;
+  tarefas?: string[];
 }
 
 interface OrcamentoItemFormProps {
@@ -138,6 +139,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       subtotal: quantidade * precoFinal,
       categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
       tipo: selecionado.tipo,
+      tarefas: selecionado.tarefas || [],
     });
     onClose();
   }

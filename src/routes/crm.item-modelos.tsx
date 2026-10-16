@@ -20,6 +20,7 @@ interface ItemModelo {
   tipo: "servico" | "peca";
   preco_unitario: number;
   unidade: string;
+  tarefas?: string[];
   created_at: string;
 }
 
@@ -35,6 +36,8 @@ function ItemModelosPage() {
     tipo: "servico" as "servico" | "peca",
     preco_unitario: 0,
     unidade: "Unidade",
+    tarefas: [] as string[],
+    novaTarefa: "",
   });
 
   useEffect(() => {
@@ -57,6 +60,8 @@ function ItemModelosPage() {
       tipo: "servico",
       preco_unitario: 0,
       unidade: "Unidade",
+      tarefas: [],
+      novaTarefa: "",
     });
     setShowModal(true);
   }
@@ -69,6 +74,8 @@ function ItemModelosPage() {
       tipo: modelo.tipo,
       preco_unitario: modelo.preco_unitario,
       unidade: modelo.unidade,
+      tarefas: modelo.tarefas || [],
+      novaTarefa: "",
     });
     setShowModal(true);
   }
@@ -84,7 +91,8 @@ function ItemModelosPage() {
         formData.descricao,
         formData.tipo,
         formData.preco_unitario,
-        formData.unidade
+        formData.unidade,
+        formData.tarefas
       );
       if (result.success) {
         setModelos(modelos.map((m) => (m.id === editandoId ? result.data : m)));
@@ -96,7 +104,8 @@ function ItemModelosPage() {
         formData.descricao,
         formData.tipo,
         formData.preco_unitario,
-        formData.unidade
+        formData.unidade,
+        formData.tarefas
       );
       if (result.success) {
         setModelos([result.data, ...modelos]);
@@ -110,6 +119,8 @@ function ItemModelosPage() {
       tipo: "servico",
       preco_unitario: 0,
       unidade: "Unidade",
+      tarefas: [],
+      novaTarefa: "",
     });
   }
 
@@ -119,6 +130,22 @@ function ItemModelosPage() {
     if (result.success) {
       setModelos(modelos.filter((m) => m.id !== id));
     }
+  }
+
+  function adicionarTarefa() {
+    if (!formData.novaTarefa.trim()) return;
+    setFormData({
+      ...formData,
+      tarefas: [...formData.tarefas, formData.novaTarefa.trim()],
+      novaTarefa: "",
+    });
+  }
+
+  function removerTarefa(index: number) {
+    setFormData({
+      ...formData,
+      tarefas: formData.tarefas.filter((_, i) => i !== index),
+    });
   }
 
   const tipoIcon = (tipo: string) => tipo === "servico" ? "🔧" : "📦";
@@ -171,6 +198,15 @@ function ItemModelosPage() {
                       <p className="text-sm text-muted-foreground mt-2">
                         {modelo.descricao}
                       </p>
+                    )}
+                    {modelo.tarefas && modelo.tarefas.length > 0 && (
+                      <div className="mt-3 pl-3 border-l border-select/20 space-y-1">
+                        {modelo.tarefas.map((tarefa, idx) => (
+                          <div key={idx} className="text-xs text-muted-foreground flex items-center gap-2">
+                            <span className="text-select">✓</span> {tarefa}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -268,6 +304,56 @@ function ItemModelosPage() {
                   rows={2}
                   className="input-base w-full resize-y"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  O que inclui (tarefas/componentes)
+                </label>
+                <div className="space-y-2">
+                  {formData.tarefas.length > 0 && (
+                    <div className="space-y-1 mb-2">
+                      {formData.tarefas.map((tarefa, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-surface rounded px-2 py-1.5 text-sm">
+                          <span className="text-foreground flex items-center gap-2">
+                            <span className="text-brand">✓</span> {tarefa}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removerTarefa(idx)}
+                            className="text-destructive hover:text-destructive/80 text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.novaTarefa}
+                      onChange={(e) =>
+                        setFormData({ ...formData, novaTarefa: e.target.value })
+                      }
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          adicionarTarefa();
+                        }
+                      }}
+                      placeholder="Ex: Backup de dados"
+                      className="input-base flex-1 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={adicionarTarefa}
+                      className="px-3 py-2 text-xs font-semibold bg-select text-white rounded-lg hover:bg-select/90 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
