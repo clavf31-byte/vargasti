@@ -9,6 +9,10 @@ interface OrcamentoItem {
   preco_unitario: number;
   subtotal: number;
   categoria?: string;
+  tipo?: "servico" | "peca";
+  servico_id?: string;
+  peca_id?: string;
+  tarefas?: string[];
 }
 
 export function useOrcamentoItens(orcamentoId?: string) {
@@ -78,6 +82,10 @@ export function useOrcamentoItens(orcamentoId?: string) {
           preco_unitario: item.preco_unitario,
           subtotal: item.subtotal,
           ordem: idx,
+          tipo: item.tipo,
+          servico_id: item.servico_id,
+          peca_id: item.peca_id,
+          tarefas: item.tarefas,
         }));
 
       if (itensToSave.length > 0) {
