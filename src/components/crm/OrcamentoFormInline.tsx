@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OrcamentoItensTable } from "./OrcamentoItensTable";
 import { OrcamentoItemForm } from "./OrcamentoItemForm";
+import { ModeloSelectorModal } from "./ModeloSelectorModal";
 import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
 import { gerarNumeroOrcamento, previewNumeroOrcamento } from "@/hooks/useOrcamentoNumero";
-import { X } from "lucide-react";
+import { X, Copy } from "lucide-react";
 
 interface OrcamentoFormInlineProps {
   userId: string;
@@ -34,6 +35,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showItemForm, setShowItemForm] = useState(false);
+  const [showModeloSelector, setShowModeloSelector] = useState(false);
   const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
 
   useEffect(() => {
@@ -81,6 +83,16 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     } catch (err) {
       console.error("Erro ao criar rascunho:", err);
     }
+  };
+
+  // Usar modelo - carrega itens do modelo
+  const handleUsarModelo = (modeloItens: any[]) => {
+    for (const item of modeloItens) {
+      addItem();
+      const idx = itens.length;
+      updateItem(idx, item);
+    }
+    setShowModeloSelector(false);
   };
 
   const subtotal = total;
@@ -255,6 +267,16 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
           </p>
         </div>
 
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setShowModeloSelector(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground border border-border rounded-lg hover:bg-surface-2 transition-colors"
+          >
+            <Copy className="size-3.5" /> Usar Modelo
+          </button>
+        </div>
+
         <OrcamentoItensTable
           itens={itens}
           onAddItem={() => setShowItemForm(true)}
@@ -335,6 +357,14 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
           </button>
         </div>
       </form>
+
+      {showModeloSelector && (
+        <ModeloSelectorModal
+          userId={userId}
+          onSelect={handleUsarModelo}
+          onClose={() => setShowModeloSelector(false)}
+        />
+      )}
     </div>
   );
 }
