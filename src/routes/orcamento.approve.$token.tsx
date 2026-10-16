@@ -266,6 +266,24 @@ function ApproveOrcamentoPage() {
                         <td style={{ padding: "12px", fontSize: 14, color: "#1a2332", fontWeight: 600, textAlign: "right" as const }}>{fmtBRL(item.subtotal || 0)}</td>
                       </tr>
                     ))}
+                    {orcamento.itens.map((item: any, idx: number) =>
+                      item.tarefas && item.tarefas.length > 0 ? (
+                        <tr key={`tarefas-${idx}`} style={{ borderBottom: "1px solid #f1f5f9", background: "#f9fafb" }}>
+                          <td colSpan={4} style={{ padding: "12px 12px 12px 32px", fontSize: 13, color: "#475569" }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: "#0891b2", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              O que inclui:
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: 20 }}>
+                              {item.tarefas.map((tarefa: string, tidx: number) => (
+                                <li key={tidx} style={{ fontSize: 12, color: "#1a2332", marginBottom: 4 }}>
+                                  ✓ {tarefa}
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      ) : null
+                    )}
                   </tbody>
                 </table>
               </>
