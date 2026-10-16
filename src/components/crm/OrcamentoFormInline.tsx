@@ -30,6 +30,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     status_enum: "rascunho",
     data_vencimento: "",
   });
+  const [orcamento_id, setOrcamento_id] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showItemForm, setShowItemForm] = useState(false);
@@ -38,10 +39,49 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
   useEffect(() => {
     if (!isOpen) return;
     setFormData((f) => ({ ...f, numero_formatado: "", cliente_id: cliente_id_pre || "" }));
+    setOrcamento_id(null);
     previewNumeroOrcamento(userId).then((num) =>
       setFormData((f) => ({ ...f, numero_formatado: num }))
     );
   }, [isOpen, userId, cliente_id_pre]);
+
+  // Auto-save rascunho ao selecionar cliente
+  const handleClienteChange = async (novoClienteId: string) => {
+    setFormData((f) => ({ ...f, cliente_id: novoClienteId }));
+
+    // Se já existe rascunho, não cria novo
+    if (orcamento_id || !novoClienteId) return;
+
+    try {
+      const numero = await gerarNumeroOrcamento(userId);
+      const { data: createdOrc, error: insertError } = await supabase.from("orcamentos").insert([{
+        numero,
+        numero_formatado: numero,
+        cliente_id: novoClienteId,
+        descricao: "",
+        observacoes: "",
+        local: "",
+        data_agendamento: null,
+        notas: "",
+        resumo_executivo: "",
+        total: 0,
+        desconto: 0,
+        impostos: 0,
+        status: "rascunho",
+        status_enum: "rascunho",
+        data_vencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        user_id: userId,
+        atendimento_id: atendimento_id || null,
+      }]).select();
+
+      if (insertError) throw insertError;
+      if (createdOrc && createdOrc[0]) {
+        setOrcamento_id(createdOrc[0].id);
+      }
+    } catch (err) {
+      console.error("Erro ao criar rascunho:", err);
+    }
+  };
 
   const subtotal = total;
   const totalComDescontoEImpostos = Math.max(0, subtotal - formData.desconto + formData.impostos);
@@ -51,39 +91,64 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     setLoading(true);
     setError(null);
     try {
-      const numero = await gerarNumeroOrcamento(userId);
-      const { error: insertError } = await supabase.from("orcamentos").insert([{
-        numero,
-        numero_formatado: numero,
-        cliente_id: formData.cliente_id,
-        descricao: formData.descricao,
-        observacoes: formData.observacoes,
-        local: formData.local,
-        data_agendamento: formData.data_agendamento || null,
-        notas: formData.descricao,
-        resumo_executivo: formData.resumo_executivo,
-        total: totalComDescontoEImpostos,
-        desconto: formData.desconto,
-        impostos: formData.impostos,
-        status: "rascunho",
-        status_enum: formData.status_enum,
-        data_vencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        user_id: userId,
-        atendimento_id: atendimento_id || null,
-      }]);
-      if (insertError) throw insertError;
+      const orc_id = orcamento_id || null;
 
-      const { data: createdOrc, error: fetchError } = await supabase
-        .from("orcamentos").select("id").eq("numero_formatado", numero).eq("user_id", userId).single();
-      if (fetchError) throw fetchError;
+      if (orc_id) {
+        // Atualizar rascunho existente
+        const { error: updateError } = await supabase
+          .from("orcamentos")
+          .update({
+            descricao: formData.descricao,
+            observacoes: formData.observacoes,
+            local: formData.local,
+            data_agendamento: formData.data_agendamento || null,
+            notas: formData.descricao,
+            resumo_executivo: formData.resumo_executivo,
+            total: totalComDescontoEImpostos,
+            desconto: formData.desconto,
+            impostos: formData.impostos,
+          })
+          .eq("id", orc_id);
 
-      if (itens.length > 0) await saveItens(createdOrc.id);
+        if (updateError) throw updateError;
+        if (itens.length > 0) await saveItens(orc_id);
+      } else {
+        // Criar novo se não existir rascunho
+        const numero = await gerarNumeroOrcamento(userId);
+        const { error: insertError } = await supabase.from("orcamentos").insert([{
+          numero,
+          numero_formatado: numero,
+          cliente_id: formData.cliente_id,
+          descricao: formData.descricao,
+          observacoes: formData.observacoes,
+          local: formData.local,
+          data_agendamento: formData.data_agendamento || null,
+          notas: formData.descricao,
+          resumo_executivo: formData.resumo_executivo,
+          total: totalComDescontoEImpostos,
+          desconto: formData.desconto,
+          impostos: formData.impostos,
+          status: "rascunho",
+          status_enum: formData.status_enum,
+          data_vencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          user_id: userId,
+          atendimento_id: atendimento_id || null,
+        }]);
+        if (insertError) throw insertError;
+
+        const { data: createdOrc, error: fetchError } = await supabase
+          .from("orcamentos").select("id").eq("numero_formatado", numero).eq("user_id", userId).single();
+        if (fetchError) throw fetchError;
+
+        if (itens.length > 0) await saveItens(createdOrc.id);
+      }
 
       setFormData({ numero_formatado: "", cliente_id: "", descricao: "", observacoes: "", local: "", data_agendamento: "", resumo_executivo: "", desconto: 0, impostos: 0, status_enum: "rascunho", data_vencimento: "" });
+      setOrcamento_id(null);
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar orçamento");
+      setError(err instanceof Error ? err.message : "Erro ao salvar orçamento");
     } finally {
       setLoading(false);
     }
@@ -116,10 +181,10 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente *</label>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente * {orcamento_id && <span className="text-xs text-brand">(rascunho criado)</span>}</label>
             <select
               value={formData.cliente_id}
-              onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
+              onChange={(e) => handleClienteChange(e.target.value)}
               className="input-base w-full"
               required
             >
