@@ -9,8 +9,9 @@ import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
 import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
+import { salvarOrcamentoComoModelo } from "@/hooks/useOrcamentoModelos";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
-import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/orcamentos/unificado/$id")({
@@ -42,6 +43,9 @@ function OrcamentoUnificadoPage() {
   const [showCompartilhamento, setShowCompartilhamento] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState<string>("");
   const [editandoResumo, setEditandoResumo] = useState(false);
+  const [showSalvarComoModelo, setShowSalvarComoModelo] = useState(false);
+  const [modeloForm, setModeloForm] = useState({ nome: "", descricao: "" });
+  const [salvandoModelo, setSalvandoModelo] = useState(false);
 
   useEffect(() => {
     if (user) loadData();
@@ -279,6 +283,35 @@ function OrcamentoUnificadoPage() {
     }
   }
 
+  async function handleSalvarComoModelo() {
+    if (!user || !modeloForm.nome.trim()) {
+      alert("Preencha o nome do modelo");
+      return;
+    }
+
+    setSalvandoModelo(true);
+    try {
+      const result = await salvarOrcamentoComoModelo(
+        user.id,
+        modeloForm.nome,
+        modeloForm.descricao,
+        itens
+      );
+
+      if (result.success) {
+        alert("✅ Modelo salvo com sucesso!");
+        setShowSalvarComoModelo(false);
+        setModeloForm({ nome: "", descricao: "" });
+      } else {
+        alert("Erro ao salvar modelo: " + result.error);
+      }
+    } catch (err) {
+      alert("Erro: " + (err instanceof Error ? err.message : "Desconhecido"));
+    } finally {
+      setSalvandoModelo(false);
+    }
+  }
+
   if (loading)
     return (
       <AppShell>
@@ -382,6 +415,13 @@ function OrcamentoUnificadoPage() {
             className="flex items-center gap-2 px-4 py-2 border border-brand/30 text-brand bg-brand/10 rounded-lg text-sm font-semibold hover:bg-brand/20 transition"
           >
             <Download className="size-4" /> PDF
+          </button>
+
+          <button
+            onClick={() => setShowSalvarComoModelo(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-purple-500/30 text-purple-400 bg-purple-500/10 rounded-lg text-sm font-semibold hover:bg-purple-500/20 transition"
+          >
+            <Copy className="size-4" /> Salvar como Modelo
           </button>
         </div>
 
@@ -585,6 +625,80 @@ function OrcamentoUnificadoPage() {
           approvalUrl={approvalUrl}
           onClose={() => setShowCompartilhamento(false)}
         />
+      )}
+
+      {showSalvarComoModelo && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowSalvarComoModelo(false)}
+        >
+          <div
+            className="card-graphite p-6 w-full max-w-500px"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">
+                Salvar como Modelo
+              </h2>
+              <button
+                onClick={() => setShowSalvarComoModelo(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSalvarComoModelo(); }} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Nome do Modelo *
+                </label>
+                <input
+                  type="text"
+                  value={modeloForm.nome}
+                  onChange={(e) => setModeloForm({ ...modeloForm, nome: e.target.value })}
+                  placeholder="Ex: Formatação Padrão"
+                  className="input-base w-full"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Descrição
+                </label>
+                <textarea
+                  value={modeloForm.descricao}
+                  onChange={(e) => setModeloForm({ ...modeloForm, descricao: e.target.value })}
+                  placeholder="Ex: Formatação completa com backup..."
+                  rows={2}
+                  className="input-base w-full resize-y"
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Os {itens.length} itens deste orçamento serão salvos no modelo.
+              </p>
+
+              <div className="flex gap-2 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setShowSalvarComoModelo(false)}
+                  className="flex-1 px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-surface-2 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvandoModelo}
+                  className="flex-1 px-4 py-2 text-sm rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                >
+                  {salvandoModelo ? "Salvando..." : "Salvar Modelo"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </AppShell>
   );
