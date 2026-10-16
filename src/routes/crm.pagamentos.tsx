@@ -198,10 +198,17 @@ function PagamentosPage() {
     const hoje = new Date().toISOString().split("T")[0];
     const saldo = Math.round((pag.valor - valorPago) * 100) / 100;
 
+    // Marcar pagamento como pago
     await supabase
       .from("pagamentos")
       .update({ status: "pago", valor: valorPago, data_pagamento: hoje })
       .eq("id", pag.id);
+
+    // Atualizar status do orçamento para "pago"
+    await supabase
+      .from("orcamentos")
+      .update({ status_enum: "pago", data_pagamento: hoje })
+      .eq("id", pag.orcamento_id);
 
     if (saldo > 0.009) {
       await (supabase as any).from("pagamentos").insert({
