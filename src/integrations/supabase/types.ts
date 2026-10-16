@@ -295,6 +295,54 @@ export type Database = {
           },
         ]
       }
+      avaliacoes: {
+        Row: {
+          cliente_id: string
+          comentario: string | null
+          created_at: string | null
+          id: string
+          orcamento_id: string
+          rating: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          comentario?: string | null
+          created_at?: string | null
+          id?: string
+          orcamento_id: string
+          rating: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          comentario?: string | null
+          created_at?: string | null
+          id?: string
+          orcamento_id?: string
+          rating?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: true
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_financeiro: {
         Row: {
           cliente_id: string
@@ -1639,6 +1687,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      servico_tarefas: {
+        Row: {
+          created_at: string | null
+          descricao: string
+          id: string
+          ordem: number
+          servico_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao: string
+          id?: string
+          ordem?: number
+          servico_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string
+          id?: string
+          ordem?: number
+          servico_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servico_tarefas_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       servicos: {
         Row: {
