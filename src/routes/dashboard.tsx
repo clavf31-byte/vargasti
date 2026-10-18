@@ -97,7 +97,7 @@ function Dashboard() {
     orcamentosCount, orcamentosStatus, orcamentosTotalAberto,
     clientesCount, clientesComOrcamento,
     pagamentosCount, pagamentosTotal,
-    contratosCount, contratosStatus,
+    osCount, osStatus,
     tarefasPendentes, tarefasAtrasadas, tarefasHoje,
     recentes,
   } = metrics;
@@ -106,8 +106,6 @@ function Dashboard() {
     ? Math.round((orcamentosStatus.aprovado / orcamentosCount) * 100) : 0;
   const clientesConvPct = clientesCount > 0
     ? Math.round((clientesComOrcamento / clientesCount) * 100) : 0;
-  const contratosAssPct = contratosCount > 0
-    ? Math.round((contratosStatus.assinado / contratosCount) * 100) : 0;
 
   const actions = [
     { to: "/crm",            icon: TrendingUp,      label: "CRM Dashboard",  desc: "Ver métricas",        cls: "bg-surface-2 border-border text-muted-foreground" },
@@ -185,21 +183,21 @@ function Dashboard() {
               progress={orcAprovadosPct}
             />
             <KpiCard
-              label="Contratos"
-              value={String(contratosCount).padStart(2, "0")}
-              icon={FileSignature}
-              to="/crm/contratos"
-              gradient="amber"
-              badge={contratosStatus.enviado > 0
-                ? { text: `${contratosStatus.enviado} ag. assinatura`, variant: "warn" }
+              label="Ordens de Serviço"
+              value={String(osCount).padStart(2, "0")}
+              icon={Wrench}
+              to="/crm/os"
+              gradient="teal"
+              badge={osStatus.em_progresso > 0
+                ? { text: `${osStatus.em_progresso} em progresso`, variant: "warn" }
                 : undefined}
               breakdown={[
-                { val: String(contratosStatus.assinado), lbl: "Assinados",  colorClass: "text-brand" },
-                { val: String(contratosStatus.enviado),  lbl: "Enviados",   colorClass: "text-info" },
-                { val: String(contratosStatus.rascunho), lbl: "Rascunho",   colorClass: "text-muted-foreground" },
+                { val: String(osStatus.aberta), lbl: "Abertas",  colorClass: "text-info" },
+                { val: String(osStatus.em_progresso), lbl: "Em progresso", colorClass: "text-warning" },
+                { val: String(osStatus.concluida), lbl: "Concluídas", colorClass: "text-brand" },
               ]}
-              footer={{ label: "Taxa de assinatura", value: `${contratosAssPct}%` }}
-              progress={contratosAssPct}
+              footer={{ label: "Taxa de conclusão", value: osCount > 0 ? `${Math.round((osStatus.concluida / osCount) * 100)}%` : "0%" }}
+              progress={osCount > 0 ? Math.round((osStatus.concluida / osCount) * 100) : 0}
             />
             <KpiCard
               label="Pagamentos"

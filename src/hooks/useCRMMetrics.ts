@@ -30,6 +30,8 @@ export interface CRMMetrics {
   pagamentosTotal: number;
   contratosCount: number;
   contratosStatus: { assinado: number; enviado: number; rascunho: number };
+  osCount: number;
+  osStatus: { aberta: number; em_progresso: number; concluida: number; cancelada: number };
   tarefasPendentes: TarefaPendente[];
   tarefasAtrasadas: number;
   tarefasHoje: number;
@@ -46,6 +48,8 @@ const INITIAL: CRMMetrics = {
   pagamentosTotal: 0,
   contratosCount: 0,
   contratosStatus: { assinado: 0, enviado: 0, rascunho: 0 },
+  osCount: 0,
+  osStatus: { aberta: 0, em_progresso: 0, concluida: 0, cancelada: 0 },
   tarefasPendentes: [],
   tarefasAtrasadas: 0,
   tarefasHoje: 0,
@@ -64,7 +68,7 @@ export function useCRMMetrics(): CRMMetrics {
       const userId = user!.id;
       const todayStr = new Date().toISOString().split("T")[0];
 
-      const [clientesRes, orcamentosRes, pagamentosRes, contratosRes, tarefasRes] = await Promise.all([
+      const [clientesRes, orcamentosRes, pagamentosRes, contratosRes, osRes, tarefasRes] = await Promise.all([
         supabase.from("clientes").select("id", { count: "exact" }).eq("user_id", userId),
         supabase
           .from("orcamentos")
@@ -73,6 +77,7 @@ export function useCRMMetrics(): CRMMetrics {
           .order("created_at", { ascending: false }),
         supabase.from("pagamentos").select("id, valor").eq("user_id", userId),
         supabase.from("contracts").select("id, status").eq("user_id", userId),
+        supabase.from("ordens_servico").select("id, status").eq("user_id", userId),
         supabase
           .from("tarefas")
           .select("id, titulo, status, prioridade, data_vencimento")
@@ -87,6 +92,7 @@ export function useCRMMetrics(): CRMMetrics {
       const orcs = (orcamentosRes.data || []) as any[];
       const pags = (pagamentosRes.data || []) as any[];
       const contratos = (contratosRes.data || []) as any[];
+      const os = (osRes.data || []) as any[];
       const tarefas = (tarefasRes.data || []) as any[];
 
       const orcStatus = { aprovado: 0, enviado: 0, rascunho: 0, rejeitado: 0 };
@@ -105,6 +111,15 @@ export function useCRMMetrics(): CRMMetrics {
         if (s === "assinado") contStatus.assinado++;
         else if (s === "enviado") contStatus.enviado++;
         else contStatus.rascunho++;
+      }
+
+      const osStatus = { aberta: 0, em_progresso: 0, concluida: 0, cancelada: 0 };
+      for (const item of os) {
+        const s = (item.status as string)?.toLowerCase();
+        if (s === "aberta") osStatus.aberta++;
+        else if (s === "em_progresso") osStatus.em_progresso++;
+        else if (s === "concluida") osStatus.concluida++;
+        else if (s === "cancelada") osStatus.cancelada++;
       }
 
       const tarefasPendentes: TarefaPendente[] = tarefas.map((t: any) => ({
@@ -138,6 +153,8 @@ export function useCRMMetrics(): CRMMetrics {
         pagamentosTotal: pags.reduce((s: number, p: any) => s + (p.valor || 0), 0),
         contratosCount: contratos.length,
         contratosStatus: contStatus,
+        osCount: os.length,
+        osStatus,
         tarefasPendentes,
         tarefasAtrasadas,
         tarefasHoje,
