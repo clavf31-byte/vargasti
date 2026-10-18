@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import {
   Users, FileText, Banknote, Plus, TrendingUp, ScrollText,
   Clock, CheckCircle2, Mail, FileEdit, ChevronRight,
-  FileSignature, AlertTriangle, CalendarClock, ListTodo, NotebookPen, FolderKanban,
+  FileSignature, AlertTriangle, CalendarClock, ListTodo, NotebookPen, FolderKanban, Wrench,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
