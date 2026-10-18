@@ -8,7 +8,7 @@ interface KpiCardProps {
   value: string;
   icon: LucideIcon;
   to: string;
-  gradient: "blue" | "purple" | "amber";
+  gradient: "blue" | "purple" | "amber" | "teal";
   badge?: { text: string; variant: "up" | "warn" | "neu" };
   breakdown: [SubItem, SubItem, SubItem];
   footer: { label: string; value: string };
@@ -19,6 +19,7 @@ const tokens = {
   blue:   { icon: "bg-select/15 border-select/30 text-select",   bar: "bg-select" },
   purple: { icon: "bg-info/12 border-info/30 text-info",         bar: "bg-info" },
   amber:  { icon: "bg-warning/12 border-warning/30 text-warning", bar: "bg-warning" },
+  teal:   { icon: "bg-teal-500/15 border-teal-500/30 text-teal-400", bar: "bg-teal-500" },
 };
 
 const badgeClass = {
