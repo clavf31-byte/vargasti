@@ -22,6 +22,8 @@ const ORC_STATUS: Record<string, { label: string; icon: typeof CheckCircle2; dot
   enviado:   { label: "Enviado",   icon: Mail,         dotClass: "bg-info",              pill: "bg-select/15 text-select" },
   rascunho:  { label: "Rascunho",  icon: FileEdit,     dotClass: "bg-muted-foreground",  pill: "bg-surface-2 text-muted-foreground" },
   rejeitado: { label: "Rejeitado", icon: FileEdit,     dotClass: "bg-destructive",       pill: "bg-destructive/15 text-destructive" },
+  faturado:  { label: "Faturado",  icon: FileSignature, dotClass: "bg-warning",           pill: "bg-warning/15 text-warning" },
+  pago:      { label: "Pago",      icon: CheckCircle2, dotClass: "bg-brand",             pill: "bg-brand/15 text-brand" },
 };
 
 const PRIORIDADE_CLS: Record<string, string> = {
@@ -272,21 +274,25 @@ function Dashboard() {
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Ações Rápidas</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {actions.map(({ to, icon: Icon, label, desc, cls }) => (
-                <Link
-                  key={to + label}
-                  to={to}
-                  className="card-selectable hover:card-selectable-hover p-3 flex items-center gap-2.5"
-                >
-                  <div className={`size-8 rounded-xl border ${cls} grid place-items-center shrink-0`}>
-                    <Icon className="size-3.5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{label}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{desc}</p>
-                  </div>
-                </Link>
-              ))}
+              {actions?.length > 0 && actions.map((action) => {
+                if (!action || !action.icon) return null;
+                const { to, icon: Icon, label, desc, cls } = action;
+                return (
+                  <Link
+                    key={to + label}
+                    to={to}
+                    className="card-selectable hover:card-selectable-hover p-3 flex items-center gap-2.5"
+                  >
+                    <div className={`size-8 rounded-xl border ${cls} grid place-items-center shrink-0`}>
+                      <Icon className="size-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate">{label}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{desc}</p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
 
