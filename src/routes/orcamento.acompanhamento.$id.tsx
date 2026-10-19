@@ -101,8 +101,8 @@ function AcompanhamentoPage() {
       return;
     }
 
-    if (!orcamento || !os) {
-      alert("Dados incompletos");
+    if (!orcamento) {
+      alert("Orçamento não encontrado");
       return;
     }
 
