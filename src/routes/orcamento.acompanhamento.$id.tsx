@@ -49,27 +49,59 @@ function AcompanhamentoPage() {
       setLoading(true);
 
       // Página pública - qualquer um com o ID consegue acessar
-      const query = supabase
+      console.log("📥 Carregando orçamento:", id);
+
+      const result = await supabase
         .from("orcamentos")
-        .select("*, clientes(nome, telefone)")
+        .select("*")
         .eq("id", id)
         .single();
 
-      const result = await query;
-      const orcData = result.data;
-      const orcError = result.error;
+      console.log("🔍 Query result:", result);
+      const { data: orcData, error: orcError } = result;
 
-      if (orcError) throw new Error("Orçamento não encontrado");
+      if (orcError) {
+        console.error("❌ Erro na query:", orcError);
+        throw new Error(`Orçamento não encontrado: ${orcError.message}`);
+      }
+
+      if (!orcData) {
+        throw new Error("Orçamento não encontrado (dados vazios)");
+      }
+
+      console.log("✅ Orçamento carregado:", orcData);
       setOrcamento(orcData);
 
+      // Carregar cliente separadamente
+      if (orcData.cliente_id) {
+        const { data: clienteData } = await supabase
+          .from("clientes")
+          .select("nome, telefone")
+          .eq("id", orcData.cliente_id)
+          .single();
+
+        if (clienteData) {
+          setOrcamento(prev => ({
+            ...prev,
+            clientes: clienteData
+          }));
+        }
+      }
+
       // Carregar OS vinculada
-      const { data: osData } = await supabase
+      const { data: osDataList, error: osError } = await supabase
         .from("ordens_servico")
         .select("*")
-        .eq("orcamento_id", id)
-        .single();
+        .eq("orcamento_id", id);
 
-      if (osData) setOs(osData);
+      if (osError) {
+        console.warn("⚠️ Erro ao carregar OS:", osError);
+      } else if (osDataList && osDataList.length > 0) {
+        console.log("✅ OS carregada:", osDataList[0]);
+        setOs(osDataList[0]);
+      } else {
+        console.log("ℹ️ Nenhuma OS encontrada");
+      }
 
       // Carregar avaliação se existir
       const avalData = await obterAvaliacao(id);
