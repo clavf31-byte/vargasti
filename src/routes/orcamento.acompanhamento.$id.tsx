@@ -28,7 +28,6 @@ function fmtDate(iso: string) {
 
 function AcompanhamentoPage() {
   const { id } = Route.useParams();
-  const { user } = useAuth();
 
   const [orcamento, setOrcamento] = useState<any>(null);
   const [os, setOs] = useState<any>(null);
