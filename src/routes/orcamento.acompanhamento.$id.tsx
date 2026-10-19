@@ -1,6 +1,7 @@
 import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { obterAvaliacao, salvarAvaliacao, deletarAvaliacao } from "@/hooks/useAvaliacao";
 import vargasLogo from "@/assets/vargasti-icon.png";
@@ -15,6 +16,12 @@ export const Route = createFileRoute("/orcamento/acompanhamento/$id")({
       { name: "og:type", content: "website" },
     ]
   }),
+  beforeLoad: async ({ context }) => {
+    const { user } = context.auth || {};
+    if (!user) {
+      throw new Error("Autenticação necessária");
+    }
+  },
   component: AcompanhamentoPage,
 });
 
@@ -28,6 +35,7 @@ function fmtDate(iso: string) {
 
 function AcompanhamentoPage() {
   const { id } = Route.useParams();
+  const { user } = useAuth();
   const [orcamento, setOrcamento] = useState<any>(null);
   const [os, setOs] = useState<any>(null);
   const [avaliacao, setAvaliacao] = useState<any>(null);
@@ -47,14 +55,20 @@ function AcompanhamentoPage() {
     try {
       setLoading(true);
 
-      // Carregar orçamento
+      if (!user) {
+        setError("Usuário não autenticado");
+        return;
+      }
+
+      // Carregar orçamento - verificar permissão (user_id)
       const { data: orcData, error: orcError } = await supabase
         .from("orcamentos")
         .select("*, clientes(nome, telefone)")
         .eq("id", id)
+        .eq("user_id", user.id)
         .single();
 
-      if (orcError) throw new Error("Orçamento não encontrado");
+      if (orcError) throw new Error("Orçamento não encontrado ou sem permissão");
       setOrcamento(orcData);
 
       // Carregar OS vinculada
@@ -293,23 +307,25 @@ function AcompanhamentoPage() {
                     "{avaliacao.comentario}"
                   </div>
                 )}
-                <button
-                  onClick={handleLimparAvaliacao}
-                  disabled={deletingAvaliacao}
-                  style={{
-                    marginTop: 16,
-                    padding: "8px 12px",
-                    background: "rgba(239, 68, 68, 0.2)",
-                    border: "1px solid rgba(239, 68, 68, 0.3)",
-                    color: "#ef4444",
-                    borderRadius: 4,
-                    fontSize: "11px",
-                    cursor: deletingAvaliacao ? "not-allowed" : "pointer",
-                    opacity: deletingAvaliacao ? 0.6 : 1,
-                  }}
-                >
-                  🗑️ Limpar (Debug)
-                </button>
+                {user?.id === orcamento?.user_id && (
+                  <button
+                    onClick={handleLimparAvaliacao}
+                    disabled={deletingAvaliacao}
+                    style={{
+                      marginTop: 16,
+                      padding: "8px 12px",
+                      background: "rgba(239, 68, 68, 0.2)",
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      color: "#ef4444",
+                      borderRadius: 4,
+                      fontSize: "11px",
+                      cursor: deletingAvaliacao ? "not-allowed" : "pointer",
+                      opacity: deletingAvaliacao ? 0.6 : 1,
+                    }}
+                  >
+                    🗑️ Limpar (Debug)
+                  </button>
+                )}
               </div>
             ) : (
               <div>
