@@ -43,3 +43,18 @@ export async function salvarAvaliacao(
     return { success: false, error: msg };
   }
 }
+
+export async function deletarAvaliacao(orcamento_id: string) {
+  try {
+    const { error } = await supabase
+      .from("avaliacoes")
+      .delete()
+      .eq("orcamento_id", orcamento_id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Erro ao deletar avaliação";
+    return { success: false, error: msg };
+  }
+}

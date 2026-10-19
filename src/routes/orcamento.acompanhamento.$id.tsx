@@ -2,7 +2,7 @@ import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { obterAvaliacao, salvarAvaliacao } from "@/hooks/useAvaliacao";
+import { obterAvaliacao, salvarAvaliacao, deletarAvaliacao } from "@/hooks/useAvaliacao";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 
@@ -37,6 +37,7 @@ function AcompanhamentoPage() {
   const [comentario, setComentario] = useState("");
   const [savingAvaliacao, setSavingAvaliacao] = useState(false);
   const [avaliacaoEnviada, setAvaliacaoEnviada] = useState(false);
+  const [deletingAvaliacao, setDeletingAvaliacao] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -112,6 +113,28 @@ function AcompanhamentoPage() {
       alert("Erro: " + (err instanceof Error ? err.message : "Desconhecido"));
     } finally {
       setSavingAvaliacao(false);
+    }
+  }
+
+  async function handleLimparAvaliacao() {
+    if (!confirm("Tem certeza que deseja deletar esta avaliação? (Ação de debug/teste)")) return;
+
+    setDeletingAvaliacao(true);
+    try {
+      const result = await deletarAvaliacao(orcamento.id);
+      if (result.success) {
+        setAvaliacaoEnviada(false);
+        setAvaliacao(null);
+        setRating(0);
+        setComentario("");
+        alert("✅ Avaliação deletada com sucesso!");
+      } else {
+        alert("Erro ao deletar: " + result.error);
+      }
+    } catch (err) {
+      alert("Erro: " + (err instanceof Error ? err.message : "Desconhecido"));
+    } finally {
+      setDeletingAvaliacao(false);
     }
   }
 
@@ -270,6 +293,23 @@ function AcompanhamentoPage() {
                     "{avaliacao.comentario}"
                   </div>
                 )}
+                <button
+                  onClick={handleLimparAvaliacao}
+                  disabled={deletingAvaliacao}
+                  style={{
+                    marginTop: 16,
+                    padding: "8px 12px",
+                    background: "rgba(239, 68, 68, 0.2)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#ef4444",
+                    borderRadius: 4,
+                    fontSize: "11px",
+                    cursor: deletingAvaliacao ? "not-allowed" : "pointer",
+                    opacity: deletingAvaliacao ? 0.6 : 1,
+                  }}
+                >
+                  🗑️ Limpar (Debug)
+                </button>
               </div>
             ) : (
               <div>
