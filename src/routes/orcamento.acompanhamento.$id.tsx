@@ -80,7 +80,9 @@ function AcompanhamentoPage() {
         setAvaliacaoEnviada(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar dados");
+      const errorMsg = err instanceof Error ? err.message : "Erro ao carregar dados";
+      console.error("❌ Erro ao carregar acompanhamento:", { err, id, errorMsg });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -108,14 +110,18 @@ function AcompanhamentoPage() {
       );
 
       if (result.success) {
+        console.log("✅ Avaliação salva:", result.data);
         setAvaliacaoEnviada(true);
         setAvaliacao(result.data);
         alert("✅ Avaliação enviada com sucesso! Obrigado pelo feedback.");
       } else {
+        console.error("❌ Erro ao enviar:", result.error);
         alert("Erro ao enviar avaliação: " + result.error);
       }
     } catch (err) {
-      alert("Erro: " + (err instanceof Error ? err.message : "Desconhecido"));
+      const errorMsg = err instanceof Error ? err.message : "Desconhecido";
+      console.error("❌ Erro na avaliação:", err, errorMsg);
+      alert("Erro: " + errorMsg);
     } finally {
       setSavingAvaliacao(false);
     }
