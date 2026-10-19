@@ -212,8 +212,8 @@ function AcompanhamentoPage() {
 
       <div style={styles.header}>
         <img src={vargasLogo} alt="VargasTI" style={{ height: 40, marginBottom: 16 }} />
-        <h1 style={styles.title}>Acompanhe Seu Equipamento</h1>
-        <p style={styles.subtitle}>Orçamento #{orcamento.numero_formatado}</p>
+        <h1 style={styles.title}>Acompanhe Seu Atendimento</h1>
+        <p style={styles.subtitle}>Status do Orçamento #{orcamento.numero_formatado}</p>
       </div>
 
       <div style={styles.card}>
@@ -417,7 +417,7 @@ function AcompanhamentoPage() {
 
       <div style={{ textAlign: "center", marginTop: 24, color: "#888", fontSize: 12 }}>
         <p>Dúvidas? Entre em contato conosco</p>
-        <p>📧 {orcamento.clientes?.telefone || "contato@vargasti.com.br"}</p>
+        <p>📧 suporte@vargasti.com.br</p>
       </div>
     </div>
   );
