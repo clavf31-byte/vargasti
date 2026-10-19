@@ -10,8 +10,9 @@ import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilha
 import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
 import { salvarOrcamentoComoModelo } from "@/hooks/useOrcamentoModelos";
+import { obterAvaliacao } from "@/hooks/useAvaliacao";
 import { baixarPDFOrcamento } from "@/lib/pdf-generator";
-import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail, Copy, Edit2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, FileSpreadsheet, Wrench, CreditCard, CheckCircle2, Download, Share2, Check, X, Mail, Copy, Edit2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crm/orcamentos/unificado/$id")({
@@ -37,11 +38,13 @@ function OrcamentoUnificadoPage() {
   const [pagamento, setPagamento] = useState<any>(null);
   const [cliente, setCliente] = useState<any>(null);
   const [itens, setItens] = useState<any[]>([]);
+  const [avaliacao, setAvaliacao] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [expandedFase, setExpandedFase] = useState<Fase | null>("orcamento");
   const [showItemForm, setShowItemForm] = useState(false);
   const [showCompartilhamento, setShowCompartilhamento] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState<string>("");
+  const [showAvaliacaoModal, setShowAvaliacaoModal] = useState(false);
   const [editandoResumo, setEditandoResumo] = useState(false);
   const [showSalvarComoModelo, setShowSalvarComoModelo] = useState(false);
   const [modeloForm, setModeloForm] = useState({ nome: "", descricao: "" });
@@ -125,6 +128,12 @@ function OrcamentoUnificadoPage() {
         .eq("orcamento_id", id);
 
       if (pgto && pgto.length > 0) setPagamento(pgto[0]);
+
+      // Carregar avaliação
+      const avaliacaoData = await obterAvaliacao(id);
+      if (avaliacaoData) {
+        setAvaliacao(avaliacaoData);
+      }
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
@@ -391,7 +400,19 @@ function OrcamentoUnificadoPage() {
             <h1 className="text-2xl font-bold">{orcamento.numero_formatado}</h1>
             <p className="text-sm text-muted-foreground">{cliente?.nome}</p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-4">
+            {avaliacao && (
+              <button
+                onClick={() => setShowAvaliacaoModal(true)}
+                className={cn(
+                  "relative p-2 rounded-lg transition",
+                  avaliacao ? "animate-pulse bg-select/20 text-select hover:bg-select/30" : "text-muted-foreground"
+                )}
+                title="Ver avaliação do cliente"
+              >
+                <Star className="size-5 fill-current" />
+              </button>
+            )}
             <span className={cn("text-sm font-semibold", statusCor[(orcamento.status_enum || orcamento.status) as keyof typeof statusCor] ?? "text-muted-foreground")}>
               {String(orcamento.status_enum || orcamento.status || "rascunho").toUpperCase()}
             </span>
@@ -835,6 +856,43 @@ function OrcamentoUnificadoPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Avaliação */}
+      {showAvaliacaoModal && avaliacao && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Avaliação do Cliente</h2>
+              <button onClick={() => setShowAvaliacaoModal(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+            </div>
+
+            <div className="bg-select/10 border border-select/30 rounded-lg p-4 mb-4 text-center">
+              <div className="text-3xl mb-2">{Array(avaliacao.rating).fill("⭐").join("")}</div>
+              <div className="font-semibold text-select">{avaliacao.rating} de 5 - {["Péssimo", "Ruim", "Regular", "Bom", "Excelente"][avaliacao.rating - 1]}</div>
+            </div>
+
+            {avaliacao.comentario && (
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-muted-foreground block mb-2">Comentário</label>
+                <div className="bg-surface-2 border border-border rounded-lg p-3 text-sm text-foreground">
+                  {avaliacao.comentario}
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs text-muted-foreground mb-4">
+              Avaliado em {new Date(avaliacao.created_at).toLocaleDateString("pt-BR")} às {new Date(avaliacao.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </div>
+
+            <button
+              onClick={() => setShowAvaliacaoModal(false)}
+              className="w-full px-4 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand/90 transition"
+            >
+              Fechar
+            </button>
           </div>
         </div>
       )}
