@@ -16,12 +16,6 @@ export const Route = createFileRoute("/orcamento/acompanhamento/$id")({
       { name: "og:type", content: "website" },
     ]
   }),
-  beforeLoad: async ({ context }) => {
-    const { user } = context.auth || {};
-    if (!user) {
-      throw new Error("Autenticação necessária");
-    }
-  },
   component: AcompanhamentoPage,
 });
 
