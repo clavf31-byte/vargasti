@@ -18,6 +18,7 @@ interface OrcamentoCompartilhamentoProps {
   approvalUrl: string;
   onClose: () => void;
   onCompartilhado?: (canal: string) => void;
+  showEvaluationLink?: boolean;
 }
 
 export function OrcamentoCompartilhamento({
@@ -26,10 +27,15 @@ export function OrcamentoCompartilhamento({
   approvalUrl,
   onClose,
   onCompartilhado,
+  showEvaluationLink = true,
 }: OrcamentoCompartilhamentoProps) {
   const [copying, setCopying] = useState(false);
+  const [copyingEval, setCopyingEval] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [avisoRastreamento, setAvisoRastreamento] = useState<string | null>(null);
+
+  const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/$/, "") || window.location.origin;
+  const evaluationUrl = `${baseUrl}/orcamento/acompanhamento/${orcamento.id}`;
   const {
     rastrearCompartilhamento,
     gerarMensagemProfissional,
@@ -93,6 +99,48 @@ export function OrcamentoCompartilhamento({
       setTimeout(() => setCopying(false), 2000);
     } catch {
       setCopying(false);
+    }
+  }
+
+  async function handleCopiarAvaliacao() {
+    setCopyingEval(true);
+    try {
+      await navigator.clipboard.writeText(evaluationUrl);
+      setTimeout(() => setCopyingEval(false), 2000);
+    } catch {
+      setCopyingEval(false);
+    }
+  }
+
+  async function handleCompartilharAvaliacao(canal: "whatsapp" | "sms" | "email") {
+    setActionLoading(true);
+    setAvisoRastreamento(null);
+    try {
+      const track = await rastrearCompartilhamento(orcamento.id, cliente.id, `${canal}_avaliacao`);
+      if (!track.success) {
+        setAvisoRastreamento(
+          "Compartilhamento aberto, mas não foi possível registrar no histórico."
+        );
+      }
+
+      const mensagem = `Olá ${cliente.nome}!\n\nGostaríamos de saber sua opinião sobre nosso atendimento. Clique no link abaixo para avaliar:\n\n${evaluationUrl}\n\nSua avaliação é muito importante para nós!\n\nAtenciosamente,\nVargasTI`;
+
+      if (canal === "whatsapp" && cliente.telefone) {
+        const urlWA = `https://wa.me/${cliente.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(mensagem)}`;
+        window.open(urlWA, "_blank");
+      } else if (canal === "sms" && cliente.telefone) {
+        const urlSMS = `sms:${cliente.telefone}?body=${encodeURIComponent(mensagem)}`;
+        window.open(urlSMS, "_blank");
+      } else if (canal === "email" && cliente.email) {
+        const assunto = `Avalie Nosso Atendimento - Orçamento #${orcamento.numero_formatado}`;
+        const corpo = encodeURIComponent(mensagem);
+        const urlEmail = `mailto:${cliente.email}?subject=${encodeURIComponent(assunto)}&body=${corpo}`;
+        window.open(urlEmail, "_blank");
+      }
+
+      onCompartilhado?.(`${canal}_avaliacao`);
+    } finally {
+      setActionLoading(false);
     }
   }
 
@@ -329,6 +377,104 @@ export function OrcamentoCompartilhamento({
             }}
           >
             {avisoRastreamento}
+          </div>
+        )}
+
+        {showEvaluationLink && (
+          <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(13, 208, 215, 0.1)" }}>
+            <p style={{ color: "#8da2b4", fontSize: "12px", textTransform: "uppercase", marginBottom: "1rem" }}>
+              📋 Link de Avaliação
+            </p>
+            <code
+              style={{
+                display: "block",
+                padding: "12px",
+                background: "rgba(0, 0, 0, 0.2)",
+                borderRadius: "6px",
+                color: "#22c55e",
+                fontSize: "12px",
+                wordBreak: "break-all",
+                marginBottom: "0.5rem",
+              }}
+            >
+              {evaluationUrl}
+            </code>
+            <button
+              onClick={handleCopiarAvaliacao}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                padding: "10px",
+                background: "rgba(34, 197, 94, 0.2)",
+                border: "1px solid rgba(34, 197, 94, 0.3)",
+                borderRadius: "6px",
+                color: "#22c55e",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "13px",
+                marginBottom: "1rem",
+              }}
+            >
+              <Copy size={14} />
+              {copyingEval ? "Copiado!" : "Copiar Link de Avaliação"}
+            </button>
+
+            <p style={{ color: "#8da2b4", fontSize: "12px", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+              Enviar Avaliação Via
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+              {cliente.telefone && (
+                <button
+                  onClick={() => handleCompartilharAvaliacao("whatsapp")}
+                  disabled={actionLoading}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "12px",
+                    background: "#25d366",
+                    border: "none",
+                    borderRadius: "6px",
+                    color: "white",
+                    cursor: actionLoading ? "not-allowed" : "pointer",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    opacity: actionLoading ? 0.6 : 1,
+                  }}
+                >
+                  <MessageCircle size={14} />
+                  WhatsApp
+                </button>
+              )}
+              {cliente.email && (
+                <button
+                  onClick={() => handleCompartilharAvaliacao("email")}
+                  disabled={actionLoading}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "12px",
+                    background: "rgba(34, 197, 94, 0.2)",
+                    border: "1px solid rgba(34, 197, 94, 0.3)",
+                    borderRadius: "6px",
+                    color: "#22c55e",
+                    cursor: actionLoading ? "not-allowed" : "pointer",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    opacity: actionLoading ? 0.6 : 1,
+                  }}
+                >
+                  <Mail size={14} />
+                  Email
+                </button>
+              )}
+            </div>
           </div>
         )}
 
