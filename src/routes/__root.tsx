@@ -177,7 +177,8 @@ function AuthGuard() {
     const isPublic =
       (!isAppHost && isLandingRoute) ||
       pathname === "/login" ||
-      pathname.startsWith("/orcamento/approve/");
+      pathname.startsWith("/orcamento/approve/") ||
+      pathname.startsWith("/orcamento/acompanhamento/");
 
     if (isAppHost && isLandingRoute) {
       navigate({ to: session ? "/dashboard" : "/login" });
