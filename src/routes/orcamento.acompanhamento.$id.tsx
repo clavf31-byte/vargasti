@@ -1,7 +1,6 @@
 import client from "@/config/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { obterAvaliacao, salvarAvaliacao } from "@/hooks/useAvaliacao";
 import vargasLogo from "@/assets/vargasti-icon.png";
@@ -30,8 +29,6 @@ function fmtDate(iso: string) {
 function AcompanhamentoPage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
-  const searchParams = new URLSearchParams(window.location.search);
-  const token = searchParams.get("token");
 
   const [orcamento, setOrcamento] = useState<any>(null);
   const [os, setOs] = useState<any>(null);
@@ -51,46 +48,16 @@ function AcompanhamentoPage() {
     try {
       setLoading(true);
 
-      // Permitir acesso se:
-      // 1. Usuário autenticado AND dono do orçamento, OU
-      // 2. Token válido no URL
-      if (!user && !token) {
-        setError("Acesso não autorizado. Verifique o link enviado.");
-        return;
-      }
+      // Página pública - qualquer um com o ID consegue acessar
+      const query = supabase
+        .from("orcamentos")
+        .select("*, clientes(nome, telefone)")
+        .eq("id", id)
+        .single();
 
-      let orcData;
-      let orcError;
-
-      if (user) {
-        // Usuário autenticado - verificar se é dono
-        const query = supabase
-          .from("orcamentos")
-          .select("*, clientes(nome, telefone)")
-          .eq("id", id)
-          .eq("user_id", user.id)
-          .single();
-
-        const result = await query;
-        orcData = result.data;
-        orcError = result.error;
-      } else if (token) {
-        // Acesso via token (cliente) - apenas validar que o orçamento existe
-        const query = supabase
-          .from("orcamentos")
-          .select("*, clientes(nome, telefone)")
-          .eq("id", id)
-          .single();
-
-        const result = await query;
-        orcData = result.data;
-        orcError = result.error;
-
-        // Validar token comparando com approval_token do orçamento
-        if (orcData && orcData.approval_token !== token) {
-          throw new Error("Token inválido");
-        }
-      }
+      const result = await query;
+      const orcData = result.data;
+      const orcError = result.error;
 
       if (orcError) throw new Error("Orçamento não encontrado");
       setOrcamento(orcData);

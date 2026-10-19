@@ -67,11 +67,11 @@ function ApproveOrcamentoPage() {
   useEffect(() => {
     if (status === "approved" && orcamento?.id) {
       const timeout = setTimeout(() => {
-        navigate({ to: `/orcamento/acompanhamento/${orcamento.id}`, search: `token=${token}` });
+        navigate({ to: `/orcamento/acompanhamento/${orcamento.id}` });
       }, 2000);
       return () => clearTimeout(timeout);
     }
-  }, [status, orcamento?.id, token, navigate]);
+  }, [status, orcamento?.id, navigate]);
 
   const updateMetaTag = (name: string, content: string) => {
     let element = document.querySelector(`meta[property="${name}"]`);
