@@ -8,6 +8,7 @@ interface OrcamentoCompartilhamentoProps {
     id: string;
     numero_formatado: string;
     total: number;
+    approval_token?: string;
   };
   cliente: {
     id: string;
@@ -35,7 +36,9 @@ export function OrcamentoCompartilhamento({
   const [avisoRastreamento, setAvisoRastreamento] = useState<string | null>(null);
 
   const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/$/, "") || window.location.origin;
-  const evaluationUrl = `${baseUrl}/orcamento/acompanhamento/${orcamento.id}`;
+  const evaluationUrl = orcamento.approval_token
+    ? `${baseUrl}/orcamento/acompanhamento/${orcamento.id}?token=${orcamento.approval_token}`
+    : `${baseUrl}/orcamento/acompanhamento/${orcamento.id}`;
   const {
     rastrearCompartilhamento,
     gerarMensagemProfissional,
