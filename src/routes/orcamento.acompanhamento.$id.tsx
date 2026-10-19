@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { obterAvaliacao, salvarAvaliacao, deletarAvaliacao } from "@/hooks/useAvaliacao";
+import { obterAvaliacao, salvarAvaliacao } from "@/hooks/useAvaliacao";
 import vargasLogo from "@/assets/vargasti-icon.png";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 
@@ -30,6 +30,9 @@ function fmtDate(iso: string) {
 function AcompanhamentoPage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
+  const searchParams = new URLSearchParams(window.location.search);
+  const token = searchParams.get("token");
+
   const [orcamento, setOrcamento] = useState<any>(null);
   const [os, setOs] = useState<any>(null);
   const [avaliacao, setAvaliacao] = useState<any>(null);
@@ -39,7 +42,6 @@ function AcompanhamentoPage() {
   const [comentario, setComentario] = useState("");
   const [savingAvaliacao, setSavingAvaliacao] = useState(false);
   const [avaliacaoEnviada, setAvaliacaoEnviada] = useState(false);
-  const [deletingAvaliacao, setDeletingAvaliacao] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -49,20 +51,48 @@ function AcompanhamentoPage() {
     try {
       setLoading(true);
 
-      if (!user) {
-        setError("Usuário não autenticado");
+      // Permitir acesso se:
+      // 1. Usuário autenticado AND dono do orçamento, OU
+      // 2. Token válido no URL
+      if (!user && !token) {
+        setError("Acesso não autorizado. Verifique o link enviado.");
         return;
       }
 
-      // Carregar orçamento - verificar permissão (user_id)
-      const { data: orcData, error: orcError } = await supabase
-        .from("orcamentos")
-        .select("*, clientes(nome, telefone)")
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .single();
+      let orcData;
+      let orcError;
 
-      if (orcError) throw new Error("Orçamento não encontrado ou sem permissão");
+      if (user) {
+        // Usuário autenticado - verificar se é dono
+        const query = supabase
+          .from("orcamentos")
+          .select("*, clientes(nome, telefone)")
+          .eq("id", id)
+          .eq("user_id", user.id)
+          .single();
+
+        const result = await query;
+        orcData = result.data;
+        orcError = result.error;
+      } else if (token) {
+        // Acesso via token (cliente) - apenas validar que o orçamento existe
+        const query = supabase
+          .from("orcamentos")
+          .select("*, clientes(nome, telefone)")
+          .eq("id", id)
+          .single();
+
+        const result = await query;
+        orcData = result.data;
+        orcError = result.error;
+
+        // Validar token comparando com approval_token do orçamento
+        if (orcData && orcData.approval_token !== token) {
+          throw new Error("Token inválido");
+        }
+      }
+
+      if (orcError) throw new Error("Orçamento não encontrado");
       setOrcamento(orcData);
 
       // Carregar OS vinculada
@@ -121,28 +151,6 @@ function AcompanhamentoPage() {
       alert("Erro: " + (err instanceof Error ? err.message : "Desconhecido"));
     } finally {
       setSavingAvaliacao(false);
-    }
-  }
-
-  async function handleLimparAvaliacao() {
-    if (!confirm("Tem certeza que deseja deletar esta avaliação? (Ação de debug/teste)")) return;
-
-    setDeletingAvaliacao(true);
-    try {
-      const result = await deletarAvaliacao(orcamento.id);
-      if (result.success) {
-        setAvaliacaoEnviada(false);
-        setAvaliacao(null);
-        setRating(0);
-        setComentario("");
-        alert("✅ Avaliação deletada com sucesso!");
-      } else {
-        alert("Erro ao deletar: " + result.error);
-      }
-    } catch (err) {
-      alert("Erro: " + (err instanceof Error ? err.message : "Desconhecido"));
-    } finally {
-      setDeletingAvaliacao(false);
     }
   }
 
@@ -300,25 +308,6 @@ function AcompanhamentoPage() {
                   <div style={{ fontSize: 12, color: "#64748b", marginTop: 8, fontStyle: "italic" }}>
                     "{avaliacao.comentario}"
                   </div>
-                )}
-                {user?.id === orcamento?.user_id && (
-                  <button
-                    onClick={handleLimparAvaliacao}
-                    disabled={deletingAvaliacao}
-                    style={{
-                      marginTop: 16,
-                      padding: "8px 12px",
-                      background: "rgba(239, 68, 68, 0.2)",
-                      border: "1px solid rgba(239, 68, 68, 0.3)",
-                      color: "#ef4444",
-                      borderRadius: 4,
-                      fontSize: "11px",
-                      cursor: deletingAvaliacao ? "not-allowed" : "pointer",
-                      opacity: deletingAvaliacao ? 0.6 : 1,
-                    }}
-                  >
-                    🗑️ Limpar (Debug)
-                  </button>
                 )}
               </div>
             ) : (
