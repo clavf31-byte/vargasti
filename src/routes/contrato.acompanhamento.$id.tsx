@@ -25,11 +25,21 @@ interface Contrato {
   clientes?: { nome: string };
 }
 
+interface Signature {
+  signed_by: string;
+  signed_at: string;
+}
+
 function AcompanhamentoContratoPage() {
   const { id } = Route.useParams();
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [signature, setSignature] = useState<Signature | null>(null);
+  const [signerName, setSignerName] = useState("");
+  const [signerEmail, setSignerEmail] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [signing, setSigning] = useState(false);
 
   useEffect(() => {
     loadContrato();
@@ -48,12 +58,62 @@ function AcompanhamentoContratoPage() {
       if (!data) throw new Error("Contrato não encontrado");
 
       setContrato(data);
+
+      // Carregar assinatura existente
+      const { data: sigData } = await (supabase as any)
+        .from("contract_signatures")
+        .select("signed_by, signed_at")
+        .eq("contract_id", id)
+        .order("signed_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (sigData) {
+        setSignature(sigData);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar contrato";
       console.error("❌ Erro:", msg);
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSign = async () => {
+    if (!signerName.trim() || !acceptTerms) {
+      alert("Preencha o nome e aceite os termos");
+      return;
+    }
+
+    setSigning(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("contract_signatures")
+        .insert([{
+          contract_id: id,
+          signed_by: signerName,
+          email: signerEmail || null,
+          client_ip: null,
+        }]);
+
+      if (error) throw error;
+
+      // Atualizar contrato como assinado
+      await (supabase as any)
+        .from("contracts")
+        .update({ signed_by: signerName, signed_at: new Date().toISOString(), status: "assinado" })
+        .eq("id", id);
+
+      setSignature({ signed_by: signerName, signed_at: new Date().toISOString() });
+      setSignerName("");
+      setSignerEmail("");
+      setAcceptTerms(false);
+      alert("Contrato assinado com sucesso!");
+    } catch (err) {
+      alert("Erro ao assinar: " + (err instanceof Error ? err.message : ""));
+    } finally {
+      setSigning(false);
     }
   };
 
@@ -158,6 +218,85 @@ function AcompanhamentoContratoPage() {
             {contrato.conteudo}
           </div>
         </div>
+
+        {signature ? (
+          <div style={{ marginTop: 32, padding: 16, background: "#f0fdf4", border: "2px solid #22c55e", borderRadius: 8 }}>
+            <div style={{ fontSize: 12, color: "#22c55e", fontWeight: "bold", marginBottom: 8 }}>✅ CONTRATO ASSINADO</div>
+            <p style={{ margin: "4px 0", fontSize: 13, color: "#1e293b" }}>
+              <strong>Assinado por:</strong> {signature.signed_by}
+            </p>
+            <p style={{ margin: "4px 0", fontSize: 13, color: "#1e293b" }}>
+              <strong>Data:</strong> {new Date(signature.signed_at).toLocaleDateString("pt-BR")} às {new Date(signature.signed_at).toLocaleTimeString("pt-BR")}
+            </p>
+          </div>
+        ) : (
+          <div style={{ marginTop: 32, padding: 20, background: "#fafafa", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: "#1e293b" }}>Assinar Contrato</div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 4 }}>Nome Completo *</label>
+              <input
+                type="text"
+                value={signerName}
+                onChange={(e) => setSignerName(e.target.value)}
+                placeholder="Seu nome completo"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 6,
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 4 }}>Email (opcional)</label>
+              <input
+                type="email"
+                value={signerEmail}
+                onChange={(e) => setSignerEmail(e.target.value)}
+                placeholder="seu@email.com"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 6,
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                style={{ marginTop: 3, cursor: "pointer" }}
+              />
+              <label style={{ fontSize: 12, color: "#64748b", cursor: "pointer" }}>
+                Declaro que li e aceito os termos deste contrato
+              </label>
+            </div>
+            <button
+              onClick={handleSign}
+              disabled={signing || !signerName.trim() || !acceptTerms}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                background: "#0bd0d7",
+                color: "#000",
+                border: "none",
+                borderRadius: 6,
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: signing || !signerName.trim() || !acceptTerms ? "not-allowed" : "pointer",
+                opacity: signing || !signerName.trim() || !acceptTerms ? 0.5 : 1,
+              }}
+            >
+              {signing ? "Assinando..." : "Assinar Contrato"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ textAlign: "center", marginTop: 24, color: "#888", fontSize: 12 }}>
