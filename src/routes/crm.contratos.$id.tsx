@@ -134,7 +134,7 @@ function VisualizarContratoPage() {
 
       {isShareOpen && contrato && (
         <ContratoCompartilhamento
-          contrato={{ id: contrato.id, titulo: contrato.titulo }}
+          contrato={{ id: contrato.id, titulo: contrato.titulo, conteudo: contrato.conteudo }}
           cliente={{
             nome: contrato.clientes?.nome || "Cliente",
             email: contrato.clientes?.email,

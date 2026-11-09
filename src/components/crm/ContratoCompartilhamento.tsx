@@ -6,6 +6,7 @@ interface ContratoCompartilhamentoProps {
   contrato: {
     id: string;
     titulo: string;
+    conteudo?: string;
   };
   cliente: {
     nome: string;
@@ -86,7 +87,7 @@ export function ContratoCompartilhamento({
               body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 40px; }
               h1 { text-align: center; margin-bottom: 10px; font-size: 24px; }
               .meta { text-align: center; color: #666; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
-              .content { white-space: pre-wrap; margin-top: 30px; }
+              .content { white-space: pre-wrap; margin-top: 30px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.5; }
               p { margin: 5px 0; }
             </style>
           </head>
@@ -96,7 +97,7 @@ export function ContratoCompartilhamento({
               <p><strong>Cliente:</strong> ${cliente.nome}</p>
               <p><strong>Gerado em:</strong> ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}</p>
             </div>
-            <div class="content">Abra a página de acompanhamento para visualizar o conteúdo completo do contrato.</div>
+            <div class="content">${(contrato.conteudo || "Conteúdo não disponível").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
           </body>
         </html>
       `;
