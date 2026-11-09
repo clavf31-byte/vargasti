@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, EmptyState, LoadingState, Btn } from "@/components/shared";
-import { Plus, Edit2, Trash2, ClipboardList, X } from "lucide-react";
+import { Plus, Edit2, Trash2, ClipboardList, X, Copy } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/modelos")({
   head: () => ({ meta: [{ title: `Modelos de Contratos · CRM ${client.name}` }] }),
@@ -115,6 +115,12 @@ function ModelosPage() {
     }
   };
 
+  const handleClone = (template: Template) => {
+    setEditingId(null);
+    setForm({ nome: `${template.nome} (cópia)`, descricao: template.descricao, conteudo: template.conteudo });
+    setIsFormOpen(true);
+  };
+
   return (
     <AppShell>
       <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
@@ -201,10 +207,13 @@ function ModelosPage() {
                     <td className="px-4 py-3 text-muted-foreground text-xs">{t.descricao || "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => handleOpenEdit(t)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors">
+                        <button onClick={() => handleOpenEdit(t)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors" title="Editar">
                           <Edit2 className="size-3" /> Editar
                         </button>
-                        <button onClick={() => handleDelete(t.id)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors">
+                        <button onClick={() => handleClone(t)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-blue/30 text-blue bg-blue/10 rounded-lg hover:bg-blue/20 transition-colors" title="Clonar">
+                          <Copy className="size-3" /> Clonar
+                        </button>
+                        <button onClick={() => handleDelete(t.id)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-destructive/30 text-destructive bg-destructive/5 rounded-lg hover:bg-destructive/15 transition-colors" title="Deletar">
                           <Trash2 className="size-3" /> Deletar
                         </button>
                       </div>
