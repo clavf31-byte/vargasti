@@ -110,13 +110,12 @@ function VisualizarContratoPage() {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <button
-              onClick={() => id && navigate({ to: `/crm/contratos/editar/${id}` })}
-              disabled={!id}
-              className="px-4 py-2.5 bg-blue text-white text-sm font-semibold rounded-lg hover:bg-blue/90 disabled:opacity-50 transition-colors"
+            <a
+              href={`/crm/contratos/editar/${id}`}
+              className="px-4 py-2.5 bg-blue text-white text-sm font-semibold rounded-lg hover:bg-blue/90 transition-colors inline-block"
             >
               ✏️ Editar
-            </button>
+            </a>
             <button
               onClick={() => setIsShareOpen(true)}
               className="px-4 py-2.5 bg-select text-white text-sm font-semibold rounded-lg hover:bg-select/90 transition-colors inline-flex items-center gap-2"
