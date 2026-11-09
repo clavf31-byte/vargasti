@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Copy, X, Mail, MessageCircle, Share2, Download, FileText } from "lucide-react";
 import QRCode from "qrcode.react";
-import html2pdf from "html2pdf.js";
 
 interface ContratoCompartilhamentoProps {
   contrato: {
@@ -71,31 +70,47 @@ export function ContratoCompartilhamento({
   const downloadPDF = () => {
     setActionLoading(true);
     try {
-      const element = document.createElement("div");
-      element.innerHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 40px; color: #333;">
-          <h1 style="text-align: center; margin-bottom: 30px;">${contrato.titulo}</h1>
-          <p style="text-align: center; color: #666; margin-bottom: 20px;">Cliente: <strong>${cliente.nome}</strong></p>
-          <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 40px;">
-            Gerado em: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}
-          </p>
-          <hr style="margin-bottom: 30px; border: none; border-top: 1px solid #ddd;">
-          <div style="white-space: pre-wrap; line-height: 1.6; font-size: 11px;">Conteúdo será carregado da página...</div>
-        </div>
+      const printWindow = window.open("", "", "height=400,width=800");
+      if (!printWindow) {
+        alert("Por favor, desabilite o bloqueador de pop-ups para gerar PDF");
+        setActionLoading(false);
+        return;
+      }
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${contrato.titulo}</title>
+            <style>
+              body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 40px; }
+              h1 { text-align: center; margin-bottom: 10px; font-size: 24px; }
+              .meta { text-align: center; color: #666; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
+              .content { white-space: pre-wrap; margin-top: 30px; }
+              p { margin: 5px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>${contrato.titulo}</h1>
+            <div class="meta">
+              <p><strong>Cliente:</strong> ${cliente.nome}</p>
+              <p><strong>Gerado em:</strong> ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}</p>
+            </div>
+            <div class="content">Abra a página de acompanhamento para visualizar o conteúdo completo do contrato.</div>
+          </body>
+        </html>
       `;
 
-      const opt = {
-        margin: 10,
-        filename: `${contrato.titulo}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
-      };
+      printWindow.document.write(html);
+      printWindow.document.close();
 
-      html2pdf().set(opt).from(element).save();
+      setTimeout(() => {
+        printWindow.print();
+        setActionLoading(false);
+      }, 250);
     } catch (e) {
       console.error("Erro ao gerar PDF:", e);
-    } finally {
+      alert("Erro ao gerar PDF. Verifique o console.");
       setActionLoading(false);
     }
   };
