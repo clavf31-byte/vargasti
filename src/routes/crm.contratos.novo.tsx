@@ -208,9 +208,9 @@ function NovoContratoPage() {
         )}
 
         {step === 2 && (
-          <div className="card-graphite p-6 space-y-4">
+          <>
             {variaveis.length === 0 ? (
-              <>
+              <div className="card-graphite p-6 space-y-4">
                 <p className="text-sm text-muted-foreground">Este modelo não possui variáveis. O contrato será criado com o conteúdo do template diretamente.</p>
                 <div className="flex gap-2">
                   <button onClick={handleCreate} disabled={criando} className="px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors">
@@ -220,39 +220,50 @@ function NovoContratoPage() {
                     <ChevronLeft className="size-4" /> Voltar
                   </button>
                 </div>
-              </>
+              </div>
             ) : (
-              <>
-                <p className="text-xs text-muted-foreground">Preencha as variáveis abaixo. Campos com dados do cliente foram preenchidos automaticamente.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {variaveis.map((v) => {
-                    const isAuto = buildAutoValues(clientes.find(c => c.id === form.cliente_id))[v] !== undefined;
-                    return (
-                      <div key={v}>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-mono">
-                          {`{{${v}}}`} {isAuto && <span className="font-sans font-normal text-select">auto</span>}
-                        </label>
-                        <input type="text" value={valores[v] || ""} onChange={(e) => setValores({ ...valores, [v]: e.target.value })} placeholder={`Valor para ${v}`} className="input-base w-full" />
-                      </div>
-                    );
-                  })}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Coluna Esquerda: Form */}
+                <div className="card-graphite p-6 space-y-4">
+                  <p className="text-xs text-muted-foreground">Preencha as variáveis. Auto-preenchidas estão marcadas.</p>
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    {variaveis.map((v) => {
+                      const isAuto = buildAutoValues(clientes.find(c => c.id === form.cliente_id))[v] !== undefined;
+                      return (
+                        <div key={v}>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1 font-mono">
+                            {`{{${v}}}`} {isAuto && <span className="font-sans font-normal text-select ml-1 text-[10px]">auto</span>}
+                          </label>
+                          <input type="text" value={valores[v] || ""} onChange={(e) => setValores({ ...valores, [v]: e.target.value })} placeholder={`Valor para ${v}`} className="input-base w-full text-sm" />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="rounded-lg p-2.5 bg-surface-2 text-[11px] text-muted-foreground">
+                    Variáveis vazias ficarão como <code className="bg-surface px-1 rounded text-[10px]">{`{{var}}`}</code> no contrato.
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button onClick={handleCreate} disabled={criando} className="flex-1 px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors">
+                      {criando ? "Criando..." : "Criar Contrato"}
+                    </button>
+                    <button onClick={() => setStep(1)} className="inline-flex items-center gap-1 px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors">
+                      <ChevronLeft className="size-4" />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="rounded-lg p-3 bg-surface-2 text-xs text-muted-foreground">
-                  Variáveis não preenchidas serão mantidas como <code>{`{{nome_da_variavel}}`}</code> no contrato e podem ser editadas depois.
+                {/* Coluna Direita: Preview */}
+                <div className="card-graphite p-6 space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Preview do Contrato</p>
+                  <div className="bg-surface rounded-lg p-4 text-xs text-foreground font-mono overflow-y-auto max-h-[600px] whitespace-pre-wrap leading-relaxed">
+                    {substituteVariables(templates.find(t => t.id === form.template_id)?.conteudo || "", valores)}
+                  </div>
                 </div>
-
-                <div className="flex gap-2">
-                  <button onClick={handleCreate} disabled={criando} className="px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors">
-                    {criando ? "Criando..." : "Criar Contrato"}
-                  </button>
-                  <button onClick={() => setStep(1)} className="inline-flex items-center gap-1 px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors">
-                    <ChevronLeft className="size-4" /> Voltar
-                  </button>
-                </div>
-              </>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </AppShell>
