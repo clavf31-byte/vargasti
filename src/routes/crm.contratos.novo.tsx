@@ -131,6 +131,13 @@ function NovoContratoPage() {
 
   const handleCreate = async () => {
     if (!user) return;
+
+    const variaveisVazias = variaveis.filter(v => !valores[v] || valores[v].trim() === "");
+    if (variaveisVazias.length > 0) {
+      alert(`Preencha todas as variáveis:\n${variaveisVazias.map(v => `• {{${v}}}`).join("\n")}`);
+      return;
+    }
+
     setCriando(true);
     try {
       let conteudoFinal = "";
@@ -300,8 +307,8 @@ function NovoContratoPage() {
                     })}
                   </div>
 
-                  <div className="rounded-lg p-2.5 bg-surface-2 text-[11px] text-muted-foreground">
-                    Variáveis vazias ficarão como <code className="bg-surface px-1 rounded text-[10px]">{`{{var}}`}</code> no contrato.
+                  <div className="rounded-lg p-2.5 bg-yellow/10 border border-yellow/30 text-[11px] text-yellow">
+                    ⚠️ Todas as variáveis são obrigatórias. Preencha antes de criar.
                   </div>
 
                   <div className="flex gap-2 pt-2">
