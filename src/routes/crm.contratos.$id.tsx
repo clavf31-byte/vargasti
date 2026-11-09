@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, LoadingState, Btn } from "@/components/shared";
-import { ChevronLeft, ScrollText } from "lucide-react";
+import { ChevronLeft, ScrollText, Share2 } from "lucide-react";
+import { ContratoCompartilhamento } from "@/components/crm/ContratoCompartilhamento";
 
 export const Route = createFileRoute("/crm/contratos/$id")({
   head: () => ({ meta: [{ title: `Contrato · CRM ${client.name}` }] }),
@@ -18,6 +19,7 @@ interface Contrato {
   conteudo: string;
   status: string;
   created_at: string;
+  clientes?: { nome: string; email?: string; telefone?: string };
 }
 
 function VisualizarContratoPage() {
@@ -26,6 +28,7 @@ function VisualizarContratoPage() {
   const navigate = useNavigate();
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     loadContrato();
@@ -36,7 +39,7 @@ function VisualizarContratoPage() {
     try {
       const { data, error } = await (supabase as any)
         .from("contracts")
-        .select("id, titulo, conteudo, status, created_at")
+        .select("id, titulo, conteudo, status, created_at, clientes(nome, email, telefone)")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -47,6 +50,8 @@ function VisualizarContratoPage() {
       setLoading(false);
     }
   };
+
+  const shareUrl = contrato ? `${window.location.origin}/contrato/acompanhamento/${contrato.id}` : "";
 
   if (loading) {
     return (
@@ -112,6 +117,12 @@ function VisualizarContratoPage() {
               ✏️ Editar
             </button>
             <button
+              onClick={() => setIsShareOpen(true)}
+              className="px-4 py-2.5 bg-select text-white text-sm font-semibold rounded-lg hover:bg-select/90 transition-colors inline-flex items-center gap-2"
+            >
+              <Share2 className="size-4" /> Compartilhar
+            </button>
+            <button
               onClick={() => navigate({ to: "/crm/contratos" })}
               className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
             >
@@ -120,6 +131,19 @@ function VisualizarContratoPage() {
           </div>
         </div>
       </div>
+
+      {isShareOpen && contrato && (
+        <ContratoCompartilhamento
+          contrato={{ id: contrato.id, titulo: contrato.titulo }}
+          cliente={{
+            nome: contrato.clientes?.nome || "Cliente",
+            email: contrato.clientes?.email,
+            telefone: contrato.clientes?.telefone,
+          }}
+          shareUrl={shareUrl}
+          onClose={() => setIsShareOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }
