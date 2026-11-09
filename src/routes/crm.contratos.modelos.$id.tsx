@@ -20,6 +20,12 @@ interface Template {
   ativo: boolean;
 }
 
+function extractVariables(conteudo: string): string[] {
+  const matches = conteudo.match(/\{\{([^}]+)\}\}/g) || [];
+  const names = matches.map((m) => m.replace(/\{\{|\}\}/g, "").trim());
+  return [...new Set(names)];
+}
+
 function EditModeloPage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
@@ -69,6 +75,7 @@ function EditModeloPage() {
 
     setSaving(true);
     try {
+      const variables = extractVariables(form.conteudo);
       const { error } = await (supabase as any)
         .from("contract_templates")
         .update({
@@ -76,6 +83,7 @@ function EditModeloPage() {
           descricao: form.descricao,
           conteudo: form.conteudo,
           ativo: form.ativo,
+          variaveis: variables,
         })
         .eq("id", id);
 

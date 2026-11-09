@@ -12,6 +12,12 @@ export const Route = createFileRoute("/crm/contratos/modelos/novo")({
   component: NovoModeloPage,
 });
 
+function extractVariables(conteudo: string): string[] {
+  const matches = conteudo.match(/\{\{([^}]+)\}\}/g) || [];
+  const names = matches.map((m) => m.replace(/\{\{|\}\}/g, "").trim());
+  return [...new Set(names)];
+}
+
 function NovoModeloPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -30,13 +36,14 @@ function NovoModeloPage() {
 
     setSaving(true);
     try {
+      const variables = extractVariables(form.conteudo);
       const { error } = await (supabase as any).from("contract_templates").insert([{
         user_id: user.id,
         nome: form.nome,
         descricao: form.descricao,
         conteudo: form.conteudo,
         ativo: true,
-        variaveis: [],
+        variaveis: variables,
       }]);
       if (error) throw error;
       navigate({ to: "/crm/contratos/modelos" });
