@@ -99,6 +99,7 @@ function AcompanhamentoContratoPage() {
         <img src={vargasLogo} alt="VargasTI" style={{ height: 40, marginBottom: 16 }} />
         <h1 style={styles.title}>Acompanhe Seu Contrato</h1>
         <p style={styles.subtitle}>Contrato: {contrato.titulo}</p>
+        {contrato.clientes?.nome && <p style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>Cliente: <strong>{contrato.clientes.nome}</strong></p>}
       </div>
 
       <div style={styles.card}>
