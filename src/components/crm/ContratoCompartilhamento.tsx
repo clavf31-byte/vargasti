@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Copy, X, Mail, MessageCircle, Share2, Download } from "lucide-react";
+import { Copy, X, Mail, MessageCircle, Share2, Download, FileText } from "lucide-react";
 import QRCode from "qrcode.react";
+import html2pdf from "html2pdf.js";
 
 interface ContratoCompartilhamentoProps {
   contrato: {
@@ -64,6 +65,38 @@ export function ContratoCompartilhamento({
         link.download = `contrato-${contrato.titulo}-qrcode.png`;
         link.click();
       }
+    }
+  };
+
+  const downloadPDF = () => {
+    setActionLoading(true);
+    try {
+      const element = document.createElement("div");
+      element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 40px; color: #333;">
+          <h1 style="text-align: center; margin-bottom: 30px;">${contrato.titulo}</h1>
+          <p style="text-align: center; color: #666; margin-bottom: 20px;">Cliente: <strong>${cliente.nome}</strong></p>
+          <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 40px;">
+            Gerado em: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}
+          </p>
+          <hr style="margin-bottom: 30px; border: none; border-top: 1px solid #ddd;">
+          <div style="white-space: pre-wrap; line-height: 1.6; font-size: 11px;">Conteúdo será carregado da página...</div>
+        </div>
+      `;
+
+      const opt = {
+        margin: 10,
+        filename: `${contrato.titulo}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
+      };
+
+      html2pdf().set(opt).from(element).save();
+    } catch (e) {
+      console.error("Erro ao gerar PDF:", e);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -191,6 +224,36 @@ export function ContratoCompartilhamento({
           >
             <Copy size={14} />
             {copying ? "Copiado!" : "Copiar Link"}
+          </button>
+        </div>
+
+        <div style={{ marginBottom: "2rem" }}>
+          <p style={{ color: "#8da2b4", fontSize: "12px", textTransform: "uppercase", marginBottom: "1rem" }}>
+            Download
+          </p>
+          <button
+            onClick={downloadPDF}
+            disabled={actionLoading}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              padding: "12px",
+              background: "rgba(59, 130, 246, 0.2)",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
+              borderRadius: "6px",
+              color: "#3b82f6",
+              cursor: actionLoading ? "not-allowed" : "pointer",
+              fontWeight: 600,
+              fontSize: "13px",
+              opacity: actionLoading ? 0.6 : 1,
+              marginBottom: "1rem",
+            }}
+          >
+            <FileText size={14} />
+            {actionLoading ? "Gerando PDF..." : "Baixar PDF"}
           </button>
         </div>
 
