@@ -93,13 +93,30 @@ function AcompanhamentoContratoPage() {
     <div style={styles.page}>
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .letterhead { border-bottom: 3px solid #0bd0d7; padding-bottom: 24px; margin-bottom: 32px; }
+        .letterhead-content { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .letterhead-logo { height: 60px; }
+        .letterhead-text h2 { margin: 0; font-size: 24px; font-weight: 700; color: #1e293b; }
+        .letterhead-text p { margin: 4px 0 0 0; font-size: 13px; color: #64748b; }
       `}</style>
 
-      <div style={styles.header}>
-        <img src={vargasLogo} alt="VargasTI" style={{ height: 40, marginBottom: 16 }} />
-        <h1 style={styles.title}>Acompanhe Seu Contrato</h1>
-        <p style={styles.subtitle}>Contrato: {contrato.titulo}</p>
-        {contrato.clientes?.nome && <p style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>Cliente: <strong>{contrato.clientes.nome}</strong></p>}
+      <div style={{ ...styles.header, paddingBottom: 0 }} className="letterhead">
+        <div className="letterhead-content">
+          <img src={vargasLogo} alt="VargasTI" className="letterhead-logo" />
+          <div className="letterhead-text">
+            <h2>VargasTI</h2>
+            <p>Soluções em Tecnologia</p>
+          </div>
+        </div>
+        <div style={{ fontSize: 13, color: "#888", textAlign: "center", marginTop: 12 }}>
+          <p style={{ margin: "0 0 4px 0" }}>📧 suporte@vargasti.com.br</p>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px 0", color: "#1e293b" }}>Contrato</h1>
+        <p style={{ fontSize: 14, color: "#64748b", margin: 0 }}>{contrato.titulo}</p>
+        {contrato.clientes?.nome && <p style={{ fontSize: 13, color: "#888", marginTop: 8 }}>Cliente: <strong>{contrato.clientes.nome}</strong></p>}
       </div>
 
       <div style={styles.card}>
