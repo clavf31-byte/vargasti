@@ -182,10 +182,13 @@ function ContratsPage() {
                         {new Date(c.created_at).toLocaleDateString("pt-BR")}
                       </td>
                       <td className="px-4 py-3 flex justify-center gap-2">
-                        <button onClick={() => navigate({ to: `/crm/contratos/${c.id}` })} className="text-select hover:text-select/80">
+                        <button onClick={() => navigate({ to: `/crm/contratos/${c.id}` })} className="text-select hover:text-select/80" title="Ver">
                           <Eye className="size-4" />
                         </button>
-                        <button onClick={() => handleDeleteContrato(c.id)} className="text-destructive hover:text-destructive/80">
+                        <button onClick={() => navigate({ to: `/crm/contratos/${c.id}/editar` })} className="text-blue hover:text-blue/80" title="Editar">
+                          <Edit2 className="size-4" />
+                        </button>
+                        <button onClick={() => handleDeleteContrato(c.id)} className="text-destructive hover:text-destructive/80" title="Deletar">
                           <Trash2 className="size-4" />
                         </button>
                       </td>
