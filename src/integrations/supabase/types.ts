@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       agenda_eventos: {
         Row: {
           atendimento_id: string | null
@@ -772,6 +787,45 @@ export type Database = {
         }
         Relationships: []
       }
+      item_modelos: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          preco_unitario: number
+          tarefas: Json | null
+          tipo: string | null
+          unidade: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          preco_unitario?: number
+          tarefas?: Json | null
+          tipo?: string | null
+          unidade?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          preco_unitario?: number
+          tarefas?: Json | null
+          tipo?: string | null
+          unidade?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       kb_articles: {
         Row: {
           content: string
@@ -1098,6 +1152,7 @@ export type Database = {
           quantidade: number
           servico_id: string | null
           subtotal: number
+          tarefas: Json | null
           tipo: string | null
         }
         Insert: {
@@ -1111,6 +1166,7 @@ export type Database = {
           quantidade?: number
           servico_id?: string | null
           subtotal?: number
+          tarefas?: Json | null
           tipo?: string | null
         }
         Update: {
@@ -1124,6 +1180,7 @@ export type Database = {
           quantidade?: number
           servico_id?: string | null
           subtotal?: number
+          tarefas?: Json | null
           tipo?: string | null
         }
         Relationships: [
@@ -1149,6 +1206,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      orcamento_modelos: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          itens: Json
+          nome: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          itens?: Json
+          nome: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          itens?: Json
+          nome?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       orcamento_sequences: {
         Row: {
@@ -1224,6 +1311,7 @@ export type Database = {
           data_agendamento: string | null
           data_aprovacao: string | null
           data_criacao: string
+          data_pagamento: string | null
           data_rejeicao: string | null
           data_vencimento: string | null
           data_visualizacao: string | null
@@ -1256,6 +1344,7 @@ export type Database = {
           data_agendamento?: string | null
           data_aprovacao?: string | null
           data_criacao?: string
+          data_pagamento?: string | null
           data_rejeicao?: string | null
           data_vencimento?: string | null
           data_visualizacao?: string | null
@@ -1288,6 +1377,7 @@ export type Database = {
           data_agendamento?: string | null
           data_aprovacao?: string | null
           data_criacao?: string
+          data_pagamento?: string | null
           data_rejeicao?: string | null
           data_vencimento?: string | null
           data_visualizacao?: string | null
@@ -2052,6 +2142,7 @@ export type Database = {
           quantidade: number
           servico_id: string | null
           subtotal: number
+          tarefas: Json | null
           tipo: string | null
         }[]
         SetofOptions: {
