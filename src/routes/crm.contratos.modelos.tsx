@@ -154,6 +154,19 @@ function ModelosPage() {
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Conteúdo *</label>
               <p className="text-[11px] text-muted-foreground mb-1.5">Use: {`{{cliente_nome}}`}, {`{{data}}`}, {`{{valor}}`}, etc.</p>
               <textarea value={form.conteudo} onChange={(e) => setForm({ ...form, conteudo: e.target.value })} rows={10} className="input-base w-full font-mono text-xs resize-y" />
+
+              {form.conteudo && extractVariables(form.conteudo).length > 0 && (
+                <div className="mt-3 p-3 bg-surface-2 rounded-lg">
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-2">Variáveis detectadas:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {extractVariables(form.conteudo).map((v) => (
+                      <code key={v} className="bg-surface px-2 py-1 rounded text-[10px] text-select font-mono border border-select/20">
+                        {`{{${v}}}`}
+                      </code>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">
