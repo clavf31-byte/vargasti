@@ -216,10 +216,22 @@ function AcompanhamentoPage() {
         .star:hover, .star.active { transform: scale(1.2); color: #fbbf24; }
       `}</style>
 
-      <div style={styles.header}>
-        <img src={vargasLogo} alt="VargasTI" style={{ height: 40, marginBottom: 16 }} />
-        <h1 style={styles.title}>Acompanhe Seu Atendimento</h1>
-        <p style={styles.subtitle}>Status do Orçamento #{orcamento.numero_formatado}</p>
+      <div style={styles.header} className="letterhead">
+        <div className="letterhead-content" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+          <img src={vargasLogo} alt="VargasTI" style={{ height: 60 }} />
+          <div className="letterhead-text" style={{ flex: 1 }}>
+            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>VargasTI</h2>
+            <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#64748b" }}>Soluções em Tecnologia</p>
+          </div>
+        </div>
+        <div style={{ fontSize: 13, color: "#888", textAlign: "center", marginTop: 12, paddingTop: 12, borderTop: "3px solid #0bd0d7" }}>
+          <p style={{ margin: "0 0 4px 0" }}>📧 suporte@vargasti.com.br</p>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px 0", color: "#1e293b" }}>Acompanhe Seu Atendimento</h1>
+        <p style={{ fontSize: 14, color: "#64748b", margin: 0 }}>Orçamento #{orcamento.numero_formatado}</p>
       </div>
 
       <div style={styles.card}>
