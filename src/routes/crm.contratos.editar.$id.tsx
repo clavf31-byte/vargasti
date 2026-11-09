@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader, LoadingState, Btn } from "@/components/shared";
 import { ChevronLeft, ScrollText } from "lucide-react";
 
-export const Route = createFileRoute("/crm/contratos/$id/editar")({
+export const Route = createFileRoute("/crm/contratos/editar/$id")({
   head: () => ({ meta: [{ title: `Editar Contrato · CRM ${client.name}` }] }),
   component: EditarContratoPage,
 });
@@ -99,7 +99,7 @@ function EditarContratoPage() {
           title="Editar Contrato"
           icon={ScrollText}
           actions={
-            <Btn variant="secondary" onClick={() => navigate({ to: `/crm/contratos/${id}` })}>
+            <Btn variant="secondary" onClick={() => id && navigate({ to: `/crm/contratos/${id}` })}>
               <ChevronLeft className="size-4" /> Voltar
             </Btn>
           }
@@ -125,7 +125,7 @@ function EditarContratoPage() {
               {saving ? "Salvando..." : "Salvar Mudanças"}
             </button>
             <button
-              onClick={() => navigate({ to: `/crm/contratos/${id}` })}
+              onClick={() => id && navigate({ to: `/crm/contratos/${id}` })}
               className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
             >
               Cancelar

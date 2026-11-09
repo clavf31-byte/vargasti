@@ -185,7 +185,7 @@ function ContratsPage() {
                         <button onClick={() => navigate({ to: `/crm/contratos/${c.id}` })} className="text-select hover:text-select/80" title="Ver">
                           <Eye className="size-4" />
                         </button>
-                        <button onClick={() => navigate({ to: `/crm/contratos/${c.id}/editar` })} className="text-blue hover:text-blue/80" title="Editar">
+                        <button onClick={() => navigate({ to: `/crm/contratos/editar/${c.id}` })} className="text-blue hover:text-blue/80" title="Editar">
                           <Edit2 className="size-4" />
                         </button>
                         <button onClick={() => handleDeleteContrato(c.id)} className="text-destructive hover:text-destructive/80" title="Deletar">

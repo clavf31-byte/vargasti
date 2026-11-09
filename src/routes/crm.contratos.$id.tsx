@@ -111,7 +111,7 @@ function VisualizarContratoPage() {
 
           <div className="flex gap-2 pt-4">
             <button
-              onClick={() => id && navigate({ to: `/crm/contratos/${id}/editar` })}
+              onClick={() => id && navigate({ to: `/crm/contratos/editar/${id}` })}
               disabled={!id}
               className="px-4 py-2.5 bg-blue text-white text-sm font-semibold rounded-lg hover:bg-blue/90 disabled:opacity-50 transition-colors"
             >
