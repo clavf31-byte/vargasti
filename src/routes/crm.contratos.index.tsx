@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader, EmptyState, LoadingState, Btn } from "@/components/shared";
 import { Plus, Eye, Trash2, ScrollText, X, Copy, Edit2 } from "lucide-react";
 
-export const Route = createFileRoute("/crm/contratos/")({
+export const Route = createFileRoute("/crm/contratos")({
   head: () => ({ meta: [{ title: `Contratos · CRM ${client.name}` }] }),
   component: ContratsPage,
 });
