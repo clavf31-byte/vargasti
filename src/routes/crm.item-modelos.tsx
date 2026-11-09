@@ -48,7 +48,7 @@ function ItemModelosPage() {
     if (!user) return;
     setLoading(true);
     const data = await obterItemModelos(user.id);
-    setModelos(data);
+    setModelos(data as any);
     setLoading(false);
   }
 
@@ -95,7 +95,7 @@ function ItemModelosPage() {
         formData.tarefas
       );
       if (result.success) {
-        setModelos(modelos.map((m) => (m.id === editandoId ? result.data : m)));
+        setModelos(modelos.map((m) => (m.id === editandoId ? (result.data as any) : m)));
       }
     } else {
       const result = await criarItemModelo(
@@ -108,7 +108,7 @@ function ItemModelosPage() {
         formData.tarefas
       );
       if (result.success) {
-        setModelos([result.data, ...modelos]);
+        setModelos([result.data as any, ...modelos]);
       }
     }
 

@@ -116,7 +116,7 @@ export function OrcamentoCompartilhamento({
     setActionLoading(true);
     setAvisoRastreamento(null);
     try {
-      const track = await rastrearCompartilhamento(orcamento.id, cliente.id, `${canal}_avaliacao`);
+      const track = await rastrearCompartilhamento(orcamento.id, cliente.id, `${canal}_avaliacao` as any);
       if (!track.success) {
         setAvisoRastreamento(
           "Compartilhamento aberto, mas não foi possível registrar no histórico."

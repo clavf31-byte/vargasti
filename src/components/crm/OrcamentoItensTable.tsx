@@ -134,7 +134,7 @@ export function OrcamentoItensTable({ itens, onAddItem, onUpdateItem, onRemoveIt
                               O que inclui:
                             </div>
                             <div className="space-y-1">
-                              {item.tarefas.map((tarefa, tidx) => (
+                              {(item.tarefas ?? []).map((tarefa, tidx) => (
                                 <div key={tidx} className="text-xs text-muted-foreground flex items-center gap-2">
                                   <span className="text-select">✓</span> {tarefa}
                                 </div>

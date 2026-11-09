@@ -42,7 +42,7 @@ function ModelosPage() {
     if (!user) return;
     setLoading(true);
     const data = await obterModelos(user.id);
-    setModelos(data);
+    setModelos(data as any);
     setLoading(false);
   }
 
@@ -71,12 +71,12 @@ function ModelosPage() {
     if (editandoId) {
       const result = await atualizarModelo(editandoId, formData.nome, formData.descricao, itensFiltrados);
       if (result.success) {
-        setModelos(modelos.map((m) => (m.id === editandoId ? result.data : m)));
+        setModelos(modelos.map((m) => (m.id === editandoId ? (result.data as any) : m)));
       }
     } else {
       const result = await criarModelo(user.id, formData.nome, formData.descricao, itensFiltrados);
       if (result.success) {
-        setModelos([result.data, ...modelos]);
+        setModelos([result.data as any, ...modelos]);
       }
     }
 

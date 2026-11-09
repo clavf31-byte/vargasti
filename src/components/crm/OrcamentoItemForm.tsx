@@ -59,16 +59,16 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
 
 function handleAddCatalogo() {
     if (!selecionado || tipo === "manual") return;
-    const precoFinal = precoCustomizado ? preco : (tipo === "servico" ? selecionado.valor_padrao : selecionado.valor_venda);
+    const precoFinal = precoCustomizado ? preco : (selecionado.preco_unitario ?? selecionado.valor_padrao ?? selecionado.valor_venda ?? 0);
     onAdd({
       descricao: selecionado.nome || selecionado.descricao,
       quantidade,
       preco_unitario: precoFinal,
       subtotal: quantidade * precoFinal,
-      categoria: tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
-      tipo,
-      servico_id: tipo === "servico" ? selecionado.id : undefined,
-      peca_id: tipo === "peca" ? selecionado.id : undefined,
+      categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
+      tipo: selecionado.tipo,
+      servico_id: selecionado.tipo === "servico" ? selecionado.id : undefined,
+      peca_id: selecionado.tipo === "peca" ? selecionado.id : undefined,
     });
     onClose();
   }

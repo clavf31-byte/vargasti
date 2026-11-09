@@ -80,7 +80,7 @@ function AcompanhamentoPage() {
           .single();
 
         if (clienteData) {
-          setOrcamento(prev => ({
+          setOrcamento((prev: any) => ({
             ...prev,
             clientes: clienteData
           }));
