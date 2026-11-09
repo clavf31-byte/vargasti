@@ -65,8 +65,10 @@ function NovoContratoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<1 | 2>(1);
+  const [modo, setModo] = useState<"modelo" | "texto">("modelo");
 
   const [form, setForm] = useState({ template_id: "", cliente_id: "", titulo: "" });
+  const [textoBruto, setTextoBruto] = useState("");
   const [variaveis, setVariaveis] = useState<string[]>([]);
   const [valores, setValores] = useState<Record<string, string>>({});
   const [criando, setCriando] = useState(false);
@@ -90,21 +92,40 @@ function NovoContratoPage() {
   };
 
   const handleNext = () => {
-    if (!form.template_id || !form.cliente_id || !form.titulo.trim()) {
-      alert("Preencha todos os campos obrigatórios");
-      return;
+    if (modo === "modelo") {
+      if (!form.template_id || !form.cliente_id || !form.titulo.trim()) {
+        alert("Preencha todos os campos obrigatórios");
+        return;
+      }
+      const template = templates.find((t) => t.id === form.template_id);
+      const cliente = clientes.find((c) => c.id === form.cliente_id);
+      if (!template) return;
+
+      const vars = extractVariables(template.conteudo);
+      const auto = buildAutoValues(cliente);
+      const initialValues: Record<string, string> = {};
+      for (const v of vars) initialValues[v] = auto[v] || "";
+
+      setVariaveis(vars);
+      setValores(initialValues);
+    } else {
+      if (!form.cliente_id || !form.titulo.trim() || !textoBruto.trim()) {
+        alert("Preencha cliente, título e cole o texto");
+        return;
+      }
+      const vars = extractVariables(textoBruto);
+      if (vars.length === 0) {
+        alert("Nenhuma variável encontrada. Use {{nome}} para marcar variáveis");
+        return;
+      }
+      const cliente = clientes.find((c) => c.id === form.cliente_id);
+      const auto = buildAutoValues(cliente);
+      const initialValues: Record<string, string> = {};
+      for (const v of vars) initialValues[v] = auto[v] || "";
+
+      setVariaveis(vars);
+      setValores(initialValues);
     }
-    const template = templates.find((t) => t.id === form.template_id);
-    const cliente = clientes.find((c) => c.id === form.cliente_id);
-    if (!template) return;
-
-    const vars = extractVariables(template.conteudo);
-    const auto = buildAutoValues(cliente);
-    const initialValues: Record<string, string> = {};
-    for (const v of vars) initialValues[v] = auto[v] || "";
-
-    setVariaveis(vars);
-    setValores(initialValues);
     setStep(2);
   };
 
@@ -112,13 +133,21 @@ function NovoContratoPage() {
     if (!user) return;
     setCriando(true);
     try {
-      const template = templates.find((t) => t.id === form.template_id);
-      if (!template) throw new Error("Template não encontrado");
-      const conteudoFinal = substituteVariables(template.conteudo, valores);
+      let conteudoFinal = "";
+      let template_id = null;
+
+      if (modo === "modelo") {
+        const template = templates.find((t) => t.id === form.template_id);
+        if (!template) throw new Error("Template não encontrado");
+        conteudoFinal = substituteVariables(template.conteudo, valores);
+        template_id = template.id;
+      } else {
+        conteudoFinal = substituteVariables(textoBruto, valores);
+      }
 
       const { data: contrato, error } = await (supabase as any)
         .from("contracts")
-        .insert([{ user_id: user.id, cliente_id: form.cliente_id, template_id: form.template_id, titulo: form.titulo, conteudo: conteudoFinal, status: "rascunho" }])
+        .insert([{ user_id: user.id, cliente_id: form.cliente_id, template_id, titulo: form.titulo, conteudo: conteudoFinal, status: "rascunho" }])
         .select().single();
 
       if (error) throw error;
@@ -148,23 +177,24 @@ function NovoContratoPage() {
         />
 
         {step === 1 && (
-          <div className="card-graphite p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Modelo de Contrato *</label>
-                <select value={form.template_id} onChange={(e) => setForm({ ...form, template_id: e.target.value })} className="input-base w-full">
-                  <option value="">Selecione um modelo</option>
-                  {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
-                </select>
-                {templates.length === 0 && (
-                  <p className="mt-1 text-xs text-destructive">
-                    Nenhum modelo ativo.{" "}
-                    <button onClick={() => navigate({ to: "/crm/contratos/modelos" })} className="text-select underline cursor-pointer">
-                      Criar modelo →
-                    </button>
-                  </p>
-                )}
+          <div className="card-graphite p-6 space-y-6">
+            {/* Escolher Modo */}
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-3">Como deseja criar o contrato?</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border-2" style={{ borderColor: modo === "modelo" ? "var(--color-select)" : "var(--color-border)" }}>
+                  <input type="radio" checked={modo === "modelo"} onChange={() => setModo("modelo")} />
+                  <span className="text-sm font-medium">📋 Usar Modelo Existente</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border-2" style={{ borderColor: modo === "texto" ? "var(--color-select)" : "var(--color-border)" }}>
+                  <input type="radio" checked={modo === "texto"} onChange={() => setModo("texto")} />
+                  <span className="text-sm font-medium">📝 Colar Texto Bruto</span>
+                </label>
               </div>
+            </div>
+
+            {/* Cliente e Título (sempre aparecem) */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente *</label>
                 <select value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })} className="input-base w-full">
@@ -172,29 +202,59 @@ function NovoContratoPage() {
                   {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                 </select>
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título do Contrato *</label>
+                <input type="text" placeholder="ex: Contrato de Suporte" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className="input-base w-full" />
+              </div>
             </div>
 
-            {selectedTemplate && (
-              <div className="rounded-lg p-3 bg-surface-2 text-xs text-muted-foreground">
-                <strong className="text-foreground">{selectedTemplate.nome}</strong>
-                {selectedTemplate.descricao && <p className="mt-1">{selectedTemplate.descricao}</p>}
-                {(() => {
-                  const vars = extractVariables(selectedTemplate.conteudo);
-                  return vars.length > 0 ? (
-                    <p className="mt-1">
-                      Variáveis: {vars.map(v => (
-                        <span key={v} className="inline-block bg-select/15 text-select px-1.5 py-0.5 rounded text-[10px] mr-1 font-mono">{`{{${v}}}`}</span>
-                      ))}
+            {/* Modo Modelo */}
+            {modo === "modelo" && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Modelo de Contrato *</label>
+                  <select value={form.template_id} onChange={(e) => setForm({ ...form, template_id: e.target.value })} className="input-base w-full">
+                    <option value="">Selecione um modelo</option>
+                    {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                  </select>
+                  {templates.length === 0 && (
+                    <p className="mt-1 text-xs text-destructive">
+                      Nenhum modelo ativo.{" "}
+                      <button onClick={() => navigate({ to: "/crm/contratos/modelos" })} className="text-select underline cursor-pointer">
+                        Criar modelo →
+                      </button>
                     </p>
-                  ) : null;
-                })()}
-              </div>
+                  )}
+                </div>
+                {selectedTemplate && (
+                  <div className="rounded-lg p-3 bg-surface-2 text-xs text-muted-foreground">
+                    <strong className="text-foreground">{selectedTemplate.nome}</strong>
+                    {selectedTemplate.descricao && <p className="mt-1">{selectedTemplate.descricao}</p>}
+                  </div>
+                )}
+              </>
             )}
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título do Contrato *</label>
-              <input type="text" placeholder="ex: Contrato de Suporte TI — Empresa X" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className="input-base w-full" />
-            </div>
+            {/* Modo Texto */}
+            {modo === "texto" && (
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cole o Texto do Contrato *</label>
+                <p className="text-[11px] text-muted-foreground mb-1.5">Marque as variáveis com: {`{{nome}}`}, {`{{data}}`}, {`{{valor}}`}, etc.</p>
+                <textarea value={textoBruto} onChange={(e) => setTextoBruto(e.target.value)} rows={10} placeholder="Cole o texto aqui..." className="input-base w-full font-mono text-xs resize-y" />
+                {textoBruto && extractVariables(textoBruto).length > 0 && (
+                  <div className="mt-3 p-3 bg-surface-2 rounded-lg">
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-2">Variáveis detectadas:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {extractVariables(textoBruto).map((v) => (
+                        <code key={v} className="bg-surface px-2 py-1 rounded text-[10px] text-select font-mono border border-select/20">
+                          {`{{${v}}}`}
+                        </code>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex gap-2 pt-2">
               <button onClick={handleNext} className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 transition-colors">
@@ -211,7 +271,7 @@ function NovoContratoPage() {
           <>
             {variaveis.length === 0 ? (
               <div className="card-graphite p-6 space-y-4">
-                <p className="text-sm text-muted-foreground">Este modelo não possui variáveis. O contrato será criado com o conteúdo do template diretamente.</p>
+                <p className="text-sm text-muted-foreground">Nenhuma variável encontrada.</p>
                 <div className="flex gap-2">
                   <button onClick={handleCreate} disabled={criando} className="px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors">
                     {criando ? "Criando..." : "Criar Contrato"}
@@ -223,7 +283,7 @@ function NovoContratoPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-6">
-                {/* Coluna Esquerda: Form */}
+                {/* Esquerda: Form */}
                 <div className="card-graphite p-6 space-y-4">
                   <p className="text-xs text-muted-foreground">Preencha as variáveis. Auto-preenchidas estão marcadas.</p>
                   <div className="space-y-3 max-h-[600px] overflow-y-auto">
@@ -254,11 +314,14 @@ function NovoContratoPage() {
                   </div>
                 </div>
 
-                {/* Coluna Direita: Preview */}
+                {/* Direita: Preview */}
                 <div className="card-graphite p-6 space-y-3">
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Preview do Contrato</p>
                   <div className="bg-surface rounded-lg p-4 text-xs text-foreground font-mono overflow-y-auto max-h-[600px] whitespace-pre-wrap leading-relaxed">
-                    {substituteVariables(templates.find(t => t.id === form.template_id)?.conteudo || "", valores)}
+                    {modo === "modelo"
+                      ? substituteVariables(templates.find(t => t.id === form.template_id)?.conteudo || "", valores)
+                      : substituteVariables(textoBruto, valores)
+                    }
                   </div>
                 </div>
               </div>
