@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader, LoadingState, Btn } from "@/components/shared";
 import { ChevronLeft, ClipboardList } from "lucide-react";
 
-export const Route = createFileRoute("/crm/contratos/modelos/$id")({
+export const Route = createFileRoute("/crm/contratos/modelos/edit/$id")({
   head: () => ({ meta: [{ title: `Editar Modelo · CRM ${client.name}` }] }),
   component: EditModeloPage,
 });

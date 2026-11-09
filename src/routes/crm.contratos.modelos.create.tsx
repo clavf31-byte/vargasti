@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader, Btn } from "@/components/shared";
 import { ChevronLeft, ClipboardList } from "lucide-react";
 
-export const Route = createFileRoute("/crm/contratos/modelos/novo")({
+export const Route = createFileRoute("/crm/contratos/modelos/create")({
   head: () => ({ meta: [{ title: `Novo Modelo · CRM ${client.name}` }] }),
   component: NovoModeloPage,
 });
