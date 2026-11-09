@@ -68,11 +68,11 @@ import { Route as OrcamentoAcompanhamentoIdRouteImport } from './routes/orcament
 import { Route as OrcamentoApproveTokenRouteImport } from './routes/orcamento.approve.$token'
 import { Route as CrmAtendimentosUnificadoIdRouteImport } from './routes/crm.atendimentos.unificado.$id'
 import { Route as CrmContratosEnviarIdRouteImport } from './routes/crm.contratos.enviar.$id'
-import { Route as CrmContratosModelosIdRouteImport } from './routes/crm.contratos.modelos.$id'
-import { Route as CrmContratosModelosNovoRouteImport } from './routes/crm.contratos.modelos.novo'
+import { Route as CrmContratosModelosCreateRouteImport } from './routes/crm.contratos.modelos.create'
 import { Route as CrmContratosReceberIdRouteImport } from './routes/crm.contratos.receber.$id'
 import { Route as CrmOrcamentosEditarIdRouteImport } from './routes/crm.orcamentos.editar.$id'
 import { Route as CrmOrcamentosUnificadoIdRouteImport } from './routes/crm.orcamentos.unificado.$id'
+import { Route as CrmContratosModelosEditIdRouteImport } from './routes/crm.contratos.modelos.edit.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -371,16 +371,12 @@ const CrmContratosEnviarIdRoute = CrmContratosEnviarIdRouteImport.update({
   path: '/enviar/$id',
   getParentRoute: () => CrmContratosRoute,
 } as any)
-const CrmContratosModelosIdRoute = CrmContratosModelosIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CrmContratosModelosRoute,
-} as any)
-const CrmContratosModelosNovoRoute = CrmContratosModelosNovoRouteImport.update({
-  id: '/novo',
-  path: '/novo',
-  getParentRoute: () => CrmContratosModelosRoute,
-} as any)
+const CrmContratosModelosCreateRoute =
+  CrmContratosModelosCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => CrmContratosModelosRoute,
+  } as any)
 const CrmContratosReceberIdRoute = CrmContratosReceberIdRouteImport.update({
   id: '/receber/$id',
   path: '/receber/$id',
@@ -396,6 +392,12 @@ const CrmOrcamentosUnificadoIdRoute =
     id: '/unificado/$id',
     path: '/unificado/$id',
     getParentRoute: () => CrmOrcamentosRoute,
+  } as any)
+const CrmContratosModelosEditIdRoute =
+  CrmContratosModelosEditIdRouteImport.update({
+    id: '/edit/$id',
+    path: '/edit/$id',
+    getParentRoute: () => CrmContratosModelosRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -458,11 +460,11 @@ export interface FileRoutesByFullPath {
   '/crm/os/': typeof CrmOsIndexRoute
   '/crm/atendimentos/unificado/$id': typeof CrmAtendimentosUnificadoIdRoute
   '/crm/contratos/enviar/$id': typeof CrmContratosEnviarIdRoute
-  '/crm/contratos/modelos/$id': typeof CrmContratosModelosIdRoute
-  '/crm/contratos/modelos/novo': typeof CrmContratosModelosNovoRoute
+  '/crm/contratos/modelos/create': typeof CrmContratosModelosCreateRoute
   '/crm/contratos/receber/$id': typeof CrmContratosReceberIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
   '/crm/orcamentos/unificado/$id': typeof CrmOrcamentosUnificadoIdRoute
+  '/crm/contratos/modelos/edit/$id': typeof CrmContratosModelosEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -516,11 +518,11 @@ export interface FileRoutesByTo {
   '/crm/os': typeof CrmOsIndexRoute
   '/crm/atendimentos/unificado/$id': typeof CrmAtendimentosUnificadoIdRoute
   '/crm/contratos/enviar/$id': typeof CrmContratosEnviarIdRoute
-  '/crm/contratos/modelos/$id': typeof CrmContratosModelosIdRoute
-  '/crm/contratos/modelos/novo': typeof CrmContratosModelosNovoRoute
+  '/crm/contratos/modelos/create': typeof CrmContratosModelosCreateRoute
   '/crm/contratos/receber/$id': typeof CrmContratosReceberIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
   '/crm/orcamentos/unificado/$id': typeof CrmOrcamentosUnificadoIdRoute
+  '/crm/contratos/modelos/edit/$id': typeof CrmContratosModelosEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -583,11 +585,11 @@ export interface FileRoutesById {
   '/crm/os/': typeof CrmOsIndexRoute
   '/crm/atendimentos/unificado/$id': typeof CrmAtendimentosUnificadoIdRoute
   '/crm/contratos/enviar/$id': typeof CrmContratosEnviarIdRoute
-  '/crm/contratos/modelos/$id': typeof CrmContratosModelosIdRoute
-  '/crm/contratos/modelos/novo': typeof CrmContratosModelosNovoRoute
+  '/crm/contratos/modelos/create': typeof CrmContratosModelosCreateRoute
   '/crm/contratos/receber/$id': typeof CrmContratosReceberIdRoute
   '/crm/orcamentos/editar/$id': typeof CrmOrcamentosEditarIdRoute
   '/crm/orcamentos/unificado/$id': typeof CrmOrcamentosUnificadoIdRoute
+  '/crm/contratos/modelos/edit/$id': typeof CrmContratosModelosEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -651,11 +653,11 @@ export interface FileRouteTypes {
     | '/crm/os/'
     | '/crm/atendimentos/unificado/$id'
     | '/crm/contratos/enviar/$id'
-    | '/crm/contratos/modelos/$id'
-    | '/crm/contratos/modelos/novo'
+    | '/crm/contratos/modelos/create'
     | '/crm/contratos/receber/$id'
     | '/crm/orcamentos/editar/$id'
     | '/crm/orcamentos/unificado/$id'
+    | '/crm/contratos/modelos/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -709,11 +711,11 @@ export interface FileRouteTypes {
     | '/crm/os'
     | '/crm/atendimentos/unificado/$id'
     | '/crm/contratos/enviar/$id'
-    | '/crm/contratos/modelos/$id'
-    | '/crm/contratos/modelos/novo'
+    | '/crm/contratos/modelos/create'
     | '/crm/contratos/receber/$id'
     | '/crm/orcamentos/editar/$id'
     | '/crm/orcamentos/unificado/$id'
+    | '/crm/contratos/modelos/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -775,11 +777,11 @@ export interface FileRouteTypes {
     | '/crm/os/'
     | '/crm/atendimentos/unificado/$id'
     | '/crm/contratos/enviar/$id'
-    | '/crm/contratos/modelos/$id'
-    | '/crm/contratos/modelos/novo'
+    | '/crm/contratos/modelos/create'
     | '/crm/contratos/receber/$id'
     | '/crm/orcamentos/editar/$id'
     | '/crm/orcamentos/unificado/$id'
+    | '/crm/contratos/modelos/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1225,18 +1227,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContratosEnviarIdRouteImport
       parentRoute: typeof CrmContratosRoute
     }
-    '/crm/contratos/modelos/$id': {
-      id: '/crm/contratos/modelos/$id'
-      path: '/$id'
-      fullPath: '/crm/contratos/modelos/$id'
-      preLoaderRoute: typeof CrmContratosModelosIdRouteImport
-      parentRoute: typeof CrmContratosModelosRoute
-    }
-    '/crm/contratos/modelos/novo': {
-      id: '/crm/contratos/modelos/novo'
-      path: '/novo'
-      fullPath: '/crm/contratos/modelos/novo'
-      preLoaderRoute: typeof CrmContratosModelosNovoRouteImport
+    '/crm/contratos/modelos/create': {
+      id: '/crm/contratos/modelos/create'
+      path: '/create'
+      fullPath: '/crm/contratos/modelos/create'
+      preLoaderRoute: typeof CrmContratosModelosCreateRouteImport
       parentRoute: typeof CrmContratosModelosRoute
     }
     '/crm/contratos/receber/$id': {
@@ -1259,6 +1254,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/crm/orcamentos/unificado/$id'
       preLoaderRoute: typeof CrmOrcamentosUnificadoIdRouteImport
       parentRoute: typeof CrmOrcamentosRoute
+    }
+    '/crm/contratos/modelos/edit/$id': {
+      id: '/crm/contratos/modelos/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/crm/contratos/modelos/edit/$id'
+      preLoaderRoute: typeof CrmContratosModelosEditIdRouteImport
+      parentRoute: typeof CrmContratosModelosRoute
     }
   }
 }
@@ -1321,13 +1323,13 @@ const CrmClientesRouteWithChildren = CrmClientesRoute._addFileChildren(
 )
 
 interface CrmContratosModelosRouteChildren {
-  CrmContratosModelosIdRoute: typeof CrmContratosModelosIdRoute
-  CrmContratosModelosNovoRoute: typeof CrmContratosModelosNovoRoute
+  CrmContratosModelosCreateRoute: typeof CrmContratosModelosCreateRoute
+  CrmContratosModelosEditIdRoute: typeof CrmContratosModelosEditIdRoute
 }
 
 const CrmContratosModelosRouteChildren: CrmContratosModelosRouteChildren = {
-  CrmContratosModelosIdRoute: CrmContratosModelosIdRoute,
-  CrmContratosModelosNovoRoute: CrmContratosModelosNovoRoute,
+  CrmContratosModelosCreateRoute: CrmContratosModelosCreateRoute,
+  CrmContratosModelosEditIdRoute: CrmContratosModelosEditIdRoute,
 }
 
 const CrmContratosModelosRouteWithChildren =

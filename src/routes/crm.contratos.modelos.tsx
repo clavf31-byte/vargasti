@@ -64,8 +64,8 @@ function ModelosPage() {
           icon={ClipboardList}
           subtitle={`${templates.length} modelo(s)`}
           actions={
-            <Btn variant=”primary” onClick={() => navigate({ to: “/crm/contratos/modelos/create” })}>
-              <Plus className=”size-4” /> Novo Modelo
+            <Btn variant="primary" onClick={() => navigate({ to: "/crm/contratos/modelos/create" })}>
+              <Plus className="size-4" /> Novo Modelo
             </Btn>
           }
         />
@@ -93,7 +93,7 @@ function ModelosPage() {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => navigate({ to: `/crm/contratos/modelos/edit/${t.id}` })}
-                          className=”inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors”
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-select/30 text-select bg-select/10 rounded-lg hover:bg-select/20 transition-colors"
                         >
                           <Edit2 className="size-3" /> Editar
                         </button>
