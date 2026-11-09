@@ -93,7 +93,7 @@ function EditarContratoPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 space-y-5 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 flex flex-col h-screen max-w-7xl mx-auto">
         <PageHeader
           category="CRM"
           title="Editar Contrato"
@@ -105,28 +105,28 @@ function EditarContratoPage() {
           }
         />
 
-        <div className="card-graphite p-6 space-y-4">
+        <div className="card-graphite p-4 flex flex-col flex-1 space-y-3 overflow-hidden">
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título *</label>
-            <input type="text" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className="input-base w-full" />
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Título *</label>
+            <input type="text" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className="input-base w-full text-sm" />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Conteúdo *</label>
-            <textarea value={form.conteudo} onChange={(e) => setForm({ ...form, conteudo: e.target.value })} rows={14} className="input-base w-full font-mono text-xs resize-y" />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Conteúdo *</label>
+            <textarea value={form.conteudo} onChange={(e) => setForm({ ...form, conteudo: e.target.value })} className="input-base w-full font-mono text-xs flex-1 resize-none" />
           </div>
 
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2.5 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 disabled:opacity-50 transition-colors"
             >
               {saving ? "Salvando..." : "Salvar Mudanças"}
             </button>
             <button
               onClick={() => id && navigate({ to: `/crm/contratos/${id}` })}
-              className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
+              className="px-4 py-2 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
             >
               Cancelar
             </button>
