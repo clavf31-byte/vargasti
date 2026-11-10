@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
-import { Copy, X, Mail, MessageCircle, Share2, Download, FileText } from "lucide-react";
+import { Copy, X, Mail, MessageCircle, Share2, Download, FileText, Lock } from "lucide-react";
 import QRCode from "qrcode.react";
+import { sendContractAccessEmail } from "@/lib/api/sendContractAccessEmail";
 
 interface ContratoCompartilhamentoProps {
   contrato: {
@@ -25,6 +26,8 @@ export function ContratoCompartilhamento({
 }: ContratoCompartilhamentoProps) {
   const [copying, setCopying] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [emailEnvio, setEmailEnvio] = useState(cliente.email || "");
+  const [enviado, setEnviado] = useState(false);
 
   const handleCopiar = async () => {
     setCopying(true);
@@ -50,6 +53,36 @@ export function ContratoCompartilhamento({
         const urlEmail = `mailto:${cliente.email}?subject=${encodeURIComponent(assunto)}&body=${corpo}`;
         window.open(urlEmail, "_blank");
       }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEnviarSeguro = async () => {
+    if (!emailEnvio.trim()) {
+      alert("Preencha o email");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const result = await sendContractAccessEmail({
+        data: {
+          contractId: contrato.id,
+          contractTitle: contrato.titulo,
+          clientEmail: emailEnvio,
+          clientName: cliente.nome,
+          senderName: "VargasTI",
+        },
+      });
+
+      if (result.success) {
+        setEnviado(true);
+        alert("Email enviado com sucesso!");
+      }
+    } catch (err) {
+      console.error("Erro ao enviar email:", err);
+      alert("Erro ao enviar email: " + (err instanceof Error ? err.message : ""));
     } finally {
       setActionLoading(false);
     }
@@ -272,6 +305,63 @@ export function ContratoCompartilhamento({
             {actionLoading ? "Gerando PDF..." : "Baixar PDF"}
           </button>
         </div>
+
+        {!enviado && (
+          <div style={{ marginBottom: "2rem", background: "rgba(13, 208, 215, 0.05)", borderRadius: "8px", padding: "1rem", border: "1px solid rgba(13, 208, 215, 0.2)" }}>
+            <p style={{ color: "#0bd0d7", fontSize: "12px", textTransform: "uppercase", marginBottom: "1rem", fontWeight: 600 }}>
+              🔐 Envio Seguro por Email
+            </p>
+            <input
+              type="email"
+              value={emailEnvio}
+              onChange={(e) => setEmailEnvio(e.target.value)}
+              placeholder="Email do cliente"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                background: "rgba(0, 0, 0, 0.2)",
+                border: "1px solid rgba(13, 208, 215, 0.3)",
+                borderRadius: "6px",
+                color: "#fff",
+                marginBottom: "12px",
+                fontSize: "13px",
+              }}
+            />
+            <button
+              onClick={handleEnviarSeguro}
+              disabled={actionLoading || !emailEnvio.trim()}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                padding: "12px",
+                background: "#0bd0d7",
+                border: "none",
+                borderRadius: "6px",
+                color: "#000",
+                cursor: actionLoading || !emailEnvio.trim() ? "not-allowed" : "pointer",
+                fontWeight: 600,
+                fontSize: "13px",
+                opacity: actionLoading || !emailEnvio.trim() ? 0.5 : 1,
+              }}
+            >
+              <Lock size={14} />
+              {actionLoading ? "Enviando..." : "Enviar Link Seguro"}
+            </button>
+            <p style={{ color: "#8da2b4", fontSize: "11px", marginTop: "8px", textAlign: "center" }}>
+              Link válido por 7 dias. Enviado apenas para este email.
+            </p>
+          </div>
+        )}
+
+        {enviado && (
+          <div style={{ marginBottom: "2rem", background: "rgba(34, 197, 94, 0.1)", borderRadius: "8px", padding: "1rem", border: "1px solid rgba(34, 197, 94, 0.3)" }}>
+            <p style={{ color: "#22c55e", fontSize: "13px", margin: 0 }}>✅ Email enviado com sucesso para {emailEnvio}</p>
+            <p style={{ color: "#8da2b4", fontSize: "11px", marginTop: "8px" }}>O cliente receberá um link seguro que expira em 7 dias.</p>
+          </div>
+        )}
 
         <div style={{ marginBottom: "2rem" }}>
           <p style={{ color: "#8da2b4", fontSize: "12px", textTransform: "uppercase", marginBottom: "1rem" }}>
