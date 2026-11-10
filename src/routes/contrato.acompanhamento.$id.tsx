@@ -122,12 +122,20 @@ function AcompanhamentoContratoPage() {
       console.log("✅ Assinatura inserida, atualizando status do contrato...");
 
       // Atualizar contrato como assinado
-      const updateResult = await (supabase as any)
+      const { data: updateData, error: updateError } = await (supabase as any)
         .from("contracts")
         .update({ signed_by: signerName, signed_at: new Date().toISOString(), status: "assinado" })
-        .eq("id", id);
+        .eq("id", id)
+        .select();
 
-      console.log("✅ Contrato atualizado:", updateResult);
+      console.log("🔄 UPDATE Response:", { updateData, updateError });
+
+      if (updateError) {
+        console.error("❌ Erro ao atualizar contrato:", updateError);
+        throw updateError;
+      }
+
+      console.log("✅ Contrato atualizado:", updateData);
 
       setSignature({ signed_by: signerName, signed_at: new Date().toISOString() });
       setSignerName("");
