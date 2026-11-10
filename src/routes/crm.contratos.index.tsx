@@ -119,6 +119,7 @@ function ContratsPage() {
       rascunho: "bg-yellow/10 text-yellow border-yellow/30",
       enviado: "bg-blue/10 text-blue border-blue/30",
       aprovado: "bg-green/10 text-green border-green/30",
+      assinado: "bg-green/10 text-green border-green/30",
       finalizado: "bg-select/10 text-select border-select/30",
     };
     return colors[status] || "bg-muted-foreground/10 text-muted-foreground border-muted-foreground/30";
