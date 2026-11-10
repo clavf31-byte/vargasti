@@ -31,4 +31,20 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://www.vargasti.com.br/blog</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://www.vargasti.com.br/blog/sinais-empresa-precisa-suporte-ti-profissional</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://www.vargasti.com.br/blog/como-escolher-provedor-helpdesk-porto-alegre</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://www.vargasti.com.br/blog/seguranca-de-rede-checklist-para-empresas</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
 </urlset>

@@ -285,6 +285,7 @@ export function LandingPage({ scrollTo }: { scrollTo?: string } = {}) {
                 )}
               </a>
             ))}
+            <Link to="/blog" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Blog</Link>
           </nav>
 
           <div className="hidden md:flex items-center gap-3 ml-auto">
@@ -540,6 +541,8 @@ export function LandingPage({ scrollTo }: { scrollTo?: string } = {}) {
             © {new Date().getFullYear()} VargasTI · Soluções que conectam
           </p>
           <div className="flex items-center gap-3 text-xs">
+            <Link to="/blog" className="text-slate-400 hover:text-cyan-300 transition">Blog</Link>
+            <span className="text-slate-700">·</span>
             <a href={SYSTEM_URL} className="text-slate-400 hover:text-cyan-300 transition">Acessar Sistema</a>
             <span className="text-slate-700">·</span>
             <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-emerald-300 transition">WhatsApp</a>

@@ -1,18 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/seo";
 import { LandingPage } from "@/components/LandingPage";
 
 export const Route = createFileRoute("/clientes")({
-  head: () => ({
-    meta: [
-      { title: "Clientes — VargasTI" },
-      { name: "description", content: "Empresas que confiam na VargasTI para resolver seus problemas de TI." },
-      { property: "og:title", content: "Clientes — VargasTI" },
-      { property: "og:description", content: "Empresas que confiam na VargasTI para resolver seus problemas de TI." },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://www.vargasti.com.br/clientes" },
-      { name: "twitter:card", content: "summary" },
-    ],
-    links: [{ rel: "canonical", href: "https://www.vargasti.com.br/clientes" }],
-  }),
+  head: () => {
+    const base = pageHead({ path: "/clientes", title: "Clientes — VargasTI", description: "Clientes VargasTI: conheça as empresas que confiam em nossas soluções de TI em Porto Alegre.", crumb: "Clientes" });
+    return { ...base };
+  },
   component: () => <LandingPage scrollTo="clientes" />,
 });

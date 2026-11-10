@@ -39,6 +39,8 @@ import { Route as ApiGmailCallbackRouteImport } from './routes/api/gmail-callbac
 import { Route as ApiGmailWebhookRouteImport } from './routes/api/gmail-webhook'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ConfigIndexRouteImport } from './routes/config.index'
 import { Route as ConfigPermissionsRouteImport } from './routes/config.permissions'
 import { Route as CrmAtendimentosRouteImport } from './routes/crm.atendimentos'
@@ -227,6 +229,16 @@ const ApiVersionRoute = ApiVersionRouteImport.update({
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfigIndexRoute = ConfigIndexRouteImport.update({
@@ -459,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/config/permissions': typeof ConfigPermissionsRoute
   '/crm/atendimentos': typeof CrmAtendimentosRouteWithChildren
   '/crm/clientes': typeof CrmClientesRouteWithChildren
@@ -475,6 +488,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/api/cron/agenda-resumo': typeof ApiCronAgendaResumoRoute
@@ -527,6 +541,7 @@ export interface FileRoutesByTo {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/config/permissions': typeof ConfigPermissionsRoute
   '/crm/item-modelos': typeof CrmItemModelosRoute
   '/crm/pagamentos': typeof CrmPagamentosRoute
@@ -538,6 +553,7 @@ export interface FileRoutesByTo {
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/admin': typeof AdminIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/config': typeof ConfigIndexRoute
   '/ferramentas': typeof FerramentasIndexRoute
   '/api/cron/agenda-resumo': typeof ApiCronAgendaResumoRoute
@@ -594,6 +610,7 @@ export interface FileRoutesById {
   '/api/gmail-webhook': typeof ApiGmailWebhookRoute
   '/api/version': typeof ApiVersionRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/config/permissions': typeof ConfigPermissionsRoute
   '/crm/atendimentos': typeof CrmAtendimentosRouteWithChildren
   '/crm/clientes': typeof CrmClientesRouteWithChildren
@@ -610,6 +627,7 @@ export interface FileRoutesById {
   '/ferramentas/excel': typeof FerramentasExcelRoute
   '/ferramentas/whatsapp': typeof FerramentasWhatsappRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/config/': typeof ConfigIndexRoute
   '/ferramentas/': typeof FerramentasIndexRoute
   '/api/cron/agenda-resumo': typeof ApiCronAgendaResumoRoute
@@ -667,6 +685,7 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/blog/$slug'
     | '/config/permissions'
     | '/crm/atendimentos'
     | '/crm/clientes'
@@ -683,6 +702,7 @@ export interface FileRouteTypes {
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/admin/'
+    | '/blog/'
     | '/config/'
     | '/ferramentas/'
     | '/api/cron/agenda-resumo'
@@ -735,6 +755,7 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/blog/$slug'
     | '/config/permissions'
     | '/crm/item-modelos'
     | '/crm/pagamentos'
@@ -746,6 +767,7 @@ export interface FileRouteTypes {
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/admin'
+    | '/blog'
     | '/config'
     | '/ferramentas'
     | '/api/cron/agenda-resumo'
@@ -801,6 +823,7 @@ export interface FileRouteTypes {
     | '/api/gmail-webhook'
     | '/api/version'
     | '/api/whatsapp-webhook'
+    | '/blog/$slug'
     | '/config/permissions'
     | '/crm/atendimentos'
     | '/crm/clientes'
@@ -817,6 +840,7 @@ export interface FileRouteTypes {
     | '/ferramentas/excel'
     | '/ferramentas/whatsapp'
     | '/admin/'
+    | '/blog/'
     | '/config/'
     | '/ferramentas/'
     | '/api/cron/agenda-resumo'
@@ -871,6 +895,8 @@ export interface RootRouteChildren {
   ApiGmailWebhookRoute: typeof ApiGmailWebhookRoute
   ApiVersionRoute: typeof ApiVersionRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiCronAgendaResumoRoute: typeof ApiCronAgendaResumoRoute
   ContratoAcompanhamentoIdRoute: typeof ContratoAcompanhamentoIdRoute
   OrcamentoAcompanhamentoIdRoute: typeof OrcamentoAcompanhamentoIdRoute
@@ -1087,6 +1113,20 @@ declare module '@tanstack/react-router' {
       path: '/api/whatsapp-webhook'
       fullPath: '/api/whatsapp-webhook'
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/config/': {
@@ -1552,6 +1592,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGmailWebhookRoute: ApiGmailWebhookRoute,
   ApiVersionRoute: ApiVersionRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiCronAgendaResumoRoute: ApiCronAgendaResumoRoute,
   ContratoAcompanhamentoIdRoute: ContratoAcompanhamentoIdRoute,
   OrcamentoAcompanhamentoIdRoute: OrcamentoAcompanhamentoIdRoute,

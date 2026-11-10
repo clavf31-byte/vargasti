@@ -174,8 +174,10 @@ function AuthGuard() {
     if (loading) return;
     const isAppHost = typeof window !== "undefined" && window.location.hostname === "app.vargasti.com.br";
     const isLandingRoute = pathname === "/";
+    const MARKETING = ["/solucoes", "/plataforma", "/clientes", "/sobre", "/contato"];
+    const isMarketing = MARKETING.includes(pathname) || pathname === "/blog" || pathname.startsWith("/blog/");
     const isPublic =
-      (!isAppHost && isLandingRoute) ||
+      (!isAppHost && (isLandingRoute || isMarketing)) ||
       pathname === "/login" ||
       pathname.startsWith("/orcamento/approve/") ||
       pathname.startsWith("/orcamento/acompanhamento/") ||
