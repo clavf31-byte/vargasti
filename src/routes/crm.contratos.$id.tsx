@@ -19,6 +19,8 @@ interface Contrato {
   conteudo: string;
   status: string;
   created_at: string;
+  archived: boolean;
+  archived_at?: string;
   clientes?: { nome: string; email?: string; telefone?: string };
 }
 
@@ -29,6 +31,7 @@ function VisualizarContratoPage() {
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [loading, setLoading] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
     loadContrato();
@@ -39,7 +42,7 @@ function VisualizarContratoPage() {
     try {
       const { data, error } = await (supabase as any)
         .from("contracts")
-        .select("id, titulo, conteudo, status, created_at, clientes(nome, email, telefone)")
+        .select("id, titulo, conteudo, status, created_at, archived, archived_at, clientes(nome, email, telefone)")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -48,6 +51,31 @@ function VisualizarContratoPage() {
       console.error("Erro:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!contrato) return;
+
+    if (!confirm("Arquivar este contrato? Ele não poderá mais ser editado ou deletado.")) {
+      return;
+    }
+
+    setArchiving(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("contracts")
+        .update({ archived: true, archived_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setContrato({ ...contrato, archived: true, archived_at: new Date().toISOString() });
+      alert("Contrato arquivado com sucesso!");
+    } catch (err) {
+      alert("Erro ao arquivar: " + (err instanceof Error ? err.message : ""));
+    } finally {
+      setArchiving(false);
     }
   };
 
@@ -109,19 +137,40 @@ function VisualizarContratoPage() {
             </div>
           </div>
 
+          {contrato.archived && (
+            <div className="mb-4 p-3 bg-yellow/10 border border-yellow/30 rounded-lg text-sm text-yellow">
+              🔐 Este contrato está arquivado e não pode ser editado ou deletado.
+            </div>
+          )}
+
           <div className="flex gap-2 pt-4">
-            <a
-              href={`/crm/contratos/editar/${id}`}
-              className="px-4 py-2.5 bg-blue text-white text-sm font-semibold rounded-lg hover:bg-blue/90 transition-colors inline-block"
-            >
-              ✏️ Editar
-            </a>
-            <button
-              onClick={() => setIsShareOpen(true)}
-              className="px-4 py-2.5 bg-select text-white text-sm font-semibold rounded-lg hover:bg-select/90 transition-colors inline-flex items-center gap-2"
-            >
-              <Share2 className="size-4" /> Compartilhar
-            </button>
+            {!contrato.archived && (
+              <>
+                <a
+                  href={`/crm/contratos/editar/${id}`}
+                  className="px-4 py-2.5 bg-blue text-white text-sm font-semibold rounded-lg hover:bg-blue/90 transition-colors inline-block"
+                >
+                  ✏️ Editar
+                </a>
+                <button
+                  onClick={() => setIsShareOpen(true)}
+                  className="px-4 py-2.5 bg-select text-white text-sm font-semibold rounded-lg hover:bg-select/90 transition-colors inline-flex items-center gap-2"
+                >
+                  <Share2 className="size-4" /> Compartilhar
+                </button>
+              </>
+            )}
+
+            {contrato.status === "assinado" && !contrato.archived && (
+              <button
+                onClick={handleArchive}
+                disabled={archiving}
+                className="px-4 py-2.5 bg-yellow/20 text-yellow text-sm font-semibold rounded-lg hover:bg-yellow/30 disabled:opacity-50 transition-colors"
+              >
+                🔐 Arquivar
+              </button>
+            )}
+
             <button
               onClick={() => navigate({ to: "/crm/contratos" })}
               className="px-4 py-2.5 border border-border text-sm text-foreground rounded-lg hover:bg-surface-2 transition-colors"
