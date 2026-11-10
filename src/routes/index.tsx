@@ -34,6 +34,7 @@ export const Route = createFileRoute("/")({
         "description": "Soluções completas em TI: suporte técnico, gestão de ativos, helpdesk, orçamentos e monitoramento de redes para empresas.",
         "url": "https://www.vargasti.com.br",
         "telephone": "+5551998808343",
+        "foundingDate": "2025",
         "contactPoint": {
           "@type": "ContactPoint",
           "telephone": "+5551998808343",
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/")({
         ],
         "address": {
           "@type": "PostalAddress",
+          "streetAddress": "Rua Reverendo Daniel Betts, 200 - Morro Santana",
           "addressLocality": "Porto Alegre",
           "addressRegion": "RS",
           "addressCountry": "BR",
