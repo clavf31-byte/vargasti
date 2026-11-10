@@ -73,8 +73,10 @@ function AcompanhamentoContratoPage() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar contrato";
-      console.error("❌ Erro:", msg);
-      setError(msg);
+      console.error("❌ Erro completo:", err);
+      console.error("❌ Erro ao carregar contrato ID:", id);
+      console.error("❌ Mensagem:", msg);
+      setError(`${msg} (ID: ${id})`);
     } finally {
       setLoading(false);
     }
