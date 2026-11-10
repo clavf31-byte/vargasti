@@ -500,6 +500,44 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_signatures: {
+        Row: {
+          client_ip: unknown
+          contract_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+          signed_at: string | null
+          signed_by: string
+        }
+        Insert: {
+          client_ip?: unknown
+          contract_id: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          signed_at?: string | null
+          signed_by: string
+        }
+        Update: {
+          client_ip?: unknown
+          contract_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          signed_at?: string | null
+          signed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_templates: {
         Row: {
           ativo: boolean
@@ -541,6 +579,8 @@ export type Database = {
           created_at: string
           email_enviado_em: string | null
           id: string
+          signed_at: string | null
+          signed_by: string | null
           status: string
           template_id: string | null
           titulo: string
@@ -554,6 +594,8 @@ export type Database = {
           created_at?: string
           email_enviado_em?: string | null
           id?: string
+          signed_at?: string | null
+          signed_by?: string | null
           status?: string
           template_id?: string | null
           titulo: string
@@ -567,6 +609,8 @@ export type Database = {
           created_at?: string
           email_enviado_em?: string | null
           id?: string
+          signed_at?: string | null
+          signed_by?: string | null
           status?: string
           template_id?: string | null
           titulo?: string
