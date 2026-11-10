@@ -40,10 +40,53 @@ function AcompanhamentoContratoPage() {
   const [signerEmail, setSignerEmail] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [signing, setSigning] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
 
   useEffect(() => {
+    validateToken();
     loadContrato();
   }, [id]);
+
+  const validateToken = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (!token) {
+      console.warn("⚠️ Nenhum token de acesso fornecido");
+      setTokenValid(false);
+      return;
+    }
+
+    try {
+      const { data, error: err } = await (supabase as any)
+        .from("contract_access_tokens")
+        .select("id, expires_at, used_at")
+        .eq("token", token)
+        .eq("contract_id", id)
+        .single();
+
+      if (err || !data) {
+        console.error("❌ Token inválido");
+        setTokenValid(false);
+        return;
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(data.expires_at);
+
+      if (now > expiresAt) {
+        console.error("❌ Token expirado");
+        setTokenValid(false);
+        return;
+      }
+
+      console.log("✅ Token válido");
+      setTokenValid(true);
+    } catch (err) {
+      console.error("Erro ao validar token:", err);
+      setTokenValid(false);
+    }
+  };
 
   const loadContrato = async () => {
     try {
@@ -151,12 +194,24 @@ function AcompanhamentoContratoPage() {
     }
   };
 
-  if (loading) {
+  if (loading || tokenValid === null) {
     return (
       <div style={styles.page}>
         <div style={{ textAlign: "center", color: "#64748b" }}>
           <div style={{ width: 32, height: 32, border: "3px solid #e2e8f0", borderTopColor: "#0bd0d7", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
           Carregando contrato...
+        </div>
+      </div>
+    );
+  }
+
+  if (!tokenValid) {
+    return (
+      <div style={styles.page}>
+        <div style={{ textAlign: "center", color: "#dc2626" }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600, margin: "16px 0" }}>Acesso Negado</h2>
+          <p>Este link expirou ou é inválido.</p>
+          <p style={{ fontSize: 12, color: "#888", marginTop: 16 }}>Solicite um novo link ao responsável pelo contrato.</p>
         </div>
       </div>
     );
