@@ -611,6 +611,8 @@ export type Database = {
       }
       contracts: {
         Row: {
+          archived: boolean | null
+          archived_at: string | null
           assinado_em: string | null
           cliente_id: string | null
           conteudo: string | null
@@ -626,6 +628,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean | null
+          archived_at?: string | null
           assinado_em?: string | null
           cliente_id?: string | null
           conteudo?: string | null
@@ -641,6 +645,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean | null
+          archived_at?: string | null
           assinado_em?: string | null
           cliente_id?: string | null
           conteudo?: string | null
