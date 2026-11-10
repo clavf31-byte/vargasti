@@ -57,19 +57,21 @@ function AcompanhamentoContratoPage() {
       if (err) throw err;
       if (!data) throw new Error("Contrato não encontrado");
 
+      console.log("📄 Contrato carregado:", data);
+      console.log("👤 Cliente:", data.clientes);
+
       setContrato(data);
 
       // Carregar assinatura existente
-      const { data: sigData } = await (supabase as any)
+      const { data: sigDataList } = await (supabase as any)
         .from("contract_signatures")
         .select("signed_by, signed_at")
         .eq("contract_id", id)
         .order("signed_at", { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
-      if (sigData) {
-        setSignature(sigData);
+      if (sigDataList && sigDataList.length > 0) {
+        setSignature(sigDataList[0]);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar contrato";
