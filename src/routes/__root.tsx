@@ -178,7 +178,8 @@ function AuthGuard() {
       (!isAppHost && isLandingRoute) ||
       pathname === "/login" ||
       pathname.startsWith("/orcamento/approve/") ||
-      pathname.startsWith("/orcamento/acompanhamento/");
+      pathname.startsWith("/orcamento/acompanhamento/") ||
+      pathname.startsWith("/contrato/acompanhamento/");
 
     if (isAppHost && isLandingRoute) {
       navigate({ to: session ? "/dashboard" : "/login" });
