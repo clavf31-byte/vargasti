@@ -101,11 +101,15 @@ function AcompanhamentoContratoPage() {
 
       if (error) throw error;
 
+      console.log("✅ Assinatura inserida, atualizando status do contrato...");
+
       // Atualizar contrato como assinado
-      await (supabase as any)
+      const updateResult = await (supabase as any)
         .from("contracts")
         .update({ signed_by: signerName, signed_at: new Date().toISOString(), status: "assinado" })
         .eq("id", id);
+
+      console.log("✅ Contrato atualizado:", updateResult);
 
       setSignature({ signed_by: signerName, signed_at: new Date().toISOString() });
       setSignerName("");
@@ -113,7 +117,9 @@ function AcompanhamentoContratoPage() {
       setAcceptTerms(false);
       alert("Contrato assinado com sucesso!");
     } catch (err) {
-      alert("Erro ao assinar: " + (err instanceof Error ? err.message : ""));
+      console.error("❌ Erro ao assinar:", err);
+      const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
+      alert("Erro ao assinar:\n\n" + errorMsg);
     } finally {
       setSigning(false);
     }
