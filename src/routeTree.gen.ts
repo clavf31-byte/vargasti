@@ -14,13 +14,18 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AnotacoesRouteImport } from './routes/anotacoes'
 import { Route as ArquivosRouteImport } from './routes/arquivos'
+import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as ConfigRouteImport } from './routes/config'
+import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DebugUserIdRouteImport } from './routes/debug-user-id'
 import { Route as FerramentasRouteImport } from './routes/ferramentas'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlataformaRouteImport } from './routes/plataforma'
 import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as SolucoesRouteImport } from './routes/solucoes'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminOperatorIdRouteImport } from './routes/admin.$operatorId'
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
@@ -99,9 +104,19 @@ const ArquivosRoute = ArquivosRouteImport.update({
   path: '/arquivos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesRoute = ClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfigRoute = ConfigRouteImport.update({
   id: '/config',
   path: '/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmRoute = CrmRouteImport.update({
@@ -129,9 +144,24 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlataformaRoute = PlataformaRouteImport.update({
+  id: '/plataforma',
+  path: '/plataforma',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolucoesRoute = SolucoesRouteImport.update({
+  id: '/solucoes',
+  path: '/solucoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -405,13 +435,18 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
+  '/clientes': typeof ClientesRoute
   '/config': typeof ConfigRouteWithChildren
+  '/contato': typeof ContatoRoute
   '/crm': typeof CrmRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/debug-user-id': typeof DebugUserIdRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
+  '/plataforma': typeof PlataformaRoute
   '/projetos': typeof ProjetosRoute
+  '/sobre': typeof SobreRoute
+  '/solucoes': typeof SolucoesRoute
   '/admin/$operatorId': typeof AdminOperatorIdRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
@@ -470,11 +505,16 @@ export interface FileRoutesByTo {
   '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
+  '/clientes': typeof ClientesRoute
+  '/contato': typeof ContatoRoute
   '/crm': typeof CrmRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/debug-user-id': typeof DebugUserIdRoute
   '/login': typeof LoginRoute
+  '/plataforma': typeof PlataformaRoute
   '/projetos': typeof ProjetosRoute
+  '/sobre': typeof SobreRoute
+  '/solucoes': typeof SolucoesRoute
   '/admin/$operatorId': typeof AdminOperatorIdRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
@@ -530,13 +570,18 @@ export interface FileRoutesById {
   '/agenda': typeof AgendaRoute
   '/anotacoes': typeof AnotacoesRoute
   '/arquivos': typeof ArquivosRoute
+  '/clientes': typeof ClientesRoute
   '/config': typeof ConfigRouteWithChildren
+  '/contato': typeof ContatoRoute
   '/crm': typeof CrmRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/debug-user-id': typeof DebugUserIdRoute
   '/ferramentas': typeof FerramentasRouteWithChildren
   '/login': typeof LoginRoute
+  '/plataforma': typeof PlataformaRoute
   '/projetos': typeof ProjetosRoute
+  '/sobre': typeof SobreRoute
+  '/solucoes': typeof SolucoesRoute
   '/admin/$operatorId': typeof AdminOperatorIdRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/debug-fetch-emails': typeof ApiDebugFetchEmailsRoute
@@ -598,13 +643,18 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/anotacoes'
     | '/arquivos'
+    | '/clientes'
     | '/config'
+    | '/contato'
     | '/crm'
     | '/dashboard'
     | '/debug-user-id'
     | '/ferramentas'
     | '/login'
+    | '/plataforma'
     | '/projetos'
+    | '/sobre'
+    | '/solucoes'
     | '/admin/$operatorId'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
@@ -663,11 +713,16 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/anotacoes'
     | '/arquivos'
+    | '/clientes'
+    | '/contato'
     | '/crm'
     | '/dashboard'
     | '/debug-user-id'
     | '/login'
+    | '/plataforma'
     | '/projetos'
+    | '/sobre'
+    | '/solucoes'
     | '/admin/$operatorId'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
@@ -722,13 +777,18 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/anotacoes'
     | '/arquivos'
+    | '/clientes'
     | '/config'
+    | '/contato'
     | '/crm'
     | '/dashboard'
     | '/debug-user-id'
     | '/ferramentas'
     | '/login'
+    | '/plataforma'
     | '/projetos'
+    | '/sobre'
+    | '/solucoes'
     | '/admin/$operatorId'
     | '/admin/setup'
     | '/api/debug-fetch-emails'
@@ -789,13 +849,18 @@ export interface RootRouteChildren {
   AgendaRoute: typeof AgendaRoute
   AnotacoesRoute: typeof AnotacoesRoute
   ArquivosRoute: typeof ArquivosRoute
+  ClientesRoute: typeof ClientesRoute
   ConfigRoute: typeof ConfigRouteWithChildren
+  ContatoRoute: typeof ContatoRoute
   CrmRoute: typeof CrmRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   DebugUserIdRoute: typeof DebugUserIdRoute
   FerramentasRoute: typeof FerramentasRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PlataformaRoute: typeof PlataformaRoute
   ProjetosRoute: typeof ProjetosRoute
+  SobreRoute: typeof SobreRoute
+  SolucoesRoute: typeof SolucoesRoute
   ApiDebugFetchEmailsRoute: typeof ApiDebugFetchEmailsRoute
   ApiDebugGmailTokenRoute: typeof ApiDebugGmailTokenRoute
   ApiDebugInterpretEmailRoute: typeof ApiDebugInterpretEmailRoute
@@ -849,11 +914,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArquivosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes': {
+      id: '/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof ClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/config': {
       id: '/config'
       path: '/config'
       fullPath: '/config'
       preLoaderRoute: typeof ConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm': {
@@ -891,11 +970,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plataforma': {
+      id: '/plataforma'
+      path: '/plataforma'
+      fullPath: '/plataforma'
+      preLoaderRoute: typeof PlataformaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projetos': {
       id: '/projetos'
       path: '/projetos'
       fullPath: '/projetos'
       preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solucoes': {
+      id: '/solucoes'
+      path: '/solucoes'
+      fullPath: '/solucoes'
+      preLoaderRoute: typeof SolucoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -1430,13 +1530,18 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaRoute: AgendaRoute,
   AnotacoesRoute: AnotacoesRoute,
   ArquivosRoute: ArquivosRoute,
+  ClientesRoute: ClientesRoute,
   ConfigRoute: ConfigRouteWithChildren,
+  ContatoRoute: ContatoRoute,
   CrmRoute: CrmRouteWithChildren,
   DashboardRoute: DashboardRoute,
   DebugUserIdRoute: DebugUserIdRoute,
   FerramentasRoute: FerramentasRouteWithChildren,
   LoginRoute: LoginRoute,
+  PlataformaRoute: PlataformaRoute,
   ProjetosRoute: ProjetosRoute,
+  SobreRoute: SobreRoute,
+  SolucoesRoute: SolucoesRoute,
   ApiDebugFetchEmailsRoute: ApiDebugFetchEmailsRoute,
   ApiDebugGmailTokenRoute: ApiDebugGmailTokenRoute,
   ApiDebugInterpretEmailRoute: ApiDebugInterpretEmailRoute,
