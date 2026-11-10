@@ -58,6 +58,7 @@ export const Route = createFileRoute("/")({
           "@type": "PostalAddress",
           "streetAddress": "Rua Reverendo Daniel Betts, 200 - Morro Santana",
           "addressLocality": "Porto Alegre",
+          "postalCode": "91450-400",
           "addressRegion": "RS",
           "addressCountry": "BR",
         },
