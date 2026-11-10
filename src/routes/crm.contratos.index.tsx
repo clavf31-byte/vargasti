@@ -16,6 +16,7 @@ interface Contrato {
   id: string;
   titulo: string;
   status: string;
+  archived_at?: string | null;
   created_at: string;
   clientes?: { nome: string };
 }
