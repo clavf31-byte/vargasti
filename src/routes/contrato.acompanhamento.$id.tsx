@@ -50,7 +50,7 @@ function AcompanhamentoContratoPage() {
       setLoading(true);
       const { data, error: err } = await (supabase as any)
         .from("contracts")
-        .select("id, titulo, conteudo, status, created_at, clientes(nome)")
+        .select("id, titulo, conteudo, status, created_at, cliente_id, clientes(nome)")
         .eq("id", id)
         .single();
 
@@ -59,6 +59,22 @@ function AcompanhamentoContratoPage() {
 
       console.log("📄 Contrato carregado:", data);
       console.log("👤 Cliente:", data.clientes);
+      console.log("👤 Cliente ID:", data.cliente_id);
+
+      // Se cliente não carregou, tenta carregar separadamente
+      if (!data.clientes && data.cliente_id) {
+        console.log("⚠️ Cliente não carregou via relação, buscando por ID...");
+        const { data: clientData } = await (supabase as any)
+          .from("clientes")
+          .select("nome")
+          .eq("id", data.cliente_id)
+          .single();
+
+        if (clientData) {
+          data.clientes = clientData;
+          console.log("✅ Cliente carregado:", clientData);
+        }
+      }
 
       setContrato(data);
 
