@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, EmptyState, LoadingState, Btn } from "@/components/shared";
-import { Plus, Eye, Trash2, ScrollText, X, Copy, Edit2 } from "lucide-react";
+import { Plus, Eye, Trash2, ScrollText, X, Copy, Edit2, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/crm/contratos/")({
   head: () => ({ meta: [{ title: `Contratos · CRM ${client.name}` }] }),
@@ -36,9 +36,10 @@ function extractVariables(conteudo: string): string[] {
 function ContratsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"contratos" | "modelos" | "novo">("contratos");
+  const [activeTab, setActiveTab] = useState<"ativos" | "arquivados" | "modelos" | "novo">("ativos");
   
   const [contratos, setContratos] = useState<Contrato[]>([]);
+  const [contratosArquivados, setContratosArquivados] = useState<Contrato[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -51,16 +52,28 @@ function ContratsPage() {
   const loadData = async () => {
     if (!user) return;
     try {
-      const [contRes, tempRes] = await Promise.all([
-        (supabase as any).from("contracts").select("id, titulo, status, created_at, clientes(nome)").eq("user_id", user.id).order("created_at", { ascending: false }),
+      const [conAtivosRes, conArqRes, tempRes] = await Promise.all([
+        (supabase as any).from("contracts").select("id, titulo, status, created_at, archived, clientes(nome)").eq("user_id", user.id).eq("archived", false).order("created_at", { ascending: false }),
+        (supabase as any).from("contracts").select("id, titulo, status, created_at, archived, archived_at, clientes(nome)").eq("user_id", user.id).eq("archived", true).order("archived_at", { ascending: false }),
         (supabase as any).from("contract_templates").select("id, nome, descricao, conteudo").order("created_at", { ascending: false }),
       ]);
-      setContratos(contRes.data || []);
+      setContratos(conAtivosRes.data || []);
+      setContratosArquivados(conArqRes.data || []);
       setTemplates(tempRes.data || []);
     } catch (e) {
       console.error("Erro:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleArchiveContrato = async (id: string) => {
+    if (!confirm("Arquivar este contrato? Ele não poderá mais ser deletado.")) return;
+    try {
+      await (supabase as any).from("contracts").update({ archived: true, archived_at: new Date().toISOString() }).eq("id", id);
+      loadData();
+    } catch (e) {
+      alert("Erro: " + (e instanceof Error ? e.message : ""));
     }
   };
 
@@ -135,7 +148,8 @@ function ContratsPage() {
         {/* Abas */}
         <div className="flex gap-4 border-b border-border overflow-x-auto">
           {[
-            { id: "contratos", label: `📋 Contratos (${contratos.length})` },
+            { id: "ativos", label: `📋 Ativos (${contratos.length})` },
+            { id: "arquivados", label: `🔐 Arquivados (${contratosArquivados.length})` },
             { id: "modelos", label: `🎨 Modelos (${templates.length})` },
             { id: "novo", label: "➕ Novo" },
           ].map((tab) => (
@@ -153,8 +167,8 @@ function ContratsPage() {
           ))}
         </div>
 
-        {/* Contratos */}
-        {activeTab === "contratos" && (
+        {/* Contratos Ativos */}
+        {activeTab === "ativos" && (
           contratos.length === 0 ? (
             <EmptyState icon={ScrollText} title="Nenhum contrato" />
           ) : (
@@ -189,8 +203,55 @@ function ContratsPage() {
                         <button onClick={() => navigate({ to: `/crm/contratos/editar/${c.id}` })} className="text-blue hover:text-blue/80" title="Editar">
                           <Edit2 className="size-4" />
                         </button>
+                        {c.status === "assinado" && (
+                          <button onClick={() => handleArchiveContrato(c.id)} className="text-yellow hover:text-yellow/80" title="Arquivar">
+                            <Lock className="size-4" />
+                          </button>
+                        )}
                         <button onClick={() => handleDeleteContrato(c.id)} className="text-destructive hover:text-destructive/80" title="Deletar">
                           <Trash2 className="size-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {/* Contratos Arquivados */}
+        {activeTab === "arquivados" && (
+          contratosArquivados.length === 0 ? (
+            <EmptyState icon={ScrollText} title="Nenhum contrato arquivado" />
+          ) : (
+            <div className="card-graphite overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-border">
+                    <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase text-left">Título</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase text-left">Cliente</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase text-left">Status</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase text-left">Arquivado em</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contratosArquivados.map((c) => (
+                    <tr key={c.id} className="border-b border-border/50 hover:bg-surface-2/40 opacity-75">
+                      <td className="px-4 py-3 font-medium text-foreground">{c.titulo}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{c.clientes?.nome || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-2.5 py-1 text-[11px] font-semibold rounded-lg border ${getStatusColor(c.status)}`}>
+                          {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">
+                        {c.archived_at ? new Date(c.archived_at).toLocaleDateString("pt-BR") : "—"}
+                      </td>
+                      <td className="px-4 py-3 flex justify-center gap-2">
+                        <button onClick={() => navigate({ to: `/crm/contratos/${c.id}` })} className="text-select hover:text-select/80" title="Ver">
+                          <Eye className="size-4" />
                         </button>
                       </td>
                     </tr>
