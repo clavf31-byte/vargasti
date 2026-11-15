@@ -44,36 +44,33 @@ export function useOrcamentoItens(orcamentoId?: string) {
   }
 
   function addItem() {
-    const newItem: OrcamentoItem = {
-      descricao: "",
-      quantidade: 1,
-      preco_unitario: 0,
-      subtotal: 0,
-      categoria: "Produtos, peças e materiais",
-    };
-    setItens([...itens, newItem]);
+    setItens((prev) => [
+      ...prev,
+      { descricao: "", quantidade: 1, preco_unitario: 0, subtotal: 0 },
+    ]);
+  }
+
+  function addItens(novos: OrcamentoItem[]) {
+    setItens((prev) => [...prev, ...novos]);
   }
 
   function updateItem(index: number, item: OrcamentoItem) {
-    const updated = [...itens];
-    updated[index] = item;
-    setItens(updated);
+    setItens((prev) => prev.map((it, i) => (i === index ? item : it)));
   }
 
   function removeItem(index: number) {
-    setItens(itens.filter((_, i) => i !== index));
+    setItens((prev) => prev.filter((_, i) => i !== index));
   }
 
+  // Insere os novos antes de apagar os antigos: se o INSERT falhar, nada é perdido.
   async function saveItens(orcamentoIdParam: string) {
     try {
-      // Deletar itens antigos
-      const { error: deleteError } = await supabase
+      const { data: antigos, error: selectError } = await supabase
         .from("orcamento_itens")
-        .delete()
+        .select("id")
         .eq("orcamento_id", orcamentoIdParam);
-      if (deleteError) throw deleteError;
+      if (selectError) throw selectError;
 
-      // Inserir novos itens
       const itensToSave = itens
         .filter((item) => item.descricao.trim())
         .map((item, idx) => ({
@@ -90,10 +87,13 @@ export function useOrcamentoItens(orcamentoId?: string) {
         }));
 
       if (itensToSave.length > 0) {
-        const { error } = await supabase
-          .from("orcamento_itens")
-          .insert(itensToSave);
+        const { error } = await supabase.from("orcamento_itens").insert(itensToSave);
+        if (error) throw error;
+      }
 
+      const idsAntigos = (antigos || []).map((i) => i.id);
+      if (idsAntigos.length > 0) {
+        const { error } = await supabase.from("orcamento_itens").delete().in("id", idsAntigos);
         if (error) throw error;
       }
 
@@ -111,6 +111,7 @@ export function useOrcamentoItens(orcamentoId?: string) {
     total,
     loading,
     addItem,
+    addItens,
     updateItem,
     removeItem,
     saveItens,

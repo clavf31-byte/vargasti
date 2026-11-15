@@ -38,7 +38,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
   const [error, setError] = useState<string | null>(null);
   const [showItemForm, setShowItemForm] = useState(false);
   const [showModeloSelector, setShowModeloSelector] = useState(false);
-  const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens(orcamentoId);
+  const { itens, total, addItens, updateItem, removeItem, saveItens } = useOrcamentoItens(orcamentoId);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -128,11 +128,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
 
   // Usar modelo - carrega itens do modelo
   const handleUsarModelo = (modeloItens: any[]) => {
-    for (const item of modeloItens) {
-      addItem();
-      const idx = itens.length;
-      updateItem(idx, item);
-    }
+    addItens(modeloItens);
     setShowModeloSelector(false);
   };
 
@@ -152,6 +148,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
           .from("orcamentos")
           .update({
             cliente_id: formData.cliente_id,
+            ...(modoEdicao ? { status: formData.status_enum, status_enum: formData.status_enum } : {}),
             descricao: formData.descricao,
             observacoes: formData.observacoes,
             local: formData.local,
@@ -203,9 +200,16 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
       onClose();
     } catch (err) {
       console.error("Erro ao salvar orçamento:", err);
-      const e = err as { message?: string; details?: string } | null;
-      const detalhe = [e?.message, e?.details].filter(Boolean).join(" — ");
-      setError(detalhe ? `Erro ao salvar orçamento: ${detalhe}` : "Erro ao salvar orçamento");
+      const codigo = (err as { code?: string } | null)?.code;
+      setError(
+        codigo === "23503"
+          ? "Um dos itens ou o cliente vinculado não existe mais. Recarregue a página e tente de novo."
+          : codigo === "23505"
+          ? "Já existe um orçamento com esse número. Tente salvar novamente."
+          : codigo === "42501"
+          ? "Você não tem permissão para salvar este orçamento."
+          : "Não foi possível salvar o orçamento. Confira os dados e tente de novo."
+      );
     } finally {
       setLoading(false);
     }
@@ -250,6 +254,22 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
             </select>
           </div>
         </div>
+
+        {modoEdicao && (
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Status</label>
+            <select
+              value={formData.status_enum}
+              onChange={(e) => setFormData({ ...formData, status_enum: e.target.value })}
+              className="input-base w-full"
+            >
+              <option value="rascunho">Rascunho</option>
+              <option value="enviado">Enviado</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="rejeitado">Rejeitado</option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do Problema *</label>
@@ -332,9 +352,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         {showItemForm && (
           <OrcamentoItemForm
             onAdd={(item) => {
-              addItem();
-              const lastIdx = itens.length;
-              updateItem(lastIdx, item);
+              addItens([item]);
               setShowItemForm(false);
             }}
             onClose={() => setShowItemForm(false)}

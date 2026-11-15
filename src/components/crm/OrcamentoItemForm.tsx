@@ -68,7 +68,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       quantidade,
       preco_unitario: manualPreco,
       subtotal: quantidade * manualPreco,
-      categoria: "Item Manual",
     });
     onClose();
   }
@@ -81,7 +80,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       quantidade,
       preco_unitario: precoFinal,
       subtotal: quantidade * precoFinal,
-      categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
       tipo: selecionado.tipo,
       tarefas: selecionado.tarefas || [],
     });
@@ -164,7 +162,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                                 key={modelo.id}
                                 type="button"
                                 onClick={() => {
-                                  console.log("✅ Modelo selecionado:", modelo.nome, "ID:", modelo.id);
                                   setSelecionado(modelo);
                                   setPreco(modelo.preco_unitario);
                                   setPrecoCustomizado(false);
@@ -202,7 +199,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                                 key={modelo.id}
                                 type="button"
                                 onClick={() => {
-                                  console.log("✅ Modelo selecionado:", modelo.nome, "ID:", modelo.id);
                                   setSelecionado(modelo);
                                   setPreco(modelo.preco_unitario);
                                   setPrecoCustomizado(false);
