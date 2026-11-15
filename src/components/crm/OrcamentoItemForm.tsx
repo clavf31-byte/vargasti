@@ -96,7 +96,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="card-graphite w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="card-graphite w-full max-w-3xl p-6 shadow-2xl max-h-[95vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-foreground">Adicionar Item</h3>
           <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
