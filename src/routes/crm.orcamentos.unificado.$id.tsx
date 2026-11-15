@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { OrcamentoItensTable } from "@/components/crm/OrcamentoItensTable";
 import { OrcamentoItemForm } from "@/components/crm/OrcamentoItemForm";
+import { OrcamentoFormInline } from "@/components/crm/OrcamentoFormInline";
 import { OrcamentoCompartilhamento } from "@/components/crm/OrcamentoCompartilhamento";
 import { gerarLinkAprovacao } from "@/hooks/useOrcamentoApproval";
 import { enviarOrcamentoPorEmail } from "@/hooks/useOrcamentoEmail";
@@ -50,13 +51,7 @@ function OrcamentoUnificadoPage() {
   const [modeloForm, setModeloForm] = useState({ nome: "", descricao: "" });
   const [salvandoModelo, setSalvandoModelo] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [formEdicao, setFormEdicao] = useState({
-    descricao: "",
-    observacoes: "",
-    resumo_executivo: "",
-    desconto: 0,
-    impostos: 0,
-  });
+  const [clientes, setClientes] = useState<Array<{ id: string; nome: string }>>([]);
 
   useEffect(() => {
     if (user) loadData();
@@ -284,43 +279,12 @@ function OrcamentoUnificadoPage() {
     }
   }
 
-  function abrirEdicao() {
-    setFormEdicao({
-      descricao: orcamento?.descricao || "",
-      observacoes: orcamento?.observacoes || "",
-      resumo_executivo: orcamento?.resumo_executivo || "",
-      desconto: orcamento?.desconto || 0,
-      impostos: orcamento?.impostos || 0,
-    });
-    setShowEditModal(true);
-  }
-
-  async function handleSalvarEdicao() {
-    try {
-      await supabase
-        .from("orcamentos")
-        .update({
-          descricao: formEdicao.descricao,
-          observacoes: formEdicao.observacoes,
-          resumo_executivo: formEdicao.resumo_executivo,
-          desconto: formEdicao.desconto,
-          impostos: formEdicao.impostos,
-        })
-        .eq("id", id);
-
-      setOrcamento({
-        ...orcamento,
-        descricao: formEdicao.descricao,
-        observacoes: formEdicao.observacoes,
-        resumo_executivo: formEdicao.resumo_executivo,
-        desconto: formEdicao.desconto,
-        impostos: formEdicao.impostos,
-      });
-      setShowEditModal(false);
-    } catch (err) {
-      console.error("Erro ao salvar orçamento:", err);
-      alert("Erro ao salvar");
+  async function abrirEdicao() {
+    if (user) {
+      const { data } = await supabase.from("clientes").select("id, nome").eq("user_id", user.id).order("nome");
+      setClientes(data || []);
     }
+    setShowEditModal(true);
   }
 
   async function handleSalvarResumo(novoResumo: string) {
@@ -770,92 +734,17 @@ function OrcamentoUnificadoPage() {
       )}
 
       {/* MODAL DE EDIÇÃO */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="card-graphite w-full max-w-600px max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Editar Orçamento</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do Problema</label>
-                <textarea
-                  value={formEdicao.descricao}
-                  onChange={(e) => setFormEdicao({ ...formEdicao, descricao: e.target.value })}
-                  rows={3}
-                  className="input-base w-full resize-y"
-                  placeholder="Descreva o problema..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Observações</label>
-                <textarea
-                  value={formEdicao.observacoes}
-                  onChange={(e) => setFormEdicao({ ...formEdicao, observacoes: e.target.value })}
-                  rows={2}
-                  className="input-base w-full resize-y"
-                  placeholder="Notas adicionais..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Resumo Executivo</label>
-                <textarea
-                  value={formEdicao.resumo_executivo}
-                  onChange={(e) => setFormEdicao({ ...formEdicao, resumo_executivo: e.target.value })}
-                  rows={2}
-                  className="input-base w-full resize-y"
-                  placeholder="Resumo executivo (aparece na tela de aprovação)..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Desconto (R$)</label>
-                  <input
-                    type="number"
-                    value={formEdicao.desconto}
-                    onChange={(e) => setFormEdicao({ ...formEdicao, desconto: parseFloat(e.target.value) || 0 })}
-                    step="0.01"
-                    className="input-base w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Impostos (R$)</label>
-                  <input
-                    type="number"
-                    value={formEdicao.impostos}
-                    onChange={(e) => setFormEdicao({ ...formEdicao, impostos: parseFloat(e.target.value) || 0 })}
-                    step="0.01"
-                    className="input-base w-full"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-surface-2 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSalvarEdicao}
-                  className="flex-1 px-4 py-2 text-sm rounded-lg bg-brand text-brand-foreground font-semibold hover:bg-brand/90 transition-colors"
-                >
-                  Salvar Alterações
-                </button>
-              </div>
-            </div>
+      {showEditModal && user && (
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto p-4">
+          <div className="max-w-3xl mx-auto">
+            <OrcamentoFormInline
+              userId={user.id}
+              clientes={clientes}
+              orcamentoId={id}
+              isOpen={showEditModal}
+              onClose={() => setShowEditModal(false)}
+              onSuccess={() => loadData()}
+            />
           </div>
         </div>
       )}

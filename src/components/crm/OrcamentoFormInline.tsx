@@ -15,9 +15,11 @@ interface OrcamentoFormInlineProps {
   onClose: () => void;
   atendimento_id?: string;
   cliente_id_pre?: string;
+  orcamentoId?: string;
 }
 
-export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClose, atendimento_id, cliente_id_pre }: OrcamentoFormInlineProps) {
+export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClose, atendimento_id, cliente_id_pre, orcamentoId }: OrcamentoFormInlineProps) {
+  const modoEdicao = !!orcamentoId;
   const [formData, setFormData] = useState({
     numero_formatado: "",
     cliente_id: "",
@@ -36,13 +38,37 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
   const [error, setError] = useState<string | null>(null);
   const [showItemForm, setShowItemForm] = useState(false);
   const [showModeloSelector, setShowModeloSelector] = useState(false);
-  const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens();
+  const { itens, total, addItem, updateItem, removeItem, saveItens } = useOrcamentoItens(orcamentoId);
 
   useEffect(() => {
     if (!isOpen) return;
     setFormData((f) => ({ ...f, numero_formatado: "", cliente_id: cliente_id_pre || "" }));
     setOrcamento_id(null);
     let cancelado = false;
+
+    if (orcamentoId) {
+      (async () => {
+        const { data } = await supabase.from("orcamentos").select("*").eq("id", orcamentoId).single();
+        if (cancelado || !data) return;
+        const o = data as any;
+        setOrcamento_id(o.id);
+        setFormData({
+          numero_formatado: o.numero_formatado || "",
+          cliente_id: o.cliente_id || "",
+          descricao: o.descricao || "",
+          observacoes: o.observacoes || "",
+          local: o.local || "",
+          data_agendamento: o.data_agendamento || "",
+          resumo_executivo: o.resumo_executivo || "",
+          desconto: o.desconto || 0,
+          impostos: o.impostos || 0,
+          status_enum: o.status_enum || "rascunho",
+          data_vencimento: o.data_vencimento || "",
+        });
+      })();
+      return () => { cancelado = true; };
+    }
+
     (async () => {
       const rascunho = await buscarRascunhoVazio(userId, atendimento_id);
       if (cancelado) return;
@@ -55,13 +81,13 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
       if (!cancelado) setFormData((f) => ({ ...f, numero_formatado: num }));
     })();
     return () => { cancelado = true; };
-  }, [isOpen, userId, cliente_id_pre, atendimento_id]);
+  }, [isOpen, userId, cliente_id_pre, atendimento_id, orcamentoId]);
 
   // Auto-save rascunho ao selecionar cliente
   const handleClienteChange = async (novoClienteId: string) => {
     setFormData((f) => ({ ...f, cliente_id: novoClienteId }));
 
-    if (!novoClienteId) return;
+    if (!novoClienteId || modoEdicao) return;
 
     // Rascunho já existe (novo ou reaproveitado): só atualiza o cliente
     if (orcamento_id) {
@@ -118,7 +144,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     setLoading(true);
     setError(null);
     try {
-      const orc_id = orcamento_id || null;
+      const orc_id = orcamentoId || orcamento_id || null;
 
       if (orc_id) {
         // Atualizar rascunho existente
@@ -139,7 +165,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
           .eq("id", orc_id);
 
         if (updateError) throw updateError;
-        if (itens.length > 0) await saveItens(orc_id);
+        if (itens.length > 0 || modoEdicao) await saveItens(orc_id);
       } else {
         // Criar novo se não existir rascunho
         const numero = await gerarNumeroOrcamento(userId);
@@ -188,7 +214,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
   return (
     <div className="card-graphite p-6">
       <div className="flex items-center justify-between mb-5 pb-4 border-b border-border">
-        <h2 className="text-base font-semibold text-foreground">Criar Novo Orçamento</h2>
+        <h2 className="text-base font-semibold text-foreground">{modoEdicao ? "Editar Orçamento" : "Criar Novo Orçamento"}</h2>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
           <X className="size-5" />
         </button>
@@ -212,7 +238,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente * {orcamento_id && <span className="text-xs text-brand">(rascunho criado)</span>}</label>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cliente * {orcamento_id && !modoEdicao && <span className="text-xs text-brand">(rascunho criado)</span>}</label>
             <select
               value={formData.cliente_id}
               onChange={(e) => handleClienteChange(e.target.value)}
@@ -340,9 +366,11 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Este orçamento terá validade de <strong className="text-foreground">7 dias</strong> a partir da criação.
-        </p>
+        {!modoEdicao && (
+          <p className="text-xs text-muted-foreground">
+            Este orçamento terá validade de <strong className="text-foreground">7 dias</strong> a partir da criação.
+          </p>
+        )}
 
         <div className="rounded-lg p-4 bg-select/5 border border-select/20 grid grid-cols-2 gap-4">
           <div>
@@ -372,7 +400,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
             disabled={loading || !formData.cliente_id}
             className="flex-1 py-2.5 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 transition-colors"
           >
-            {loading ? "Criando..." : "Criar Orçamento"}
+            {loading ? (modoEdicao ? "Salvando..." : "Criando...") : (modoEdicao ? "Salvar Alterações" : "Criar Orçamento")}
           </button>
         </div>
       </form>
