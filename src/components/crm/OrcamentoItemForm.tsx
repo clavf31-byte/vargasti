@@ -166,6 +166,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                                 key={modelo.id}
                                 type="button"
                                 onClick={() => {
+                                  console.log("✅ Modelo selecionado:", modelo.nome, "ID:", modelo.id);
                                   setSelecionado(modelo);
                                   setPreco(modelo.preco_unitario);
                                   setPrecoCustomizado(false);
@@ -203,6 +204,7 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
                                 key={modelo.id}
                                 type="button"
                                 onClick={() => {
+                                  console.log("✅ Modelo selecionado:", modelo.nome, "ID:", modelo.id);
                                   setSelecionado(modelo);
                                   setPreco(modelo.preco_unitario);
                                   setPrecoCustomizado(false);
