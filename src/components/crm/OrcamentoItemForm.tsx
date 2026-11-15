@@ -57,21 +57,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
     }
   }
 
-function handleAddCatalogo() {
-    if (!selecionado || tipo === "manual") return;
-    const precoFinal = precoCustomizado ? preco : (selecionado.preco_unitario ?? selecionado.valor_padrao ?? selecionado.valor_venda ?? 0);
-    onAdd({
-      descricao: selecionado.nome || selecionado.descricao,
-      quantidade,
-      preco_unitario: precoFinal,
-      subtotal: quantidade * precoFinal,
-      categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
-      tipo: selecionado.tipo,
-      servico_id: selecionado.tipo === "servico" ? selecionado.id : undefined,
-      peca_id: selecionado.tipo === "peca" ? selecionado.id : undefined,
-    });
-    onClose();
-  }
 
   function handleAddManual() {
     if (!manualNome.trim() || manualPreco <= 0) {
@@ -98,6 +83,8 @@ function handleAddCatalogo() {
       subtotal: quantidade * precoFinal,
       categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
       tipo: selecionado.tipo,
+      servico_id: selecionado.tipo === "servico" ? selecionado.id : undefined,
+      peca_id: selecionado.tipo === "peca" ? selecionado.id : undefined,
       tarefas: selecionado.tarefas || [],
     });
     onClose();
@@ -347,7 +334,7 @@ function handleAddCatalogo() {
                   className="flex-1 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-surface-2 transition-colors">
                   Cancelar
                 </button>
-                <button type="button" onClick={tipo === "modelos" ? handleAddModelo : handleAddCatalogo}
+                <button type="button" onClick={handleAddModelo}
                   className="flex-1 py-2 bg-brand text-brand-foreground rounded-lg text-sm font-semibold hover:bg-brand/90 transition-colors">
                   Adicionar
                 </button>
