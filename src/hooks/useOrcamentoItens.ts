@@ -83,7 +83,6 @@ export function useOrcamentoItens(orcamentoId?: string) {
           preco_unitario: item.preco_unitario,
           subtotal: item.subtotal,
           ordem: idx,
-          categoria: item.categoria,
           tipo: item.tipo,
           servico_id: item.servico_id,
           peca_id: item.peca_id,

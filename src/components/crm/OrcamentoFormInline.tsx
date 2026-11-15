@@ -4,7 +4,7 @@ import { OrcamentoItensTable } from "./OrcamentoItensTable";
 import { OrcamentoItemForm } from "./OrcamentoItemForm";
 import { ModeloSelectorModal } from "./ModeloSelectorModal";
 import { useOrcamentoItens } from "@/hooks/useOrcamentoItens";
-import { gerarNumeroOrcamento, previewNumeroOrcamento } from "@/hooks/useOrcamentoNumero";
+import { gerarNumeroOrcamento, previewNumeroOrcamento, buscarRascunhoVazio } from "@/hooks/useOrcamentoNumero";
 import { X, Copy } from "lucide-react";
 
 interface OrcamentoFormInlineProps {
@@ -42,17 +42,32 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
     if (!isOpen) return;
     setFormData((f) => ({ ...f, numero_formatado: "", cliente_id: cliente_id_pre || "" }));
     setOrcamento_id(null);
-    previewNumeroOrcamento(userId).then((num) =>
-      setFormData((f) => ({ ...f, numero_formatado: num }))
-    );
-  }, [isOpen, userId, cliente_id_pre]);
+    let cancelado = false;
+    (async () => {
+      const rascunho = await buscarRascunhoVazio(userId, atendimento_id);
+      if (cancelado) return;
+      if (rascunho) {
+        setOrcamento_id(rascunho.id);
+        setFormData((f) => ({ ...f, numero_formatado: rascunho.numero_formatado }));
+        return;
+      }
+      const num = await previewNumeroOrcamento(userId);
+      if (!cancelado) setFormData((f) => ({ ...f, numero_formatado: num }));
+    })();
+    return () => { cancelado = true; };
+  }, [isOpen, userId, cliente_id_pre, atendimento_id]);
 
   // Auto-save rascunho ao selecionar cliente
   const handleClienteChange = async (novoClienteId: string) => {
     setFormData((f) => ({ ...f, cliente_id: novoClienteId }));
 
-    // Se já existe rascunho, não cria novo
-    if (orcamento_id || !novoClienteId) return;
+    if (!novoClienteId) return;
+
+    // Rascunho já existe (novo ou reaproveitado): só atualiza o cliente
+    if (orcamento_id) {
+      await supabase.from("orcamentos").update({ cliente_id: novoClienteId }).eq("id", orcamento_id);
+      return;
+    }
 
     try {
       const numero = await gerarNumeroOrcamento(userId);
@@ -110,6 +125,7 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
         const { error: updateError } = await supabase
           .from("orcamentos")
           .update({
+            cliente_id: formData.cliente_id,
             descricao: formData.descricao,
             observacoes: formData.observacoes,
             local: formData.local,

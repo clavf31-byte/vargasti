@@ -81,3 +81,32 @@ export async function gerarNumeroOrcamento(userId: string): Promise<string> {
     throw err;
   }
 }
+
+export async function buscarRascunhoVazio(
+  userId: string,
+  atendimentoId?: string | null
+): Promise<{ id: string; numero_formatado: string } | null> {
+  let query = supabase
+    .from("orcamentos")
+    .select("id, numero_formatado, descricao")
+    .eq("user_id", userId)
+    .eq("status", "rascunho")
+    .eq("total", 0)
+    .order("created_at", { ascending: true });
+
+  query = atendimentoId ? query.eq("atendimento_id", atendimentoId) : query.is("atendimento_id", null);
+
+  const { data } = await query.limit(20);
+  for (const orc of data || []) {
+    if (orc.descricao && orc.descricao.trim()) continue;
+    const { data: itens } = await supabase
+      .from("orcamento_itens")
+      .select("id")
+      .eq("orcamento_id", orc.id)
+      .limit(1);
+    if (!itens || itens.length === 0) {
+      return { id: orc.id, numero_formatado: orc.numero_formatado || "" };
+    }
+  }
+  return null;
+}
