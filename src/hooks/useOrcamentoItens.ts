@@ -67,10 +67,11 @@ export function useOrcamentoItens(orcamentoId?: string) {
   async function saveItens(orcamentoIdParam: string) {
     try {
       // Deletar itens antigos
-      await supabase
+      const { error: deleteError } = await supabase
         .from("orcamento_itens")
         .delete()
         .eq("orcamento_id", orcamentoIdParam);
+      if (deleteError) throw deleteError;
 
       // Inserir novos itens
       const itensToSave = itens

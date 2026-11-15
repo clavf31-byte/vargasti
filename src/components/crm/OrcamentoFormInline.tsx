@@ -160,7 +160,10 @@ export function OrcamentoFormInline({ userId, clientes, onSuccess, isOpen, onClo
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar orçamento");
+      console.error("Erro ao salvar orçamento:", err);
+      const e = err as { message?: string; details?: string } | null;
+      const detalhe = [e?.message, e?.details].filter(Boolean).join(" — ");
+      setError(detalhe ? `Erro ao salvar orçamento: ${detalhe}` : "Erro ao salvar orçamento");
     } finally {
       setLoading(false);
     }
