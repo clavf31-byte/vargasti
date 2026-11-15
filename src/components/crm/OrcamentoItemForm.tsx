@@ -83,8 +83,6 @@ export function OrcamentoItemForm({ onAdd, onClose }: OrcamentoItemFormProps) {
       subtotal: quantidade * precoFinal,
       categoria: selecionado.tipo === "servico" ? "Serviços" : "Produtos, peças e materiais",
       tipo: selecionado.tipo,
-      servico_id: selecionado.tipo === "servico" ? selecionado.id : undefined,
-      peca_id: selecionado.tipo === "peca" ? selecionado.id : undefined,
       tarefas: selecionado.tarefas || [],
     });
     onClose();
