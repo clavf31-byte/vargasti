@@ -442,56 +442,6 @@ function OrcamentoDetalhePage() {
             </div>
           </div>
 
-          {orcamento.notas && (
-            <div style={{ borderTop: "1px solid rgba(19, 200, 211, 0.16)", paddingTop: "1.5rem" }}>
-              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Observações</p>
-              <p style={{ fontSize: "14px", color: "#eaf3f8", whiteSpace: "pre-wrap" }}>
-                {orcamento.notas}
-              </p>
-            </div>
-          )}
-
-          {orcamento.approval_status && (
-            <div
-              style={{
-                marginTop: "1.5rem",
-                paddingTop: "1.5rem",
-                borderTop: "1px solid rgba(19, 200, 211, 0.16)",
-              }}
-            >
-              <p style={{ fontSize: "12px", color: "#8da2b4", marginBottom: "0.5rem" }}>Status de Aprovação</p>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  fontSize: "14px",
-                }}
-              >
-                {orcamento.approval_status === "approved" && (
-                  <>
-                    <CheckCircle2 size={16} style={{ color: "#66bb6a" }} />
-                    <span style={{ color: "#66bb6a" }}>
-                      Aprovado em{" "}
-                      {orcamento.approved_at ? new Date(orcamento.approved_at).toLocaleDateString("pt-BR") : ""}
-                    </span>
-                  </>
-                )}
-                {orcamento.approval_status === "pending" && (
-                  <>
-                    <Clock size={16} style={{ color: "#0bd0d7" }} />
-                    <span style={{ color: "#0bd0d7" }}>Aguardando aprovação</span>
-                  </>
-                )}
-                {orcamento.approval_status === "rejected" && (
-                  <>
-                    <XCircle size={16} style={{ color: "#ef5350" }} />
-                    <span style={{ color: "#ef5350" }}>Rejeitado</span>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
