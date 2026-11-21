@@ -267,6 +267,7 @@ function OrcamentoUnificadoPage() {
         status: orcamento.status_enum || orcamento.status,
         desconto: orcamento.desconto,
         impostos: orcamento.impostos,
+        observacoes: orcamento.observacoes,
         approval_url: approvalUrl,
       };
 

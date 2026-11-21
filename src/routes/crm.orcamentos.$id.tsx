@@ -30,6 +30,7 @@ type Orcamento = {
   impostos?: number;
   data_vencimento: string;
   notas: string;
+  observacoes?: string | null;
   data_criacao: string;
   approval_token?: string;
   approval_status?: string;
@@ -241,6 +242,7 @@ function OrcamentoDetalhePage() {
         status: orcamento.status_enum,
         desconto: orcamento.desconto,
         impostos: orcamento.impostos,
+        observacoes: orcamento.observacoes || undefined,
         approval_url: approvalUrl || undefined,
       });
 

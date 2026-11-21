@@ -22,6 +22,7 @@ interface OrcamentoPDF {
   status: string;
   desconto?: number;
   impostos?: number;
+  observacoes?: string;
   approval_url?: string;
 }
 
@@ -308,6 +309,29 @@ export function gerarPDFOrcamento(orcamento: OrcamentoPDF) {
   );
 
   y += 20;
+
+  // ── OBSERVAÇÕES ──────────────────────────────────────────────────────────────
+  if (orcamento.observacoes && orcamento.observacoes.trim()) {
+    const linhas = doc.splitTextToSize(orcamento.observacoes.trim(), cw - 10);
+    const altura = 12 + linhas.length * 4.5;
+    y = addPageIfNeeded(doc, y, altura, ml);
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(...C.gray);
+    doc.roundedRect(ml, y, cw, altura, 2, 2, "FD");
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...C.dark);
+    doc.text("Observações", ml + 5, y + 7);
+
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...C.gray);
+    doc.text(linhas, ml + 5, y + 13);
+
+    y += altura + 6;
+  }
 
   // ── APPROVAL BOX ─────────────────────────────────────────────────────────────
   if (orcamento.approval_url) {

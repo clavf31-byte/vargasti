@@ -242,10 +242,16 @@ function ApproveOrcamentoPage() {
                 <div style={styles.infoLabel}>Emissão</div>
                 <div style={styles.infoValue}>{orcamento?.created_at ? fmtDate(orcamento.created_at) : "—"}</div>
               </div>
-              {orcamento?.notas && (
+              {(orcamento?.descricao || orcamento?.notas) && (
+                <div style={{ ...styles.infoCell, gridColumn: "span 2", borderRight: "none" }}>
+                  <div style={styles.infoLabel}>Descrição</div>
+                  <div style={{ ...styles.infoValue, fontWeight: 400, color: "#475569", whiteSpace: "pre-wrap" }}>{orcamento.descricao || orcamento.notas}</div>
+                </div>
+              )}
+              {orcamento?.observacoes && (
                 <div style={{ ...styles.infoCell, gridColumn: "span 2", borderRight: "none" }}>
                   <div style={styles.infoLabel}>Observações</div>
-                  <div style={{ ...styles.infoValue, fontWeight: 400, color: "#475569" }}>{orcamento.notas}</div>
+                  <div style={{ ...styles.infoValue, fontWeight: 400, color: "#475569", whiteSpace: "pre-wrap" }}>{orcamento.observacoes}</div>
                 </div>
               )}
             </div>
